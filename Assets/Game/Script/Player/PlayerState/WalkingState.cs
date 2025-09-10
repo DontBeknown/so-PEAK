@@ -2,8 +2,14 @@ using UnityEngine;
 
 public class WalkingState : IPlayerState
 {
-    public void Enter(PlayerController player) { }
-    public void Exit(PlayerController player) { }
+    public void Enter(PlayerController player)
+    {
+        player.playerAnimator.SetWalking(true);
+    }
+    public void Exit(PlayerController player)
+    {
+        player.playerAnimator.SetWalking(false);
+    }
 
     public void HandleInput(PlayerController player, Vector2 moveInput) { }
 
@@ -24,6 +30,9 @@ public class WalkingState : IPlayerState
                 player.transform.forward,
                 moveDir,
                 Time.fixedDeltaTime * player.rotationSmoothness);
+
+
+        player.playerAnimator.UpdateMovement(player.rb.linearVelocity, player.walkSpeed);
     }
 
     Vector2 SquareToCircle(Vector2 input)

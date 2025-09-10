@@ -2,47 +2,88 @@ using UnityEngine;
 
 public class ClimbingState : IPlayerState
 {
-    public void Enter(PlayerController player) { }
-    public void Exit(PlayerController player) { }
+    public void Enter(PlayerController player) 
+    {
+        player.playerAnimator.SetClimbing(true);
+        //player.rb.useGravity = false;
+    }
+    public void Exit(PlayerController player)
+    { 
+        player.playerAnimator.SetClimbing(false);
+        //player.rb.useGravity = true;
+    }
+
     public void HandleInput(PlayerController player, Vector2 moveInput) { }
 
     public void FixedUpdate(PlayerController player)
     {
         Vector2 input = player.moveInput;
-        Vector3 offset = player.transform.TransformDirection(Vector2.one * 0.5f);
-        Vector3 checkDirection = Vector3.zero;
-        int k = 0;
+        Vector3 wallNormal = Vector3.zero;
+        int hitCount = 0;
 
-        for (int i = 0; i < 4; i++)
+        Vector3[] probeDirs =
         {
-            if (Physics.Raycast(player.transform.position + offset, player.transform.forward,
-                out RaycastHit checkHit, player.climbDetectionRange, player.climbableLayer))
+        player.transform.forward,
+        Quaternion.AngleAxis(45f, Vector3.up) * player.transform.forward,
+        Quaternion.AngleAxis(-45f, Vector3.up) * player.transform.forward,
+        Quaternion.AngleAxis(90f, Vector3.up) * player.transform.forward,
+        Quaternion.AngleAxis(-90f, Vector3.up) * player.transform.forward
+    };
+
+        foreach (var dir in probeDirs)
+        {
+            if (Physics.Raycast(player.transform.position,
+                                dir,
+                                out RaycastHit hit,
+                                player.climbDetectionRange,
+                                player.climbableLayer))
             {
-                checkDirection += checkHit.normal;
-                k++;
+                wallNormal += hit.normal;
+                hitCount++;
             }
-            offset = Quaternion.AngleAxis(90f, player.transform.forward) * offset;
         }
 
-        if (k > 0)
-            checkDirection /= k;
-
-        if (Physics.Raycast(player.transform.position, -checkDirection, out RaycastHit hit,
-            player.climbDetectionRange, player.climbableLayer))
+        if (hitCount > 0)
         {
-            // stick to wall
-            Quaternion targetRot = Quaternion.LookRotation(-hit.normal, Vector3.up);
-            player.transform.rotation = Quaternion.Slerp(player.transform.rotation, targetRot, Time.fixedDeltaTime * player.rotationSmoothness);
+            wallNormal.Normalize();
 
-            player.rb.position = Vector3.Lerp(player.rb.position,
-                hit.point + hit.normal * (player.capsuleRadius + player.wallOffset),
-                Time.fixedDeltaTime * 10f);
+            if (Physics.Raycast(player.transform.position, -wallNormal,
+                out RaycastHit stickHit,
+                player.climbDetectionRange + 0.5f,
+                player.climbableLayer))
+            {
+                player.transform.rotation = Quaternion.Slerp(
+                    player.transform.rotation,
+                    Quaternion.LookRotation(-stickHit.normal, Vector3.up),
+                    Time.fixedDeltaTime * player.rotationSmoothness
+                );
 
-            player.rb.linearVelocity = player.transform.TransformDirection(new Vector3(input.x, input.y, 0f)) * player.climbSpeed;
+                player.rb.position = Vector3.Lerp(
+                    player.rb.position,
+                    stickHit.point + stickHit.normal * (player.capsuleRadius + player.wallOffset),
+                    Time.fixedDeltaTime * 10f
+                );
+
+                if (input.sqrMagnitude > 0.01f)
+                    player.rb.linearVelocity = player.transform.TransformDirection(new Vector3(input.x, input.y, 0f)) * player.climbSpeed;
+                else
+                    player.rb.linearVelocity = Vector3.zero;
+
+                player.rb.useGravity = false;
+
+                player.playerAnimator.UpdateMovement(
+                    player.transform.TransformDirection(new Vector3(input.x, 0f, input.y)),
+                    player.climbSpeed
+                );
+
+
+                return;
+            }
         }
-        else
-        {
-            player.ChangeState(new FallingState());
-        }
+
+
+
+        //player.ChangeState(new FallingState());
     }
+
 }

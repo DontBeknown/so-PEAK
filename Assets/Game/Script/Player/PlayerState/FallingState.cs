@@ -2,13 +2,29 @@
 
 public class FallingState : IPlayerState
 {
-    public void Enter(PlayerController player) { }
-    public void Exit(PlayerController player) { }
+    public void Enter(PlayerController player)
+    {
+        player.playerAnimator.SetFalling(true);
+        player.playerAnimator.SetWalking(false);
+        player.playerAnimator.SetClimbing(false);
+    }
+
+    public void Exit(PlayerController player)
+    {
+        player.playerAnimator.SetFalling(false);
+    }
+
     public void HandleInput(PlayerController player, Vector2 moveInput) { }
 
     public void FixedUpdate(PlayerController player)
     {
-        // falling handled by gravity → nothing extra
+        /*bool grounded = player.IsGrounded();
+        player.playerAnimator.SetGrounded(grounded);
+
+        if (grounded && player.rb.linearVelocity.y <= 0.1f)
+        {
+            player.ChangeState(new WalkingState());
+        }*/
     }
 }
 

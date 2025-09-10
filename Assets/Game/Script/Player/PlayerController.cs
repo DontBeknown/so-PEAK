@@ -14,6 +14,7 @@ public class PlayerController : MonoBehaviour
     public LayerMask climbableLayer;
 
     [HideInInspector] public Rigidbody rb;
+    [HideInInspector] public PlayerAnimator playerAnimator;
     [HideInInspector] public IA_PlayerController inputActions;
     [HideInInspector] public Vector2 moveInput;
 
@@ -22,6 +23,10 @@ public class PlayerController : MonoBehaviour
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
+
+        Animator animatorComponent = GetComponentInChildren<Animator>();
+        playerAnimator = new PlayerAnimator(animatorComponent, transform);
+        
         inputActions = new IA_PlayerController();
 
         inputActions.Player.Move.performed += ctx => moveInput = ctx.ReadValue<Vector2>();
@@ -46,11 +51,11 @@ public class PlayerController : MonoBehaviour
 
         if (!(currentState is ClimbingState))
         {
-            bool grounded = Physics.Raycast(transform.position, Vector3.down, out _, 1.05f);
+            //bool grounded = IsGrounded();
 
-            if (grounded && rb.linearVelocity.y <= 0.1f && !(currentState is WalkingState))
+            if (rb.linearVelocity.y <= 0.1f && !(currentState is WalkingState))
                 ChangeState(new WalkingState());
-            else if (!grounded && currentState is WalkingState)
+            else if (currentState is WalkingState)
                 ChangeState(new FallingState());
         }
 
@@ -90,22 +95,32 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        if (Physics.SphereCast(transform.position + Vector3.up * 0.5f,
-                               0.3f,
-                               transform.forward,
+        Vector3 origin = transform.position + Vector3.up * 0.5f;
+        Vector3 dir = transform.forward;
+        float radius = 0.3f;
+
+        if (Physics.SphereCast(origin,
+                               radius,
+                               dir,
                                out RaycastHit hit,
                                climbDetectionRange,
                                climbableLayer))
         {
+
             ChangeState(new ClimbingState());
             rb.linearVelocity = Vector3.zero;
             rb.useGravity = false;
         }
     }
 
-    // Helper
     public static Vector2 SquareToCircle(Vector2 input)
     {
         return (input.sqrMagnitude >= 1f) ? input.normalized : input;
+    }
+
+    public bool IsGrounded()
+    {
+        float checkDist = capsuleRadius + 0.05f;
+        return Physics.Raycast(transform.position, Vector3.down, out _, checkDist);
     }
 }
