@@ -1,89 +1,39 @@
 using UnityEngine;
+using UnityEngine.InputSystem.XR;
 
 public class ClimbingState : IPlayerState
 {
-    public void Enter(PlayerController player) 
+    public void Enter(PlayerModel model) => model.Animator.SetClimbing(true);
+    public void Exit(PlayerModel model) => model.Animator.SetClimbing(false);
+
+    public void HandleInput(PlayerModel model, Vector2 input) { }
+
+    public void FixedUpdate(PlayerModel model, Vector2 input)
     {
-        player.playerAnimator.SetClimbing(true);
-        //player.rb.useGravity = false;
-    }
-    public void Exit(PlayerController player)
-    { 
-        player.playerAnimator.SetClimbing(false);
-        //player.rb.useGravity = true;
+        if (model.TryClimb(out RaycastHit hit))
+        {
+            model.Transform.rotation = Quaternion.Slerp(
+                model.Transform.rotation,
+                Quaternion.LookRotation(-hit.normal, Vector3.up),
+                Time.fixedDeltaTime * model.RotationSmoothness);
+
+            Vector3 climbMotion = model.Transform.TransformDirection(new Vector3(input.x, input.y, 0f)) * model.ClimbSpeed;
+            model.Move(climbMotion);
+
+            model.Animator.UpdateMovement(new Vector3(input.x, 0f, input.y), model.ClimbSpeed);
+            model.Velocity.y = 0f;
+        }
     }
 
-    public void HandleInput(PlayerController player, Vector2 moveInput) { }
-
-    public void FixedUpdate(PlayerController player)
+    public void OnJump(PlayerModel model)
     {
-        Vector2 input = player.moveInput;
-        Vector3 wallNormal = Vector3.zero;
-        int hitCount = 0;
-
-        Vector3[] probeDirs =
-        {
-        player.transform.forward,
-        Quaternion.AngleAxis(45f, Vector3.up) * player.transform.forward,
-        Quaternion.AngleAxis(-45f, Vector3.up) * player.transform.forward,
-        Quaternion.AngleAxis(90f, Vector3.up) * player.transform.forward,
-        Quaternion.AngleAxis(-90f, Vector3.up) * player.transform.forward
-    };
-
-        foreach (var dir in probeDirs)
-        {
-            if (Physics.Raycast(player.transform.position,
-                                dir,
-                                out RaycastHit hit,
-                                player.climbDetectionRange,
-                                player.climbableLayer))
-            {
-                wallNormal += hit.normal;
-                hitCount++;
-            }
-        }
-
-        if (hitCount > 0)
-        {
-            wallNormal.Normalize();
-
-            if (Physics.Raycast(player.transform.position, -wallNormal,
-                out RaycastHit stickHit,
-                player.climbDetectionRange + 0.5f,
-                player.climbableLayer))
-            {
-                player.transform.rotation = Quaternion.Slerp(
-                    player.transform.rotation,
-                    Quaternion.LookRotation(-stickHit.normal, Vector3.up),
-                    Time.fixedDeltaTime * player.rotationSmoothness
-                );
-
-                player.rb.position = Vector3.Lerp(
-                    player.rb.position,
-                    stickHit.point + stickHit.normal * (player.capsuleRadius + player.wallOffset),
-                    Time.fixedDeltaTime * 10f
-                );
-
-                if (input.sqrMagnitude > 0.01f)
-                    player.rb.linearVelocity = player.transform.TransformDirection(new Vector3(input.x, input.y, 0f)) * player.climbSpeed;
-                else
-                    player.rb.linearVelocity = Vector3.zero;
-
-                player.rb.useGravity = false;
-
-                player.playerAnimator.UpdateMovement(
-                    player.transform.TransformDirection(new Vector3(input.x, 0f, input.y)),
-                    player.climbSpeed
-                );
-
-
-                return;
-            }
-        }
-
-
-
-        //player.ChangeState(new FallingState());
+        model.Velocity.y = model.JumpForce;
     }
 
+    public void OnClimb(PlayerModel model)
+    {
+        model.Velocity.y = 0f;
+        PlayerController controller = model.Transform.GetComponent<PlayerController>();
+        controller.ChangeState(new FallingState());
+    }
 }

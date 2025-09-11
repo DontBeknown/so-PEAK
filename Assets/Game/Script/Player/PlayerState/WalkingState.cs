@@ -2,41 +2,39 @@ using UnityEngine;
 
 public class WalkingState : IPlayerState
 {
-    public void Enter(PlayerController player)
-    {
-        player.playerAnimator.SetWalking(true);
-    }
-    public void Exit(PlayerController player)
-    {
-        player.playerAnimator.SetWalking(false);
-    }
+    public void Enter(PlayerModel model) => model.Animator.SetWalking(true);
+    public void Exit(PlayerModel model) => model.Animator.SetWalking(false);
 
-    public void HandleInput(PlayerController player, Vector2 moveInput) { }
+    public void HandleInput(PlayerModel model, Vector2 input) { }
 
-    public void FixedUpdate(PlayerController player)
+    public void FixedUpdate(PlayerModel model, Vector2 input)
     {
-        Vector2 inputCircle = SquareToCircle(player.moveInput);
+        Vector2 circle = (input.sqrMagnitude >= 1f) ? input.normalized : input;
 
         Transform cam = Camera.main.transform;
-        Vector3 moveDir = Quaternion.FromToRotation(cam.up, Vector3.up)
-                        * cam.TransformDirection(new Vector3(inputCircle.x, 0f, inputCircle.y));
+        Vector3 moveDir = Quaternion.FromToRotation(cam.up, Vector3.up) *
+                          cam.TransformDirection(new Vector3(circle.x, 0f, circle.y));
 
-        Vector3 newVelo = moveDir * player.walkSpeed;
-        newVelo.y = player.rb.linearVelocity.y;
-        player.rb.linearVelocity = newVelo;
+        Vector3 horizontal = moveDir * model.WalkSpeed;
+        model.Move(horizontal + Vector3.up * model.Velocity.y);
 
         if (moveDir.sqrMagnitude > 0.01f)
-            player.transform.forward = Vector3.Slerp(
-                player.transform.forward,
-                moveDir,
-                Time.fixedDeltaTime * player.rotationSmoothness);
+            model.Transform.forward = Vector3.Slerp(
+                model.Transform.forward, moveDir,
+                Time.fixedDeltaTime * model.RotationSmoothness);
 
-
-        player.playerAnimator.UpdateMovement(player.rb.linearVelocity, player.walkSpeed);
+        model.Animator.UpdateMovement(horizontal, model.WalkSpeed);
+        model.ApplyGravity(-9.81f);
     }
 
-    Vector2 SquareToCircle(Vector2 input)
+    public void OnJump(PlayerModel model) => model.Jump();
+
+    public void OnClimb(PlayerModel model)
     {
-        return (input.sqrMagnitude >= 1f) ? input.normalized : input;
+        if (model.TryClimb(out RaycastHit hit))
+        {
+            PlayerController controller = model.Transform.GetComponent<PlayerController>();
+            controller.ChangeState(new ClimbingState());
+        }
     }
 }

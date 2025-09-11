@@ -2,8 +2,10 @@ using UnityEngine;
 
 public interface IPlayerState
 {
-    void Enter(PlayerController player);
-    void Exit(PlayerController player);
-    void HandleInput(PlayerController player, Vector2 moveInput);
-    void FixedUpdate(PlayerController player);
+    void Enter(PlayerModel model);
+    void Exit(PlayerModel model);
+    void HandleInput(PlayerModel model, Vector2 input);
+    void FixedUpdate(PlayerModel model, Vector2 input);
+    void OnJump(PlayerModel model) { }
+    void OnClimb(PlayerModel model) { }
 }
