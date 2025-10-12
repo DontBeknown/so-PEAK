@@ -6,6 +6,6 @@ public interface IPlayerState
     void Exit(PlayerModel model);
     void HandleInput(PlayerModel model, Vector2 input);
     void FixedUpdate(PlayerModel model, Vector2 input);
-    void OnJump(PlayerModel model) { }
+    void OnJump(PlayerModel model, Vector2 input) { }
     void OnClimb(PlayerModel model) { }
 }

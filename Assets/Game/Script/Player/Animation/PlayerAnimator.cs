@@ -4,7 +4,6 @@ public class PlayerAnimator
 {
     private readonly Animator animator;
     private readonly Transform root;
-
     public PlayerAnimator(Animator animator, Transform root)
     {
         this.animator = animator;
