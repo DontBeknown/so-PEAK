@@ -79,8 +79,20 @@ public class PlayerStats : MonoBehaviour
     public void ConsumeStamina(float amount) => stamina.Drain(amount);
     public void TakeDamage(float dmg) => health.Damage(dmg);
     public void Heal(float amount) => health.Heal(amount);
-    public void Eat(float nutrition) => hunger.Subtract(nutrition);
-    public void Drink(float water) => thirst.Subtract(water);
+    public void Eat(float nutrition) => hunger.Add(nutrition);
+    public void Drink(float water) => thirst.Add(water);
+
+    public void ModifyTemperature(float amount)
+    {
+        // Add temperature stat if you haven't already, or modify existing temperature system
+        // temperature.Add(amount);
+        Debug.Log($"Temperature modified by {amount}");
+    }
+
+    public void RestoreStamina(float amount)
+    {
+        stamina.Add(amount);
+    }
 
     public float Health => health.Current;
     public float MaxHealth => health.Max;
@@ -97,5 +109,18 @@ public class PlayerStats : MonoBehaviour
     public float Stamina => stamina.Current;
     public float MaxStamina => stamina.Max;
     public float StaminaPercent => stamina.Percent;
+
+    public IStat GetStat(StatType statType)
+    {
+        return statType switch
+        {
+            StatType.Health => health,
+            StatType.Hunger => hunger,
+            StatType.Thirst => thirst,
+            StatType.Stamina => stamina,
+            // StatType.Temperature => temperature, // Add when you implement temperature
+            _ => null
+        };
+    }
 
 }

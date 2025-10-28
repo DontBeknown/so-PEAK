@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d9669199bd3ec04191f40bd7b61cd2a, type: 3}
+  m_Name: Campfire
+  m_EditorClassIdentifier: Assembly-CSharp::CraftingRecipe
+  recipeName: Campfire
+  description: Build a campfire for cooking
+  icon: {fileID: 0}
+  requirements:
+  - item: {fileID: 11400000, guid: 0bd05febf0f3e4743a320c0980a39d15, type: 2}
+    quantity: 2
+  - item: {fileID: 11400000, guid: da4382b47225e4e479aca0c167ead00e, type: 2}
+    quantity: 3
+  resultItem: {fileID: 11400000, guid: 55f9c685593aa664f9c88ecef7d21eee, type: 2}
+  resultQuantity: 1
+  craftingTime: 3
+  requiresCampfire: 0
+  requiresWorkbench: 0
