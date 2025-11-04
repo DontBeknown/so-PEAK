@@ -1,0 +1,20 @@
+{
+    "asset": "d6787487b53044d45983640188072c21",
+    "fileName": "019a4f5b-78ae-709a-b722-c0e05b4f3139.png",
+    "prompt": "Stick: \"A wooden stick with a rough texture.\"",
+    "negativePrompt": "",
+    "model": "5b5b2af1-6ea4-4266-b087-cc9f3bf4f450",
+    "modelName": "Flux.1 Dev",
+    "customSeed": -1,
+    "w3CTraceId": "646522294c7b9fb1065112cff19a234d",
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0
+}

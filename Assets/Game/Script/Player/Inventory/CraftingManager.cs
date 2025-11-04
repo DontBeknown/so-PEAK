@@ -41,6 +41,12 @@ public class CraftingManager : MonoBehaviour
         return craftableRecipes;
     }
 
+    // Get all recipes regardless of whether they can be crafted
+    public List<CraftingRecipe> GetAllRecipes()
+    {
+        return new List<CraftingRecipe>(availableRecipes);
+    }
+
     public bool CanCraftRecipe(CraftingRecipe recipe)
     {
         if (recipe == null) return false;

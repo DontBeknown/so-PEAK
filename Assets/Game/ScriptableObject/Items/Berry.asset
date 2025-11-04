@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
   itemName: Berry
   description: 
-  icon: {fileID: 10911, guid: 0000000000000000f000000000000000, type: 0}
+  icon: {fileID: 21300000, guid: 9414d5698a6fc35419b715bd376e8e13, type: 3}
   maxStackSize: 30
   itemType: 1
   category: 3

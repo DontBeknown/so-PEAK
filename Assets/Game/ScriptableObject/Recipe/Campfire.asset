@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CraftingRecipe
   recipeName: Campfire
   description: Build a campfire for cooking
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 4c3dd933c9c90c9489559f8e32093a71, type: 3}
   requirements:
   - item: {fileID: 11400000, guid: 0bd05febf0f3e4743a320c0980a39d15, type: 2}
     quantity: 2

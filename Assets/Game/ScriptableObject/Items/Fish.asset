@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
   itemName: Fish
   description: 
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: bfed6acf7ea8a58468fbba5aa1f54419, type: 3}
   maxStackSize: 1
   itemType: 1
   category: 4

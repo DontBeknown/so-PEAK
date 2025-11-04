@@ -42,7 +42,7 @@ public class ResourceCollector : MonoBehaviour
                 AudioSource.PlayClipAtPoint(collectSound, transform.position);
             }
 
-            Debug.Log($"Collected {quantityToGive} {resourceItem.itemName}");
+            //Debug.Log($"Collected {quantityToGive} {resourceItem.itemName}");
 
             // Check if should be destroyed or disabled
             if (destroyAfterCollect || harvestCount >= maxHarvests)
@@ -86,6 +86,13 @@ public class ResourceCollector : MonoBehaviour
 
         int quantityRange = maxQuantity == minQuantity ? minQuantity : Random.Range(minQuantity, maxQuantity + 1);
         return $"{resourceItem.itemName} x{quantityRange}";
+    }
+
+    // Public accessor for the UI to get the item's icon (if any).
+    // Keeps the underlying field private while exposing just the Sprite.
+    public Sprite ItemIcon
+    {
+        get { return resourceItem != null ? resourceItem.icon : null; }
     }
 
     private void OnDrawGizmosSelected()

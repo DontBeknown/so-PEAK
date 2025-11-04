@@ -14,7 +14,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private InventoryManager inventoryManager;
     [SerializeField] private CraftingManager craftingManager;
     [SerializeField] private ItemDetector itemDetector;
-    [SerializeField] private InventoryUI inventoryUI;
+    [SerializeField] private TabbedInventoryUI tabbedInventoryUI;
 
     void Awake()
     {
@@ -38,10 +38,10 @@ public class PlayerController : MonoBehaviour
             craftingManager = GetComponent<CraftingManager>();
         if (itemDetector == null)
             itemDetector = GetComponent<ItemDetector>();
-        if (inventoryUI == null)
-            inventoryUI = FindFirstObjectByType<InventoryUI>();
+        if (tabbedInventoryUI == null)
+            tabbedInventoryUI = FindFirstObjectByType<TabbedInventoryUI>();
 
-        inputActions.Player.OpenInventory.performed += _ => inventoryUI.ToggleInventory();
+        inputActions.Player.OpenInventory.performed += _ => tabbedInventoryUI.ToggleUI();
 
     }
 

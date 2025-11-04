@@ -22,10 +22,7 @@ public class InventoryUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI itemQuantityText; // Show "x5" etc.
 
     [Header("Stats Display")]
-    [SerializeField] private Slider healthSlider;
-    [SerializeField] private Slider hungerSlider;
-    [SerializeField] private Slider thirstSlider;
-    [SerializeField] private Slider staminaSlider;
+    // Sliders have been moved to `SimpleStatsHUD`; keep text elements here only.
     [SerializeField] private TextMeshProUGUI healthText;
     [SerializeField] private TextMeshProUGUI hungerText;
     [SerializeField] private TextMeshProUGUI thirstText;
@@ -204,42 +201,22 @@ public class InventoryUI : MonoBehaviour
     private void UpdateStatsDisplay()
     {
         if (playerStats == null) return;
-
-        // Update health
-        if (healthSlider != null)
-        {
-            healthSlider.value = playerStats.HealthPercent;
-        }
+        // Update textual stat displays (numbers)
         if (healthText != null)
         {
             healthText.text = $"{playerStats.Health:F0}/{playerStats.MaxHealth:F0}";
         }
 
-        // Update hunger
-        if (hungerSlider != null)
-        {
-            hungerSlider.value = 1f - playerStats.HungerPercent; // Inverted for hunger bar
-        }
         if (hungerText != null)
         {
             hungerText.text = $"{playerStats.Hunger:F0}/{playerStats.MaxHunger:F0}";
         }
 
-        // Update thirst
-        if (thirstSlider != null)
-        {
-            thirstSlider.value = 1f - playerStats.ThirstPercent; // Inverted for thirst bar
-        }
         if (thirstText != null)
         {
             thirstText.text = $"{playerStats.Thirst:F0}/{playerStats.MaxThirst:F0}";
         }
 
-        // Update stamina
-        if (staminaSlider != null)
-        {
-            staminaSlider.value = playerStats.StaminaPercent;
-        }
         if (staminaText != null)
         {
             staminaText.text = $"{playerStats.Stamina:F0}/{playerStats.MaxStamina:F0}";
@@ -397,10 +374,34 @@ public class InventoryUI : MonoBehaviour
 
     private void Update()
     {
-        // Update stats display periodically
-        if (isOpen)
+
+    }
+
+    // Methods for tabbed UI support - show/hide panel without managing pause/cursor state
+    public void ShowInventoryPanel()
+    {
+        if (inventoryPanel != null)
         {
-            UpdateStatsDisplay();
+            inventoryPanel.SetActive(true);
         }
+
+        UpdateAllSlots();
+        UpdateStatsDisplay();
+
+        // Show empty selection or maintain current selection
+        if (selectedSlotIndex < 0)
+        {
+            ShowEmptySelection();
+        }
+    }
+
+    public void HideInventoryPanel()
+    {
+        if (inventoryPanel != null)
+        {
+            inventoryPanel.SetActive(false);
+        }
+
+        ClearSelection();
     }
 }

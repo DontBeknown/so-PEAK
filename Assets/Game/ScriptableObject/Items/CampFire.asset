@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
   itemName: Campfire
   description: A warm campfire for cooking food.
-  icon: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  icon: {fileID: 21300000, guid: 4c3dd933c9c90c9489559f8e32093a71, type: 3}
   maxStackSize: 1
   itemType: 4
   category: 6

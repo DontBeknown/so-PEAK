@@ -51,7 +51,11 @@ public class PickupPrompt : MonoBehaviour
 
     private void UpdatePromptContent(ResourceCollector item)
     {
-        if (item == null) SetPromptVisible(false);
+        if (item == null)
+        {
+            SetPromptVisible(false);
+            return;
+        }
 
         if (itemNameText != null)
         {
@@ -59,10 +63,12 @@ public class PickupPrompt : MonoBehaviour
         }
 
         // Update icon if you have item icons set up
-        if (itemIcon != null && item != null)
+        if (itemIcon != null)
         {
-            // You'll need to get the icon from the ResourceCollector's item
-            // itemIcon.sprite = item.ResourceItem.icon;
+            // Use the new ItemIcon property on ResourceCollector. If there's no icon, disable the image to avoid showing a blank/old sprite.
+            Sprite icon = item.ItemIcon;
+            itemIcon.sprite = icon;
+            itemIcon.enabled = icon != null;
         }
     }
 
