@@ -1,4 +1,4 @@
-using System.Numerics;
+
 using UnityEditor.AssetImporters;
 using UnityEngine;
 using static UnityEditor.PlayerSettings.SplashScreen;
@@ -17,6 +17,11 @@ public class NoiseTranslator : MonoBehaviour
     [Header("Map Size")]
     public int mapWidth = 1000;
     public int mapHeight = 1000;
+
+    [Header("Falloff Mask Settings")]
+    public bool useFalloffMask = true;
+    public Vector2 peakCenter = new Vector2(0.5f, 0.5f); // normalized center (0–1)
+    public float falloffPower = 2.5f; // controls slope shape
 
     public float meshHeightMultiplier;
     public AnimationCurve meshHeightCurve;
@@ -66,6 +71,29 @@ public class NoiseTranslator : MonoBehaviour
                 float[] np_param = {c, e, r};
                 double off = SplineMap.GetSpline(mainSpline, np_param) + 0.015f;
                 float d = 1.0f - 83.0f / 160.0f + (float)off; // simplified, y=0 always
+
+                if (useFalloffMask)
+                {
+                    // Compute normalized distance from center
+                    float nx = (float)x / mapWidth;
+                    float nz = (float)z / mapHeight;
+
+                    // radial distance (0 = center, 1 = far edge)
+                    float dx = nx - peakCenter.x;
+                    float dz = nz - peakCenter.y;
+                    float dist = Mathf.Sqrt(dx * dx + dz * dz) / 0.7071f; // normalize to 0–1 range
+
+                    // mask curve
+                    float mask = Mathf.Clamp01(1f - Mathf.Pow(dist, falloffPower));
+
+                    d *= mask; // apply falloff mask
+                }
+
+                if (float.IsNaN(d) || float.IsInfinity(d))
+                    d = 0f;
+                else
+                    d = Mathf.Clamp(d, 0f, 1f);
+
                 depthMap[x, z] = d;
             }
         });
@@ -86,28 +114,6 @@ public class NoiseTranslator : MonoBehaviour
     {
         InitMainSpline();
     }
-
-    //private void OnEnable() // Called when script is loaded/enabled
-    //{
-    //    if (mainSpline == null)
-    //        InitMainSpline();
-    //    MapDisplay display = GetComponent<MapDisplay>();
-    //    if (display != null && display.textureRender != null)
-    //    {
-    //        display.textureRender.gameObject.SetActive(true);
-    //    }
-    //}
-
-    //void OnDisable()
-    //{
-    //    MapDisplay display = GetComponent<MapDisplay>();
-    //    if (display != null && display.textureRender != null)
-    //    {
-    //        display.textureRender.gameObject.SetActive(false);
-    //    }
-    //}
-
-
 
 
 }
