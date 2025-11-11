@@ -11,6 +11,7 @@ public class ThridPersonCamera : MonoBehaviour
     public float height = 2f;
     public float sensitivity = 2f;
     public float smoothTime = 0.1f;
+    public float verticalSmoothTime = 0.2f;
 
     [Header("Collision")]
     public LayerMask collisionMask;
@@ -19,6 +20,8 @@ public class ThridPersonCamera : MonoBehaviour
     private Vector3 velocity;
     private float yaw;
     private float pitch = 15f;
+    private float smoothedTargetY;
+    private float verticalVelocity;
 
     private IA_PlayerController inputActions;
 
@@ -29,41 +32,66 @@ public class ThridPersonCamera : MonoBehaviour
         inputActions.Player.Look.canceled += ctx => lookInput = Vector2.zero;
     }
 
+    void Start()
+    {
+        if (target)
+        {
+            smoothedTargetY = target.position.y;
+        }
+        
+        // Hide and lock cursor for gameplay
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
     void OnEnable() => inputActions.Enable();
     void OnDisable() => inputActions.Disable();
 
     void LateUpdate()
     {
         if (!target) return;
+        
+        // Don't rotate camera when cursor is visible (inventory is open)
+        bool canRotateCamera = Cursor.lockState == CursorLockMode.Locked;
 
-        // --- Look Rotation ---
-        yaw += lookInput.x * sensitivity;
-        pitch -= lookInput.y * sensitivity;
-        pitch = Mathf.Clamp(pitch, -30f, 70f);
+        // --- Smooth Target Y Position (for stairs) ---
+        smoothedTargetY = Mathf.SmoothDamp(smoothedTargetY, target.position.y, ref verticalVelocity, verticalSmoothTime);
+        Vector3 smoothedTargetPosition = new Vector3(target.position.x, smoothedTargetY, target.position.z);
+
+        // --- Look Rotation (only when camera can rotate) ---
+        if (canRotateCamera)
+        {
+            yaw += lookInput.x * sensitivity;
+            pitch -= lookInput.y * sensitivity;
+            pitch = Mathf.Clamp(pitch, -30f, 70f);
+        }
 
         Quaternion rotation = Quaternion.Euler(pitch, yaw, 0f);
 
+        // --- Target Look Position ---
+        Vector3 targetLookPosition = smoothedTargetPosition + Vector3.up * height * 0.5f;
+
         // --- Desired Camera Position ---
-        Vector3 desiredPosition = target.position - rotation * Vector3.forward * distance + Vector3.up * height;
+        Vector3 desiredPosition = smoothedTargetPosition - rotation * Vector3.forward * distance + Vector3.up * height;
 
         // --- Collision Check ---
-        Vector3 dir = desiredPosition - target.position;
+        Vector3 dir = desiredPosition - targetLookPosition;
         float desiredDist = dir.magnitude;
 
-        if (Physics.SphereCast(target.position + Vector3.up * height * 0.5f, 0.2f, dir.normalized, out RaycastHit hit, desiredDist, collisionMask))
+        if (Physics.SphereCast(targetLookPosition, 0.2f, dir.normalized, out RaycastHit hit, desiredDist, collisionMask))
         {
-            desiredPosition = target.position + dir.normalized * (hit.distance - 0.2f);
+            desiredPosition = targetLookPosition + dir.normalized * Mathf.Max(hit.distance - 0.2f, minDistance);
         }
 
         // --- Clamp Min Distance ---
-        float distToTarget = Vector3.Distance(target.position, desiredPosition);
+        float distToTarget = Vector3.Distance(targetLookPosition, desiredPosition);
         if (distToTarget < minDistance)
         {
-            desiredPosition = target.position - rotation * Vector3.forward * minDistance + Vector3.up * height;
+            desiredPosition = smoothedTargetPosition - rotation * Vector3.forward * minDistance + Vector3.up * height;
         }
 
         // --- Smooth Move & Look ---
         transform.position = Vector3.SmoothDamp(transform.position, desiredPosition, ref velocity, smoothTime);
-        transform.LookAt(target.position + Vector3.up * height * 0.5f);
+        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(targetLookPosition - transform.position), smoothTime * 10f);
     }
 }

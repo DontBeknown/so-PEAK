@@ -4,17 +4,17 @@ public class PlayerAnimator
 {
     private readonly Animator animator;
     private readonly Transform root;
-    private FootIKController footIKController;
+    private FootIKControllerRefactored footIKController;
 
     public PlayerAnimator(Animator animator, Transform root)
     {
         this.animator = animator;
         this.root = root;
         
-        // Try to get FootIKController component
+        // Try to get FootIKControllerRefactored component
         if (root != null)
         {
-            footIKController = root.GetComponent<FootIKController>();
+            footIKController = root.GetComponent<FootIKControllerRefactored>();
         }
     }
 

@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e76162a7ee483545a4175ceac120a13, type: 3}
+  m_Name: FootIKConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Player.Animation.FootIKConfig
+  ikWeight: 1
+  rotationWeight: 1
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  raycastDistance: 1.5
+  raycastUpOffset: 1
+  footOffset: 0.05
+  minFootDistance: 0.05
+  climbableLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  climbingFootReachDistance: 0
+  climbingFootOffset: 0.08
+  enablePelvisAdjustment: 1
+  pelvisUpDownSpeed: 5
+  pelvisOffset: 0.1
+  maxPelvisAdjustment: 0.3
+  smoothSpeed: 10

@@ -1,5 +1,10 @@
 using UnityEngine;
+using Game.Player.Interfaces;
 
+/// <summary>
+/// Climbing state - handles wall climbing and mantling.
+/// Refactored to use dependency injection for state transitions.
+/// </summary>
 public class ClimbingState : IPlayerState
 {
 
@@ -7,28 +12,40 @@ public class ClimbingState : IPlayerState
     private const float LedgeForward = 0.45f;
     private const float LedgeDownCheck = 2.0f;
 
-    private Vector3 _lastWallNormal = Vector3.forward; 
+    private Vector3 _lastWallNormal = Vector3.forward;
+    private IStateTransitioner _stateTransitioner;
 
-    public void Enter(PlayerModel model)
+    public ClimbingState()
     {
-        model.Animator.SetClimbing(true);
+    }
+
+    /// <summary>
+    /// Constructor with dependency injection
+    /// </summary>
+    public ClimbingState(IStateTransitioner stateTransitioner)
+    {
+        _stateTransitioner = stateTransitioner;
+    } 
+
+    public void Enter(PlayerModelRefactored model)
+    {
+        model.GetAnimationService().SetClimbing(true);
         model.Velocity = Vector3.zero;
     }
 
-    public void Exit(PlayerModel model)
+    public void Exit(PlayerModelRefactored model)
     {
-        model.Animator.SetClimbing(false);
+        model.GetAnimationService().SetClimbing(false);
         model.Stats?.SetClimbing(false);
     }
 
-    public void HandleInput(PlayerModel model, Vector2 input) { }
+    public void HandleInput(PlayerModelRefactored model, Vector2 input) { }
 
-    public void FixedUpdate(PlayerModel model, Vector2 input)
+    public void FixedUpdate(PlayerModelRefactored model, Vector2 input)
     {
         if (model.Stats != null && model.Stats.Stamina <= 0f)
         {
-            PlayerController controller = model.Transform.GetComponent<PlayerController>();
-            controller.ChangeState(new FallingState());
+            TransitionToFalling(model);
             return;
         }
 
@@ -49,7 +66,7 @@ public class ClimbingState : IPlayerState
             Vector3 climbMotion = model.Transform.TransformDirection(climbLocal) * model.ClimbSpeed;
             model.Move(climbMotion);
 
-            model.Animator.UpdateMovement(new Vector3(input.x, 0f, input.y), model.ClimbSpeed);
+            model.GetAnimationService().UpdateMovement(new Vector3(input.x, 0f, input.y), model.ClimbSpeed);
             model.Velocity = Vector3.zero; // no gravity while attached
 
             // Drain stamina
@@ -64,7 +81,7 @@ public class ClimbingState : IPlayerState
         }
         else
         {
-            // 3) Lost the wall — BEFORE falling, try one last mantle using the last seen normal
+            // 3) Lost the wall â€“ BEFORE falling, try one last mantle using the last seen normal
             if (_lastWallNormal != Vector3.zero &&
                 model.TryMantleTopFrom(model.Transform.position + Vector3.up * 0.5f, _lastWallNormal, LedgeUpCheck, LedgeForward, LedgeDownCheck, out Vector3 topPoint2))
             {
@@ -73,38 +90,71 @@ public class ClimbingState : IPlayerState
             }
 
             // No ledge found -> fall
-            PlayerController controller = model.Transform.GetComponent<PlayerController>();
-            controller.ChangeState(new FallingState());
+            TransitionToFalling(model);
         }
     }
 
-    private void FinishClimbToTop(PlayerModel model, Vector3 topPoint)
+    private void TransitionToFalling(PlayerModelRefactored model)
+    {
+        if (_stateTransitioner != null)
+        {
+            _stateTransitioner.TransitionTo(new FallingState(_stateTransitioner));
+        }
+        else
+        {
+            Debug.LogWarning("ClimbingState: No state transitioner available for falling transition!");
+        }
+    }
+
+    private void TransitionToWalking(PlayerModelRefactored model)
+    {
+        if (_stateTransitioner != null)
+        {
+            _stateTransitioner.TransitionTo(new WalkingState(_stateTransitioner));
+        }
+        else
+        {
+            Debug.LogWarning("ClimbingState: No state transitioner available for walking transition!");
+        }
+    }
+
+    private void FinishClimbToTop(PlayerModelRefactored model, Vector3 topPoint)
     {
         // If you have a climb-up animation, trigger here and snap on event.
         model.SnapToTop(topPoint);
 
-        // Face forward along the surface normal’s tangent (optional)
+        // Face forward along the surface normal's tangent (optional)
         Vector3 forward = Vector3.ProjectOnPlane(model.Transform.forward, Vector3.up);
         if (forward.sqrMagnitude > 0.0001f)
             model.Transform.forward = forward.normalized;
 
-        PlayerController controller = model.Transform.GetComponent<PlayerController>();
-        controller.ChangeState(new WalkingState());
+        // Use state transitioner
+        TransitionToWalking(model);
     }
 
-    public void OnJump(PlayerModel model, Vector2 input)
+    public void OnJump(PlayerModelRefactored model, Vector2 input)
     {
         // Hop off the wall
-        model.Velocity.y = model.JumpForce;
-        PlayerController controller = model.Transform.GetComponent<PlayerController>();
-        controller.ChangeState(new FallingState());
+        Vector3 vel = model.Velocity;
+        vel.y = model.JumpForce;
+        model.Velocity = vel;
+        TransitionToFalling(model);
     }
 
-    public void OnClimb(PlayerModel model)
+    public void OnClimb(PlayerModelRefactored model)
     {
         // Manually release from wall
         model.Velocity = Vector3.zero;
-        PlayerController controller = model.Transform.GetComponent<PlayerController>();
-        controller.ChangeState(new FallingState());
+        
+        // Check if player is already on ground - if so, go to walking instead of falling
+        IPhysicsService physicsService = model.GetPhysicsService();
+        if (physicsService != null && physicsService.IsGrounded())
+        {
+            TransitionToWalking(model);
+        }
+        else
+        {
+            TransitionToFalling(model);
+        }
     }
 }

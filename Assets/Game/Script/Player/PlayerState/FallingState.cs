@@ -1,30 +1,58 @@
 ﻿using UnityEngine;
+using Game.Player.Interfaces;
 
+/// <summary>
+/// Falling state - handles airborne movement and landing.
+/// Refactored to use dependency injection for state transitions.
+/// </summary>
 public class FallingState : IPlayerState
 {
-    public void Enter(PlayerModel model) => model.Animator.SetFalling(true);
+    private IStateTransitioner _stateTransitioner;
 
-    public void Exit(PlayerModel model)
+    public FallingState()
     {
-        model.Animator.SetFalling(false);
     }
 
-    public void HandleInput(PlayerModel model, Vector2 input) { }
+    /// <summary>
+    /// Constructor with dependency injection
+    /// </summary>
+    public FallingState(IStateTransitioner stateTransitioner)
+    {
+        _stateTransitioner = stateTransitioner;
+    }
 
-    public void FixedUpdate(PlayerModel model, Vector2 input)
+    public void Enter(PlayerModelRefactored model)
+    {
+        model.GetAnimationService().SetFalling(true);
+    }
+
+    public void Exit(PlayerModelRefactored model)
+    {
+        model.GetAnimationService().SetFalling(false);
+    }
+
+    public void HandleInput(PlayerModelRefactored model, Vector2 input) { }
+
+    public void FixedUpdate(PlayerModelRefactored model, Vector2 input)
     {
         model.Move(model.Velocity);
         model.ApplyGravity(-9.81f);
     }
 
-    public void OnJump(PlayerModel model, Vector2 input) { }
+    public void OnJump(PlayerModelRefactored model, Vector2 input) { }
 
-    public void OnClimb(PlayerModel model)
+    public void OnClimb(PlayerModelRefactored model)
     {
         if (model.TryClimb(out RaycastHit _))
         {
-            PlayerController controller = model.Transform.GetComponent<PlayerController>();
-            controller.ChangeState(new ClimbingState());
+            if (_stateTransitioner != null)
+            {
+                _stateTransitioner.TransitionTo(new ClimbingState(_stateTransitioner));
+            }
+            else
+            {
+                Debug.LogWarning("FallingState: No state transitioner available for climb transition!");
+            }
         }
     }
 }

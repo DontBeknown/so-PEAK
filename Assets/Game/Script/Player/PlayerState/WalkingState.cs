@@ -1,32 +1,55 @@
 using UnityEngine;
+using Game.Player.Interfaces;
 
+/// <summary>
+/// Walking state - handles ground-based movement.
+/// Refactored to use dependency injection and remove Camera.main references.
+/// </summary>
 public class WalkingState : IPlayerState
 {
-    public void Enter(PlayerModel model)
+    private IStateTransitioner _stateTransitioner;
+
+    public WalkingState()
     {
-        model.Animator.SetWalking(true);
     }
 
-    public void Exit(PlayerModel model)
+    /// <summary>
+    /// Constructor with dependency injection
+    /// </summary>
+    public WalkingState(IStateTransitioner stateTransitioner)
     {
-        model.Animator.SetWalking(false);
+        _stateTransitioner = stateTransitioner;
     }
 
-    public void HandleInput(PlayerModel model, Vector2 input) { }
-
-    public void FixedUpdate(PlayerModel model, Vector2 input)
+    public void Enter(PlayerModelRefactored model)
     {
-        Vector2 circle = (input.sqrMagnitude >= 1f) ? input.normalized : input;
+        var animService = model.GetAnimationService();
+        animService.SetWalking(true);
+        animService.SetGrounded(true);
+    }
 
-        Transform cam = Camera.main.transform;
-        Vector3 moveDir = Quaternion.FromToRotation(cam.up, Vector3.up) *
-                          cam.TransformDirection(new Vector3(circle.x, 0f, circle.y));
+    public void Exit(PlayerModelRefactored model)
+    {
+        model.GetAnimationService().SetWalking(false);
+    }
 
+    public void HandleInput(PlayerModelRefactored model, Vector2 input) { }
+
+    public void FixedUpdate(PlayerModelRefactored model, Vector2 input)
+    {
+        var context = model.GetMovementContext();
+        var cameraProvider = model.GetCameraProvider();
+        var animService = model.GetAnimationService();
+
+        // Get movement direction from camera
+        Vector3 moveDir = cameraProvider.GetWorldDirection(input);
+
+        // Apply horizontal movement
         Vector3 horizontal = moveDir * model.WalkSpeed;
-
         Vector3 motion = new Vector3(horizontal.x, model.Velocity.y, horizontal.z);
         model.Move(motion);
 
+        // Rotate to face movement direction
         if (moveDir.sqrMagnitude > 0.01f)
         {
             model.Transform.forward = Vector3.Slerp(
@@ -34,11 +57,14 @@ public class WalkingState : IPlayerState
                 Time.fixedDeltaTime * model.RotationSmoothness);
         }
 
-        model.Animator.UpdateMovement(horizontal, model.WalkSpeed);
+        // Update animation
+        animService.UpdateMovement(horizontal, model.WalkSpeed);
+        
+        // Apply gravity
         model.ApplyGravity(-9.81f);
     }
 
-    public void OnJump(PlayerModel model, Vector2 input)
+    public void OnJump(PlayerModelRefactored model, Vector2 input)
     {
         if (model.Stats != null)
         {
@@ -52,20 +78,22 @@ public class WalkingState : IPlayerState
             return;
         }
 
-        Vector2 circle = input.sqrMagnitude >= 1f ? input.normalized : input;
-        Transform cam = Camera.main.transform;
-        Vector3 moveDir = Quaternion.FromToRotation(cam.up, Vector3.up) *
-                          cam.TransformDirection(new Vector3(circle.x, 0f, circle.y));
-
+        Vector3 moveDir = model.GetCameraProvider().GetWorldDirection(input);
         model.JumpWithMomentum(moveDir.normalized);
     }
 
-    public void OnClimb(PlayerModel model)
+    public void OnClimb(PlayerModelRefactored model)
     {
         if (model.TryClimb(out RaycastHit _))
         {
-            PlayerController controller = model.Transform.GetComponent<PlayerController>();
-            controller.ChangeState(new ClimbingState());
+            if (_stateTransitioner != null)
+            {
+                _stateTransitioner.TransitionTo(new ClimbingState(_stateTransitioner));
+            }
+            else
+            {
+                Debug.LogWarning("WalkingState: No state transitioner available for climb transition!");
+            }
         }
     }
 }
