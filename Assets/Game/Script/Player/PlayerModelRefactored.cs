@@ -118,9 +118,8 @@ public class PlayerModelRefactored
     {
         if (IsGrounded())
         {
-            Vector3 vel = Velocity;
-            vel.y = JumpForce;
-            Velocity = vel;
+            // Clear horizontal velocity for a pure vertical jump
+            Velocity = new Vector3(0f, JumpForce, 0f);
         }
     }
 

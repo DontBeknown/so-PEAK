@@ -26,6 +26,14 @@ public class WalkingState : IPlayerState
         var animService = model.GetAnimationService();
         animService.SetWalking(true);
         animService.SetGrounded(true);
+        
+        // Clear downward velocity when entering walking state (landing from a fall/jump)
+        if (model.Velocity.y < 0f)
+        {
+            Vector3 vel = model.Velocity;
+            vel.y = 0f;
+            model.Velocity = vel;
+        }
     }
 
     public void Exit(PlayerModelRefactored model)
@@ -60,7 +68,8 @@ public class WalkingState : IPlayerState
         // Update animation
         animService.UpdateMovement(horizontal, model.WalkSpeed);
         
-        // Apply gravity
+        // Apply minimal gravity to keep grounded on slopes
+        // Gravity is handled differently in ApplyGravity when grounded
         model.ApplyGravity(-9.81f);
     }
 
