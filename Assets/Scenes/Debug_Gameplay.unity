@@ -5680,7 +5680,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3163606868872665762, guid: f254b774e8e34b34b87ce5699382600e, type: 3}
       propertyPath: m_Layer
-      value: 7
+      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -6924,7 +6924,7 @@ GameObject:
   - component: {fileID: 1494595364}
   - component: {fileID: 1494595363}
   - component: {fileID: 1494595362}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Plane
   m_TagString: Untagged
   m_Icon: {fileID: 0}

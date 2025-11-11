@@ -1,0 +1,11 @@
+{
+    "asset": "e4fc4652d01ae364e873753b6b1a9242",
+    "fileName": "019a72b6-435d-71dc-a349-b47b84a4cf65.pose.json",
+    "prompt": "climb",
+    "negativePrompt": "",
+    "model": "9e46c009-67d8-4254-a3a0-32e3168247ee",
+    "modelName": "Text to Motion",
+    "customSeed": 1412744178,
+    "w3CTraceId": "809b26857752bfd8afccd6143a95f582",
+    "isTrimmed": false
+}

@@ -14,6 +14,8 @@ public class PlayerModel
     public float RotationSmoothness { get; }
     public float ClimbDetectionRange { get; }
     public LayerMask ClimbableLayer { get; }
+    public float GroundCheckDistance { get; }
+    public LayerMask GroundLayer { get; }
 
     // Physics
     public Vector3 Velocity;
@@ -31,9 +33,80 @@ public class PlayerModel
         RotationSmoothness = config.rotationSmoothness;
         ClimbDetectionRange = config.climbDetectionRange;
         ClimbableLayer = config.climbableLayer;
+        GroundCheckDistance = config.groundCheckDistance;
+        GroundLayer = config.groundLayer;
     }
 
-    public bool IsGrounded() => Controller.isGrounded;
+    public bool IsGrounded()
+    {
+        // Use a combination of CharacterController's built-in check and a custom raycast
+        // This helps detect ground on slopes more reliably
+        if (Controller.isGrounded)
+            return true;
+
+        // Perform a spherecast from slightly above the bottom of the character controller
+        // Start from high enough so the sphere doesn't overlap ground initially
+        float sphereRadius = Controller.radius * 0.9f;
+        Vector3 origin = Transform.position + Vector3.up * (Controller.height * 0.5f);
+        float maxDistance = (Controller.height * 0.5f) + GroundCheckDistance;
+        
+        bool hit = Physics.SphereCast(origin, sphereRadius, Vector3.down, 
+                                     out RaycastHit hitInfo, maxDistance, GroundLayer, QueryTriggerInteraction.Ignore);
+
+        // Debug visualization
+        #if UNITY_EDITOR
+        /*Color debugColor = hit ? Color.green : Color.red;
+        Vector3 endPoint = origin + Vector3.down * maxDistance;
+        
+        // Draw the spherecast path
+        Debug.DrawLine(origin, endPoint, debugColor);
+        
+        // Draw sphere at start
+        DrawDebugSphere(origin, sphereRadius, debugColor);
+        
+        // Draw sphere at end or hit point
+        Vector3 sphereEndPos = hit ? origin + Vector3.down * hitInfo.distance : endPoint;
+        DrawDebugSphere(sphereEndPos, sphereRadius, debugColor);*/
+        #endif
+        
+        return hit;
+    }
+
+    #if UNITY_EDITOR
+    private void DrawDebugSphere(Vector3 center, float radius, Color color)
+    {
+        // Draw sphere using debug lines (circles in 3 planes)
+        int segments = 16;
+        float angleStep = 360f / segments;
+        
+        for (int i = 0; i < segments; i++)
+        {
+            float angle1 = i * angleStep * Mathf.Deg2Rad;
+            float angle2 = (i + 1) * angleStep * Mathf.Deg2Rad;
+            
+            // XY plane
+            Debug.DrawLine(
+                center + new Vector3(Mathf.Cos(angle1) * radius, Mathf.Sin(angle1) * radius, 0),
+                center + new Vector3(Mathf.Cos(angle2) * radius, Mathf.Sin(angle2) * radius, 0),
+                color
+            );
+            
+            // XZ plane
+            Debug.DrawLine(
+                center + new Vector3(Mathf.Cos(angle1) * radius, 0, Mathf.Sin(angle1) * radius),
+                center + new Vector3(Mathf.Cos(angle2) * radius, 0, Mathf.Sin(angle2) * radius),
+                color
+            );
+            
+            // YZ plane
+            Debug.DrawLine(
+                center + new Vector3(0, Mathf.Cos(angle1) * radius, Mathf.Sin(angle1) * radius),
+                center + new Vector3(0, Mathf.Cos(angle2) * radius, Mathf.Sin(angle2) * radius),
+                color
+            );
+        }
+    }
+    #endif
 
     public void Move(Vector3 motion) => Controller.Move(motion * Time.fixedDeltaTime);
 

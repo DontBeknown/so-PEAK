@@ -11,6 +11,8 @@ public class PlayerConfig : ScriptableObject
     public float climbDetectionRange = 1f;
     public LayerMask climbableLayer;
     public float gravity = -9.81f;
+    public float groundCheckDistance = 0.3f;
+    public LayerMask groundLayer = -1;
 
     [Header("Stamina")]
     public float jumpStaminaCost = 20f;

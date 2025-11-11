@@ -60,7 +60,10 @@ public class PlayerController : MonoBehaviour
         if (!(currentState is ClimbingState))
         {
             if (!model.IsGrounded())
+            {
                 ChangeState(new FallingState());
+            }
+                
             else if (!(currentState is WalkingState))
                 ChangeState(new WalkingState());
         }
@@ -123,4 +126,9 @@ public class PlayerController : MonoBehaviour
     // Optional: Add getter methods for other systems to access
     public InventoryManager GetInventoryManager() => inventoryManager;
     public ItemDetector GetItemDetector() => itemDetector;
+    
+    /// <summary>
+    /// Get the current player state for external systems (e.g., IK controllers)
+    /// </summary>
+    public IPlayerState GetCurrentState() => currentState;
 }
