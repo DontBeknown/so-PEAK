@@ -66,9 +66,15 @@ public class PlayerStats : MonoBehaviour
         if (stamina.CanUse(config.jumpStaminaCost))
             stamina.Drain(config.jumpStaminaCost);
     }
+    
     public void SetClimbing(bool climbing)
     {
         stamina.SetClimbing(climbing);
+    }
+
+    public void SetWalking(bool walking)
+    {
+        stamina.SetWalking(walking);
     }
 
     public void OnSprint(bool sprinting)

@@ -135,7 +135,7 @@ namespace Game.Player
             {
                 if (!(_currentState is FallingState))
                 {
-                    TransitionTo(new FallingState(this));
+                    //TransitionTo(new FallingState(this));
                 }
             }
             // Return to walking when landed

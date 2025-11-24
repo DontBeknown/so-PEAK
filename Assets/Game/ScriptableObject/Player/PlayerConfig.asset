@@ -21,13 +21,13 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   gravity: -9.81
-  groundCheckDistance: 0.6
+  groundCheckDistance: 0
   groundLayer:
     serializedVersion: 2
     m_Bits: 384
   jumpStaminaCost: 20
   sprintStaminaDrainPerSecond: 25
-  climbStaminaDrainPerSecond: 0
+  climbStaminaDrainPerSecond: 5
   staminaRegenPerSecond: 15
   staminaDrainCooldown: 1
   hungerDrainPerSecond: 0.2

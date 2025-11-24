@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e76162a7ee483545a4175ceac120a13, type: 3}
   m_Name: FootIKConfig
   m_EditorClassIdentifier: Assembly-CSharp::Game.Player.Animation.FootIKConfig
-  ikWeight: 1
+  ikWeight: 0.832
   rotationWeight: 1
   groundLayer:
     serializedVersion: 2
@@ -29,5 +29,5 @@ MonoBehaviour:
   enablePelvisAdjustment: 1
   pelvisUpDownSpeed: 5
   pelvisOffset: 0.1
-  maxPelvisAdjustment: 0.3
+  maxPelvisAdjustment: 0.5
   smoothSpeed: 10

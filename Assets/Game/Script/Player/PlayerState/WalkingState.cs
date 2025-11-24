@@ -27,6 +27,9 @@ public class WalkingState : IPlayerState
         animService.SetWalking(true);
         animService.SetGrounded(true);
         
+        // Enable stamina regeneration in walking state
+        model.Stats?.SetWalking(true);
+        
         // Clear downward velocity when entering walking state (landing from a fall/jump)
         if (model.Velocity.y < 0f)
         {
@@ -39,6 +42,9 @@ public class WalkingState : IPlayerState
     public void Exit(PlayerModelRefactored model)
     {
         model.GetAnimationService().SetWalking(false);
+        
+        // Disable stamina regeneration when leaving walking state
+        model.Stats?.SetWalking(false);
     }
 
     public void HandleInput(PlayerModelRefactored model, Vector2 input) { }

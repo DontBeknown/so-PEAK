@@ -15,8 +15,8 @@ public class PlayerModelRefactored
     public CharacterController Controller { get; private set; }
     public PlayerStats Stats { get; private set; }
     
-    // Configuration Data
-    private readonly PlayerData _data;
+    // Configuration (direct reference for runtime debugging in Unity Inspector)
+    private readonly PlayerConfig _config;
     
     // Services (Dependency Injection)
     private readonly IPhysicsService _physicsService;
@@ -54,8 +54,8 @@ public class PlayerModelRefactored
             Debug.LogError("PlayerModel: CharacterController is required!");
         }
 
-        // Convert config to data
-        _data = PlayerData.FromConfig(config);
+        // Store config reference (allows runtime changes in Inspector)
+        _config = config;
 
         // Initialize services (with defaults if not provided)
         _physicsService = physicsService ?? new PlayerPhysicsService(Transform, Controller, config);
@@ -69,7 +69,7 @@ public class PlayerModelRefactored
         _movementContext = new PlayerMovementContext(
             Transform,
             Controller,
-            _data,
+            PlayerData.FromConfig(config),
             _physicsService,
             _cameraProvider,
             _animationService,
@@ -97,15 +97,15 @@ public class PlayerModelRefactored
     /// </summary>
     public ICameraProvider GetCameraProvider() => _cameraProvider;
 
-    // Keep backward compatibility properties
-    public float WalkSpeed => _data.WalkSpeed;
-    public float ClimbSpeed => _data.ClimbSpeed;
-    public float JumpForce => _data.JumpForce;
-    public float RotationSmoothness => _data.RotationSmoothness;
-    public float ClimbDetectionRange => _data.ClimbDetectionRange;
-    public LayerMask ClimbableLayer => _data.ClimbableLayer;
-    public float GroundCheckDistance => _data.GroundCheckDistance;
-    public LayerMask GroundLayer => _data.GroundLayer;
+    // Direct config properties (reads live values from Inspector for easy debugging)
+    public float WalkSpeed => _config.walkSpeed;
+    public float ClimbSpeed => _config.climbSpeed;
+    public float JumpForce => _config.jumpForce;
+    public float RotationSmoothness => _config.rotationSmoothness;
+    public float ClimbDetectionRange => _config.climbDetectionRange;
+    public LayerMask ClimbableLayer => _config.climbableLayer;
+    public float GroundCheckDistance => _config.groundCheckDistance;
+    public LayerMask GroundLayer => _config.groundLayer;
 
     // Delegate methods to services for backward compatibility
     public bool IsGrounded() => _physicsService.IsGrounded();
@@ -154,7 +154,7 @@ public class PlayerModelRefactored
     }
 
     /// <summary>
-    /// Gets player configuration data (read-only)
+    /// Gets the player configuration for direct access
     /// </summary>
-    public PlayerData GetData() => _data;
+    public PlayerConfig GetConfig() => _config;
 }

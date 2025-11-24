@@ -9,9 +9,6 @@ public class ItemDetector : MonoBehaviour
     [SerializeField] private LayerMask itemLayerMask = -1; // Which layers to detect items on
     [SerializeField] private Transform detectionCenter; // Optional custom center point
 
-    [Header("UI Settings")]
-    [SerializeField] private KeyCode pickupKey = KeyCode.F;
-
     [Header("References")]
     [SerializeField] private InventoryManager inventoryManager;
 

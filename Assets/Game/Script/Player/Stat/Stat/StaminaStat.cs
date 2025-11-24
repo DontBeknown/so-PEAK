@@ -11,6 +11,7 @@ public class StaminaStat : Stat
     private float cooldownTimer;
     private bool draining;
     private bool isClimbing;
+    private bool isWalking;
 
     public void Init(float regen, float cooldown, float climbDrain)
     {
@@ -36,7 +37,7 @@ public class StaminaStat : Stat
         {
             if (cooldownTimer > 0f)
                 cooldownTimer -= deltaTime;
-            else
+            else if (isWalking) // Only regen when in walking state
                 Add(regenPerSecond * deltaTime);
         }
     }
@@ -50,6 +51,11 @@ public class StaminaStat : Stat
     public void SetClimbing(bool climbing)
     {
         isClimbing = climbing;
+    }
+
+    public void SetWalking(bool walking)
+    {
+        isWalking = walking;
     }
 
     public bool CanUse(float amount) => current >= amount;
