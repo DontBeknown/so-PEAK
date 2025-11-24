@@ -55,7 +55,7 @@ public class MapGenerator : MonoBehaviour
                 for (int x = 0; x < mapWidth; x++)
                 {
                     // Value transformation based on initial noise
-                    noiseMap[x, y] = -3.0f * (Mathf.Abs(Mathf.Abs(noiseMap[x, y]) - 0.6666667f) - 0.33333334f);
+                    noiseMap[x, y] = -4.0f * (Mathf.Abs(Mathf.Abs(noiseMap[x, y]) - 0.6666667f) - 0.33333334f);
 
                     // If the value is "kinda white" keep it white
                     if (noiseMap[x, y] > -0.5f)
