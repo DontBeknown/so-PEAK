@@ -19,7 +19,7 @@ MonoBehaviour:
   climbableLayer:
     serializedVersion: 2
     m_Bits: 128
-  handReachDistance: 1.5
+  handReachDistance: 1
   handOffsetFromWall: 0.05
-  handHorizontalSpread: 0.4
-  handHeightOffset: 0.2
+  handHorizontalSpread: 0.47
+  handHeightOffset: 2.21

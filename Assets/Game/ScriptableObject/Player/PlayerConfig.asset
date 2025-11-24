@@ -16,7 +16,7 @@ MonoBehaviour:
   climbSpeed: 2
   jumpForce: 5
   rotationSmoothness: 10
-  climbDetectionRange: 1
+  climbDetectionRange: 3
   climbableLayer:
     serializedVersion: 2
     m_Bits: 128
