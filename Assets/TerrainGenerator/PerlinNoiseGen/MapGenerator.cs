@@ -17,12 +17,19 @@ public class MapGenerator : MonoBehaviour
     public Vector2 offset;
 
     public bool usePowerMode = false;
+    public bool autoRandomSeed = false;
+    public bool ridgesNoise = false;
     public bool autoUpdate;
 
     public float[,] noiseMap;
 
     public void GenerateMap()
     {
+        if (autoRandomSeed)
+        {
+            seed = Random.Range(0, 1000000);
+        }
+        
         noiseMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, noiseScale, octaves, persistance, lacunarity, offset);
 
         //Continentalness case: pow2 everything
@@ -40,6 +47,34 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
+        //Ridges Test
+        if (ridgesNoise)
+        {
+            for (int y = 0; y < mapHeight; y++)
+            {
+                for (int x = 0; x < mapWidth; x++)
+                {
+                    // Value transformation based on initial noise
+                    noiseMap[x, y] = -3.0f * (Mathf.Abs(Mathf.Abs(noiseMap[x, y]) - 0.6666667f) - 0.33333334f);
+
+                    // If the value is "kinda white" keep it white
+                    if (noiseMap[x, y] > -0.5f)
+                    {
+                        noiseMap[x, y] = 1f;
+                    }
+
+                    // Clamp to [-1, 1]
+                    noiseMap[x, y] = Mathf.Clamp(noiseMap[x, y], -1f, 1f);
+
+                    // Remap from [-1, 1] to [0, 1]
+                    noiseMap[x, y] = (noiseMap[x, y] + 1f) / 2f;
+
+                }       
+            }
+
+        }
+
+
 
         MapDisplay display = GetComponent<MapDisplay>();
         display.DrawNoiseMap(noiseMap, false);

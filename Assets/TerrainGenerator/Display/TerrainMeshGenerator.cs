@@ -18,6 +18,8 @@ public static class PerlinTerrainMeshGenerator
 
         MeshData meshData = new MeshData(verticesX, verticesY);
         int vertexIndex = 0;
+        float maxHeight = float.MinValue; // Track max value
+        float minHeight = float.MaxValue; // Track max value
 
         for (int y = 0; y < height; y += meshSimplificationIncrement)
         {
@@ -26,7 +28,7 @@ public static class PerlinTerrainMeshGenerator
                 int yVertex = y / meshSimplificationIncrement;
                 int xVertex = x / meshSimplificationIncrement;
 
-                meshData.vertices[vertexIndex] = new Vector3(topLeftX + x, heightCurve.Evaluate(heightMap[x, y]) * heightMultiplier, topLeftZ - y);
+                meshData.vertices[vertexIndex] = new Vector3(topLeftX + x,heightMap[x, y] * heightMultiplier, topLeftZ - y);
                 meshData.uvs[vertexIndex] = new Vector2(x / (float)width, y / (float)height);
 
                 // Fix: Use simplified vertex indices for boundary check
@@ -39,22 +41,20 @@ public static class PerlinTerrainMeshGenerator
                     meshData.AddTriangle(current + 1 + verticesX, current, current + 1);
                 }
 
-                float vertexHeight = heightCurve.Evaluate(heightMap[x, y]) * heightMultiplier;
+                //float vertexHeight = heightCurve.Evaluate(heightMap[x, y]) * heightMultiplier;
+                float vertexHeight = heightMap[x, y] * heightMultiplier;
+                if (vertexHeight > maxHeight) maxHeight = vertexHeight; // Update max
+                if (vertexHeight < minHeight) minHeight = vertexHeight; // Update max
                 meshData.vertices[vertexIndex] = new Vector3(topLeftX + x, vertexHeight, topLeftZ - y);
 
                 // Log a few sample points for height diagnostic
-                if (vertexIndex == 0 || vertexIndex == (verticesX * verticesY) / 2 || vertexIndex == verticesX * verticesY - 1)
-                {
-                    Debug.Log($"Vertex {vertexIndex} at ({x},{y}) - heightMap={heightMap[x, y]}, curveOut={heightCurve.Evaluate(heightMap[x, y])}, height={vertexHeight}");
-                }
+
 
                 vertexIndex++;
             }
         }
-        Debug.Log($"TriangleIndex after generation: {meshData.triangleIndex}");
-
-        Debug.Log("Mesh Gen");
-
+        Debug.Log("Max mesh height: " + maxHeight); // Output max height
+        Debug.Log("Min mesh height: " + minHeight); // Output max height
         return meshData;
 
     }
