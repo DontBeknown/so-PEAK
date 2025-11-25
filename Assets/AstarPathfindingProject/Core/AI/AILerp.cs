@@ -294,7 +294,7 @@ namespace Pathfinding {
 		protected Transform tr;
 
 		/// <summary>Current path which is followed</summary>
-		protected ABPath path;
+		protected Path path;
 
 		/// <summary>Only when the previous path has been returned should a search for a new path be done</summary>
 		protected bool canSearchAgain = true;
@@ -463,7 +463,7 @@ namespace Pathfinding {
 
 			// Create a new path request
 			// The OnPathComplete method will later be called with the result
-			SetPath(ABPath.Construct(currentPosition, destination, null));
+			SetPath(TestPath.Construct(currentPosition, destination, null));
 		}
 
 		/// <summary>
@@ -482,9 +482,9 @@ namespace Pathfinding {
 		/// Finally it is returned to the seeker which forwards it to this function.
 		/// </summary>
 		protected virtual void OnPathComplete (Path _p) {
-			ABPath p = _p as ABPath;
+			Path p = _p; // Accept any Path (TestPath or ABPath)
 
-			if (p == null) throw new System.Exception("This function only handles ABPaths, do not use special path types");
+			if (p == null) return;
 
 			canSearchAgain = true;
 
@@ -503,10 +503,10 @@ namespace Pathfinding {
 				ConfigurePathSwitchInterpolation();
 			}
 
-
+			
 			// Replace the old path
 			var oldPath = path;
-			path = p;
+			path = p as Path;
 			reachedEndOfPath = false;
 
 			// Just for the rest of the code to work, if there

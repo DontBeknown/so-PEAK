@@ -379,7 +379,7 @@ namespace Pathfinding {
 		/// <param name="end">The end point of the path</param>
 		/// <param name="callback">The function to call when the path has been calculated</param>
 		public Path StartPath (Vector3 start, Vector3 end, OnPathDelegate callback) {
-			return StartPath(ABPath.Construct(start, end, null), callback);
+			return StartPath(TestPath.Construct(start, end, null), callback);
 		}
 
 		/// <summary>
@@ -393,7 +393,7 @@ namespace Pathfinding {
 		/// <param name="callback">The function to call when the path has been calculated</param>
 		/// <param name="graphMask">Mask used to specify which graphs should be searched for close nodes. See #Pathfinding.NNConstraint.graphMask. This will override #graphMask for this path request.</param>
 		public Path StartPath (Vector3 start, Vector3 end, OnPathDelegate callback, GraphMask graphMask) {
-			return StartPath(ABPath.Construct(start, end, null), callback, graphMask);
+			return StartPath(TestPath.Construct(start, end, null), callback, graphMask);
 		}
 
 		/// <summary>
