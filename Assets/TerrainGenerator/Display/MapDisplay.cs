@@ -44,7 +44,22 @@ public class MapDisplay : MonoBehaviour
 
     public void DrawMesh(MeshData meshData)
     {
-        meshFilter.mesh = meshData.CreateMesh();
+        // Create the mesh and store it in a variable
+        Mesh mesh = meshData.CreateMesh();
+
+        // Assign to MeshFilter
+        meshFilter.mesh = mesh;
+
+        // Try to get a MeshCollider on the same object
+        MeshCollider meshCollider = meshFilter.GetComponent<MeshCollider>();
+
+        // If none exists, automatically add one
+        if (meshCollider == null)
+            meshCollider = meshFilter.gameObject.AddComponent<MeshCollider>();
+
+        // Force Unity to refresh the collider
+        meshCollider.sharedMesh = null;
+        meshCollider.sharedMesh = mesh;
     }
 
 }
