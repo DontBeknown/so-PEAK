@@ -1,7 +1,9 @@
 
 using System;
+using System.Collections.Generic;
 using UnityEditor.AssetImporters;
 using UnityEngine;
+using System.Linq;
 using static UnityEditor.PlayerSettings.SplashScreen;
 
 public class NoiseTranslator : MonoBehaviour
@@ -38,6 +40,11 @@ public class NoiseTranslator : MonoBehaviour
     [HideInInspector] public Spline mainSpline;
     [HideInInspector] public float[,] depthMap;
     [HideInInspector] public float[,] tempHeight;
+
+    //for collect max height index and value
+    private float maxHeight = 0f;
+    List<Vector2Int> peakPoints = new List<Vector2Int>();
+
     //init Spline
     public void InitMainSpline()
     { 
@@ -67,7 +74,7 @@ public class NoiseTranslator : MonoBehaviour
         //Curve to 0-1
         CurveHeight();
         //Do the roads
-        //ErodedMountain();
+        ErodedMountain();
 
         MapDisplay display = GetComponent<MapDisplay>();
         Debug.Log("DrawMode: " + drawMode);
@@ -207,43 +214,26 @@ public class NoiseTranslator : MonoBehaviour
     }
 
     //Curve Height via Curve anim
-
+    //will compare with roads later
     private void CurveHeight()
     {
-        RoadNoise.GenerateMap();
-        float[,] roadRidge = RoadNoise.noiseMap;
-        
-
-
+        //maxHeight = 0f;
         for (int z = 0; z < mapWidth; z++)
         {
             for (int x = 0; x < mapWidth; x++)
             {
-
-                depthMap[x, z] = Mathf.Clamp(depthMap[x, z], 0f, 1f);
-                //evaluate roads
-                //inverse mask: 1 will be dark
-                float tempRoad = (1-roadRidge[x, z]);
-                //if it roads evaluate with roads animcurve
-                if (tempRoad > 0.75)
+                depthMap[x,z]= meshHeightCurve.Evaluate(depthMap[x, z]);
+                // Track max value
+                if (depthMap[x, z] > maxHeight)
                 {
-                    //evaluate mountain
-                    tempRoad = roadHeightCurve.Evaluate(depthMap[x,z]); 
+                    maxHeight = depthMap[x, z];
+                    peakPoints.Clear();
+                    peakPoints.Add(new Vector2Int(x, z));
                 }
-                //else it is max val so cancel otu
-                else
+                else if (Mathf.Approximately(depthMap[x, z], maxHeight))
                 {
-                    tempRoad = float.MaxValue;
+                    peakPoints.Add(new Vector2Int(x, z));
                 }
-
-                depthMap[x,z]= Mathf.Min(tempRoad,meshHeightCurve.Evaluate(depthMap[x, z]));
-
-
-
-
-
-
-
 
             }
 
@@ -253,42 +243,69 @@ public class NoiseTranslator : MonoBehaviour
 
     private void ErodedMountain()
     {
-        //init road noise for correction
+  
         RoadNoise.GenerateMap();
         float[,] roadRidge = RoadNoise.noiseMap;
 
-        //multiplier here
+        float maxDist = 0f;
 
-        //then we eroded with roads
-        //0-> more eroded, 1-> less eroded
+        Vector2Int peakCoord = GetPeakCoordinate();
+
         for (int z = 0; z < mapWidth; z++)
         {
             for (int x = 0; x < mapWidth; x++)
             {
-                //evaluate roads
-                //inverse mask: 1 will be dark
-                float temp = (1 - roadRidge[x, z]);
-                
-                //then conditions to seperate the roads out of mask area
-                if (temp > 0.5)
+                if (roadRidge[x, z] < 0.25f)
                 {
-
-                    
-
+                    float d = Vector2.Distance(new Vector2(x, z), peakCoord);
+                    if (d > maxDist) maxDist = d;
                 }
-
-
-                //then replace
-                depthMap[x, z] = temp;
-
             }
-
         }
 
 
+        if (maxDist < 0.0001f) maxDist = 0.0001f;
 
 
+        for (int z = 0; z < mapWidth; z++)
+        {
+            for (int x = 0; x < mapWidth; x++)
+            {
+                if (roadRidge[x, z] < 0.25f)
+                {
+                    float d = Vector2.Distance(new Vector2(x, z), peakCoord);
+                    float t = 1f - (d / maxDist);  
+                    t = Mathf.Clamp01(t);
+
+
+                    float height = maxHeight * t;
+                    depthMap[x, z] = roadHeightCurve.Evaluate(height);
+                }
+
+            }
+        }
 
     }
+
+    // Returns the “central” coordinate of the maximum height in a 2D map
+    private Vector2Int GetPeakCoordinate()
+    {
+        
+        // 2. Pick median X and Z for central peak
+        if (peakPoints.Count == 0)
+        {
+            return new Vector2Int(0, 0); // fallback if no peak
+        }
+
+        var sortedX = peakPoints.Select(p => p.x).OrderBy(v => v).ToList();
+        var sortedZ = peakPoints.Select(p => p.y).OrderBy(v => v).ToList();
+
+        int medianX = sortedX[sortedX.Count / 2];
+        int medianZ = sortedZ[sortedZ.Count / 2];
+
+        return new Vector2Int(medianX, medianZ);
+    }
+
+
 
 }

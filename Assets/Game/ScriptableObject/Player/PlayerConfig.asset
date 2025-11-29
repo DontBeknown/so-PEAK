@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8682bdef8a18cb749a33588ac6e4d295, type: 3}
   m_Name: PlayerConfig
   m_EditorClassIdentifier: Assembly-CSharp::PlayerConfig
-  walkSpeed: 3
+  walkSpeed: 10
   climbSpeed: 2
   jumpForce: 5
   rotationSmoothness: 10
