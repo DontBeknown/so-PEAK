@@ -63,7 +63,8 @@ public class PlayerModelRefactored
         Animator animator = owner.GetComponentInChildren<Animator>();
         _animationService = animationService ?? new PlayerAnimationService(animator, Transform);
         
-        _cameraProvider = cameraProvider ?? new MainCameraProvider();
+        // Use CinemachineCameraProvider for better Cinemachine support
+        _cameraProvider = cameraProvider ?? new CinemachineCameraProvider();
 
         // Create movement context
         _movementContext = new PlayerMovementContext(

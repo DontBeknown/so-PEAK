@@ -22,6 +22,7 @@ namespace Game.Player
         [SerializeField] private CraftingManager craftingManager;
         [SerializeField] private ItemDetector itemDetector;
         [SerializeField] private TabbedInventoryUI tabbedInventoryUI;
+        [SerializeField] private CinemachinePlayerCamera playerCamera;
 
         // Core Components
         private PlayerModelRefactored _model;
@@ -96,6 +97,7 @@ namespace Game.Player
             craftingManager ??= GetComponent<CraftingManager>();
             itemDetector ??= GetComponent<ItemDetector>();
             tabbedInventoryUI ??= FindFirstObjectByType<TabbedInventoryUI>();
+            playerCamera ??= FindFirstObjectByType<CinemachinePlayerCamera>();
 
             // Create facade with Command Pattern support
             _inventoryFacade = new PlayerInventoryFacade(
@@ -105,7 +107,8 @@ namespace Game.Player
                 tabbedInventoryUI,
                 _model.Stats,
                 transform,
-                enableInventoryCommandDebugLogs
+                enableInventoryCommandDebugLogs,
+                playerCamera
             );
             
             // Connect inventory facade to input handler for input blocking

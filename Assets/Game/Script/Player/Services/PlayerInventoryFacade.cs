@@ -17,6 +17,7 @@ namespace Game.Player.Services
         private readonly TabbedInventoryUI _inventoryUI;
         private readonly PlayerStats _playerStats;
         private readonly Transform _playerTransform;
+        private readonly CinemachinePlayerCamera _playerCamera;
         
         // Command Pattern
         private readonly InventoryCommandInvoker _commandInvoker;
@@ -31,7 +32,8 @@ namespace Game.Player.Services
             TabbedInventoryUI inventoryUI,
             PlayerStats playerStats = null,
             Transform playerTransform = null,
-            bool enableCommandDebugLogs = false)
+            bool enableCommandDebugLogs = false,
+            CinemachinePlayerCamera playerCamera = null)
         {
             _inventoryManager = inventoryManager;
             _craftingManager = craftingManager;
@@ -39,6 +41,7 @@ namespace Game.Player.Services
             _inventoryUI = inventoryUI;
             _playerStats = playerStats;
             _playerTransform = playerTransform;
+            _playerCamera = playerCamera ?? Object.FindFirstObjectByType<CinemachinePlayerCamera>();
             
             _commandInvoker = new InventoryCommandInvoker(enableDebugLogs: enableCommandDebugLogs);
         }
@@ -55,18 +58,25 @@ namespace Game.Player.Services
             // Toggle inventory state
             _isInventoryOpen = !_isInventoryOpen;
             
-            // Manage cursor based on inventory state
-            if (_isInventoryOpen)
+            // Manage cursor and camera input based on inventory state
+            if (_playerCamera != null)
             {
-                // Show cursor and unlock it for UI interaction
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
+                // Use the camera controller to handle cursor and input
+                _playerCamera.SetCursorLock(!_isInventoryOpen);
             }
             else
             {
-                // Hide cursor and lock it for gameplay
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
+                // Fallback to manual cursor control if camera not found
+                if (_isInventoryOpen)
+                {
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                }
+                else
+                {
+                    Cursor.lockState = CursorLockMode.Locked;
+                    Cursor.visible = false;
+                }
             }
         }
         
