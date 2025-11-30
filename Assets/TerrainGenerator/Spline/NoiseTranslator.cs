@@ -41,9 +41,13 @@ public class NoiseTranslator : MonoBehaviour
     [HideInInspector] public float[,] depthMap;
     [HideInInspector] public float[,] tempHeight;
 
+
     //for collect max height index and value
     private float maxHeight = 0f;
     List<Vector2Int> peakPoints = new List<Vector2Int>();
+
+    //collect mapNoise Bcs im lazy
+    private float[,] roadRidge;
 
     //init Spline
     public void InitMainSpline()
@@ -84,7 +88,7 @@ public class NoiseTranslator : MonoBehaviour
         }
         else if (drawMode == DrawMode.Mesh)
         {
-            display.DrawMesh(PerlinTerrainMeshGenerator.GenerateTerrainMesh(depthMap, meshHeightMultiplier, meshHeightCurve, levelOfDetail));
+            display.DrawMesh(PerlinTerrainMeshGenerator.GenerateTerrainMesh(depthMap, roadRidge, meshHeightMultiplier, meshHeightCurve, levelOfDetail));
         }
     }
 
@@ -245,7 +249,7 @@ public class NoiseTranslator : MonoBehaviour
     {
         // 1. Generate the road mask
         RoadNoise.GenerateMap();
-        float[,] roadRidge = RoadNoise.noiseMap;
+        roadRidge = RoadNoise.noiseMap;
 
         // 2. Real mountain peak after curve
         Vector2Int mountainPeak = GetPeakCoordinate();

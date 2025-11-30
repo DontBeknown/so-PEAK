@@ -4,7 +4,8 @@ using UnityEngine;
 
 public static class PerlinTerrainMeshGenerator
 {
-    public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail)
+
+    public static MeshData GenerateTerrainMesh(float[,] heightMap, float[,] roadNoise, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail)
     {
         int width = heightMap.GetLength(0);
         int height = heightMap.GetLength(1);
@@ -49,6 +50,40 @@ public static class PerlinTerrainMeshGenerator
 
                 // Log a few sample points for height diagnostic
 
+                //Color Here?
+                // --- Vertex Color Assignment ---
+
+                Color finalColor;
+
+                // 1. Road check
+                if (roadNoise[x, y] < 0.25f)
+                {
+                    finalColor = new Color(0.70f, 0.55f, 0.35f); // light brown
+                }
+                else
+                {
+                    // 2. Compute steepness (compare with right and down neighbors)
+                    float heightHere = heightMap[x, y];
+                    float heightRight = (x < width - 1) ? heightMap[x + 1, y] : heightHere;
+                    float heightDown = (y < height - 1) ? heightMap[x, y + 1] : heightHere;
+
+                    float steepness = Mathf.Max(
+                        Mathf.Abs(heightHere - heightRight),
+                        Mathf.Abs(heightHere - heightDown)
+                    );
+
+                    if (steepness > 0.15f)
+                    {
+                        finalColor = new Color(0.35f, 0.20f, 0.10f); // dark brown rock
+                    }
+                    else
+                    {
+                        finalColor = new Color(0.2f, 0.7f, 0.2f); // green grass
+                    }
+                }
+
+                // Assign into mesh
+                meshData.colors[vertexIndex] = finalColor;
 
                 vertexIndex++;
             }
@@ -66,6 +101,8 @@ public class MeshData
     public int[] triangles;
     public Vector2[] uvs;
 
+    public Color[] colors;
+
     public int triangleIndex;
 
     public MeshData(int meshWidth, int meshHeight)
@@ -73,6 +110,7 @@ public class MeshData
         vertices = new Vector3[meshWidth * meshHeight];
         uvs = new Vector2[meshWidth * meshHeight];
         triangles = new int[(meshWidth - 1) * (meshHeight - 1) * 6];
+        colors = new Color[meshWidth * meshHeight];
     }
 
     public void AddTriangle(int a, int b, int c)
@@ -94,9 +132,12 @@ public class MeshData
         mesh.vertices = vertices;
         mesh.triangles = triangles;
         mesh.uv = uvs;
+
+        mesh.colors = colors;
+
         mesh.RecalculateNormals();
 
-        Debug.Log($"Vertices: {vertices.Length}, Triangles: {triangles.Length}");
+        //Debug.Log($"Vertices: {vertices.Length}, Triangles: {triangles.Length}");
         return mesh;
     }
 
