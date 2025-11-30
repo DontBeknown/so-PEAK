@@ -217,7 +217,7 @@ public class NoiseTranslator : MonoBehaviour
     //will compare with roads later
     private void CurveHeight()
     {
-        //maxHeight = 0f;
+        maxHeight = 0f;
         for (int z = 0; z < mapWidth; z++)
         {
             for (int x = 0; x < mapWidth; x++)
@@ -243,14 +243,129 @@ public class NoiseTranslator : MonoBehaviour
 
     private void ErodedMountain()
     {
-  
+        // 1. Generate the road mask
         RoadNoise.GenerateMap();
         float[,] roadRidge = RoadNoise.noiseMap;
 
+        // 2. Real mountain peak after curve
+        Vector2Int mountainPeak = GetPeakCoordinate();
+
+        // 3. Find closest point in road network to the peak
+        Vector2Int closestRoad = GetClosestRoadPoint(mountainPeak, roadRidge);
+
+        // 4. Generate direct walkable path
+        List<Vector2Int> line = GetLine(mountainPeak, closestRoad);
+
+        // 5. Carve this path into the mountain height
+        CarveRoad(line, roadRidge);
+
+        // 6. (Optional) Apply your erosion gradient to remaining road areas
+        ApplyErosionGradient(roadRidge, mountainPeak);
+    }
+
+
+
+    private Vector2Int GetPeakCoordinate()
+    {
+        if (peakPoints.Count == 0)
+            return new Vector2Int(0, 0);
+
+        float avgX = (float)peakPoints.Average(p => p.x);
+        float avgZ = (float)peakPoints.Average(p => p.y);
+
+        // Sort by distance to centroid
+        var sorted = peakPoints
+            .OrderBy(p => Vector2.Distance(
+                new Vector2(p.x, p.y),
+                new Vector2(avgX, avgZ)
+            ))
+            .ToList();
+
+        // Take the middle one
+        return sorted[sorted.Count / 2];
+    }
+
+    private Vector2Int GetClosestRoadPoint(Vector2Int peak, float[,] roadMask)
+    {
+        float bestDist = float.MaxValue;
+        Vector2Int best = peak;
+
+        //MAYBE CAN THREADED?
+        for (int z = 0; z < mapWidth; z++)
+        {
+            for (int x = 0; x < mapWidth; x++)
+            {
+                if (roadMask[x, z] < 0.25f) // road area
+                {
+                    float d = Vector2.Distance(new Vector2(x, z), peak);
+                    if (d < bestDist)
+                    {
+                        bestDist = d;
+                        best = new Vector2Int(x, z);
+                    }
+                }
+            }
+        }
+
+        return best;
+    }
+
+    private List<Vector2Int> GetLine(Vector2Int a, Vector2Int b)
+    {
+        List<Vector2Int> pts = new List<Vector2Int>();
+
+        int x0 = a.x, y0 = a.y;
+        int x1 = b.x, y1 = b.y;
+
+        int dx = Mathf.Abs(x1 - x0);
+        int dy = Mathf.Abs(y1 - y0);
+
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+
+        int err = dx - dy;
+
+        while (true)
+        {
+            pts.Add(new Vector2Int(x0, y0));
+            if (x0 == x1 && y0 == y1) break;
+
+            int e2 = 2 * err;
+            if (e2 > -dy) { err -= dy; x0 += sx; }
+            if (e2 < dx) { err += dx; y0 += sy; }
+        }
+
+        return pts;
+    }
+
+    private void CarveRoad(List<Vector2Int> line, float[,] heightMap)
+    {
+        int radius = 10;            // road width
+
+        foreach (var p in line)
+        {
+            for (int dz = -radius; dz <= radius; dz++)
+                for (int dx = -radius; dx <= radius; dx++)
+                {
+                    int xx = p.x + dx;
+                    int zz = p.y + dz;
+
+                    if (xx < 0 || zz < 0 || xx >= mapWidth || zz >= mapWidth)
+                        continue;
+
+                    float dist = Mathf.Sqrt(dx * dx + dz * dz);
+                    if (dist > radius) continue;
+
+                    heightMap[xx, zz] = 0;
+                }
+        }
+    }
+
+    private void ApplyErosionGradient(float[,] roadRidge, Vector2Int peakCoord)
+    {
         float maxDist = 0f;
 
-        Vector2Int peakCoord = GetPeakCoordinate();
-
+        //CAN BE OPTIMIZED BY THREAD
         for (int z = 0; z < mapWidth; z++)
         {
             for (int x = 0; x < mapWidth; x++)
@@ -263,47 +378,24 @@ public class NoiseTranslator : MonoBehaviour
             }
         }
 
-
         if (maxDist < 0.0001f) maxDist = 0.0001f;
-
 
         for (int z = 0; z < mapWidth; z++)
         {
             for (int x = 0; x < mapWidth; x++)
             {
-                if (roadRidge[x, z] < 0.25f)
-                {
-                    float d = Vector2.Distance(new Vector2(x, z), peakCoord);
-                    float t = 1f - (d / maxDist);  
-                    t = Mathf.Clamp01(t);
+                if (roadRidge[x, z] >= 0.25f)
+                    continue;
 
-
-                    float height = maxHeight * t;
-                    depthMap[x, z] = roadHeightCurve.Evaluate(height);
-                }
-
+                float d = Vector2.Distance(new Vector2(x, z), peakCoord);
+                //got the distance
+                float t = Mathf.Clamp01(1f - d / maxDist);
+                //evaluate it in AnimCurve
+                t = roadHeightCurve.Evaluate(t);
+                //Overwrites
+                depthMap[x, z] = maxHeight * t;
             }
         }
-
-    }
-
-    // Returns the “central” coordinate of the maximum height in a 2D map
-    private Vector2Int GetPeakCoordinate()
-    {
-        
-        // 2. Pick median X and Z for central peak
-        if (peakPoints.Count == 0)
-        {
-            return new Vector2Int(0, 0); // fallback if no peak
-        }
-
-        var sortedX = peakPoints.Select(p => p.x).OrderBy(v => v).ToList();
-        var sortedZ = peakPoints.Select(p => p.y).OrderBy(v => v).ToList();
-
-        int medianX = sortedX[sortedX.Count / 2];
-        int medianZ = sortedZ[sortedZ.Count / 2];
-
-        return new Vector2Int(medianX, medianZ);
     }
 
 
