@@ -12,7 +12,7 @@ namespace Game.Player.Inventory.Commands
         private readonly InventoryManager _inventoryManager;
         private readonly InventoryItem _item;
         private readonly int _quantity;
-        private bool _wasDropped;
+        //private bool _wasDropped;
 
         public bool CanUndo => false; // Undo would require picking up the spawned object
         public string Description => $"Drop {_item?.itemName ?? "Unknown Item"} x{_quantity}";
@@ -39,7 +39,7 @@ namespace Game.Player.Inventory.Commands
             
             if (removed)
             {
-                _wasDropped = true;
+                //_wasDropped = true;
                 Debug.Log($"Dropped {_item.itemName} x{_quantity}");
                 
                 // TODO: Spawn world object if item has prefab reference

@@ -46,6 +46,7 @@ public class InventoryUI : MonoBehaviour
         // Get required components
         inventoryManager = FindFirstObjectByType<InventoryManager>();
         playerStats = FindFirstObjectByType<PlayerStats>();
+        
 
         // Setup buttons
         if (closeButton != null)
@@ -149,6 +150,7 @@ public class InventoryUI : MonoBehaviour
             Time.timeScale = 0f;
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
+
         }
 
         UpdateAllSlots();
