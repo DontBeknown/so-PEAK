@@ -3138,8 +3138,8 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8818119416865454608}
-  - {fileID: 5510900426120375645}
   - {fileID: 8789668539895052543}
+  - {fileID: 5510900426120375645}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!143 &988247627514051869
@@ -3269,6 +3269,7 @@ MonoBehaviour:
   craftingManager: {fileID: 981263882377947087}
   itemDetector: {fileID: 3370764287735499575}
   tabbedInventoryUI: {fileID: 2350192110763661019}
+  playerCamera: {fileID: 0}
 --- !u!1 &4706825401437791348
 GameObject:
   m_ObjectHideFlags: 0
