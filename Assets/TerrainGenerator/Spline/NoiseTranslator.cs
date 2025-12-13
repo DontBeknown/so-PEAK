@@ -1,11 +1,8 @@
 
 using System;
 using System.Collections.Generic;
-using UnityEditor.AssetImporters;
 using UnityEngine;
 using System.Linq;
-using static UnityEditor.PlayerSettings.SplashScreen;
-
 public class NoiseTranslator : MonoBehaviour
 {
     public enum DrawMode { NoiseMap, Mesh };
@@ -24,7 +21,7 @@ public class NoiseTranslator : MonoBehaviour
 
     [Header("Falloff Mask Settings")]
     public bool useFalloffMask = true;
-    public Vector2 peakCenter = new Vector2(0.5f, 0.5f); // normalized center (0–1)
+    public Vector2 peakCenter = new Vector2(0.5f, 0.5f); // normalized center (0ï¿½1)
     public float falloffPower = 2.5f; // controls slope shape
 
     public float meshHeightMultiplier;
@@ -139,7 +136,7 @@ public class NoiseTranslator : MonoBehaviour
                     // radial distance (0 = center, 1 = far edge)
                     float dx = nx - peakCenter.x;
                     float dz = nz - peakCenter.y;
-                    float dist = Mathf.Sqrt(dx * dx + dz * dz) / 0.7071f; // normalize to 0–1 range
+                    float dist = Mathf.Sqrt(dx * dx + dz * dz) / 0.7071f; // normalize to 0ï¿½1 range
 
                     // mask curve
                     float mask = Mathf.Clamp01(1f - Mathf.Pow(dist, falloffPower));

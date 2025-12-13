@@ -254,7 +254,7 @@ public struct Maps
     }
 }
 
-[CustomEditor(typeof(TerrainMeshGenerator))]
+/*[CustomEditor(typeof(TerrainMeshGenerator))]
 public class TerrainMeshGeneratorEditor : Editor
 {
     public override void OnInspectorGUI()
@@ -268,4 +268,4 @@ public class TerrainMeshGeneratorEditor : Editor
             generator.GenerateMap();
         }
     }
-}
+}*/
