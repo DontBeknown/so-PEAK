@@ -28,6 +28,7 @@ public class PlayerStats : MonoBehaviour
         hunger.Init(config.hungerDrainPerSecond, config.hungerHurtThreshold, config.starvationDPS);
         thirst.Init(config.thirstDrainPerSecond, config.thirstHurtThreshold, config.dehydrationDPS);
         stamina.Init(config.staminaRegenPerSecond, config.staminaDrainCooldown, config.climbStaminaDrainPerSecond);
+        stamina.InitFatigue(config.maxFatigue, config.fatigueRateTime, config.fatigueRateElev, config.fatigueRateSpeed);
 
         health.OnChanged += (c, m) => OnHealthChanged?.Invoke(c, m);
         stamina.OnChanged += (c, m) => OnStaminaChanged?.Invoke(c, m);
@@ -100,6 +101,14 @@ public class PlayerStats : MonoBehaviour
         stamina.Add(amount);
     }
 
+    /// <summary>
+    /// Fully rest the player - clears all fatigue (e.g., sleeping, campfire rest)
+    /// </summary>
+    public void FullRest()
+    {
+        stamina.FullRest();
+    }
+
     public float Health => health.Current;
     public float MaxHealth => health.Max;
     public float HealthPercent => health.Percent;
@@ -115,6 +124,9 @@ public class PlayerStats : MonoBehaviour
     public float Stamina => stamina.Current;
     public float MaxStamina => stamina.Max;
     public float StaminaPercent => stamina.Percent;
+    
+    // Expose stamina stat for advanced operations like terrain drain
+    public StaminaStat StaminaStat => stamina;
 
     public IStat GetStat(StatType statType)
     {

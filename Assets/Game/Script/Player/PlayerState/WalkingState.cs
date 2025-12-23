@@ -54,12 +54,35 @@ public class WalkingState : IPlayerState
         var context = model.GetMovementContext();
         var cameraProvider = model.GetCameraProvider();
         var animService = model.GetAnimationService();
+        var physicsService = model.GetPhysicsService();
 
         // Get movement direction from camera
         Vector3 moveDir = cameraProvider.GetWorldDirection(input);
 
-        // Apply horizontal movement
+        // Apply horizontal movement with Tobler's hiking function for slope speed
         Vector3 horizontal = moveDir * model.WalkSpeed;
+        
+        // Calculate slope effects (stamina drain and fatigue accumulation)
+        if (horizontal.sqrMagnitude > 0.01f)
+        {
+            float toblerSpeedMultiplier = CalculateSlopeEffects(model, horizontal);
+            
+            // Combine slope and fatigue penalties additively
+            float fatigueSpeedPenalty = 1f;
+            if (model.Stats?.StaminaStat != null && model.Stats.Config != null)
+            {
+                fatigueSpeedPenalty = model.Stats.StaminaStat.GetFatigueSpeedPenalty(model.Stats.Config.fatigueSpeedPenaltyThreshold);
+            }
+            
+            // Sum the speed reductions, then apply to base speed
+            float toblerReduction = 1f - toblerSpeedMultiplier;
+            float fatigueReduction = 1f - fatigueSpeedPenalty;
+            float totalReduction = Mathf.Clamp01(toblerReduction + fatigueReduction);
+            float combinedMultiplier = 1f - totalReduction;
+            
+            horizontal *= combinedMultiplier;
+        }
+        
         Vector3 motion = new Vector3(horizontal.x, model.Velocity.y, horizontal.z);
         model.Move(motion);
 
@@ -77,6 +100,63 @@ public class WalkingState : IPlayerState
         // Apply minimal gravity to keep grounded on slopes
         // Gravity is handled differently in ApplyGravity when grounded
         model.ApplyGravity(-9.81f);
+    }
+    
+    /// <summary>
+    /// Calculate slope effects using Tobler's hiking function for speed
+    /// Formula: speed = base_speed * exp(-3.5 * abs(slope + 0.05))
+    /// Returns speed multiplier to apply
+    /// </summary>
+    private float CalculateSlopeEffects(PlayerModelRefactored model, Vector3 horizontalVelocity)
+    {
+        var config = model.Stats?.Config;
+        if (config == null) return 1f;
+        
+        // Get ground normal via raycast
+        Vector3 groundNormal = Vector3.up;
+        Vector3 origin = model.Transform.position + Vector3.up * 0.5f;
+        
+        if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, 2f, config.groundLayer))
+        {
+            groundNormal = hit.normal;
+        }
+        
+        // Calculate slope angle
+        float slopeAngle = Vector3.Angle(Vector3.up, groundNormal);
+        
+        // Check if moving uphill or downhill
+        float movementDot = Vector3.Dot(horizontalVelocity.normalized, groundNormal);
+        bool isMovingUphill = movementDot < 0f;
+        
+        // Convert angle to slope gradient for Tobler's function
+        float slopeAngleRad = slopeAngle * Mathf.Deg2Rad;
+        float slopeGradient = Mathf.Tan(slopeAngleRad);
+        
+        // Apply sign based on direction (positive for uphill, negative for downhill)
+        if (!isMovingUphill)
+        {
+            slopeGradient = -slopeGradient;
+        }
+        
+        // Tobler's hiking function: speed = base_speed * exp(-3.5 * abs(slope + 0.05))
+        float toblerRaw = Mathf.Exp(-3.5f * Mathf.Abs(slopeGradient + 0.05f));
+        
+        // Calculate flat ground reference (gradient = 0)
+        float flatGroundValue = Mathf.Exp(-3.5f * 0.05f); // ≈ 0.839
+        
+        // Remap so flat ground = max speed, steep slopes = min speed
+        float normalizedValue = toblerRaw / flatGroundValue; // 0 to 1+ range
+        float toblerSpeedMultiplier = Mathf.Lerp(config.minSlopeSpeedMultiplier, config.maxSlopeSpeedMultiplier, Mathf.Clamp01(normalizedValue));
+        
+        // Apply constant stamina drain when moving and pass parameters for fatigue calculation
+        if (model.Stats != null && horizontalVelocity.magnitude > config.movementThreshold)
+        {
+            float drainPerSecond = config.baseMovementStaminaDrain; // No multiplier, constant drain
+            float movementSpeed = horizontalVelocity.magnitude * toblerSpeedMultiplier;
+            model.Stats.StaminaStat.ApplyTerrainDrain(drainPerSecond, slopeGradient, movementSpeed);
+        }
+        
+        return toblerSpeedMultiplier;
     }
 
     public void OnJump(PlayerModelRefactored model, Vector2 input)

@@ -16,6 +16,8 @@ MonoBehaviour:
   climbSpeed: 2
   jumpForce: 5
   rotationSmoothness: 10
+  minSlopeSpeedMultiplier: 0.7
+  maxSlopeSpeedMultiplier: 1
   climbDetectionRange: 3
   climbableLayer:
     serializedVersion: 2
@@ -30,6 +32,19 @@ MonoBehaviour:
   climbStaminaDrainPerSecond: 5
   staminaRegenPerSecond: 15
   staminaDrainCooldown: 1
+  baseMovementStaminaDrain: 0.5
+  slopeStartAngle: 15
+  slopeMaxAngle: 45
+  uphillDrainMultiplier: 3
+  downhillDrainMultiplier: 0.3
+  movementThreshold: 0.1
+  maxFatigue: 100
+  fatigueRateTime: 0.12
+  fatigueRateElev: 0.0005
+  fatigueRateSpeed: 0.1
+  slopeFatigueMultiplier: 2
+  fatigueStaminaPenaltyThreshold: 50
+  fatigueSpeedPenaltyThreshold: 70
   hungerDrainPerSecond: 0.2
   hungerHurtThreshold: 30
   starvationDPS: 1

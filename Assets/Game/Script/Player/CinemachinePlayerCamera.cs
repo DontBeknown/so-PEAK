@@ -4,7 +4,7 @@ using Unity.Cinemachine;
 public class CinemachinePlayerCamera : MonoBehaviour
 {
     private CinemachineCamera[] cinemachineCameras;
-    private bool originalCameraEnabled = true;
+    //private bool originalCameraEnabled = true;
 
     private void Start()
     {
