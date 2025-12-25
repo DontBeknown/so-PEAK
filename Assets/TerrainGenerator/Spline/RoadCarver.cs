@@ -13,7 +13,7 @@ public static class RoadCarver
         Vector2Int peak = GetPeakCoordinate(peakPoint);
         Vector2Int closestRoad = GetClosestRoadPoint(peak, roadRidge);
         List<Vector2Int> line = GetLine(peak, closestRoad);
-        CarveRoad(line, depthMap);
+        CarveRoad(line, roadRidge);
         ApplyErosionGradient(depthMap, roadRidge, peak, maxHeight, roadHeightCurve);
         
 
@@ -91,10 +91,10 @@ public static class RoadCarver
         return pts;
     }
 
-    private static void CarveRoad(List<Vector2Int> line, float[,] heightMap)
+    private static void CarveRoad(List<Vector2Int> line, float[,] roadMask)
     {
         int radius = 10;            // road width
-        int mapWidth = heightMap.GetLength(0);
+        int mapWidth = roadMask.GetLength(0);
 
         foreach (var p in line)
         {
@@ -110,7 +110,7 @@ public static class RoadCarver
                     float dist = Mathf.Sqrt(dx * dx + dz * dz);
                     if (dist > radius) continue;
 
-                    heightMap[xx, zz] = 0;
+                    roadMask[xx, zz] = 0;
                 }
         }
     }
