@@ -5,16 +5,16 @@ using UnityEngine;
 public static class PerlinTerrainMeshGenerator
 {
 
-    public static MeshData GenerateTerrainMesh(float[,] heightMap, float[,] roadNoise, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail)
+    public static MeshData GenerateTerrainMesh(float[,] heightMap, Color[,] colorMap, float heightMultiplier, int levelOfDetail)
     {
         int width = heightMap.GetLength(0);
-        int height = heightMap.GetLength(1);
+        int length = heightMap.GetLength(1);
         float topLeftX = (width - 1) / -2f;
-        float topLeftZ = (height - 1) / 2f;
+        float topLeftZ = (length - 1) / 2f;
 
         int meshSimplificationIncrement = (levelOfDetail == 0) ? 1 : levelOfDetail * 2;
         int verticesX = (width - 1) / meshSimplificationIncrement + 1;
-        int verticesY = (height - 1) / meshSimplificationIncrement + 1;
+        int verticesY = (length - 1) / meshSimplificationIncrement + 1;
 
 
         MeshData meshData = new MeshData(verticesX, verticesY);
@@ -22,7 +22,7 @@ public static class PerlinTerrainMeshGenerator
         float maxHeight = float.MinValue; // Track max value
         float minHeight = float.MaxValue; // Track max value
 
-        for (int y = 0; y < height; y += meshSimplificationIncrement)
+        for (int y = 0; y < length; y += meshSimplificationIncrement)
         {
             for (int x = 0; x < width; x += meshSimplificationIncrement)
             {
@@ -30,7 +30,7 @@ public static class PerlinTerrainMeshGenerator
                 int xVertex = x / meshSimplificationIncrement;
 
                 meshData.vertices[vertexIndex] = new Vector3(topLeftX + x,heightMap[x, y] * heightMultiplier, topLeftZ - y);
-                meshData.uvs[vertexIndex] = new Vector2(x / (float)width, y / (float)height);
+                meshData.uvs[vertexIndex] = new Vector2(x / (float)width, y / (float)length);
 
                 // Fix: Use simplified vertex indices for boundary check
                 if (xVertex < verticesX - 1 && yVertex < verticesY - 1)
@@ -42,48 +42,43 @@ public static class PerlinTerrainMeshGenerator
                     meshData.AddTriangle(current + 1 + verticesX, current, current + 1);
                 }
 
-                //float vertexHeight = heightCurve.Evaluate(heightMap[x, y]) * heightMultiplier;
                 float vertexHeight = heightMap[x, y] * heightMultiplier;
                 if (vertexHeight > maxHeight) maxHeight = vertexHeight; // Update max
                 if (vertexHeight < minHeight) minHeight = vertexHeight; // Update max
                 meshData.vertices[vertexIndex] = new Vector3(topLeftX + x, vertexHeight, topLeftZ - y);
 
-                // Log a few sample points for height diagnostic
 
-                //Color Here?
-                // --- Vertex Color Assignment ---
+                //Color finalColor;
 
-                Color finalColor;
+                //// 1. Road check
+                //if (roadNoise[x, y] < 0.25f)
+                //{
+                //    finalColor = new Color(0.70f, 0.55f, 0.35f); // light brown
+                //}
+                //else
+                //{
+                //    // 2. Compute steepness (compare with right and down neighbors)
+                //    float heightHere = heightMap[x, y];
+                //    float heightRight = (x < width - 1) ? heightMap[x + 1, y] : heightHere;
+                //    float heightDown = (y < height - 1) ? heightMap[x, y + 1] : heightHere;
 
-                // 1. Road check
-                if (roadNoise[x, y] < 0.25f)
-                {
-                    finalColor = new Color(0.70f, 0.55f, 0.35f); // light brown
-                }
-                else
-                {
-                    // 2. Compute steepness (compare with right and down neighbors)
-                    float heightHere = heightMap[x, y];
-                    float heightRight = (x < width - 1) ? heightMap[x + 1, y] : heightHere;
-                    float heightDown = (y < height - 1) ? heightMap[x, y + 1] : heightHere;
+                //    float steepness = Mathf.Max(
+                //        Mathf.Abs(heightHere - heightRight),
+                //        Mathf.Abs(heightHere - heightDown)
+                //    );
 
-                    float steepness = Mathf.Max(
-                        Mathf.Abs(heightHere - heightRight),
-                        Mathf.Abs(heightHere - heightDown)
-                    );
-
-                    if (steepness > 0.15f)
-                    {
-                        finalColor = new Color(0.35f, 0.20f, 0.10f); // dark brown rock
-                    }
-                    else
-                    {
-                        finalColor = new Color(0.2f, 0.7f, 0.2f); // green grass
-                    }
-                }
+                //    if (steepness > 0.15f)
+                //    {
+                //        finalColor = new Color(0.35f, 0.20f, 0.10f); // dark brown rock
+                //    }
+                //    else
+                //    {
+                //        finalColor = new Color(0.2f, 0.7f, 0.2f); // green grass
+                //    }
+                //}
 
                 // Assign into mesh
-                meshData.colors[vertexIndex] = finalColor;
+                meshData.colors[vertexIndex] = colorMap[x,y];
 
                 vertexIndex++;
             }
@@ -137,7 +132,7 @@ public class MeshData
 
         mesh.RecalculateNormals();
 
-        //Debug.Log($"Vertices: {vertices.Length}, Triangles: {triangles.Length}");
+
         return mesh;
     }
 

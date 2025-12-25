@@ -20,7 +20,7 @@ public class NoiseTranslatorEditor : Editor
                 return;
             }
 
-            nt.DepthNoise();
+            nt.TerrainDrawing();
             Debug.Log("Depth map generated!");
         }
     }
