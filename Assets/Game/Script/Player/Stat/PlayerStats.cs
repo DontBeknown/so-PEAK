@@ -4,11 +4,15 @@ using System;
 public class PlayerStats : MonoBehaviour
 {
     [SerializeField] private PlayerConfig config;
+    [SerializeField] private EquipmentManager equipmentManager;
 
     [SerializeField] private HealthStat health;
     [SerializeField] private HungerStat hunger;
     [SerializeField] private ThirstStat thirst;
     [SerializeField] private StaminaStat stamina;
+    [SerializeField] private FatigueStat fatigue;
+    
+    private IStatModifierCalculator statModifierCalculator;
 
     public PlayerConfig Config => config;
 
@@ -20,15 +24,25 @@ public class PlayerStats : MonoBehaviour
 
     private void Awake()
     {
+        // Auto-assign equipment manager if not set
+        equipmentManager ??= GetComponent<EquipmentManager>();
+        
+        // Initialize stat modifier calculator
+        if (equipmentManager != null)
+        {
+            statModifierCalculator = new StatModifierApplicator(equipmentManager);
+        }
+        
         health ??= new HealthStat();
         hunger ??= new HungerStat();
         thirst ??= new ThirstStat();
         stamina ??= new StaminaStat();
+        fatigue ??= new FatigueStat();
 
         hunger.Init(config.hungerDrainPerSecond, config.hungerHurtThreshold, config.starvationDPS);
         thirst.Init(config.thirstDrainPerSecond, config.thirstHurtThreshold, config.dehydrationDPS);
         stamina.Init(config.staminaRegenPerSecond, config.staminaDrainCooldown, config.climbStaminaDrainPerSecond);
-        stamina.InitFatigue(config.maxFatigue, config.fatigueRateTime, config.fatigueRateElev, config.fatigueRateSpeed);
+        fatigue.Init(config.maxFatigue, config.fatigueRateTime, config.fatigueRateElev);
 
         health.OnChanged += (c, m) => OnHealthChanged?.Invoke(c, m);
         stamina.OnChanged += (c, m) => OnStaminaChanged?.Invoke(c, m);
@@ -42,6 +56,7 @@ public class PlayerStats : MonoBehaviour
         hunger.Tick(dt);
         thirst.Tick(dt);
         stamina.Tick(dt);
+        fatigue.Tick(dt);
 
         if (hunger.ShouldHurt)
         {
@@ -106,7 +121,7 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     public void FullRest()
     {
-        stamina.FullRest();
+        fatigue.FullRest();
     }
 
     public float Health => health.Current;
@@ -125,8 +140,13 @@ public class PlayerStats : MonoBehaviour
     public float MaxStamina => stamina.Max;
     public float StaminaPercent => stamina.Percent;
     
-    // Expose stamina stat for advanced operations like terrain drain
+    public float Fatigue => fatigue.Current;
+    public float MaxFatigue => fatigue.Max;
+    public float FatiguePercent => fatigue.Percent;
+    
+    // Expose stat instances for advanced operations
     public StaminaStat StaminaStat => stamina;
+    public FatigueStat FatigueStat => fatigue;
 
     public IStat GetStat(StatType statType)
     {
@@ -140,5 +160,116 @@ public class PlayerStats : MonoBehaviour
             _ => null
         };
     }
+    
+    #region Equipment Stat Modifiers
+    
+    /// <summary>
+    /// Gets the modified walk speed with equipment bonuses applied.
+    /// </summary>
+    public float GetModifiedWalkSpeed(bool isOnSlope = false)
+    {
+        float baseSpeed = config.baseWalkSpeed;
+        
+        if (statModifierCalculator != null)
+        {
+            // Apply universal walk speed modifier
+            baseSpeed = statModifierCalculator.GetModifiedValue(StatModifierType.UniversalWalkSpeed, baseSpeed);
+            
+            // Apply normal or slope-specific modifier
+            if (isOnSlope)
+            {
+                baseSpeed = statModifierCalculator.GetModifiedValue(StatModifierType.WalkSpeedSlope, baseSpeed);
+            }
+            else
+            {
+                baseSpeed = statModifierCalculator.GetModifiedValue(StatModifierType.NormalWalkSpeed, baseSpeed);
+            }
+        }
+        
+        return baseSpeed;
+    }
+    
+    /// <summary>
+    /// Gets the modified climb speed with equipment bonuses applied.
+    /// </summary>
+    public float GetModifiedClimbSpeed()
+    {
+        float baseSpeed = config.baseClimbSpeed;
+        
+        if (statModifierCalculator != null)
+        {
+            baseSpeed = statModifierCalculator.GetModifiedValue(StatModifierType.ClimbSpeed, baseSpeed);
+        }
+        
+        return baseSpeed;
+    }
+    
+    /// <summary>
+    /// Gets the stamina drain multiplier with equipment reductions applied.
+    /// Lower values mean less stamina drain.
+    /// </summary>
+    public float GetStaminaDrainMultiplier(bool isWalking = false, bool isClimbing = false)
+    {
+        float multiplier = 1f;
+        
+        if (statModifierCalculator != null)
+        {
+            // Universal stamina reduction applies to all activities
+            multiplier = statModifierCalculator.GetModifiedValue(StatModifierType.UniversalStaminaReduce, multiplier);
+            
+            // Activity-specific reductions
+            if (isWalking)
+            {
+                multiplier = statModifierCalculator.GetModifiedValue(StatModifierType.WalkStaminaReduce, multiplier);
+            }
+            else if (isClimbing)
+            {
+                multiplier = statModifierCalculator.GetModifiedValue(StatModifierType.ClimbStaminaReduce, multiplier);
+            }
+        }
+        
+        return multiplier;
+    }
+    
+    /// <summary>
+    /// Gets the fatigue accumulation multiplier with equipment reductions applied.
+    /// Lower values mean slower fatigue accumulation.
+    /// </summary>
+    public float GetFatigueMultiplier(bool isOnSlope = false)
+    {
+        float multiplier = 1f;
+        
+        if (statModifierCalculator != null)
+        {
+            // Universal fatigue reduction
+            multiplier = statModifierCalculator.GetModifiedValue(StatModifierType.UniversalFatigueReduce, multiplier);
+            
+            // Slope-specific reduction
+            if (isOnSlope)
+            {
+            multiplier = statModifierCalculator.GetModifiedValue(StatModifierType.SlopeFatigueReduce, multiplier);
+            }
+        }
+        
+        return multiplier;
+    }
+    
+    /// <summary>
+    /// Gets the fatigue rest bonus with equipment applied.
+    /// Higher values mean faster fatigue recovery when resting.
+    /// </summary>
+    public float GetFatigueRestBonus()
+    {
+        float bonus = 1f;
+        
+        if (statModifierCalculator != null)
+        {
+            bonus = statModifierCalculator.GetModifiedValue(StatModifierType.FatigueGainWhenRest, bonus);
+        }
+        
+        return bonus;
+    }
+    
+    #endregion
 
 }

@@ -15,11 +15,13 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
     [SerializeField] private Color normalColor = Color.white;
     [SerializeField] private Color highlightColor = Color.yellow;
     [SerializeField] private Color selectedColor = Color.cyan;
+    [SerializeField] private Color equippedColor = new Color(0.3f, 0.8f, 0.3f, 1f); // Green tint for equipped items
 
     private InventorySlot inventorySlot;
     private int slotIndex;
     private InventoryUI inventoryUI;
     private bool isSelected = false;
+    private EquipmentManager equipmentManager; // To check if item is equipped
 
     public InventorySlot InventorySlot => inventorySlot;
     public int SlotIndex => slotIndex;
@@ -29,6 +31,9 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
     {
         inventoryUI = ui;
         slotIndex = index;
+        
+        // Get equipment manager reference
+        equipmentManager = FindFirstObjectByType<EquipmentManager>();
 
         // Hide highlight initially
         if (highlightImage != null)
@@ -88,7 +93,15 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
     {
         if (backgroundImage == null) return;
 
-        if (isSelected)
+        // Check if this item is currently equipped
+        bool isEquipped = IsItemEquipped();
+        
+        if (isEquipped)
+        {
+            // Show equipped color (green tint)
+            backgroundImage.color = equippedColor;
+        }
+        else if (isSelected)
         {
             backgroundImage.color = selectedColor;
         }
@@ -96,6 +109,21 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
         {
             backgroundImage.color = normalColor;
         }
+    }
+    
+    private bool IsItemEquipped()
+    {
+        if (inventorySlot == null || inventorySlot.IsEmpty || equipmentManager == null)
+            return false;
+        
+        // Check if item is equipment
+        EquipmentItem equipItem = inventorySlot.item as EquipmentItem;
+        if (equipItem == null)
+            return false;
+        
+        // Check if this specific item is currently equipped
+        IEquippable equippedItem = equipmentManager.GetEquippedItem(equipItem.EquipmentSlot);
+        return equippedItem == equipItem;
     }
 
     public void SetSelected(bool selected)

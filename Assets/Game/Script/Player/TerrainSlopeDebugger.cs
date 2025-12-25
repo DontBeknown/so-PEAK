@@ -110,21 +110,20 @@ public class TerrainSlopeDebugger : MonoBehaviour
         GUILayout.Label($"Direction: {(isMovingUphill ? "UPHILL ↗" : "DOWNHILL ↘")}");
         GUILayout.Label($"Tobler Multiplier: {currentSpeedMultiplier:F2}x");
         
-        if (stats != null && stats.Config != null && stats.StaminaStat != null)
+        if (stats != null && stats.Config != null && stats.FatigueStat != null)
         {
             float drainPerSec = stats.Config.baseMovementStaminaDrain;
-            float fatigue = stats.StaminaStat.Fatigue;
-            float fatiguePercent = stats.StaminaStat.FatiguePercent;
+            float fatigue = stats.FatigueStat.Current;
+            float fatiguePercent = stats.FatigueStat.Percent;
             
             // Calculate speeds
-            float baseSpeed = stats.Config.walkSpeed;
+            float baseSpeed = stats.Config.baseWalkSpeed;
             float theoreticalSpeed = baseSpeed * currentSpeedMultiplier;
             
             // Calculate fatigue components using same values as WalkingState
             float fatigueTimeRate = stats.Config.fatigueRateTime;
             float fatigueElevRate = stats.Config.fatigueRateElev * Mathf.Abs(currentSlopeGradient);
-            float fatigueSpeedRate = stats.Config.fatigueRateSpeed * actualMovementSpeed;
-            float totalFatigueRate = fatigueTimeRate + fatigueElevRate + fatigueSpeedRate;
+            float totalFatigueRate = fatigueTimeRate + fatigueElevRate;
             
             GUILayout.Label($"Base Speed: {baseSpeed:F2} m/s");
             GUILayout.Label($"After Tobler: {theoreticalSpeed:F2} m/s");
@@ -136,7 +135,6 @@ public class TerrainSlopeDebugger : MonoBehaviour
             GUILayout.Label($"<b>Fatigue Breakdown:</b>", style);
             GUILayout.Label($"  Time: {fatigueTimeRate:F3}/sec");
             GUILayout.Label($"  Elevation: {fatigueElevRate:F3}/sec");
-            GUILayout.Label($"  Speed: {fatigueSpeedRate:F3}/sec");
             GUILayout.Label($"  Total: {totalFatigueRate:F3}/sec");
             
             GUILayout.Space(3);

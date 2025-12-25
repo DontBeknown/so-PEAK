@@ -69,9 +69,9 @@ public class WalkingState : IPlayerState
             
             // Combine slope and fatigue penalties additively
             float fatigueSpeedPenalty = 1f;
-            if (model.Stats?.StaminaStat != null && model.Stats.Config != null)
+            if (model.Stats?.FatigueStat != null && model.Stats.Config != null)
             {
-                fatigueSpeedPenalty = model.Stats.StaminaStat.GetFatigueSpeedPenalty(model.Stats.Config.fatigueSpeedPenaltyThreshold);
+                fatigueSpeedPenalty = model.Stats.FatigueStat.GetSpeedPenalty(model.Stats.Config.fatigueSpeedPenaltyThreshold);
             }
             
             // Sum the speed reductions, then apply to base speed
@@ -148,12 +148,26 @@ public class WalkingState : IPlayerState
         float normalizedValue = toblerRaw / flatGroundValue; // 0 to 1+ range
         float toblerSpeedMultiplier = Mathf.Lerp(config.minSlopeSpeedMultiplier, config.maxSlopeSpeedMultiplier, Mathf.Clamp01(normalizedValue));
         
-        // Apply constant stamina drain when moving and pass parameters for fatigue calculation
+        // Apply constant stamina drain when moving and update fatigue with movement parameters
         if (model.Stats != null && horizontalVelocity.magnitude > config.movementThreshold)
         {
             float drainPerSecond = config.baseMovementStaminaDrain; // No multiplier, constant drain
-            float movementSpeed = horizontalVelocity.magnitude * toblerSpeedMultiplier;
-            model.Stats.StaminaStat.ApplyTerrainDrain(drainPerSecond, slopeGradient, movementSpeed);
+            
+            // Apply fatigue multiplier to stamina drain
+            if (model.Stats.FatigueStat != null)
+            {
+                float fatigueDrainMultiplier = model.Stats.FatigueStat.GetStaminaDrainMultiplier();
+                drainPerSecond *= fatigueDrainMultiplier;
+            }
+            
+            model.Stats.StaminaStat.ApplyTerrainDrain(drainPerSecond);
+            
+            // Update fatigue with movement parameters
+            if (model.Stats.FatigueStat != null)
+            {
+                float movementSpeed = horizontalVelocity.magnitude * toblerSpeedMultiplier;
+                model.Stats.FatigueStat.UpdateMovement(slopeGradient, movementSpeed, true);
+            }
         }
         
         return toblerSpeedMultiplier;

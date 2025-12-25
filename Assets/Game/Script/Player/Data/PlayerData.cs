@@ -44,8 +44,8 @@ namespace Game.Player.Data
         {
             return new PlayerData
             {
-                WalkSpeed = config.walkSpeed,
-                ClimbSpeed = config.climbSpeed,
+                WalkSpeed = config.baseWalkSpeed,
+                ClimbSpeed = config.baseClimbSpeed,
                 JumpForce = config.jumpForce,
                 RotationSmoothness = config.rotationSmoothness,
                 Gravity = config.gravity,

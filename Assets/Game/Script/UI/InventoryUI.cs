@@ -11,6 +11,9 @@ public class InventoryUI : MonoBehaviour
     [SerializeField] private Transform slotsContainer;
     [SerializeField] private GameObject slotPrefab;
     [SerializeField] private Button closeButton;
+    
+    [Header("Equipment Panel")]
+    [SerializeField] private EquipmentUI equipmentUI; // Equipment displayed alongside inventory
 
     [Header("Selected Item Panel")]
     [SerializeField] private GameObject selectedItemPanel;
@@ -32,6 +35,7 @@ public class InventoryUI : MonoBehaviour
     [SerializeField] private bool pauseGameWhenOpen = true;
 
     private InventoryManager inventoryManager;
+    private EquipmentManager equipmentManager;
     private PlayerStats playerStats;
     private List<InventorySlotUI> slotUIs = new List<InventorySlotUI>();
     private int selectedSlotIndex = -1;
@@ -45,6 +49,7 @@ public class InventoryUI : MonoBehaviour
     {
         // Get required components
         inventoryManager = FindFirstObjectByType<InventoryManager>();
+        equipmentManager = FindFirstObjectByType<EquipmentManager>();
         playerStats = FindFirstObjectByType<PlayerStats>();
         
 
@@ -181,7 +186,7 @@ public class InventoryUI : MonoBehaviour
         ClearSelection();
     }
 
-    private void UpdateAllSlots()
+    public void UpdateAllSlots()
     {
         if (inventoryManager == null) return;
 
@@ -300,11 +305,19 @@ public class InventoryUI : MonoBehaviour
                 // Update use button
                 if (useButton != null)
                 {
-                    useButton.interactable = item.isConsumable;
+                    // Check if item is equipment or consumable
+                    bool isEquipment = item.itemType == ItemType.Equipment;
+                    useButton.interactable = item.isConsumable || isEquipment;
+                    
                     var buttonText = useButton.GetComponentInChildren<TextMeshProUGUI>();
                     if (buttonText != null)
                     {
-                        buttonText.text = item.isConsumable ? "Consume" : "Use";
+                        if (isEquipment)
+                            buttonText.text = "Equip";
+                        else if (item.isConsumable)
+                            buttonText.text = "Consume";
+                        else
+                            buttonText.text = "Use";
                     }
                 }
 
@@ -329,6 +342,15 @@ public class InventoryUI : MonoBehaviour
         if (slotUI.IsEmpty) return;
 
         var item = slotUI.InventorySlot.item;
+        
+        // Check if item is equipment
+        if (item.itemType == ItemType.Equipment)
+        {
+            EquipItem(item);
+            return;
+        }
+        
+        // Otherwise, consume if consumable
         if (item.isConsumable)
         {
             inventoryManager.ConsumeItem(item);
@@ -340,6 +362,31 @@ public class InventoryUI : MonoBehaviour
                 UpdateSelectedItemPanel();
             }
         }
+    }
+    
+    private void EquipItem(InventoryItem item)
+    {
+        if (equipmentManager == null)
+        {
+            Debug.LogWarning("EquipmentManager not found! Cannot equip items.");
+            return;
+        }
+        
+        EquipmentItem equipItem = item as EquipmentItem;
+        if (equipItem == null)
+        {
+            Debug.LogWarning($"Item {item.itemName} is marked as Equipment but is not an EquipmentItem!");
+            return;
+        }
+        
+        // Equip the item (keep it in inventory)
+        IEquippable previousItem = equipmentManager.Equip(equipItem);
+        
+        Debug.Log($"Equipped {equipItem.itemName} to {equipItem.EquipmentSlot} slot");
+        
+        // Update UI to show equipped status
+        UpdateAllSlots();
+        UpdateSelectedItemPanel();
     }
 
     public void UseSelectedItem()
@@ -386,6 +433,12 @@ public class InventoryUI : MonoBehaviour
         {
             inventoryPanel.SetActive(true);
         }
+        
+        // Also show equipment panel alongside inventory
+        if (equipmentUI != null)
+        {
+            equipmentUI.ShowEquipmentPanel();
+        }
 
         UpdateAllSlots();
         UpdateStatsDisplay();
@@ -402,6 +455,12 @@ public class InventoryUI : MonoBehaviour
         if (inventoryPanel != null)
         {
             inventoryPanel.SetActive(false);
+        }
+        
+        // Also hide equipment panel
+        if (equipmentUI != null)
+        {
+            equipmentUI.HideEquipmentPanel();
         }
 
         ClearSelection();

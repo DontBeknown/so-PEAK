@@ -99,8 +99,8 @@ public class PlayerModelRefactored
     public ICameraProvider GetCameraProvider() => _cameraProvider;
 
     // Direct config properties (reads live values from Inspector for easy debugging)
-    public float WalkSpeed => _config.walkSpeed;
-    public float ClimbSpeed => _config.climbSpeed;
+    public float WalkSpeed => _config.baseWalkSpeed;
+    public float ClimbSpeed => _config.baseClimbSpeed;
     public float JumpForce => _config.jumpForce;
     public float RotationSmoothness => _config.rotationSmoothness;
     public float ClimbDetectionRange => _config.climbDetectionRange;

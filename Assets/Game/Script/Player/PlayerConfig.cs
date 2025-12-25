@@ -3,15 +3,21 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Config/PlayerConfig", fileName = "PlayerConfig")]
 public class PlayerConfig : ScriptableObject
 {
-    [Header("Movement")]
-    public float walkSpeed = 3f;
-    public float climbSpeed = 2f;
+    [Header("Movement - Base Values")]
+    [Tooltip("Base walk speed on flat terrain")]
+    public float baseWalkSpeed = 3f;
+    [Tooltip("Base climb speed")]
+    public float baseClimbSpeed = 2f;
     public float jumpForce = 5f;
     public float rotationSmoothness = 10f;
+    
+    [Header("Movement - Slope Modifiers")]
     [Tooltip("Minimum speed multiplier on steep slopes (0.7 = 70% speed)")]
     public float minSlopeSpeedMultiplier = 0.7f;
     [Tooltip("Maximum speed multiplier on flat/downhill (1.0 = 100% speed)")]
     public float maxSlopeSpeedMultiplier = 1f;
+    
+    [Header("Movement - Physics")]
     public float climbDetectionRange = 1f;
     public LayerMask climbableLayer;
     public float gravity = -9.81f;
@@ -48,8 +54,6 @@ public class PlayerConfig : ScriptableObject
     public float fatigueRateTime = 0.12f;
     [Tooltip("Fatigue rate based on elevation/slope")]
     public float fatigueRateElev = 0.0005f;
-    [Tooltip("Fatigue rate based on movement speed")]
-    public float fatigueRateSpeed = 0.1f;
     [Tooltip("Multiplier for fatigue accumulation on slopes")]
     public float slopeFatigueMultiplier = 2f;
     [Tooltip("Fatigue threshold where stamina regen is reduced (50 = 50% fatigue)")]
