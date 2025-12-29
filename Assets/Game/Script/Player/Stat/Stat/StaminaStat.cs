@@ -13,6 +13,8 @@ public class StaminaStat : Stat
     private bool isClimbing;
     private bool isWalking;
     
+    public event Action<float> OnDrained;
+    
     // Terrain-based drain tracking
     private float currentSlopeDrain;
 
@@ -55,6 +57,7 @@ public class StaminaStat : Stat
     public void Drain(float amount)
     {
         draining = true;
+        OnDrained?.Invoke(amount);
         SetCurrent(Current - amount);
     }
 

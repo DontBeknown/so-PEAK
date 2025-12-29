@@ -19,6 +19,11 @@ public class PlayerStats : MonoBehaviour
     public event Action<float, float> OnHealthChanged;
     public event Action<float, float> OnStaminaChanged;
     public event Action OnDeath;
+    
+    // Stat tracking events
+    public event Action<float> OnStaminaDrained;
+    public event Action<float> OnHealthDamaged;
+    public event Action<float> OnFatigueChanged;
 
     private bool isSprinting;
 
@@ -47,6 +52,11 @@ public class PlayerStats : MonoBehaviour
         health.OnChanged += (c, m) => OnHealthChanged?.Invoke(c, m);
         stamina.OnChanged += (c, m) => OnStaminaChanged?.Invoke(c, m);
         health.OnDeath += () => OnDeath?.Invoke();
+        
+        // Subscribe to stat tracking events
+        health.OnDamaged += (amount) => OnHealthDamaged?.Invoke(amount);
+        stamina.OnDrained += (amount) => OnStaminaDrained?.Invoke(amount);
+        fatigue.OnChanged += (c, m) => OnFatigueChanged?.Invoke(c);
     }
 
     private void Update()

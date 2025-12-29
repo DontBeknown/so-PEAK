@@ -5,10 +5,12 @@ using System;
 public class HealthStat : Stat
 {
     public event Action OnDeath;
+    public event Action<float> OnDamaged;
 
     public void Damage(float amount)
     {
         if (current <= 0f) return;
+        OnDamaged?.Invoke(amount);
         Subtract(amount);
         if (current <= 0f) OnDeath?.Invoke();
     }

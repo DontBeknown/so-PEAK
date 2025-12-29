@@ -123,7 +123,7 @@ public class EquipmentUI : MonoBehaviour
         }
         
         isInitialized = true;
-        Debug.Log($"EquipmentUI: Created {slotUIs.Count} equipment slots");
+        //Debug.Log($"EquipmentUI: Created {slotUIs.Count} equipment slots");
     }
 
     private void UpdateAllSlots()

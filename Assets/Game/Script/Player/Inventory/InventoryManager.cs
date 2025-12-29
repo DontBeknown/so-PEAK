@@ -16,7 +16,7 @@ public class InventoryManager : MonoBehaviour
     // Events
     public static event Action<InventoryItem, int> OnItemAdded;
     public static event Action<InventoryItem, int> OnItemRemoved;
-    public static event Action<InventoryItem> OnItemConsumed;
+    public static event Action<InventoryItem, int> OnItemConsumed;
     public static event Action OnInventoryChanged;
 
     private void Awake()
@@ -107,7 +107,7 @@ public class InventoryManager : MonoBehaviour
             }
 
             RemoveItem(item, 1);
-            OnItemConsumed?.Invoke(item);
+            OnItemConsumed?.Invoke(item, 1);
             return true;
         }
 

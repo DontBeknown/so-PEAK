@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8682bdef8a18cb749a33588ac6e4d295, type: 3}
   m_Name: PlayerConfig
   m_EditorClassIdentifier: Assembly-CSharp::PlayerConfig
-  walkSpeed: 5
-  climbSpeed: 2
+  baseWalkSpeed: 5
+  baseClimbSpeed: 2
   jumpForce: 5
   rotationSmoothness: 10
   minSlopeSpeedMultiplier: 0.7
@@ -41,7 +41,6 @@ MonoBehaviour:
   maxFatigue: 100
   fatigueRateTime: 0.12
   fatigueRateElev: 0.0005
-  fatigueRateSpeed: 0.1
   slopeFatigueMultiplier: 2
   fatigueStaminaPenaltyThreshold: 50
   fatigueSpeedPenaltyThreshold: 70

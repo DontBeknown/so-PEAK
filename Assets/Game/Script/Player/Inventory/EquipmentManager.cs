@@ -38,7 +38,7 @@ public class EquipmentManager : MonoBehaviour
             equipmentSlots[slotType] = slot;
         }
 
-        Debug.Log($"EquipmentManager initialized with {equipmentSlots.Count} slots");
+        //Debug.Log($"EquipmentManager initialized with {equipmentSlots.Count} slots");
     }
 
     /// <summary>
