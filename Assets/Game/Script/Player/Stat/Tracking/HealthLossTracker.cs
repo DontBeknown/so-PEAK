@@ -5,6 +5,7 @@
 public class HealthLossTracker : BaseStatTracker<float>
 {
     private float totalHealthLost;
+    private int incidentCount;
     
     public override string MetricName => "Health Lost";
     public override float CurrentValue 
@@ -16,6 +17,7 @@ public class HealthLossTracker : BaseStatTracker<float>
     public HealthLossTracker(int maxDataPoints = 100) : base(maxDataPoints)
     {
         totalHealthLost = 0f;
+        incidentCount = 0;
     }
     
     public override void RecordValue(float damageAmount)
@@ -23,8 +25,14 @@ public class HealthLossTracker : BaseStatTracker<float>
         if (damageAmount > 0f)
         {
             totalHealthLost += damageAmount;
+            incidentCount++;
         }
     }
+    
+    /// <summary>
+    /// Gets the number of times health was damaged.
+    /// </summary>
+    public int GetIncidentCount() => incidentCount;
     
     protected override TimeSeriesDataPoint CreateDataPoint(float timestamp)
     {
@@ -35,5 +43,6 @@ public class HealthLossTracker : BaseStatTracker<float>
     {
         base.Reset();
         totalHealthLost = 0f;
+        incidentCount = 0;
     }
 }

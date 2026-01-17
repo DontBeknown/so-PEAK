@@ -17,6 +17,12 @@ public class PlayerStatsTrackerUI : MonoBehaviour
     [SerializeField] private GameObject panel;
     [SerializeField] private Button closeButton;
     
+    [Header("Tab System")]
+    [SerializeField] private GameObject statTrackingTab;
+    [SerializeField] private GameObject assessmentTab;
+    [SerializeField] private Button statTrackingTabButton;
+    [SerializeField] private Button assessmentTabButton;
+    
     [Header("Text Displays")]
     [SerializeField] private TextMeshProUGUI sessionTimeText;
     [SerializeField] private TextMeshProUGUI distanceText;
@@ -74,6 +80,12 @@ public class PlayerStatsTrackerUI : MonoBehaviour
         if (closeButton != null)
             closeButton.onClick.AddListener(Hide);
         
+        if (statTrackingTabButton != null)
+            statTrackingTabButton.onClick.AddListener(() => SwitchToTab(true));
+        
+        if (assessmentTabButton != null)
+            assessmentTabButton.onClick.AddListener(() => SwitchToTab(false));
+        
         if (distanceButton != null)
             distanceButton.onClick.AddListener(() => SwitchGraphMetric(StatMetricType.Distance));
         
@@ -110,6 +122,25 @@ public class PlayerStatsTrackerUI : MonoBehaviour
         if (panel != null)
         {
             panel.SetActive(true);
+            SwitchToTab(true); // Default to stat tracking tab
+            RefreshDisplay();
+        }
+    }
+    
+    /// <summary>
+    /// Switches between stat tracking and assessment tabs
+    /// </summary>
+    /// <param name="showStatTracking">True for stat tracking, false for assessment</param>
+    public void SwitchToTab(bool showStatTracking)
+    {
+        if (statTrackingTab != null)
+            statTrackingTab.SetActive(showStatTracking);
+        
+        if (assessmentTab != null)
+            assessmentTab.SetActive(!showStatTracking);
+        
+        if (showStatTracking)
+        {
             RefreshDisplay();
         }
     }
@@ -281,6 +312,8 @@ public class PlayerStatsTrackerUI : MonoBehaviour
             StatMetricType.Fatigue => "Fatigue Over Time",
             StatMetricType.Health => "Health Lost Over Time",
             StatMetricType.Consumables => "Consumables Used Over Time",
+            StatMetricType.PathTracking => "Path Positions Over Time",
+            StatMetricType.RiskTracking => "Risk Events Over Time",
             _ => "Unknown Metric"
         };
     }

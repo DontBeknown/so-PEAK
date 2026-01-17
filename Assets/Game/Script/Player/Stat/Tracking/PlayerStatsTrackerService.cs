@@ -16,6 +16,7 @@ public class PlayerStatsTrackerService : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private int maxDataPoints = 100;
     [SerializeField] private float snapshotInterval = 5f; // seconds between time-series snapshots
+    [SerializeField] private float minPathDistance = 1f; // minimum distance to record path positions
     
     // Trackers using IStatTracker<T> interface
     private DistanceTracker distanceTracker;
@@ -23,6 +24,8 @@ public class PlayerStatsTrackerService : MonoBehaviour
     private FatigueTracker fatigueTracker;
     private HealthLossTracker healthLossTracker;
     private ConsumableTracker consumableTracker;
+    private PathTracker pathTracker;
+    private RiskTracker riskTracker;
     
     // State
     private bool isTracking;
@@ -57,6 +60,8 @@ public class PlayerStatsTrackerService : MonoBehaviour
         fatigueTracker = new FatigueTracker(maxDataPoints);
         healthLossTracker = new HealthLossTracker(maxDataPoints);
         consumableTracker = new ConsumableTracker(maxDataPoints);
+        pathTracker = new PathTracker(minPathDistance, maxDataPoints);
+        riskTracker = new RiskTracker(maxDataPoints);
     }
     
     private void FindDependencies()
@@ -128,6 +133,8 @@ public class PlayerStatsTrackerService : MonoBehaviour
         fatigueTracker.Reset();
         healthLossTracker.Reset();
         consumableTracker.Reset();
+        pathTracker.Reset();
+        riskTracker.Reset();
         
         sessionStartTime = Time.time;
         timeSinceLastSnapshot = 0f;
@@ -142,10 +149,11 @@ public class PlayerStatsTrackerService : MonoBehaviour
         float dt = Time.deltaTime;
         timeSinceLastSnapshot += dt;
         
-        // Update distance tracking
+        // Update distance and path tracking
         if (playerTransform != null)
         {
             distanceTracker.UpdatePosition(playerTransform.position);
+            pathTracker.UpdatePosition(playerTransform.position);
         }
         
         // Periodic time-series snapshots
@@ -166,6 +174,8 @@ public class PlayerStatsTrackerService : MonoBehaviour
         fatigueTracker.UpdateTimeSeries(timestamp);
         healthLossTracker.UpdateTimeSeries(timestamp);
         consumableTracker.UpdateTimeSeries(timestamp);
+        pathTracker.UpdateTimeSeries(timestamp);
+        riskTracker.UpdateTimeSeries(timestamp);
     }
     
     // Event Handlers
@@ -190,7 +200,7 @@ public class PlayerStatsTrackerService : MonoBehaviour
         {
             for (int i = 0; i < quantity; i++)
             {
-                consumableTracker.RecordConsumable(item.itemName);
+                consumableTracker.RecordConsumable(item); // Pass InventoryItem object
             }
         }
     }
@@ -228,6 +238,39 @@ public class PlayerStatsTrackerService : MonoBehaviour
     public int GetTotalConsumablesUsed() => consumableTracker.TotalCount;
     
     /// <summary>
+    /// Gets count of food items consumed (for assessment).
+    /// </summary>
+    public int GetFoodItemsConsumed() => consumableTracker.GetFoodItemsConsumed();
+    
+    /// <summary>
+    /// Gets count of water items consumed (for assessment).
+    /// </summary>
+    public int GetWaterItemsConsumed() => consumableTracker.GetWaterItemsConsumed();
+    
+    /// <summary>
+    /// Gets count of health loss incidents (for assessment).
+    /// </summary>
+    public int GetHealthLossIncidents() => healthLossTracker.GetIncidentCount();
+    
+    /// <summary>
+    /// Gets the PathTracker instance.
+    /// </summary>
+    public PathTracker GetPathTracker() => pathTracker;
+    
+    /// <summary>
+    /// Gets the RiskTracker instance.
+    /// </summary>
+    public RiskTracker GetRiskTracker() => riskTracker;
+    
+    /// <summary>
+    /// Registers a risk event.
+    /// </summary>
+    public void RegisterRiskEvent(RiskEvent riskEvent)
+    {
+        riskTracker.RecordValue(riskEvent);
+    }
+    
+    /// <summary>
     /// Gets time-series data for a specific metric type.
     /// </summary>
     public List<TimeSeriesDataPoint> GetTimeSeriesData(StatMetricType metricType)
@@ -239,6 +282,8 @@ public class PlayerStatsTrackerService : MonoBehaviour
             StatMetricType.Fatigue => fatigueTracker.TimeSeriesData,
             StatMetricType.Health => healthLossTracker.TimeSeriesData,
             StatMetricType.Consumables => consumableTracker.TimeSeriesData,
+            StatMetricType.PathTracking => pathTracker.TimeSeriesData,
+            StatMetricType.RiskTracking => riskTracker.TimeSeriesData,
             _ => new List<TimeSeriesDataPoint>()
         };
     }
