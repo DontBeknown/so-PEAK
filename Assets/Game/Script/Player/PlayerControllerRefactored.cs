@@ -214,6 +214,12 @@ namespace Game.Player
         public string GetRedoDescription() => _inventoryFacade?.GetRedoDescription() ?? "Nothing to redo";
         public void ClearInventoryCommandHistory() => _inventoryFacade?.ClearCommandHistory();
 
+        // Input Control
+        public void SetInputBlocked(bool blocked)
+        {
+            _inputHandler?.SetInputBlocked(blocked);
+        }
+
         #endregion
     }
 }

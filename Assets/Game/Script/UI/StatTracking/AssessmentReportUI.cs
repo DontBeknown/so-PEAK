@@ -108,9 +108,8 @@ public class AssessmentReportUI : MonoBehaviour
         // Display rank with emoji
         if (rankText != null)
         {
-            string rankEmoji = GetRankEmoji(score.rank);
             string rankName = GetRankName(score.rank);
-            rankText.text = $"{rankEmoji} {rankName}";
+            rankText.text = $"{rankName}";
         }
         
         // Display total score
@@ -168,7 +167,7 @@ public class AssessmentReportUI : MonoBehaviour
         text += $"  Food: {details.foodEfficiency:F1}%\n";
         text += $"  Water: {details.waterEfficiency:F1}%\n";
         text += $"  Usage Ratio: {details.resourceUsageRatio:F2}x\n";
-        text += $"\n<i>{details.feedback}</i>";
+        text += $"<i>{details.feedback}</i>";
         
         efficiencyDetailsText.text = text;
     }
@@ -185,7 +184,7 @@ public class AssessmentReportUI : MonoBehaviour
         text += $"  Risks Avoided: {details.risksAvoided}\n";
         text += $"  Risks Encountered: {details.risksEncountered}\n";
         text += $"  Avoidance Rate: {details.avoidanceRate:F1}%\n";
-        text += $"\n<i>{details.feedback}</i>";
+        text += $"<i>{details.feedback}</i>";
         
         safetyDetailsText.text = text;
     }
@@ -202,7 +201,7 @@ public class AssessmentReportUI : MonoBehaviour
         text += $"  Path Deviation: {details.pathDeviation:F1}%\n";
         text += $"  Time Efficiency: {details.timeEfficiency:F1}%\n";
         text += $"  Route Optimality: {details.routeOptimality:F1}/100\n";
-        text += $"\n<i>{details.feedback}</i>";
+        text += $"<i>{details.feedback}</i>";
         
         planningDetailsText.text = text;
     }
@@ -226,20 +225,6 @@ public class AssessmentReportUI : MonoBehaviour
         feedbackText.text = feedback;
     }
     
-    /// <summary>
-    /// Gets emoji for performance rank
-    /// </summary>
-    private string GetRankEmoji(PerformanceRank rank)
-    {
-        return rank switch
-        {
-            PerformanceRank.AlpineMaster => "🏔️",
-            PerformanceRank.SkilledPlanner => "🧭",
-            PerformanceRank.Survivor => "⚙️",
-            PerformanceRank.LostWanderer => "🪶",
-            _ => "❓"
-        };
-    }
     
     /// <summary>
     /// Gets display name for performance rank

@@ -123,7 +123,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
         
         // Check if this specific item is currently equipped
         IEquippable equippedItem = equipmentManager.GetEquippedItem(equipItem.EquipmentSlot);
-        return equippedItem == equipItem;
+        return (Object)equippedItem == equipItem;
     }
 
     public void SetSelected(bool selected)

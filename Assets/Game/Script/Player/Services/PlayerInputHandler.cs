@@ -16,6 +16,7 @@ namespace Game.Player.Services
         private PlayerInventoryFacade _inventoryFacade;
         
         private Vector2 _moveInput;
+        private bool _inputBlocked = false;
 
         // Events for UI/Inventory actions
         public System.Action OnPickupRequested;
@@ -40,33 +41,49 @@ namespace Game.Player.Services
         {
             _inventoryFacade = inventoryFacade;
         }
+        
+        /// <summary>
+        /// Blocks or unblocks all player input
+        /// Call with true to stop player movement (e.g., when UI is open)
+        /// Call with false to resume normal input
+        /// </summary>
+        public void SetInputBlocked(bool blocked)
+        {
+            _inputBlocked = blocked;
+            
+            // Clear move input when blocking
+            if (blocked)
+            {
+                _moveInput = Vector2.zero;
+            }
+        }
 
         private void BindInputActions()
         {
-            // Movement input (continuous) - block when inventory is open
+            // Movement input (continuous) - block when input is blocked or inventory is open
             _inputActions.Player.Move.performed += ctx => 
             {
-                if (!IsInventoryOpen())
+                if (!IsInputBlocked())
                     _moveInput = ctx.ReadValue<Vector2>();
             };
             _inputActions.Player.Move.canceled += _ => _moveInput = Vector2.zero;
 
-            // Action inputs - delegate to current state (block when inventory is open)
+            // Action inputs - delegate to current state (block when input is blocked or inventory is open)
             _inputActions.Player.Jump.performed += _ => 
             {
-                if (!IsInventoryOpen())
+                if (!IsInputBlocked())
                     HandleJumpInput();
             };
             _inputActions.Player.Climb.performed += _ => 
             {
-                if (!IsInventoryOpen())
+                if (!IsInputBlocked())
                     HandleClimbInput();
             };
 
             // Item/UI inputs - trigger events (inventory toggle always works)
             _inputActions.Player.Pickup.performed += _ => 
             {
-                if (!IsInventoryOpen())
+                if (!IsInputBlocked())
                     OnPickupRequested?.Invoke();
             };
             _inputActions.Player.OpenInventory.performed += _ => OnInventoryToggleRequested?.Invoke();
@@ -82,6 +99,11 @@ namespace Game.Player.Services
         private bool IsInventoryOpen()
         {
             return _inventoryFacade?.IsInventoryOpen ?? false;
+        }
+        
+        private bool IsInputBlocked()
+        {
+            return _inputBlocked || IsInventoryOpen();
         }
 
         private void HandleJumpInput()

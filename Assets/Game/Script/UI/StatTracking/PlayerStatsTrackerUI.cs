@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using Game.Player;
+using Game.Player.Services;
 
 /// <summary>
 /// UI presenter for displaying player statistics.
@@ -12,6 +14,8 @@ public class PlayerStatsTrackerUI : MonoBehaviour
     [Header("Dependencies")]
     [SerializeField] private PlayerStatsTrackerService trackerService;
     [SerializeField] private CinemachinePlayerCamera playerCamera;
+    [SerializeField] private PlayerControllerRefactored playerController;
+    [SerializeField] private SimpleStatsHUD simpleStatsHUD;
     
     [Header("UI References")]
     [SerializeField] private GameObject panel;
@@ -67,6 +71,16 @@ public class PlayerStatsTrackerUI : MonoBehaviour
             playerCamera = FindFirstObjectByType<CinemachinePlayerCamera>();
         }
         
+        if (playerController == null)
+        {
+            playerController = FindFirstObjectByType<PlayerControllerRefactored>();
+        }
+
+        if(simpleStatsHUD == null)
+        {
+            simpleStatsHUD = FindFirstObjectByType<SimpleStatsHUD>();
+        }
+        
         SetupButtons();
         
         if (panel != null)
@@ -113,6 +127,11 @@ public class PlayerStatsTrackerUI : MonoBehaviour
     {
         playerCamera.SetCursorLock(false);
         
+        // Stop player movement
+        BlockPlayerInput(true);
+
+        simpleStatsHUD.Hide();
+        
         // Stop tracking when UI is opened
         if (trackerService != null)
         {
@@ -136,8 +155,10 @@ public class PlayerStatsTrackerUI : MonoBehaviour
         if (statTrackingTab != null)
             statTrackingTab.SetActive(showStatTracking);
         
-        if (assessmentTab != null)
+        if (assessmentTab != null){
+            assessmentTab.GetComponent<AssessmentReportUI>()?.GenerateAndDisplayAssessment();
             assessmentTab.SetActive(!showStatTracking);
+        } 
         
         if (showStatTracking)
         {
@@ -151,6 +172,11 @@ public class PlayerStatsTrackerUI : MonoBehaviour
     public void Hide()
     {
         playerCamera.SetCursorLock(true);
+        
+        simpleStatsHUD.Show();
+        
+        // Resume player movement
+        BlockPlayerInput(false);
         
         // Resume tracking when UI is closed
         if (trackerService != null)
@@ -328,5 +354,13 @@ public class PlayerStatsTrackerUI : MonoBehaviour
             return $"{hours}h {minutes}m {secs}s";
         else
             return $"{minutes}m {secs}s";
+    }
+    
+    /// <summary>
+    /// Blocks or unblocks player input
+    /// </summary>
+    private void BlockPlayerInput(bool block)
+    {
+        playerController?.SetInputBlocked(block);
     }
 }

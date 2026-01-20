@@ -7,6 +7,7 @@ public class SimpleStatsHUD : MonoBehaviour
     [SerializeField] private PlayerStats playerStats;
 
     [Header("UI References")]
+    [SerializeField] private GameObject hudPanel;
     [SerializeField] private Slider healthSlider;
     [SerializeField] private Slider hungerSlider;
     [SerializeField] private Slider thirstSlider;
@@ -35,5 +36,38 @@ public class SimpleStatsHUD : MonoBehaviour
 
         if (hungerSlider) hungerSlider.value = playerStats.HungerPercent;
         if (thirstSlider) thirstSlider.value = playerStats.ThirstPercent;
+    }
+
+    /// <summary>
+    /// Shows the HUD panel
+    /// </summary>
+    public void Show()
+    {
+        if (hudPanel != null)
+        {
+            hudPanel.SetActive(true);
+        }
+    }
+
+    /// <summary>
+    /// Hides the HUD panel
+    /// </summary>
+    public void Hide()
+    {
+        if (hudPanel != null)
+        {
+            hudPanel.SetActive(false);
+        }
+    }
+
+    /// <summary>
+    /// Toggles the HUD panel visibility
+    /// </summary>
+    public void Toggle()
+    {
+        if (hudPanel != null)
+        {
+            hudPanel.SetActive(!hudPanel.activeSelf);
+        }
     }
 }
