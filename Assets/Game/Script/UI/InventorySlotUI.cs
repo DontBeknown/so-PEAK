@@ -22,6 +22,8 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
     private InventoryUI inventoryUI;
     private bool isSelected = false;
     private EquipmentManager equipmentManager; // To check if item is equipped
+    private TooltipUI tooltipUI;
+    private ContextMenuUI contextMenuUI;
 
     public InventorySlot InventorySlot => inventorySlot;
     public int SlotIndex => slotIndex;
@@ -34,6 +36,11 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
         
         // Get equipment manager reference
         equipmentManager = FindFirstObjectByType<EquipmentManager>();
+        
+        // Get tooltip and context menu references
+        tooltipUI = FindFirstObjectByType<TooltipUI>();
+        if(tooltipUI == null) Debug.LogWarning("TooltipUI not found in scene.");
+        contextMenuUI = FindFirstObjectByType<ContextMenuUI>();
 
         // Hide highlight initially
         if (highlightImage != null)
@@ -128,6 +135,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
 
     public void SetSelected(bool selected)
     {
+        // No longer used - kept for compatibility
         isSelected = selected;
         UpdateBackgroundColor();
     }
@@ -136,23 +144,28 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
     {
         if (inventoryUI == null) return;
 
-        if (eventData.button == PointerEventData.InputButton.Left)
+        if (eventData.button == PointerEventData.InputButton.Right)
         {
-            // Left click - select slot and show in selected panel
-            inventoryUI.SelectSlot(slotIndex);
+            // Right click - show context menu
+            if (!IsEmpty && contextMenuUI != null)
+            {
+                contextMenuUI.ShowInventoryMenu(this, inventoryUI, equipmentManager);
+            }
         }
-        else if (eventData.button == PointerEventData.InputButton.Right)
-        {
-            // Right click - quick use item
-            inventoryUI.UseItem(slotIndex);
-        }
+        // Left click does nothing now
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        // Only show highlight, no tooltip
+        // Show highlight
         if (highlightImage != null)
             highlightImage.gameObject.SetActive(true);
+        
+        // Show tooltip if slot has an item
+        if (!IsEmpty && tooltipUI != null)
+        {
+            tooltipUI.ShowTooltip(inventorySlot.item, inventorySlot.quantity);
+        }
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -160,5 +173,11 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
         // Hide highlight
         if (highlightImage != null)
             highlightImage.gameObject.SetActive(false);
+        
+        // Hide tooltip
+        if (tooltipUI != null)
+        {
+            tooltipUI.HideTooltip();
+        }
     }
 }

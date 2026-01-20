@@ -25,6 +25,8 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
     private EquipmentManager equipmentManager;
     private IEquippable equippedItem;
     private EquipmentUI equipmentUI;
+    private TooltipUI tooltipUI;
+    private ContextMenuUI contextMenuUI;
 
     public EquipmentSlotType SlotType => slotType;
     public bool IsEmpty => equippedItem == null;
@@ -35,6 +37,10 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
         equipmentUI = ui;
         slotType = type;
         equipmentManager = manager;
+        
+        // Get tooltip and context menu references
+        tooltipUI = FindFirstObjectByType<TooltipUI>();
+        contextMenuUI = FindFirstObjectByType<ContextMenuUI>();
 
         // Set slot label
         if (slotLabel != null)
@@ -111,22 +117,15 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (eventData.button == PointerEventData.InputButton.Left)
+        if (eventData.button == PointerEventData.InputButton.Right)
         {
-            // Left click - select this equipment slot
-            if (equipmentUI != null)
+            // Right click - show context menu if slot has equipment
+            if (!IsEmpty && contextMenuUI != null)
             {
-                equipmentUI.SelectEquipmentSlot(slotType);
+                contextMenuUI.ShowEquipmentMenu(this, equipmentUI);
             }
         }
-        else if (eventData.button == PointerEventData.InputButton.Right)
-        {
-            // Right click - quick unequip
-            if (!IsEmpty && equipmentManager != null)
-            {
-                equipmentManager.Unequip(slotType);
-            }
-        }
+        // Left click does nothing now
     }
 
     public void OnPointerEnter(PointerEventData eventData)
@@ -136,6 +135,16 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
 
         if (backgroundImage != null && IsEmpty)
             backgroundImage.color = highlightColor;
+        
+        // Show tooltip if slot has equipped item
+        if (!IsEmpty && tooltipUI != null)
+        {
+            EquipmentItem equipItem = equippedItem as EquipmentItem;
+            if (equipItem != null)
+            {
+                tooltipUI.ShowTooltip(equipItem, 1);
+            }
+        }
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -145,6 +154,12 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
 
         if (backgroundImage != null && IsEmpty)
             backgroundImage.color = normalColor;
+        
+        // Hide tooltip
+        if (tooltipUI != null)
+        {
+            tooltipUI.HideTooltip();
+        }
     }
 
     public void OnDrop(PointerEventData eventData)

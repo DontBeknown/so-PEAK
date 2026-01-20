@@ -16,21 +16,12 @@ public class EquipmentUI : MonoBehaviour
     [SerializeField] private Transform equipmentSlotsContainer;
     [SerializeField] private GameObject equipmentSlotPrefab;
 
-    [Header("Selected Equipment Panel")]
-    [SerializeField] private GameObject selectedEquipmentPanel;
-    [SerializeField] private Image selectedEquipmentIcon;
-    [SerializeField] private TextMeshProUGUI selectedEquipmentName;
-    [SerializeField] private TextMeshProUGUI selectedEquipmentDescription;
-    [SerializeField] private TextMeshProUGUI selectedEquipmentStats; // Shows stat modifiers
-    [SerializeField] private Button unequipButton;
-
     [Header("Character Preview (Optional)")]
     [SerializeField] private Image characterPreview;
 
     private EquipmentManager equipmentManager;
     private InventoryUI inventoryUI; // Reference to refresh inventory when unequipping
     private Dictionary<EquipmentSlotType, EquipmentSlotUI> slotUIs = new Dictionary<EquipmentSlotType, EquipmentSlotUI>();
-    private EquipmentSlotType? selectedSlotType = null;
     private bool isInitialized = false; // Track if slots have been created
 
     private void Awake()
@@ -40,10 +31,6 @@ public class EquipmentUI : MonoBehaviour
         
         // Find inventory UI to refresh it when unequipping
         inventoryUI = FindFirstObjectByType<InventoryUI>();
-
-        // Setup unequip button
-        if (unequipButton != null)
-            unequipButton.onClick.AddListener(UnequipSelectedItem);
 
         // Start hidden
         if (equipmentPanel != null)
@@ -147,157 +134,6 @@ public class EquipmentUI : MonoBehaviour
         {
             slotUI.UpdateSlot(item);
         }
-
-        // Update selected panel if this slot is selected
-        if (selectedSlotType.HasValue && selectedSlotType.Value == slotType)
-        {
-            UpdateSelectedEquipmentPanel();
-        }
-    }
-
-    public void SelectEquipmentSlot(EquipmentSlotType slotType)
-    {
-        selectedSlotType = slotType;
-        UpdateSelectedEquipmentPanel();
-    }
-
-    private void UpdateSelectedEquipmentPanel()
-    {
-        if (selectedEquipmentPanel == null) return;
-
-        if (!selectedSlotType.HasValue)
-        {
-            ShowEmptySelection();
-            return;
-        }
-
-        IEquippable equippedItem = equipmentManager?.GetEquippedItem(selectedSlotType.Value);
-
-        if (equippedItem == null)
-        {
-            // Empty slot - just hide the panel
-            ShowEmptySelection();
-            return;
-        }
-
-        // Show equipped item details
-        EquipmentItem equipItem = equippedItem as EquipmentItem;
-        if (equipItem != null)
-        {
-            selectedEquipmentPanel.SetActive(true);
-
-            // Update icon
-            if (selectedEquipmentIcon != null && equipItem.icon != null)
-            {
-                selectedEquipmentIcon.sprite = equipItem.icon;
-                selectedEquipmentIcon.gameObject.SetActive(true);
-            }
-
-            // Update name
-            if (selectedEquipmentName != null)
-            {
-                selectedEquipmentName.text = equipItem.itemName;
-            }
-
-            // Update description
-            if (selectedEquipmentDescription != null)
-            {
-                selectedEquipmentDescription.text = equipItem.description;
-            }
-
-            // Update stat modifiers
-            if (selectedEquipmentStats != null)
-            {
-                string statsText = GetStatModifiersText(equippedItem);
-                selectedEquipmentStats.text = statsText;
-            }
-
-            // Enable unequip button
-            if (unequipButton != null)
-            {
-                unequipButton.interactable = true;
-            }
-        }
-    }
-
-    private string GetStatModifiersText(IEquippable equipment)
-    {
-        if (equipment == null || equipment.StatModifiers == null || equipment.StatModifiers.Count == 0)
-        {
-            return "<color=#888888>No stat bonuses</color>";
-        }
-
-        System.Text.StringBuilder sb = new System.Text.StringBuilder();
-        sb.AppendLine("<b>Stat Bonuses:</b>");
-
-        foreach (var modifier in equipment.StatModifiers)
-        {
-            string modifierText = FormatStatModifier(modifier);
-            sb.AppendLine($"<color=#4CAF50>• {modifierText}</color>");
-        }
-
-        return sb.ToString();
-    }
-
-    private string FormatStatModifier(IStatModifier modifier)
-    {
-        string modifierName = GetFriendlyModifierName(modifier.ModifierType);
-        string valueText;
-
-        if (modifier.IsMultiplicative)
-        {
-            float percentage = modifier.Value * 100f;
-            string sign = percentage >= 0 ? "+" : "";
-            valueText = $"{sign}{percentage:F0}%";
-        }
-        else
-        {
-            string sign = modifier.Value >= 0 ? "+" : "";
-            valueText = $"{sign}{modifier.Value:F1}";
-        }
-
-        return $"{modifierName}: {valueText}";
-    }
-
-    private string GetFriendlyModifierName(StatModifierType type)
-    {
-        return type switch
-        {
-            StatModifierType.UniversalWalkSpeed => "Walk Speed",
-            StatModifierType.NormalWalkSpeed => "Normal Walk Speed",
-            StatModifierType.WalkSpeedSlope => "Slope Walk Speed",
-            StatModifierType.ClimbSpeed => "Climb Speed",
-            StatModifierType.UniversalStaminaReduce => "Stamina Efficiency",
-            StatModifierType.WalkStaminaReduce => "Walk Stamina Efficiency",
-            StatModifierType.ClimbStaminaReduce => "Climb Stamina Efficiency",
-            StatModifierType.PenaltyFatigueReduce => "Fatigue Penalty Reduction",
-            StatModifierType.UniversalFatigueReduce => "Fatigue Reduction",
-            StatModifierType.SlopeFatigueReduce => "Slope Fatigue Reduction",
-            StatModifierType.FatigueGainWhenRest => "Rest Recovery Bonus",
-            _ => type.ToString()
-        };
-    }
-
-    private void ShowEmptySelection()
-    {
-        if (selectedEquipmentPanel != null)
-        {
-            selectedEquipmentPanel.SetActive(false);
-        }
-    }
-
-    private void UnequipSelectedItem()
-    {
-        if (selectedSlotType.HasValue && equipmentManager != null)
-        {
-            equipmentManager.Unequip(selectedSlotType.Value);
-            
-            // Refresh inventory UI to update equipped visual feedback
-            if (inventoryUI != null)
-            {
-                inventoryUI.UpdateAllSlots();
-            }
-        }
     }
 
     /// <summary>
@@ -328,11 +164,6 @@ public class EquipmentUI : MonoBehaviour
         }
 
         UpdateAllSlots();
-
-        if (!selectedSlotType.HasValue)
-        {
-            ShowEmptySelection();
-        }
     }
 
     public void HideEquipmentPanel()
@@ -341,8 +172,5 @@ public class EquipmentUI : MonoBehaviour
         {
             equipmentPanel.SetActive(false);
         }
-
-        selectedSlotType = null;
-        ShowEmptySelection();
     }
 }

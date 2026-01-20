@@ -15,15 +15,6 @@ public class InventoryUI : MonoBehaviour
     [Header("Equipment Panel")]
     [SerializeField] private EquipmentUI equipmentUI; // Equipment displayed alongside inventory
 
-    [Header("Selected Item Panel")]
-    [SerializeField] private GameObject selectedItemPanel;
-    [SerializeField] private Image selectedItemIcon;
-    [SerializeField] private TextMeshProUGUI selectedItemName;
-    [SerializeField] private TextMeshProUGUI selectedItemDescription;
-    [SerializeField] private Button useButton;
-    [SerializeField] private Button dropButton;
-    [SerializeField] private TextMeshProUGUI itemQuantityText; // Show "x5" etc.
-
     [Header("Stats Display")]
     // Sliders have been moved to `SimpleStatsHUD`; keep text elements here only.
     [SerializeField] private TextMeshProUGUI healthText;
@@ -38,7 +29,6 @@ public class InventoryUI : MonoBehaviour
     private EquipmentManager equipmentManager;
     private PlayerStats playerStats;
     private List<InventorySlotUI> slotUIs = new List<InventorySlotUI>();
-    private int selectedSlotIndex = -1;
     private bool isOpen = false;
     private PlayerInput playerInput;
     private InputAction openInventoryAction;
@@ -57,12 +47,6 @@ public class InventoryUI : MonoBehaviour
         if (closeButton != null)
             closeButton.onClick.AddListener(CloseInventory);
 
-        if (useButton != null)
-            useButton.onClick.AddListener(UseSelectedItem);
-
-        if (dropButton != null)
-            dropButton.onClick.AddListener(DropSelectedItem);
-
         // Start closed
         CloseInventory();
     }
@@ -73,9 +57,6 @@ public class InventoryUI : MonoBehaviour
         SubscribeToEvents();
         UpdateAllSlots();
         UpdateStatsDisplay();
-
-        // Show "Select an item" message initially
-        ShowEmptySelection();
     }
 
     private void OnDestroy()
@@ -160,12 +141,6 @@ public class InventoryUI : MonoBehaviour
 
         UpdateAllSlots();
         UpdateStatsDisplay();
-
-        // Show empty selection or maintain current selection
-        if (selectedSlotIndex < 0)
-        {
-            ShowEmptySelection();
-        }
     }
 
     public void CloseInventory()
@@ -182,8 +157,6 @@ public class InventoryUI : MonoBehaviour
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
-
-        ClearSelection();
     }
 
     public void UpdateAllSlots()
@@ -230,109 +203,7 @@ public class InventoryUI : MonoBehaviour
         }
     }
 
-    public void SelectSlot(int slotIndex)
-    {
-        if (slotIndex < 0 || slotIndex >= slotUIs.Count) return;
 
-        // Clear previous selection
-        ClearSelection();
-
-        // Select new slot
-        selectedSlotIndex = slotIndex;
-        slotUIs[selectedSlotIndex].SetSelected(true);
-
-        // Update selected item panel
-        UpdateSelectedItemPanel();
-    }
-
-    private void ClearSelection()
-    {
-        if (selectedSlotIndex >= 0 && selectedSlotIndex < slotUIs.Count)
-        {
-            slotUIs[selectedSlotIndex].SetSelected(false);
-        }
-
-        selectedSlotIndex = -1;
-        ShowEmptySelection();
-    }
-
-    private void ShowEmptySelection()
-    {
-        if (selectedItemPanel == null) return;
-
-        selectedItemPanel.SetActive(false);
-
-    }
-
-    private void UpdateSelectedItemPanel()
-    {
-        if (selectedItemPanel == null) return;
-
-        if (selectedSlotIndex >= 0 && selectedSlotIndex < slotUIs.Count)
-        {
-            var slotUI = slotUIs[selectedSlotIndex];
-            if (!slotUI.IsEmpty)
-            {
-                selectedItemPanel.SetActive(true);
-                var item = slotUI.InventorySlot.item;
-                var quantity = slotUI.InventorySlot.quantity;
-
-                // Update icon
-                if (selectedItemIcon != null && item.icon != null)
-                {
-                    selectedItemIcon.sprite = item.icon;
-                    selectedItemIcon.gameObject.SetActive(true);
-                }
-
-                // Update name
-                if (selectedItemName != null)
-                {
-                    selectedItemName.text = item.itemName;
-                }
-
-                // Update description
-                if (selectedItemDescription != null)
-                {
-                    selectedItemDescription.text = item.description;
-                }
-
-                // Update quantity
-                if (itemQuantityText != null)
-                {
-                    itemQuantityText.text = quantity > 1 ? $"x{quantity}" : "";
-                }
-
-                // Update use button
-                if (useButton != null)
-                {
-                    // Check if item is equipment or consumable
-                    bool isEquipment = item.itemType == ItemType.Equipment;
-                    useButton.interactable = item.isConsumable || isEquipment;
-                    
-                    var buttonText = useButton.GetComponentInChildren<TextMeshProUGUI>();
-                    if (buttonText != null)
-                    {
-                        if (isEquipment)
-                            buttonText.text = "Equip";
-                        else if (item.isConsumable)
-                            buttonText.text = "Consume";
-                        else
-                            buttonText.text = "Use";
-                    }
-                }
-
-                // Enable drop button
-                if (dropButton != null)
-                {
-                    dropButton.interactable = true;
-                }
-
-                return;
-            }
-        }
-
-        ShowEmptySelection();
-    }
 
     public void UseItem(int slotIndex)
     {
@@ -355,12 +226,6 @@ public class InventoryUI : MonoBehaviour
         {
             inventoryManager.ConsumeItem(item);
             UpdateStatsDisplay(); // Refresh stats after consumption
-
-            // Update selected panel if this item is currently selected
-            if (selectedSlotIndex == slotIndex)
-            {
-                UpdateSelectedItemPanel();
-            }
         }
     }
     
@@ -386,33 +251,29 @@ public class InventoryUI : MonoBehaviour
         
         // Update UI to show equipped status
         UpdateAllSlots();
-        UpdateSelectedItemPanel();
     }
 
-    public void UseSelectedItem()
+    public void DropItem(int slotIndex)
     {
-        if (selectedSlotIndex >= 0)
+        if (slotIndex >= 0 && slotIndex < slotUIs.Count && inventoryManager != null)
         {
-            UseItem(selectedSlotIndex);
-        }
-    }
-
-    public void DropSelectedItem()
-    {
-        if (selectedSlotIndex >= 0 && selectedSlotIndex < slotUIs.Count && inventoryManager != null)
-        {
-            var slotUI = slotUIs[selectedSlotIndex];
+            var slotUI = slotUIs[slotIndex];
             if (!slotUI.IsEmpty)
             {
                 // Remove one item from inventory
                 var item = slotUI.InventorySlot.item;
                 inventoryManager.RemoveItem(item, 1);
                 Debug.Log($"Dropped {item.itemName}");
-
-                // Update selected panel after dropping
-                UpdateSelectedItemPanel();
             }
         }
+    }
+    
+    /// <summary>
+    /// Get the equipment manager reference (for context menu).
+    /// </summary>
+    public EquipmentManager GetEquipmentManager()
+    {
+        return equipmentManager;
     }
 
     private void OnItemChanged(InventoryItem item, int quantity)
@@ -442,12 +303,6 @@ public class InventoryUI : MonoBehaviour
 
         UpdateAllSlots();
         UpdateStatsDisplay();
-
-        // Show empty selection or maintain current selection
-        if (selectedSlotIndex < 0)
-        {
-            ShowEmptySelection();
-        }
     }
 
     public void HideInventoryPanel()
@@ -462,7 +317,5 @@ public class InventoryUI : MonoBehaviour
         {
             equipmentUI.HideEquipmentPanel();
         }
-
-        ClearSelection();
     }
 }
