@@ -7,30 +7,17 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class StatTrackerExample : MonoBehaviour
 {
-    [Header("References")]
-    [SerializeField] private PlayerStatsTrackerUI statsUI;
-    
     [Header("Input Settings")]
     [SerializeField] private Key toggleKey = Key.P;
     
-    private void Awake()
-    {
-        // Auto-find UI if not assigned
-        if (statsUI == null)
-        {
-            statsUI = FindFirstObjectByType<PlayerStatsTrackerUI>();
-        }
-    }
-    
     private void Update()
     {
-        // Toggle stats UI with Tab key (or your configured key)
+        // Toggle stats UI with configured key
         if (Keyboard.current != null && Keyboard.current[toggleKey].wasPressedThisFrame)
         {
-            if (statsUI != null)
+            if (UIManager.Instance != null)
             {
-                
-                statsUI.Toggle();
+                UIManager.Instance.ToggleStatsTracker();
             }
         }
     }
@@ -40,9 +27,9 @@ public class StatTrackerExample : MonoBehaviour
     /// </summary>
     public void ShowStatsUI()
     {
-        if (statsUI != null)
+        if (UIManager.Instance != null)
         {
-            statsUI.Show();
+            UIManager.Instance.OpenStatsTracker();
         }
     }
 }

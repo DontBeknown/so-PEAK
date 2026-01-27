@@ -16,6 +16,7 @@ public class PlayerStatsTrackerUI : MonoBehaviour
     [SerializeField] private CinemachinePlayerCamera playerCamera;
     [SerializeField] private PlayerControllerRefactored playerController;
     [SerializeField] private SimpleStatsHUD simpleStatsHUD;
+    [SerializeField] private AssessmentReportUI assessmentReportUI;
     
     [Header("UI References")]
     [SerializeField] private GameObject panel;
@@ -53,6 +54,8 @@ public class PlayerStatsTrackerUI : MonoBehaviour
     
     private StatMetricType currentGraphMetric = StatMetricType.Distance;
     private float timeSinceLastRefresh;
+    
+    public bool IsActive => panel != null && panel.activeSelf;
     
     private void Awake()
     {
@@ -132,11 +135,21 @@ public class PlayerStatsTrackerUI : MonoBehaviour
 
         simpleStatsHUD.Hide();
         
+        // Hide pickup prompt when stats UI opens
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.HidePickupPrompt();
+        }
+        
         // Stop tracking when UI is opened
         if (trackerService != null)
         {
             trackerService.StopTracking();
         }
+        
+        if (assessmentReportUI != null){
+            assessmentReportUI.GenerateAndDisplayAssessment();
+        } 
         
         if (panel != null)
         {
@@ -155,10 +168,8 @@ public class PlayerStatsTrackerUI : MonoBehaviour
         if (statTrackingTab != null)
             statTrackingTab.SetActive(showStatTracking);
         
-        if (assessmentTab != null){
-            assessmentTab.GetComponent<AssessmentReportUI>()?.GenerateAndDisplayAssessment();
+        if (assessmentTab != null)
             assessmentTab.SetActive(!showStatTracking);
-        } 
         
         if (showStatTracking)
         {
@@ -177,6 +188,12 @@ public class PlayerStatsTrackerUI : MonoBehaviour
         
         // Resume player movement
         BlockPlayerInput(false);
+        
+        // Show pickup prompt again when stats UI closes
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowPickupPromptIfNeeded();
+        }
         
         // Resume tracking when UI is closed
         if (trackerService != null)

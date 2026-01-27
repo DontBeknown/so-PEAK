@@ -18,7 +18,7 @@ public class TooltipUI : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField] private Vector2 offset = new Vector2(15f, -15f);
-    [SerializeField] private float padding = 10f;
+    //[SerializeField] private float padding = 10f;
 
     private RectTransform tooltipRect;
     private Canvas canvas;

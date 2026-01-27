@@ -13,7 +13,7 @@ namespace Game.Menu
     {
         [Header("Animation Settings")]
         [SerializeField] private float fadeSpeed = 5f;
-        [SerializeField] private float scaleSpeed = 5f;
+        //[SerializeField] private float scaleSpeed = 5f;
         [SerializeField] private bool fadeOnEnable = true;
         [SerializeField] private bool scaleOnEnable = false;
 

@@ -23,6 +23,8 @@ public class EquipmentUI : MonoBehaviour
     private InventoryUI inventoryUI; // Reference to refresh inventory when unequipping
     private Dictionary<EquipmentSlotType, EquipmentSlotUI> slotUIs = new Dictionary<EquipmentSlotType, EquipmentSlotUI>();
     private bool isInitialized = false; // Track if slots have been created
+    
+    public bool IsActive => equipmentPanel != null && equipmentPanel.activeSelf;
 
     private void Awake()
     {

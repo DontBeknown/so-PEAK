@@ -51,10 +51,18 @@ namespace Game.Player.Services
         {
             _inputBlocked = blocked;
             
-            // Clear move input when blocking
+            // Clear move input when blocking to stop player movement immediately
             if (blocked)
             {
                 _moveInput = Vector2.zero;
+                
+                // Also stop the player's velocity to prevent sliding
+                if (_model != null)
+                {
+                    // Reset velocity to stop movement (keep Y component for gravity)
+                    Vector3 currentVelocity = _model.Velocity;
+                    _model.Velocity = new Vector3(0, currentVelocity.y, 0);
+                }
             }
         }
 

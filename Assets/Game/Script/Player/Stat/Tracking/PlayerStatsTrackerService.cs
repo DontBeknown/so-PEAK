@@ -31,10 +31,11 @@ public class PlayerStatsTrackerService : MonoBehaviour
     private bool isTracking;
     private float sessionStartTime;
     private float timeSinceLastSnapshot;
+    private float accumulatedSessionDuration; // Stores duration when tracking is paused
     
     // Public properties
     public bool IsTracking => isTracking;
-    public float SessionDuration => isTracking ? Time.time - sessionStartTime : 0f;
+    public float SessionDuration => accumulatedSessionDuration + (isTracking ? Time.time - sessionStartTime : 0f);
     
     private void Awake()
     {
@@ -111,7 +112,7 @@ public class PlayerStatsTrackerService : MonoBehaviour
         sessionStartTime = Time.time;
         timeSinceLastSnapshot = 0f;
         
-        Debug.Log("[StatTracker] Started tracking player statistics");
+        //Debug.Log("[StatTracker] Started tracking player statistics");
     }
     
     /// <summary>
@@ -119,7 +120,12 @@ public class PlayerStatsTrackerService : MonoBehaviour
     /// </summary>
     public void StopTracking()
     {
+        if (!isTracking) return;
+        
+        // Accumulate the session duration before stopping
+        accumulatedSessionDuration += Time.time - sessionStartTime;
         isTracking = false;
+        
         Debug.Log($"[StatTracker] Stopped tracking. Session duration: {FormatTime(SessionDuration)}");
     }
     
@@ -136,6 +142,7 @@ public class PlayerStatsTrackerService : MonoBehaviour
         pathTracker.Reset();
         riskTracker.Reset();
         
+        accumulatedSessionDuration = 0f;
         sessionStartTime = Time.time;
         timeSinceLastSnapshot = 0f;
         

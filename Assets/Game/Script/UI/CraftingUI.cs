@@ -333,7 +333,7 @@ public class CraftingUI : MonoBehaviour
         RefreshRecipeList();
         UpdateSelectedRecipeDisplay();
 
-        Debug.Log($"Successfully crafted {recipe.recipeName}!");
+        //Debug.Log($"Successfully crafted {recipe.recipeName}!");
     }
 
     private void OnCraftingFailed(CraftingRecipe recipe)

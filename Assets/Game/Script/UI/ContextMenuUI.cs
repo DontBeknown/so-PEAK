@@ -16,7 +16,7 @@ public class ContextMenuUI : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField] private Vector2 offset = new Vector2(5f, -5f);
-    [SerializeField] private float padding = 10f;
+    //[SerializeField] private float padding = 10f;
 
     private RectTransform menuRect;
     private Canvas canvas;

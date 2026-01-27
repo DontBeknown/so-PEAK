@@ -16,6 +16,16 @@ public class EquipmentManager : MonoBehaviour
     /// Event fired when any equipment changes (equip or unequip).
     /// </summary>
     public event Action<EquipmentSlotType, IEquippable> OnEquipmentChanged;
+    
+    /// <summary>
+    /// Static event fired when an item is equipped (for UI notifications).
+    /// </summary>
+    public static event Action<IEquippable> OnItemEquipped;
+    
+    /// <summary>
+    /// Static event fired when an item is unequipped (for UI notifications).
+    /// </summary>
+    public static event Action<IEquippable> OnItemUnequipped;
 
     private void Awake()
     {
@@ -32,8 +42,14 @@ public class EquipmentManager : MonoBehaviour
             var slot = new EquipmentSlot(slotType);
             
             // Subscribe to slot events
-            slot.OnItemEquipped += item => OnEquipmentChanged?.Invoke(slotType, item);
-            slot.OnItemUnequipped += item => OnEquipmentChanged?.Invoke(slotType, null);
+            slot.OnItemEquipped += item => {
+                OnEquipmentChanged?.Invoke(slotType, item);
+                OnItemEquipped?.Invoke(item);
+            };
+            slot.OnItemUnequipped += item => {
+                OnEquipmentChanged?.Invoke(slotType, null);
+                OnItemUnequipped?.Invoke(item);
+            };
             
             equipmentSlots[slotType] = slot;
         }

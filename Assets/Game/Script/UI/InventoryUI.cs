@@ -14,6 +14,9 @@ public class InventoryUI : MonoBehaviour
     
     [Header("Equipment Panel")]
     [SerializeField] private EquipmentUI equipmentUI; // Equipment displayed alongside inventory
+    
+    [Header("Tooltip")]
+    [SerializeField] private TooltipUI tooltipUI;
 
     [Header("Stats Display")]
     // Sliders have been moved to `SimpleStatsHUD`; keep text elements here only.
@@ -41,6 +44,9 @@ public class InventoryUI : MonoBehaviour
         inventoryManager = FindFirstObjectByType<InventoryManager>();
         equipmentManager = FindFirstObjectByType<EquipmentManager>();
         playerStats = FindFirstObjectByType<PlayerStats>();
+        
+        if (tooltipUI == null)
+            tooltipUI = FindFirstObjectByType<TooltipUI>();
         
 
         // Setup buttons
@@ -141,6 +147,12 @@ public class InventoryUI : MonoBehaviour
 
         UpdateAllSlots();
         UpdateStatsDisplay();
+
+        if (tooltipUI != null)
+        {
+            tooltipUI.HideTooltip();
+        }
+
     }
 
     public void CloseInventory()
@@ -156,6 +168,11 @@ public class InventoryUI : MonoBehaviour
             Time.timeScale = 1f;
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+        }
+
+        if (tooltipUI != null)
+        {
+            tooltipUI.HideTooltip();
         }
     }
 
@@ -310,6 +327,12 @@ public class InventoryUI : MonoBehaviour
         if (inventoryPanel != null)
         {
             inventoryPanel.SetActive(false);
+        }
+        
+        // Hide tooltip when hiding inventory panel
+        if (tooltipUI != null)
+        {
+            tooltipUI.HideTooltip();
         }
         
         // Also hide equipment panel

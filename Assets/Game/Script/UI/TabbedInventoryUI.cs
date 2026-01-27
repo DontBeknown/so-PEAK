@@ -34,6 +34,7 @@ public class TabbedInventoryUI : MonoBehaviour
     }
 
     public bool IsOpen => isOpen;
+    public bool IsActive => isOpen;
 
     private void Awake()
     {
@@ -106,6 +107,12 @@ public class TabbedInventoryUI : MonoBehaviour
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
+        
+        // Hide pickup prompt when inventory opens
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.HidePickupPrompt();
+        }
 
         // Switch to the specified tab
         SwitchTab(tab);
@@ -139,6 +146,12 @@ public class TabbedInventoryUI : MonoBehaviour
         if (craftingUI != null)
         {
             craftingUI.HideCraftingPanel();
+        }
+        
+        // Show pickup prompt again when inventory closes
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowPickupPromptIfNeeded();
         }
     }
 

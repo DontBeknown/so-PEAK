@@ -36,7 +36,7 @@ namespace Game.Player.Inventory.Commands
             
             if (success)
             {
-                Debug.Log($"Picked up: {_resourceCollector.name}");
+                //Debug.Log($"Picked up: {_resourceCollector.name}");
                 return true;
             }
 

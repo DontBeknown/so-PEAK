@@ -79,4 +79,34 @@ public class PickupPrompt : MonoBehaviour
             promptPanel.SetActive(visible);
         }
     }
+    
+    /// <summary>
+    /// Shows the pickup prompt for a specific item
+    /// </summary>
+    public void Show(string itemName)
+    {
+        if (itemNameText != null)
+        {
+            itemNameText.text = itemName;
+        }
+        SetPromptVisible(true);
+    }
+    
+    /// <summary>
+    /// Hides the pickup prompt
+    /// </summary>
+    public void Hide()
+    {
+        SetPromptVisible(false);
+    }
+    
+    /// <summary>
+    /// Checks if there's an item in range and shows prompt accordingly
+    /// This is called by UIManager when menus close
+    /// </summary>
+    public void CheckAndShow()
+    {
+        // The prompt visibility is already managed by ItemDetector events
+        // This method exists for UIManager to call when needed
+    }
 }
