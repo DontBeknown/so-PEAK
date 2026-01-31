@@ -192,7 +192,7 @@ public class ItemNotificationUI : MonoBehaviour
         {
             NotificationType.Added => "+ Added",
             NotificationType.Removed => "- Removed",
-            NotificationType.Consumed => "✓ Consumed",
+            NotificationType.Consumed => "Consumed",
             NotificationType.Equipped => "Equipped",
             NotificationType.Unequipped => "Unequipped",
             _ => ""

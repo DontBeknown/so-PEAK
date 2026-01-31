@@ -20,9 +20,11 @@ namespace Game.Player
         [Header("Inventory System References")]
         [SerializeField] private InventoryManager inventoryManager;
         [SerializeField] private CraftingManager craftingManager;
-        [SerializeField] private ItemDetector itemDetector;
         [SerializeField] private TabbedInventoryUI tabbedInventoryUI;
         [SerializeField] private CinemachinePlayerCamera playerCamera;
+
+        [Header("Interaction System")]
+        [SerializeField] private Game.Interaction.InteractionDetector interactionDetector;
 
         // Core Components
         private PlayerModelRefactored _model;
@@ -40,6 +42,7 @@ namespace Game.Player
             InitializeModel();
             InitializeServices();
             InitializeInventory();
+            InitializeInteraction();
         }
 
         private void Start()
@@ -85,7 +88,7 @@ namespace Game.Player
             _inputHandler = new PlayerInputHandler(this, _model);
             
             // Subscribe to input events
-            _inputHandler.OnPickupRequested += HandlePickupInput;
+            _inputHandler.OnInteractRequested += HandleInteractInput;
             _inputHandler.OnInventoryToggleRequested += HandleInventoryToggle;
             _inputHandler.OnQuickUseRequested += HandleQuickUse;
         }
@@ -95,15 +98,14 @@ namespace Game.Player
             // Auto-assign components
             inventoryManager ??= GetComponent<InventoryManager>();
             craftingManager ??= GetComponent<CraftingManager>();
-            itemDetector ??= GetComponent<ItemDetector>();
             tabbedInventoryUI ??= FindFirstObjectByType<TabbedInventoryUI>();
             playerCamera ??= FindFirstObjectByType<CinemachinePlayerCamera>();
 
             // Create facade with Command Pattern support
+            // Pass null for itemDetector - using new InteractionDetector system instead
             _inventoryFacade = new PlayerInventoryFacade(
                 inventoryManager,
                 craftingManager,
-                itemDetector,
                 tabbedInventoryUI,
                 _model.Stats,
                 transform,
@@ -113,6 +115,12 @@ namespace Game.Player
             
             // Connect inventory facade to input handler for input blocking
             _inputHandler?.SetInventoryFacade(_inventoryFacade);
+        }
+
+        private void InitializeInteraction()
+        {
+            // Auto-assign InteractionDetector component
+            interactionDetector ??= GetComponent<Game.Interaction.InteractionDetector>();
         }
 
         #endregion
@@ -180,9 +188,13 @@ namespace Game.Player
 
         #region Input Handlers
 
-        private void HandlePickupInput()
+        private void HandleInteractInput()
         {
-            _inventoryFacade?.TryPickupNearestItem();
+            // Use new interaction system
+            if (interactionDetector != null)
+            {
+                interactionDetector.TryInteractWithNearest();
+            }
         }
 
         private void HandleInventoryToggle()
@@ -199,12 +211,17 @@ namespace Game.Player
 
         #region Public API (for UI and other systems)
 
-        public ResourceCollector GetTargetItem() => _inventoryFacade?.GetNearestItem();
+        [System.Obsolete("GetTargetItem is deprecated. Use InteractionDetector.NearestInteractable instead.", false)]
+        public ResourceCollector GetTargetItem() => null;
+        
         public void ConsumeItem(InventoryItem item) => _inventoryFacade?.ConsumeItem(item);
         public void StartCrafting(CraftingRecipe recipe) => _inventoryFacade?.StartCrafting(recipe);
         
         public InventoryManager GetInventoryManager() => _inventoryFacade?.InventoryManager;
+        
+        [System.Obsolete("ItemDetector is deprecated. Use InteractionDetector instead.", false)]
         public ItemDetector GetItemDetector() => _inventoryFacade?.ItemDetector;
+        
         public IPlayerState GetCurrentState() => _currentState;
 
         // Inventory Command Pattern - Undo/Redo

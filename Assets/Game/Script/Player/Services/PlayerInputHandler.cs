@@ -19,7 +19,7 @@ namespace Game.Player.Services
         private bool _inputBlocked = false;
 
         // Events for UI/Inventory actions
-        public System.Action OnPickupRequested;
+        public System.Action OnInteractRequested;
         public System.Action OnInventoryToggleRequested;
         public System.Action OnQuickUseRequested;
 
@@ -92,7 +92,7 @@ namespace Game.Player.Services
             _inputActions.Player.Pickup.performed += _ => 
             {
                 if (!IsInputBlocked())
-                    OnPickupRequested?.Invoke();
+                    OnInteractRequested?.Invoke();
             };
             _inputActions.Player.OpenInventory.performed += _ => OnInventoryToggleRequested?.Invoke();
             
@@ -149,7 +149,7 @@ namespace Game.Player.Services
             _inputActions.Player.Move.canceled -= _ => _moveInput = Vector2.zero;
             _inputActions.Player.Jump.performed -= _ => HandleJumpInput();
             _inputActions.Player.Climb.performed -= _ => HandleClimbInput();
-            _inputActions.Player.Pickup.performed -= _ => OnPickupRequested?.Invoke();
+            _inputActions.Player.Pickup.performed -= _ => OnInteractRequested?.Invoke();
             _inputActions.Player.OpenInventory.performed -= _ => OnInventoryToggleRequested?.Invoke();
         }
     }

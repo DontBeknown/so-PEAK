@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.Player;
+using Game.Interaction.UI;
 /// <summary>
 /// Centralized UI Manager that holds references to all UI panels
 /// and manages their visibility and interactions.
@@ -24,9 +25,9 @@ public class UIManager : MonoBehaviour
     [SerializeField] private CraftingUI craftingUI;
     [SerializeField] private EquipmentUI equipmentUI;
     [SerializeField] private PlayerStatsTrackerUI statsTrackerUI;
-    [SerializeField] private PickupPrompt pickupPrompt;
     [SerializeField] private SimpleStatsHUD simpleStatsHUD;
     [SerializeField] private ItemNotificationUI itemNotificationUI;
+    [SerializeField] private InteractionPromptUI interactionPromptUI;
     
     [Header("Player References")]
     [SerializeField] private CinemachinePlayerCamera playerCamera;
@@ -64,14 +65,14 @@ public class UIManager : MonoBehaviour
         if (statsTrackerUI == null)
             statsTrackerUI = FindFirstObjectByType<PlayerStatsTrackerUI>();
         
-        if (pickupPrompt == null)
-            pickupPrompt = FindFirstObjectByType<PickupPrompt>();
-        
         if (simpleStatsHUD == null)
             simpleStatsHUD = FindFirstObjectByType<SimpleStatsHUD>();
         
         if (itemNotificationUI == null)
             itemNotificationUI = FindFirstObjectByType<ItemNotificationUI>();
+        
+        if (interactionPromptUI == null)
+            interactionPromptUI = FindFirstObjectByType<InteractionPromptUI>();
         
         if (playerCamera == null)
             playerCamera = FindFirstObjectByType<CinemachinePlayerCamera>();
@@ -86,7 +87,7 @@ public class UIManager : MonoBehaviour
     public EquipmentUI EquipmentUI => equipmentUI;
     public ItemNotificationUI ItemNotificationUI => itemNotificationUI;
     public PlayerStatsTrackerUI StatsTrackerUI => statsTrackerUI;
-    public PickupPrompt PickupPrompt => pickupPrompt;
+
     public SimpleStatsHUD SimpleStatsHUD => simpleStatsHUD;
     public CinemachinePlayerCamera PlayerCamera => playerCamera;
     public PlayerControllerRefactored PlayerController => playerController;
@@ -223,38 +224,34 @@ public class UIManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Hides the pickup prompt
+    /// Hides the interaction prompt
     /// </summary>
     public void HidePickupPrompt()
     {
-        if (pickupPrompt != null)
+        if (interactionPromptUI != null)
         {
-            pickupPrompt.Hide();
+            interactionPromptUI.ForceHide();
         }
     }
     
     /// <summary>
-    /// Shows the pickup prompt if conditions are met
+    /// Shows the interaction prompt if conditions are met
+    /// InteractionPromptUI manages its own visibility via InteractionDetector events
     /// </summary>
     public void ShowPickupPromptIfNeeded()
     {
-        // Only show pickup prompt if no menus are open
-        if (!isAnyMenuOpen && pickupPrompt != null)
-        {
-            // The pickup prompt will handle its own visibility logic
-            // based on whether player is near a pickable item
-            pickupPrompt.CheckAndShow();
-        }
+        // InteractionPromptUI automatically shows based on InteractionDetector events
+        // No manual control needed - it will re-enable when menus close
     }
     
     /// <summary>
-    /// Shows the pickup prompt for a specific item
+    /// Shows the interaction prompt with custom text
     /// </summary>
     public void ShowPickupPrompt(string itemName)
     {
-        if (pickupPrompt != null && !isAnyMenuOpen)
+        if (interactionPromptUI != null && !isAnyMenuOpen)
         {
-            pickupPrompt.Show(itemName);
+            interactionPromptUI.ShowCustomPrompt($"[F] Press F to {itemName}");
         }
     }
     

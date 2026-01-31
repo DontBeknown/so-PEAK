@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 
+[System.Obsolete("ItemDetector is deprecated. Use InteractionDetector with ResourceCollectorInteractable instead. See INTERACTION_SYSTEM_SETUP_GUIDE.md for migration.", false)]
 public class ItemDetector : MonoBehaviour
 {
     [Header("Detection Settings")]

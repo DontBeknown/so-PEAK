@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+[System.Obsolete("PickupPrompt is deprecated. Use InteractionPromptUI instead. See INTERACTION_SYSTEM_SETUP_GUIDE.md for migration.", false)]
 public class PickupPrompt : MonoBehaviour
 {
     [Header("UI References")]

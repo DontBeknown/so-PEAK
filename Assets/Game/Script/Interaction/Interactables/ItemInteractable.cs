@@ -1,0 +1,164 @@
+using UnityEngine;
+
+namespace Game.Interaction
+{
+    /// <summary>
+    /// Simple instant-pickup interactable for collecting items.
+    /// Player presses E to instantly add item to inventory.
+    /// </summary>
+    public class ItemInteractable : MonoBehaviour, IInteractable
+    {
+        [Header("Item Settings")]
+        [SerializeField] private InventoryItem item;
+        [SerializeField] private int quantity = 1;
+        [SerializeField] private string customPrompt = ""; // Optional custom prompt
+        
+        [Header("Interaction Settings")]
+        [SerializeField] private float interactionPriority = 1f;
+        [SerializeField] private string interactionVerb = "Press to";
+        
+        [Header("Feedback")]
+        [SerializeField] private GameObject highlightEffect; // Optional visual effect
+        [SerializeField] private AudioClip pickupSound;
+        [SerializeField] private GameObject pickupParticles;
+        [SerializeField] private bool destroyOnPickup = true;
+        
+        private bool isHighlighted = false;
+        private bool hasBeenCollected = false;
+
+        #region IInteractable Implementation
+
+        public string InteractionPrompt 
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(customPrompt))
+                    return customPrompt;
+                
+                if (item != null)
+                    return $"Pick up {item.itemName}";
+                
+                return "Pick up Item";
+            }
+        }
+
+        public string InteractionVerb => interactionVerb;
+
+        public bool CanInteract => !hasBeenCollected && item != null;
+
+        public float InteractionPriority => interactionPriority;
+
+        public Transform GetTransform() => transform;
+
+        public void OnHighlighted(bool highlighted)
+        {
+            isHighlighted = highlighted;
+            
+            // Toggle highlight effect if available
+            if (highlightEffect != null)
+            {
+                highlightEffect.SetActive(highlighted);
+            }
+        }
+
+        public void Interact(Game.Player.PlayerControllerRefactored player)
+        {
+            if (!CanInteract || hasBeenCollected)
+                return;
+
+            // Get inventory manager from player
+            InventoryManager inventoryManager = player.GetInventoryManager();
+            if (inventoryManager == null)
+            {
+                Debug.LogError("[ItemInteractable] Player has no InventoryManager!");
+                return;
+            }
+
+            // Try to add item to inventory
+            bool added = inventoryManager.AddItem(item, quantity);
+            
+            if (added)
+            {
+                hasBeenCollected = true;
+                
+                // Play pickup feedback
+                PlayPickupFeedback();
+                
+                // Show notification
+                ShowPickupNotification();
+                
+                // Destroy or disable the object
+                if (destroyOnPickup)
+                {
+                    Destroy(gameObject);
+                }
+                else
+                {
+                    gameObject.SetActive(false);
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[ItemInteractable] Failed to add {item.itemName} to inventory (full?)");
+            }
+        }
+
+        #endregion
+
+        private void PlayPickupFeedback()
+        {
+            // Play sound
+            if (pickupSound != null)
+            {
+                AudioSource.PlayClipAtPoint(pickupSound, transform.position);
+            }
+            
+            // Spawn particles
+            if (pickupParticles != null)
+            {
+                Instantiate(pickupParticles, transform.position, Quaternion.identity);
+            }
+        }
+
+        private void ShowPickupNotification()
+        {
+            if (item != null)
+            {
+                string message = quantity > 1 
+                    ? $"Collected {quantity}x {item.itemName}" 
+                    : $"Collected {item.itemName}";
+                
+                // TODO: Connect to notification system when available
+                Debug.Log(message);
+            }
+        }
+
+        private void OnValidate()
+        {
+            // Ensure quantity is at least 1
+            if (quantity < 1)
+                quantity = 1;
+        }
+
+        #region Editor Gizmos
+
+        private void OnDrawGizmos()
+        {
+            // Draw a small sphere to show interaction point
+            Gizmos.color = hasBeenCollected ? Color.gray : Color.yellow;
+            Gizmos.DrawWireSphere(transform.position, 0.3f);
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            // Draw item name label in editor
+            if (item != null)
+            {
+                UnityEditor.Handles.Label(transform.position + Vector3.up * 0.5f, 
+                    $"{item.itemName} x{quantity}");
+            }
+        }
+
+        #endregion
+    }
+}

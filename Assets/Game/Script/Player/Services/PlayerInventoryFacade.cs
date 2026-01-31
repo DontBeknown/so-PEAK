@@ -13,7 +13,6 @@ namespace Game.Player.Services
     {
         private readonly InventoryManager _inventoryManager;
         private readonly CraftingManager _craftingManager;
-        private readonly ItemDetector _itemDetector;
         private readonly TabbedInventoryUI _inventoryUI;
         private readonly PlayerStats _playerStats;
         private readonly Transform _playerTransform;
@@ -28,7 +27,6 @@ namespace Game.Player.Services
         public PlayerInventoryFacade(
             InventoryManager inventoryManager,
             CraftingManager craftingManager,
-            ItemDetector itemDetector,
             TabbedInventoryUI inventoryUI,
             PlayerStats playerStats = null,
             Transform playerTransform = null,
@@ -37,7 +35,6 @@ namespace Game.Player.Services
         {
             _inventoryManager = inventoryManager;
             _craftingManager = craftingManager;
-            _itemDetector = itemDetector;
             _inventoryUI = inventoryUI;
             _playerStats = playerStats;
             _playerTransform = playerTransform;
@@ -139,26 +136,27 @@ namespace Game.Player.Services
 
         /// <summary>
         /// Attempts to pickup the nearest item using Command Pattern
+        /// DEPRECATED: Use InteractionDetector system instead
+        /// Kept for backward compatibility only
         /// </summary>
+        [System.Obsolete("Use InteractionDetector with ItemInteractable instead. This method is deprecated.", false)]
         public bool TryPickupNearestItem()
         {
-            if (_itemDetector == null || _inventoryManager == null)
-                return false;
-
-            ResourceCollector nearestItem = _itemDetector.NearestItem;
-            if (nearestItem == null)
-                return false;
-
-            var command = new PickupItemCommand(_inventoryManager, nearestItem);
-            return _commandInvoker.Execute(command);
+            // ItemDetector has been replaced with InteractionDetector system
+            // This method is kept for backward compatibility but does nothing
+            Debug.LogWarning("[PlayerInventoryFacade] TryPickupNearestItem is deprecated. Use InteractionDetector system instead.");
+            return false;
         }
 
         /// <summary>
         /// Gets the nearest item that can be picked up
+        /// DEPRECATED: Use InteractionDetector.NearestInteractable instead
         /// </summary>
+        [System.Obsolete("Use InteractionDetector.NearestInteractable instead. This method is deprecated.", false)]
         public ResourceCollector GetNearestItem()
         {
-            return _itemDetector?.NearestItem;
+            // ItemDetector has been replaced with InteractionDetector system
+            return null;
         }
 
         #endregion
@@ -229,7 +227,9 @@ namespace Game.Player.Services
 
         public InventoryManager InventoryManager => _inventoryManager;
         public CraftingManager CraftingManager => _craftingManager;
-        public ItemDetector ItemDetector => _itemDetector;
+        
+        [System.Obsolete("ItemDetector is deprecated. Use InteractionDetector on PlayerController instead.", false)]
+        public ItemDetector ItemDetector => null;
 
         #endregion
     }
