@@ -28,6 +28,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private SimpleStatsHUD simpleStatsHUD;
     [SerializeField] private ItemNotificationUI itemNotificationUI;
     [SerializeField] private InteractionPromptUI interactionPromptUI;
+    [SerializeField] private AssessmentReportUI assessmentReportUI;
     
     [Header("Player References")]
     [SerializeField] private CinemachinePlayerCamera playerCamera;
@@ -74,6 +75,9 @@ public class UIManager : MonoBehaviour
         if (interactionPromptUI == null)
             interactionPromptUI = FindFirstObjectByType<InteractionPromptUI>();
         
+        if (assessmentReportUI == null)
+            assessmentReportUI = FindFirstObjectByType<AssessmentReportUI>();
+        
         if (playerCamera == null)
             playerCamera = FindFirstObjectByType<CinemachinePlayerCamera>();
         
@@ -87,6 +91,7 @@ public class UIManager : MonoBehaviour
     public EquipmentUI EquipmentUI => equipmentUI;
     public ItemNotificationUI ItemNotificationUI => itemNotificationUI;
     public PlayerStatsTrackerUI StatsTrackerUI => statsTrackerUI;
+    public AssessmentReportUI AssessmentReportUI => assessmentReportUI;
 
     public SimpleStatsHUD SimpleStatsHUD => simpleStatsHUD;
     public CinemachinePlayerCamera PlayerCamera => playerCamera;
@@ -224,6 +229,31 @@ public class UIManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Opens the assessment report UI
+    /// </summary>
+    public void OpenAssessmentReport()
+    {
+        if (assessmentReportUI == null) return;
+        
+        assessmentReportUI.gameObject.SetActive(true);
+        assessmentReportUI.GenerateAndDisplayAssessment();
+        HidePickupPrompt();
+        SetMenuOpen(true);
+    }
+    
+    /// <summary>
+    /// Closes the assessment report UI
+    /// </summary>
+    public void CloseAssessmentReport()
+    {
+        if (assessmentReportUI == null) return;
+        
+        assessmentReportUI.gameObject.SetActive(false);
+        ShowPickupPromptIfNeeded();
+        SetMenuOpen(false);
+    }
+    
+    /// <summary>
     /// Hides the interaction prompt
     /// </summary>
     public void HidePickupPrompt()
@@ -264,6 +294,7 @@ public class UIManager : MonoBehaviour
         CloseCrafting();
         CloseEquipment();
         CloseStatsTracker();
+        CloseAssessmentReport();
     }
     
     /// <summary>
@@ -290,10 +321,24 @@ public class UIManager : MonoBehaviour
     /// </summary>
     public bool IsAnyMenuOpen()
     {
-        return isAnyMenuOpen || 
+        bool result = isAnyMenuOpen || 
                (inventoryUI != null && inventoryUI.IsActive) ||
                (craftingUI != null && craftingUI.IsActive) ||
                (equipmentUI != null && equipmentUI.IsActive) ||
                (statsTrackerUI != null && statsTrackerUI.IsActive);
+        
+        // Debug which menus are open
+        /*if (result)
+        {
+            string openMenus = "Open menus: ";
+            if (isAnyMenuOpen) openMenus += "isAnyMenuOpen flag, ";
+            if (inventoryUI != null && inventoryUI.IsActive) openMenus += "Inventory, ";
+            if (craftingUI != null && craftingUI.IsActive) openMenus += "Crafting, ";
+            if (equipmentUI != null && equipmentUI.IsActive) openMenus += "Equipment, ";
+            if (statsTrackerUI != null && statsTrackerUI.IsActive) openMenus += "StatsTracker, ";
+            Debug.Log($"[UIManager] {openMenus.TrimEnd(',', ' ')}");
+        }*/
+        
+        return result;
     }
 }

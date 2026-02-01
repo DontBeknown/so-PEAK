@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using Game.Interaction.UI;
 
 namespace Game.Interaction
 {
@@ -20,6 +21,18 @@ namespace Game.Interaction
         [SerializeField] private bool enableGizmos = true;
         [SerializeField] private Color gizmoColorWithTarget = Color.green;
         [SerializeField] private Color gizmoColorNoTarget = Color.yellow;
+        
+        [Header("UI Markers")]
+        [SerializeField] private bool enableUIMarkers = true;
+        [SerializeField] private bool showMarkersOnlyWhenStill = true;
+        [SerializeField] private float stillDelayBeforeShowingMarkers = 2.5f; // Seconds to wait before showing markers
+        [SerializeField] private float movementThreshold = 0.1f; // Minimum movement to be considered "moving"
+        [SerializeField] private Sprite markerSprite; // Optional custom marker sprite
+        [SerializeField] private Canvas markerCanvas; // Canvas to spawn markers on (auto-finds if null)
+        [SerializeField] private Transform markerContainer; // Container for markers (auto-creates if null)
+        [SerializeField] private Color markerInRangeColor = new Color(1f, 1f, 0f, 0.7f); // Yellow
+        [SerializeField] private Color markerSelectedColor = new Color(0f, 1f, 0f, 1f); // Green
+        [SerializeField] private Color markerDepletedColor = new Color(0.5f, 0.5f, 0.5f, 0.5f); // Grey
 
         // Instance Events (each detector has its own events)
         public event Action<IInteractable> OnNearestInteractableChanged;
@@ -29,6 +42,10 @@ namespace Game.Interaction
         private IInteractable nearestInteractable = null;
         private IInteractable previousNearestInteractable = null;
         private float updateTimer = 0f;
+        private Dictionary<IInteractable, InteractableUIMarker> markerMap = new Dictionary<IInteractable, InteractableUIMarker>();
+        private CharacterController characterController;
+        private global::UIManager uiManager;
+        private float stillTimer = 0f; // Tracks how long player has been standing still
 
         // Properties
         public IInteractable NearestInteractable => nearestInteractable;
@@ -38,6 +55,29 @@ namespace Game.Interaction
         {
             if (detectionCenter == null)
                 detectionCenter = transform;
+            
+            // Get player reference
+            characterController = GetComponent<CharacterController>();
+            uiManager = global::UIManager.Instance;
+            
+            // Auto-find canvas for markers
+            if (enableUIMarkers && markerCanvas == null)
+            {
+                markerCanvas = FindFirstObjectByType<Canvas>();
+                if (markerCanvas == null)
+                {
+                    Debug.LogWarning("[InteractionDetector] UI Markers enabled but no Canvas found. Markers will be disabled.");
+                    enableUIMarkers = false;
+                }
+            }
+            
+            // Create marker container if not assigned
+            if (enableUIMarkers && markerCanvas != null && markerContainer == null)
+            {
+                GameObject containerObj = new GameObject("InteractionMarkers");
+                markerContainer = containerObj.transform;
+                markerContainer.SetParent(markerCanvas.transform, false);
+            }
         }
 
         private void Update()
@@ -48,6 +88,12 @@ namespace Game.Interaction
             {
                 updateTimer = 0f;
                 UpdateNearestInteractable();
+            }
+            
+            // Update marker visibility based on player movement
+            if (enableUIMarkers && showMarkersOnlyWhenStill)
+            {
+                UpdateMarkerVisibilityBasedOnMovement();
             }
         }
 
@@ -64,7 +110,19 @@ namespace Game.Interaction
                 if (interactable != null && interactable.CanInteract)
                 {
                     interactablesInRange.Add(interactable);
+                    
+                    // Create marker if UI markers are enabled and marker doesn't exist
+                    if (enableUIMarkers && !markerMap.ContainsKey(interactable))
+                    {
+                        CreateMarkerForInteractable(interactable);
+                    }
                 }
+            }
+            
+            // Remove markers for interactables no longer in range
+            if (enableUIMarkers)
+            {
+                CleanupOutOfRangeMarkers();
             }
 
             // Find the nearest interactable with priority system
@@ -92,6 +150,12 @@ namespace Game.Interaction
                 if (nearestInteractable != null)
                 {
                     nearestInteractable.OnHighlighted(false);
+                    
+                    // Update marker to "in range" state
+                    if (enableUIMarkers && markerMap.ContainsKey(nearestInteractable))
+                    {
+                        markerMap[nearestInteractable].ShowInRange();
+                    }
                 }
 
                 previousNearestInteractable = nearestInteractable;
@@ -101,6 +165,12 @@ namespace Game.Interaction
                 if (nearestInteractable != null)
                 {
                     nearestInteractable.OnHighlighted(true);
+                    
+                    // Update marker to "selected" state
+                    if (enableUIMarkers && markerMap.ContainsKey(nearestInteractable))
+                    {
+                        markerMap[nearestInteractable].ShowSelected();
+                    }
                 }
 
                 // Trigger events
@@ -157,6 +227,116 @@ namespace Game.Interaction
         {
             UpdateNearestInteractable();
         }
+        
+        private void CreateMarkerForInteractable(IInteractable interactable)
+        {
+            if (markerCanvas == null || markerContainer == null) return;
+            
+            InteractableUIMarker marker = InteractableUIMarker.CreateMarker(
+                interactable.GetTransform(),
+                markerSprite,
+                markerCanvas,
+                markerInRangeColor,
+                markerSelectedColor,
+                markerDepletedColor
+            );
+            
+            if (marker != null)
+            {                
+                marker.transform.SetParent(markerContainer, false);                
+                markerMap[interactable] = marker;
+                marker.ShowInRange(); // Start in "in range" state
+            }
+        }
+        
+        private void CleanupOutOfRangeMarkers()
+        {
+            // Find markers that are no longer in range
+            List<IInteractable> toRemove = new List<IInteractable>();
+            
+            foreach (var kvp in markerMap)
+            {
+                if (!interactablesInRange.Contains(kvp.Key))
+                {
+                    toRemove.Add(kvp.Key);
+                }
+            }
+            
+            // Remove and destroy markers
+            foreach (var interactable in toRemove)
+            {
+                if (markerMap.ContainsKey(interactable))
+                {
+                    InteractableUIMarker marker = markerMap[interactable];
+                    if (marker != null)
+                    {
+                        marker.Hide();
+                        Destroy(marker.gameObject, 0.5f); // Delay to allow fade out
+                    }
+                    markerMap.Remove(interactable);
+                }
+            }
+        }
+        
+        private void UpdateMarkerVisibilityBasedOnMovement()
+        {
+            bool isPlayerMoving = IsPlayerMoving();
+            bool isMenuOpen = uiManager != null && uiManager.IsAnyMenuOpen();
+
+            //Debug.Log($"[InteractionDetector] Player moving: {isPlayerMoving}, Menu open: {isMenuOpen}, Still timer: {stillTimer}");            
+            // Update still timer
+            if (isPlayerMoving)
+            {
+                stillTimer = 0f; // Reset timer when moving
+            }
+            else
+            {
+                stillTimer += Time.deltaTime; // Increment timer when still
+            }
+            
+            // Only show markers if player has been still long enough AND no menu is open
+            bool shouldShowMarkers = !isPlayerMoving && !isMenuOpen && stillTimer >= stillDelayBeforeShowingMarkers;
+            
+            // Hide/show all markers based on movement and delay
+            foreach (var kvp in markerMap)
+            {
+                InteractableUIMarker marker = kvp.Value;
+                if (marker != null)
+                {
+                    if (shouldShowMarkers)
+                    {
+                        // Show marker with appropriate state
+                        if (kvp.Key == nearestInteractable)
+                        {
+                            marker.ShowSelected();
+                        }
+                        else
+                        {
+                            marker.ShowInRange();
+                        }
+                    }
+                    else
+                    {
+                        // Hide marker instantly if moving or delay not reached yet (no fade)
+                        marker.HideInstant();
+                    }
+                }
+            }
+        }
+        
+        private bool IsPlayerMoving()
+        {
+            if (characterController == null) return false;
+            
+            if (characterController != null)
+            {
+                // CharacterController doesn't have velocity property, check if it moved in last frame
+                Vector3 horizontalVelocity = new Vector3(characterController.velocity.x, 0, characterController.velocity.z);
+                return horizontalVelocity.magnitude > movementThreshold;
+            }
+            
+            return false;
+        }
 
         private void OnDrawGizmos()
         {
@@ -180,6 +360,22 @@ namespace Game.Interaction
             if (nearestInteractable != null)
             {
                 nearestInteractable.OnHighlighted(false);
+            }
+            
+            // Cleanup all markers
+            foreach (var kvp in markerMap)
+            {
+                if (kvp.Value != null)
+                {
+                    Destroy(kvp.Value.gameObject);
+                }
+            }
+            markerMap.Clear();
+            
+            // Cleanup marker container
+            if (markerContainer != null)
+            {
+                Destroy(markerContainer.gameObject);
             }
         }
     }

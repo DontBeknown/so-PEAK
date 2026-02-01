@@ -63,40 +63,32 @@ public List<IInteractable> GetInteractablesInRange();
 ```
 
 #### 3. **InteractionPromptUI**
-Simple UI overlay showing interaction prompt.
+UI overlay showing interaction prompt at bottom-center of screen.
 
 **Features:**
 - Shows/hides based on `InteractionDetector` events
 - Displays custom prompt text from interactable
-- Animated fade in/out
+- Animated fade in/out with subtle pulse
+- **Built-in progress bar** for gathering interactions
 - Position: Bottom-center of screen
 
-**Display Format:**
+**Display Formats:**
 ```
-[E] Pick up Wooden Log
-[E] Check Assessment Report
-[Hold E] Gather Berries
+Standard Interaction:
+[F] Press E to Pick up Wooden Log
+[F] Press E to Check Assessment Report
+
+Gathering with Progress:
+[F] Hold E to Gather Berries
+[████████░░] 80%
 ```
 
-#### 4. **GatheringProgressUI**
-Progress bar shown during timed gathering interactions.
-
-**Features:**
-- Appears above the gathering object (world space UI)
-- Fills from 0% to 100% over gather duration
-- Shows item icon and count
-- Displays "Gathering..." text
-- Shows "Hold E" reminder
-- Smoothly animates fill amount
-
-**Display Format:**
-```
-┌──────────────────────┐
-│ Gathering Berries... │
-│ [████████░░] 80%     │
-│ (Hold E)             │
-└──────────────────────┘
-```
+**Progress Bar Mode:**
+- Activated during timed gathering interactions
+- Shows horizontal fill bar (0% → 100%)
+- Displays percentage text
+- Replaces world-space UI for cleaner experience
+- Uses same UI container as prompt
 
 ---
 
@@ -174,9 +166,9 @@ Interactable with progress timer that locks player during gathering.
 
 **Interaction Flow:**
 1. Player approaches berry bush → Detector highlights it
-2. UI shows "Hold E to Gather Berries"
+2. UI shows "Hold E to Gather Berries" at bottom
 3. Player presses and HOLDS E → Gathering starts
-4. Progress bar appears above bush (0% → 100%)
+4. Progress bar appears in prompt UI (0% → 100%)
 5. Player locked in place while holding E (can't move, attack, or open inventory)
 6. Timer counts up while E is held (e.g., 3 seconds)
 7. If player releases E before completion → Gathering cancelled
@@ -195,7 +187,7 @@ Interactable with progress timer that locks player during gathering.
 
 **Visual States:**
 - **Ready**: Full berry bush, green UI marker
-- **Gathering**: Progress bar visible, player animation playing
+- **Gathering**: Progress bar in prompt UI, player animation playing
 - **Depleted**: Empty bush, grey UI marker (if respawnable)
 - **Respawning**: Gradually fills back up (optional visual)
 
@@ -318,8 +310,7 @@ Assets/Game/Script/
 │   ├── Core/
 │   │   ├── IInteractable.cs
 │   │   ├── InteractionDetector.cs
-│   │   ├── InteractionPromptUI.cs
-│   │   └── GatheringProgressUI.cs
+│   │   └── InteractionPromptUI.cs (includes progress bar)
 │   │
 │   ├── Interactables/
 │   │   ├── ItemInteractable.cs
@@ -345,19 +336,19 @@ Assets/Game/Script/
 ### Phase 1: Core System ✅
 1. Create `IInteractable` interface
 2. Implement `InteractionDetector` (refactor from `ItemDetector`)
-3. Create `InteractionPromptUI`
+3. Create `InteractionPromptUI` with progress bar support
 4. Update `PlayerControllerRefactored` integration
 5. Update `PlayerInputHandler` for "interact" input
 
 ### Phase 2: Interactable Types ✅
 1. Implement `ItemInteractable` (backwards compatible with existing items)
 2. Implement `AssessmentTerminalInteractable`
-3. Implement `GatheringInteractable` with timer system
+3. Implement `GatheringInteractable` with integrated progress UI
 4. Create adapter `ResourceCollectorInteractable`
 
 ### Phase 3: Polish & Feedback ✅
 1. Add UI marker system with billboard effect
-2. Add gathering progress bar UI
+2. Add progress bar to prompt UI for gathering
 3. Add audio feedback (gather start, loop, complete, cancel)
 4. Add player gathering animation
 5. Add interaction animations
@@ -429,12 +420,12 @@ Player stands between log and terminal
 Player approaches berry bush
 → InteractionDetector finds GatheringInteractable
 → Bush shows green UI marker above it
-→ UI shows "Hold E to Gather Berries"
+→ UI prompt shows "Hold E to Gather Berries" at bottom
 → Player presses and HOLDS E button down
-→ Gathering starts, progress bar appears with "(Hold E)" text
+→ Gathering starts, progress bar appears in prompt UI
 → Player frozen in place (cannot move while holding E)
 → Gathering animation plays on player
-→ Timer counts: 0% → 25% → 50% → 75% → 100%
+→ Progress bar fills: 0% → 25% → 50% → 75% → 100%
 → Player keeps E held for full 3 seconds
 → On 100%: "Collected 3 Berries" notification
 → Bush depletes (marker turns grey)
@@ -445,10 +436,10 @@ Player approaches berry bush
 ### Scenario 5: Player Releases E Button Early
 ```
 Player starts gathering berries
-→ Holds E, progress at 50%
+→ Holds E, progress bar at 50%
 → Player releases E button
 → Gathering cancelled immediately
-→ Progress bar disappears
+→ Progress bar disappears from prompt UI
 → "Gathering cancelled!" message
 → Player control returns (can move again)
 → No items collected
@@ -458,11 +449,11 @@ Player starts gathering berries
 ### Scenario 6: Gathering Interrupted by Damage
 ```
 Player starts gathering berries (70% complete)
-→ Still holding E button
+→ Still holding E button, progress bar showing
 → Enemy attacks player from behind
 → Player takes damage
 → Gathering interrupted immediately
-→ Progress bar disappears
+→ Progress bar disappears from prompt UI
 → "Gathering interrupted!" message
 → Player control returns
 → No items collected

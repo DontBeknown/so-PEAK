@@ -8,13 +8,9 @@ namespace Game.Interaction
     /// </summary>
     public class AssessmentTerminalInteractable : MonoBehaviour, IInteractable
     {
-        [Header("UI Reference")]
-        [SerializeField] private AssessmentReportUI assessmentReportUI;
-        [SerializeField] private bool findUIAutomatically = true;
-        
         [Header("Interaction Settings")]
         [SerializeField] private string customPrompt = "Check Assessment Report";
-        [SerializeField] private string interactionVerb = "Press E to";
+        [SerializeField] private string interactionVerb = "Press F to";
         [SerializeField] private float interactionPriority = 0.8f; // Slightly lower than items
         
         [Header("Player Control")]
@@ -44,7 +40,7 @@ namespace Game.Interaction
         {
             get
             {
-                if (assessmentReportUI == null)
+                if (UIManager.Instance == null || UIManager.Instance.AssessmentReportUI == null)
                     return false;
                 
                 // Check cooldown
@@ -105,50 +101,19 @@ namespace Game.Interaction
 
         #endregion
 
-        private void Awake()
-        {
-            // Auto-find AssessmentReportUI if not assigned
-            if (assessmentReportUI == null && findUIAutomatically)
-            {
-                assessmentReportUI = FindFirstObjectByType<AssessmentReportUI>();
-                
-                if (assessmentReportUI == null)
-                {
-                    Debug.LogError("[AssessmentTerminalInteractable] No AssessmentReportUI found in scene!");
-                }
-            }
-        }
-
-        private void OnEnable()
-        {
-            // Subscribe to UI close event if available
-            // This allows us to unlock player when UI closes
-            if (assessmentReportUI != null)
-            {
-                // Note: AssessmentReportUI would need to expose an OnClose event
-                // For now, we'll handle it manually
-            }
-        }
-
         private void OpenAssessmentUI()
         {
-            if (assessmentReportUI == null)
+            if (UIManager.Instance == null)
             {
-                Debug.LogError("[AssessmentTerminalInteractable] AssessmentReportUI is not assigned!");
+                Debug.LogError("[AssessmentTerminalInteractable] UIManager not found!");
                 UnlockPlayer();
                 return;
             }
             
-            // Show the assessment UI
-            assessmentReportUI.gameObject.SetActive(true);
-            assessmentReportUI.GenerateAndDisplayAssessment();
+            // Open stats tracker via UIManager
+            UIManager.Instance.OpenStatsTracker();
             
-            // Note: In a full implementation, you'd want to:
-            // 1. Subscribe to UI close event
-            // 2. Unlock player when UI is closed
-            // For now, unlock after a delay or manually
-            
-            Debug.Log("[AssessmentTerminalInteractable] Assessment report opened");
+            Debug.Log("[AssessmentTerminalInteractable] Stats tracker opened");
         }
 
         /// <summary>

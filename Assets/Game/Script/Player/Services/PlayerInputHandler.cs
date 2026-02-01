@@ -24,6 +24,17 @@ namespace Game.Player.Services
         public System.Action OnQuickUseRequested;
 
         public Vector2 MoveInput => _moveInput;
+        
+        /// <summary>
+        /// Returns true if the pickup/interact button is currently held down
+        /// </summary>
+        public bool IsPickupButtonHeld => !IsInputBlocked() && _inputActions.Player.Pickup.IsPressed();
+        
+        /// <summary>
+        /// Returns the raw physical state of the pickup button, ignoring input blocking.
+        /// Use this for gathering interactions that need to detect button release even when input is blocked.
+        /// </summary>
+        public bool IsPickupButtonPhysicallyHeld => _inputActions?.Player.Pickup.IsPressed() ?? false;
 
         public PlayerInputHandler(IStateTransitioner stateTransitioner, PlayerModelRefactored model)
         {

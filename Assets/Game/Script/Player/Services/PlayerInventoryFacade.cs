@@ -132,35 +132,6 @@ namespace Game.Player.Services
 
         #endregion
 
-        #region Item Detection & Pickup
-
-        /// <summary>
-        /// Attempts to pickup the nearest item using Command Pattern
-        /// DEPRECATED: Use InteractionDetector system instead
-        /// Kept for backward compatibility only
-        /// </summary>
-        [System.Obsolete("Use InteractionDetector with ItemInteractable instead. This method is deprecated.", false)]
-        public bool TryPickupNearestItem()
-        {
-            // ItemDetector has been replaced with InteractionDetector system
-            // This method is kept for backward compatibility but does nothing
-            Debug.LogWarning("[PlayerInventoryFacade] TryPickupNearestItem is deprecated. Use InteractionDetector system instead.");
-            return false;
-        }
-
-        /// <summary>
-        /// Gets the nearest item that can be picked up
-        /// DEPRECATED: Use InteractionDetector.NearestInteractable instead
-        /// </summary>
-        [System.Obsolete("Use InteractionDetector.NearestInteractable instead. This method is deprecated.", false)]
-        public ResourceCollector GetNearestItem()
-        {
-            // ItemDetector has been replaced with InteractionDetector system
-            return null;
-        }
-
-        #endregion
-
         #region Crafting
 
         /// <summary>

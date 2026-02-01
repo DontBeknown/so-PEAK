@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 using System.Collections;
 using DG.Tweening;
 
@@ -28,17 +27,12 @@ namespace Game.Interaction
         [Header("Visual Feedback")]
         [SerializeField] private GameObject highlightEffect;
         [SerializeField] private GameObject depletedVisual; // Optional different model when empty
-        [SerializeField] private Transform progressBarSpawnPoint; // Where to show progress UI
-        [SerializeField] private GameObject progressBarPrefab; // Optional custom progress bar prefab
         
         [Header("Audio")]
         [SerializeField] private AudioClip gatherStartSound;
         [SerializeField] private AudioClip gatherLoopSound;
         [SerializeField] private AudioClip gatherCompleteSound;
         [SerializeField] private AudioClip gatherCancelSound;
-        
-        [Header("Animation")]
-        [SerializeField] private string playerGatherAnimationTrigger = "Gather";
         
         // State
         private bool isHighlighted = false;
@@ -50,7 +44,7 @@ namespace Game.Interaction
         // References
         private Game.Player.PlayerControllerRefactored currentPlayer;
         private Coroutine gatheringCoroutine;
-        private Game.Interaction.UI.GatheringProgressUI currentProgressBar;
+        private Game.Interaction.UI.InteractionPromptUI promptUI;
         private AudioSource loopingAudioSource;
 
         #region IInteractable Implementation
@@ -69,7 +63,7 @@ namespace Game.Interaction
             }
         }
 
-        public string InteractionVerb => "Hold E to";
+        public string InteractionVerb => "Hold to";
 
         public bool CanInteract => !isCurrentlyGathering && !isDepleted && resourceItem != null;
 
@@ -150,8 +144,12 @@ namespace Game.Interaction
             // Trigger player animation (if animator available)
             // TODO: Implement animation system
             
-            // Show progress bar
-            ShowProgressBar();
+            // Find and setup progress bar in prompt UI
+            promptUI = FindFirstObjectByType<Game.Interaction.UI.InteractionPromptUI>();
+            if (promptUI != null)
+            {
+                promptUI.ShowProgressBar();
+            }
             
             // Start gathering coroutine
             gatheringCoroutine = StartCoroutine(GatheringProcess());
@@ -169,7 +167,10 @@ namespace Game.Interaction
                 currentGatherProgress = Mathf.Clamp01(elapsedTime / gatherDuration);
                 
                 // Update progress bar
-                UpdateProgressBar(currentGatherProgress);
+                if (promptUI != null)
+                {
+                    promptUI.UpdateProgress(currentGatherProgress);
+                }
                 
                 yield return null;
             }
@@ -180,12 +181,19 @@ namespace Game.Interaction
 
         private void CheckGatheringInput()
         {
-            // Check if E key is still held
-            var keyboard = Keyboard.current;
-            if (keyboard != null && !keyboard.eKey.isPressed)
+            // Check if pickup button is still physically held (bypasses input blocking)
+            if (currentPlayer != null)
             {
-                // Player released E - cancel gathering
-                CancelGathering("Released E button");
+                if (!currentPlayer.IsPickupButtonPhysicallyHeld)
+                {
+                    // Player released button - cancel gathering
+                    CancelGathering("Released button");
+                }
+            }
+            else
+            {
+                // No player reference - shouldn't happen, but cancel just in case
+                CancelGathering("Lost player reference");
             }
         }
 
@@ -272,7 +280,11 @@ namespace Game.Interaction
             }
             
             // Hide progress bar
-            HideProgressBar();
+            if (promptUI != null)
+            {
+                promptUI.HideProgressBar();
+                promptUI = null;
+            }
             
             // Unlock player
             if (currentPlayer != null)
@@ -315,56 +327,6 @@ namespace Game.Interaction
             }
         }
 
-        #region Progress Bar
-
-        private void ShowProgressBar()
-        {
-            Vector3 spawnPos = progressBarSpawnPoint != null 
-                ? progressBarSpawnPoint.position 
-                : transform.position + Vector3.up * 2f;
-            
-            // Create progress bar
-            if (progressBarPrefab != null)
-            {
-                GameObject barObj = Instantiate(progressBarPrefab, spawnPos, Quaternion.identity);
-                currentProgressBar = barObj.GetComponent<Game.Interaction.UI.GatheringProgressUI>();
-            }
-            else
-            {
-                // Create basic progress bar programmatically
-                currentProgressBar = Game.Interaction.UI.GatheringProgressUI.CreateProgressBar(transform, null);
-            }
-            
-            if (currentProgressBar != null)
-            {
-                // Setup with item info
-                Sprite itemIcon = resourceItem != null ? resourceItem.icon : null;
-                string itemName = resourceItem != null ? resourceItem.itemName : "Resource";
-                
-                currentProgressBar.Show(transform, itemName, itemIcon);
-            }
-        }
-
-        private void UpdateProgressBar(float progress)
-        {
-            if (currentProgressBar != null)
-            {
-                currentProgressBar.UpdateProgress(progress);
-            }
-        }
-
-        private void HideProgressBar()
-        {
-            if (currentProgressBar != null)
-            {
-                currentProgressBar.Hide();
-                Destroy(currentProgressBar.gameObject, 0.5f); // Destroy after fade out
-                currentProgressBar = null;
-            }
-        }
-
-        #endregion
-
         private void ShowCompletionNotification()
         {
             string message = resourcesPerGather > 1
@@ -391,26 +353,15 @@ namespace Game.Interaction
             Color gizmoColor = isDepleted ? Color.gray : (isCurrentlyGathering ? Color.green : Color.yellow);
             Gizmos.color = gizmoColor;
             Gizmos.DrawWireSphere(transform.position, 0.5f);
-            
-            // Draw progress bar spawn point
-            if (progressBarSpawnPoint != null)
-            {
-                Gizmos.color = Color.cyan;
-                Gizmos.DrawWireSphere(progressBarSpawnPoint.position, 0.2f);
-            }
         }
 
         private void OnDrawGizmosSelected()
         {
-            Vector3 labelPos = progressBarSpawnPoint != null 
-                ? progressBarSpawnPoint.position 
-                : transform.position + Vector3.up * 2f;
-            
             string label = resourceItem != null 
                 ? $"{resourceItem.itemName} x{resourcesPerGather}\n{gatherDuration}s gather"
                 : "Gathering Node";
             
-            UnityEditor.Handles.Label(labelPos, label);
+            UnityEditor.Handles.Label(transform.position + Vector3.up * 2f, label);
         }
 
         #endregion

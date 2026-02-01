@@ -20,6 +20,9 @@ namespace Game.Interaction.UI
         [SerializeField] private GameObject promptContainer;
         [SerializeField] private TextMeshProUGUI promptText;
         [SerializeField] private CanvasGroup canvasGroup;
+        [SerializeField] private GameObject progressBarContainer;
+        [SerializeField] private Image progressBarFill;
+        [SerializeField] private TextMeshProUGUI progressPercentText;
 
         [Header("Animation Settings")]
         [SerializeField] private float fadeDuration = 0.2f;
@@ -34,6 +37,7 @@ namespace Game.Interaction.UI
 
         private IInteractable currentInteractable;
         private bool isVisible = false;
+        private bool isShowingProgress = false;
         private Tweener fadeTween;
         private Tweener pulseTween;
 
@@ -63,6 +67,12 @@ namespace Game.Interaction.UI
             // Start hidden
             canvasGroup.alpha = 0f;
             promptContainer.SetActive(false);
+            
+            // Hide progress bar initially
+            if (progressBarContainer != null)
+            {
+                progressBarContainer.SetActive(false);
+            }
         }
 
         private void OnEnable()
@@ -216,6 +226,68 @@ namespace Game.Interaction.UI
             canvasGroup.alpha = 0f;
             promptContainer.transform.localScale = Vector3.one;
             promptContainer.SetActive(false);
+            
+            // Hide progress bar
+            HideProgressBar();
+        }
+        
+        /// <summary>
+        /// Show progress bar for gathering interactions
+        /// </summary>
+        public void ShowProgressBar()
+        {
+            if (progressBarContainer != null)
+            {
+                isShowingProgress = true;
+                progressBarContainer.SetActive(true);
+                
+                // Reset progress
+                if (progressBarFill != null)
+                    progressBarFill.fillAmount = 0f;
+                
+                if (progressPercentText != null)
+                    progressPercentText.text = "0%";
+                
+                // Stop pulse animation when showing progress
+                pulseTween?.Kill();
+                promptContainer.transform.localScale = Vector3.one;
+            }
+        }
+        
+        /// <summary>
+        /// Update progress bar fill amount (0-1)
+        /// </summary>
+        public void UpdateProgress(float progress)
+        {
+            if (!isShowingProgress || progressBarFill == null)
+                return;
+            
+            progress = Mathf.Clamp01(progress);
+            progressBarFill.fillAmount = progress;
+            
+            if (progressPercentText != null)
+            {
+                int percentage = Mathf.RoundToInt(progress * 100f);
+                progressPercentText.text = $"{percentage}%";
+            }
+        }
+        
+        /// <summary>
+        /// Hide progress bar
+        /// </summary>
+        public void HideProgressBar()
+        {
+            if (progressBarContainer != null)
+            {
+                isShowingProgress = false;
+                progressBarContainer.SetActive(false);
+                
+                // Resume pulse animation if still visible
+                if (isVisible)
+                {
+                    StartPulseAnimation();
+                }
+            }
         }
     }
 }

@@ -236,7 +236,17 @@ namespace Game.Player
         {
             _inputHandler?.SetInputBlocked(blocked);
         }
-
+        
+        /// <summary>
+        /// Check if the pickup/interact button is currently held down
+        /// </summary>
+        public bool IsPickupButtonHeld => _inputHandler?.IsPickupButtonHeld ?? false;
+        
+        /// <summary>
+        /// Check the raw physical state of the pickup button, ignoring input blocking.
+        /// Used by gathering system to detect button release even when movement is locked.
+        /// </summary>
+        public bool IsPickupButtonPhysicallyHeld => _inputHandler?.IsPickupButtonPhysicallyHeld ?? false;
         #endregion
     }
 }

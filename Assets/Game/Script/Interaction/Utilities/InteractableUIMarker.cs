@@ -13,7 +13,9 @@ namespace Game.Interaction.UI
     {
         [Header("UI References")]
         [SerializeField] private Image markerImage;
-        [SerializeField] private Canvas canvas;
+        [SerializeField] private RectTransform markerRectTransform;
+        [SerializeField] private Canvas parentCanvas; // Screen-space canvas to attach to
+        [SerializeField] private bool autoFindCanvas = true;
         
         [Header("Colors")]
         [SerializeField] private Color inRangeColor = new Color(1f, 1f, 0f, 0.7f); // Yellow
@@ -32,15 +34,14 @@ namespace Game.Interaction.UI
         [SerializeField] private float floatAmplitude = 0.2f;
         [SerializeField] private float floatSpeed = 2f;
         
-        [Header("Billboard Settings")]
-        [SerializeField] private bool billboardToCamera = true;
-        [SerializeField] private Vector3 offset = new Vector3(0, 2f, 0);
+        [Header("Positioning")]
+        [SerializeField] private Vector2 screenOffset = new Vector2(0, 50f); // Pixel offset from target position
         
         private Camera mainCamera;
         private Transform targetTransform;
         private bool isVisible = false;
         private bool isSelected = false;
-        private Vector3 initialLocalPosition;
+        private Vector2 initialLocalPosition;
         private Tweener scaleTween;
         private Tweener fadeTween;
         private MarkerState currentState = MarkerState.Hidden;
@@ -55,26 +56,50 @@ namespace Game.Interaction.UI
 
         private void Awake()
         {
-            // Auto-setup canvas
-            if (canvas == null)
+            // Auto-find parent canvas
+            if (parentCanvas == null && autoFindCanvas)
             {
-                canvas = GetComponent<Canvas>();
-                if (canvas == null)
+                parentCanvas = GetComponentInParent<Canvas>();
+                
+                // If no parent canvas, find one in scene
+                if (parentCanvas == null)
                 {
-                    canvas = gameObject.AddComponent<Canvas>();
+                    parentCanvas = FindFirstObjectByType<Canvas>();
+                }
+                
+                if (parentCanvas == null)
+                {
+                    Debug.LogError("[InteractableUIMarker] No Canvas found! Create a screen-space canvas first.");
+                    return;
                 }
             }
             
-            canvas.renderMode = RenderMode.WorldSpace;
+            // Ensure we're parented to the canvas
+            if (parentCanvas != null && transform.parent != parentCanvas.transform)
+            {
+                transform.SetParent(parentCanvas.transform, false);
+            }
             
-            // Auto-find marker image
+            // Auto-find marker image and rect transform
             if (markerImage == null)
             {
-                markerImage = GetComponentInChildren<Image>();
+                markerImage = GetComponent<Image>();
+                if (markerImage == null)
+                {
+                    markerImage = GetComponentInChildren<Image>();
+                }
+            }
+            
+            if (markerRectTransform == null)
+            {
+                markerRectTransform = GetComponent<RectTransform>();
             }
             
             // Store initial position for floating animation
-            initialLocalPosition = transform.localPosition;
+            if (markerRectTransform != null)
+            {
+                initialLocalPosition = markerRectTransform.anchoredPosition;
+            }
             
             // Start hidden
             if (markerImage != null)
@@ -87,32 +112,64 @@ namespace Game.Interaction.UI
 
         private void Start()
         {
+            // Try to find camera - works with Cinemachine or regular camera
             mainCamera = Camera.main;
             if (mainCamera == null)
             {
-                Debug.LogWarning("[InteractableUIMarker] Main camera not found! Billboard effect will not work.");
+                mainCamera = FindAnyObjectByType<Camera>();
+                
+                if (mainCamera == null)
+                {
+                    Debug.LogWarning("[InteractableUIMarker] No camera found! Marker positioning will not work.");
+                }
             }
         }
 
         private void LateUpdate()
         {
-            // Billboard effect - always face camera
-            if (billboardToCamera && mainCamera != null)
+            // Update screen position to follow target
+            if (targetTransform != null && mainCamera != null && markerRectTransform != null)
             {
-                transform.rotation = mainCamera.transform.rotation;
-            }
-            
-            // Follow target with offset
-            if (targetTransform != null)
-            {
-                transform.position = targetTransform.position + offset;
-            }
-            
-            // Floating animation
-            if (enableFloating && isVisible)
-            {
-                float floatOffset = Mathf.Sin(Time.time * floatSpeed) * floatAmplitude;
-                transform.localPosition = initialLocalPosition + Vector3.up * floatOffset;
+                // Convert world position to screen point
+                Vector3 screenPoint = mainCamera.WorldToScreenPoint(targetTransform.position);
+                
+                // Check if target is in front of camera
+                if (screenPoint.z > 0)
+                {
+                    // Convert screen point to canvas position
+                    Vector2 canvasPos;
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                        parentCanvas.transform as RectTransform,
+                        screenPoint,
+                        parentCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : mainCamera,
+                        out canvasPos
+                    );
+                    
+                    // Apply offset and floating animation
+                    Vector2 finalPos = canvasPos + screenOffset;
+                    
+                    if (enableFloating && isVisible)
+                    {
+                        float floatOffset = Mathf.Sin(Time.time * floatSpeed) * floatAmplitude;
+                        finalPos.y += floatOffset;
+                    }
+                    
+                    markerRectTransform.anchoredPosition = finalPos;
+                    
+                    // Show marker (target is visible)
+                    if (markerImage != null && markerImage.color.a == 0 && isVisible)
+                    {
+                        markerImage.color = new Color(markerImage.color.r, markerImage.color.g, markerImage.color.b, currentState == MarkerState.InRange ? inRangeColor.a : selectedColor.a);
+                    }
+                }
+                else
+                {
+                    // Target is behind camera - hide marker
+                    if (markerImage != null && isVisible)
+                    {
+                        markerImage.color = new Color(markerImage.color.r, markerImage.color.g, markerImage.color.b, 0);
+                    }
+                }
             }
         }
 
@@ -122,8 +179,11 @@ namespace Game.Interaction.UI
         public void Initialize(Transform target)
         {
             targetTransform = target;
-            transform.position = target.position + offset;
-            initialLocalPosition = transform.localPosition;
+            
+            if (markerRectTransform != null)
+            {
+                initialLocalPosition = markerRectTransform.anchoredPosition;
+            }
         }
 
         /// <summary>
@@ -190,6 +250,28 @@ namespace Game.Interaction.UI
                     .SetEase(Ease.OutQuad);
             }
         }
+        
+        /// <summary>
+        /// Hide the marker instantly without fade animation
+        /// </summary>
+        public void HideInstant()
+        {
+            if (currentState == MarkerState.Hidden && !isVisible) return;
+            
+            currentState = MarkerState.Hidden;
+            isVisible = false;
+            isSelected = false;
+            
+            // Kill existing tweens
+            scaleTween?.Kill();
+            fadeTween?.Kill();
+            
+            // Instantly hide
+            if (markerImage != null)
+            {
+                markerImage.color = new Color(markerImage.color.r, markerImage.color.g, markerImage.color.b, 0);
+            }
+        }
 
         private void AnimateToState(Color targetColor, float targetScale)
         {
@@ -209,11 +291,11 @@ namespace Game.Interaction.UI
         }
 
         /// <summary>
-        /// Set marker offset from target
+        /// Set marker screen offset in pixels
         /// </summary>
-        public void SetOffset(Vector3 newOffset)
+        public void SetOffset(Vector2 newOffset)
         {
-            offset = newOffset;
+            screenOffset = newOffset;
         }
 
         /// <summary>
@@ -222,9 +304,9 @@ namespace Game.Interaction.UI
         public void SetFloating(bool enabled)
         {
             enableFloating = enabled;
-            if (!enabled)
+            if (!enabled && markerRectTransform != null)
             {
-                transform.localPosition = initialLocalPosition;
+                markerRectTransform.anchoredPosition = initialLocalPosition;
             }
         }
 
@@ -238,39 +320,53 @@ namespace Game.Interaction.UI
         #region Static Factory Method
 
         /// <summary>
-        /// Creates a UI marker for an interactable object
+        /// Creates a UI marker for an interactable object on screen-space canvas
         /// </summary>
-        public static InteractableUIMarker CreateMarker(Transform target, Sprite markerSprite = null)
+        public static InteractableUIMarker CreateMarker(Transform target, Sprite markerSprite = null, Canvas canvas = null, 
+            Color? inRangeColor = null, Color? selectedColor = null, Color? depletedColor = null)
         {
-            // Create canvas object
-            GameObject markerObj = new GameObject("InteractableMarker");
-            markerObj.transform.SetParent(target);
-            markerObj.transform.localPosition = Vector3.up * 2f;
+            // Find canvas if not provided
+            if (canvas == null)
+            {
+                canvas = FindFirstObjectByType<Canvas>();
+                if (canvas == null)
+                {
+                    Debug.LogError("[InteractableUIMarker] No Canvas found in scene! Cannot create marker.");
+                    return null;
+                }
+            }
+            
+            // Create marker object on canvas
+            GameObject markerObj = new GameObject("InteractableMarker_" + target.name);
+            markerObj.transform.SetParent(canvas.transform, false);
+            
+            // Add RectTransform and configure
+            RectTransform rectTransform = markerObj.AddComponent<RectTransform>();
+            rectTransform.sizeDelta = new Vector2(25, 25);
+            rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            
+            // Add Image component
+            Image image = markerObj.AddComponent<Image>();
+            image.sprite = markerSprite;
+            image.raycastTarget = false;
+            image.color = new Color(1, 1, 0, 0); // Start invisible
             
             // Add marker component
             InteractableUIMarker marker = markerObj.AddComponent<InteractableUIMarker>();
-            
-            // Setup canvas
-            Canvas canvas = markerObj.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.WorldSpace;
-            canvas.sortingOrder = 100;
-            
-            // Create image
-            GameObject imageObj = new GameObject("MarkerImage");
-            imageObj.transform.SetParent(markerObj.transform);
-            imageObj.transform.localPosition = Vector3.zero;
-            imageObj.transform.localRotation = Quaternion.identity;
-            imageObj.transform.localScale = Vector3.one;
-            
-            Image image = imageObj.AddComponent<Image>();
-            image.sprite = markerSprite;
-            image.raycastTarget = false;
-            
-            RectTransform rect = imageObj.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(100, 100);
-            
             marker.markerImage = image;
-            marker.canvas = canvas;
+            marker.markerRectTransform = rectTransform;
+            marker.parentCanvas = canvas;
+            
+            // Apply custom colors if provided
+            if (inRangeColor.HasValue)
+                marker.inRangeColor = inRangeColor.Value;
+            if (selectedColor.HasValue)
+                marker.selectedColor = selectedColor.Value;
+            if (depletedColor.HasValue)
+                marker.depletedColor = depletedColor.Value;
+            
             marker.Initialize(target);
             
             return marker;
