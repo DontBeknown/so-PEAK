@@ -1,7 +1,8 @@
 using UnityEngine;
 using Unity.Cinemachine;
+using Game.UI;
 
-public class CinemachinePlayerCamera : MonoBehaviour
+public class CinemachinePlayerCamera : MonoBehaviour, ICameraInputController
 {
     private CinemachineCamera[] cinemachineCameras;
     //private bool originalCameraEnabled = true;
@@ -34,7 +35,7 @@ public class CinemachinePlayerCamera : MonoBehaviour
         
     }
 
-    private void EnableCameraInput(bool enable)
+    public void EnableCameraInput(bool enable)
     {
         // Refresh cache in case cameras were added/changed
         if (cinemachineCameras == null || cinemachineCameras.Length == 0)

@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 using Game.Interaction.UI;
+using Game.UI;
 
 namespace Game.Interaction
 {
@@ -44,7 +45,7 @@ namespace Game.Interaction
         private float updateTimer = 0f;
         private Dictionary<IInteractable, InteractableUIMarker> markerMap = new Dictionary<IInteractable, InteractableUIMarker>();
         private CharacterController characterController;
-        private global::UIManager uiManager;
+        private UIServiceProvider uiServiceProvider;
         private float stillTimer = 0f; // Tracks how long player has been standing still
 
         // Properties
@@ -58,7 +59,7 @@ namespace Game.Interaction
             
             // Get player reference
             characterController = GetComponent<CharacterController>();
-            uiManager = global::UIManager.Instance;
+            uiServiceProvider = UIServiceProvider.Instance;
             
             // Auto-find canvas for markers
             if (enableUIMarkers && markerCanvas == null)
@@ -281,7 +282,7 @@ namespace Game.Interaction
         private void UpdateMarkerVisibilityBasedOnMovement()
         {
             bool isPlayerMoving = IsPlayerMoving();
-            bool isMenuOpen = uiManager != null && uiManager.IsAnyMenuOpen();
+            bool isMenuOpen = uiServiceProvider != null && uiServiceProvider.IsAnyPanelOpen();
 
             //Debug.Log($"[InteractionDetector] Player moving: {isPlayerMoving}, Menu open: {isMenuOpen}, Still timer: {stillTimer}");            
             // Update still timer

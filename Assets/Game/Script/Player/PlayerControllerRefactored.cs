@@ -1,6 +1,8 @@
 using UnityEngine;
 using Game.Player.Interfaces;
 using Game.Player.Services;
+using Game.Core.DI;
+using Game.UI;
 
 namespace Game.Player
 {
@@ -20,7 +22,7 @@ namespace Game.Player
         [Header("Inventory System References")]
         [SerializeField] private InventoryManager inventoryManager;
         [SerializeField] private CraftingManager craftingManager;
-        [SerializeField] private TabbedInventoryUI tabbedInventoryUI;
+        [SerializeField] private UIServiceProvider uiServiceProvider;
         [SerializeField] private CinemachinePlayerCamera playerCamera;
 
         [Header("Interaction System")]
@@ -98,15 +100,18 @@ namespace Game.Player
             // Auto-assign components
             inventoryManager ??= GetComponent<InventoryManager>();
             craftingManager ??= GetComponent<CraftingManager>();
-            tabbedInventoryUI ??= FindFirstObjectByType<TabbedInventoryUI>();
-            playerCamera ??= FindFirstObjectByType<CinemachinePlayerCamera>();
+            
+            // Use ServiceContainer for cross-scene references
+            if (uiServiceProvider == null)
+                uiServiceProvider = ServiceContainer.Instance.TryGet<UIServiceProvider>();
+            if (playerCamera == null)
+                playerCamera = ServiceContainer.Instance.TryGet<CinemachinePlayerCamera>();
 
-            // Create facade with Command Pattern support
-            // Pass null for itemDetector - using new InteractionDetector system instead
+            // Create facade with UIServiceProvider (SOLID: Dependency Injection)
             _inventoryFacade = new PlayerInventoryFacade(
                 inventoryManager,
                 craftingManager,
-                tabbedInventoryUI,
+                uiServiceProvider,
                 _model.Stats,
                 transform,
                 enableInventoryCommandDebugLogs,
@@ -218,9 +223,6 @@ namespace Game.Player
         public void StartCrafting(CraftingRecipe recipe) => _inventoryFacade?.StartCrafting(recipe);
         
         public InventoryManager GetInventoryManager() => _inventoryFacade?.InventoryManager;
-        
-        [System.Obsolete("ItemDetector is deprecated. Use InteractionDetector instead.", false)]
-        public ItemDetector GetItemDetector() => _inventoryFacade?.ItemDetector;
         
         public IPlayerState GetCurrentState() => _currentState;
 

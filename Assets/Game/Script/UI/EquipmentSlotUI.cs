@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
+using Game.Core.DI;
 
 /// <summary>
 /// UI component for a single equipment slot.
@@ -38,9 +39,9 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
         slotType = type;
         equipmentManager = manager;
         
-        // Get tooltip and context menu references
-        tooltipUI = FindFirstObjectByType<TooltipUI>();
-        contextMenuUI = FindFirstObjectByType<ContextMenuUI>();
+        // Get tooltip and context menu references from ServiceContainer
+        tooltipUI = ServiceContainer.Instance.TryGet<TooltipUI>();
+        contextMenuUI = ServiceContainer.Instance.TryGet<ContextMenuUI>();
 
         // Set slot label
         if (slotLabel != null)

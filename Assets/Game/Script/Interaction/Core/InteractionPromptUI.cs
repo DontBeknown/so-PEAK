@@ -2,6 +2,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
+using Game.Core.DI;
+using Game.Core.Events;
+using Game.UI;
 
 namespace Game.Interaction.UI
 {
@@ -15,6 +18,8 @@ namespace Game.Interaction.UI
         [Header("Detection Reference")]
         [SerializeField] private InteractionDetector interactionDetector;
         [SerializeField] private bool autoFindDetector = true;
+        
+        private IEventBus eventBus;
 
         [Header("UI References")]
         [SerializeField] private GameObject promptContainer;
@@ -33,7 +38,7 @@ namespace Game.Interaction.UI
 
         [Header("Formatting")]
         [SerializeField] private string keyFormat = "[{0}]"; // Format for key display
-        [SerializeField] private string promptFormat = "{0} {1}"; // "{verb} {action}"
+        //[SerializeField] private string promptFormat = "{0} {1}"; // "{verb} {action}"
 
         private IInteractable currentInteractable;
         private bool isVisible = false;
@@ -46,13 +51,15 @@ namespace Game.Interaction.UI
             // Auto-find InteractionDetector if not assigned
             if (interactionDetector == null && autoFindDetector)
             {
-                interactionDetector = FindFirstObjectByType<InteractionDetector>();
-                
+                interactionDetector = ServiceContainer.Instance.TryGet<InteractionDetector>();
                 if (interactionDetector == null)
                 {
-                    Debug.LogWarning("[InteractionPromptUI] No InteractionDetector found in scene. Prompt UI will not function.");
+                    Debug.LogWarning("[InteractionPromptUI] No InteractionDetector found in ServiceContainer. Prompt UI will not function.");
                 }
             }
+            
+            // Get EventBus from ServiceContainer (SOLID: Dependency Inversion)
+            eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
 
             // Auto-assign if not set
             if (promptContainer == null)
@@ -83,6 +90,13 @@ namespace Game.Interaction.UI
                 interactionDetector.OnNearestInteractableChanged += HandleInteractableChanged;
                 interactionDetector.OnInteractableInRange += HandleInteractableInRange;
             }
+            
+            // Subscribe to panel events via EventBus (SOLID: Observer pattern via EventBus)
+            if (eventBus != null)
+            {
+                eventBus.Subscribe<PanelOpenedEvent>(HandlePanelOpened);
+                eventBus.Subscribe<PanelClosedEvent>(HandlePanelClosed);
+            }
         }
 
         private void OnDisable()
@@ -92,6 +106,13 @@ namespace Game.Interaction.UI
             {
                 interactionDetector.OnNearestInteractableChanged -= HandleInteractableChanged;
                 interactionDetector.OnInteractableInRange -= HandleInteractableInRange;
+            }
+            
+            // Unsubscribe from EventBus panel events
+            if (eventBus != null)
+            {
+                eventBus.Unsubscribe<PanelOpenedEvent>(HandlePanelOpened);
+                eventBus.Unsubscribe<PanelClosedEvent>(HandlePanelClosed);
             }
             
             // Kill all active tweens to prevent errors
@@ -127,6 +148,39 @@ namespace Game.Interaction.UI
                 HidePrompt();
             }
         }
+        
+        /// <summary>
+        /// Handle panel opened event - hide prompt immediately
+        /// SOLID: Observer pattern via EventBus for reactive UI behavior
+        /// </summary>
+        private void HandlePanelOpened(PanelOpenedEvent evt)
+        {
+            // Immediately hide prompt when any panel opens
+            HidePrompt();
+            Debug.Log("[InteractionPromptUI] Hiding prompt due to panel opened: " + evt.PanelName);
+        }
+        
+        /// <summary>
+        /// Handle panel closed event - show prompt if interactable still in range
+        /// SOLID: Observer pattern via EventBus
+        /// </summary>
+        private void HandlePanelClosed(PanelClosedEvent evt)
+        {
+            // Check if we should show prompt again when panel closes
+            if (currentInteractable != null && interactionDetector != null)
+            {
+                var uiService = ServiceContainer.Instance.TryGet<UIServiceProvider>();
+                
+                // Only show if no other panels are open and interactable still in range
+                if (uiService != null && !uiService.IsAnyPanelOpen())
+                {
+                    if (interactionDetector.NearestInteractable == currentInteractable)
+                    {
+                        ShowPrompt();
+                    }
+                }
+            }
+        }
 
         private void UpdatePromptText()
         {
@@ -149,6 +203,11 @@ namespace Game.Interaction.UI
         private void ShowPrompt()
         {
             if (isVisible) return;
+            
+            // Don't show prompt if any UI panels are open (SOLID: SRP - self-manages visibility)
+            var uiService = ServiceContainer.Instance.TryGet<UIServiceProvider>();
+            if (uiService != null && uiService.IsAnyPanelOpen())
+                return;
 
             isVisible = true;
             promptContainer.SetActive(true);

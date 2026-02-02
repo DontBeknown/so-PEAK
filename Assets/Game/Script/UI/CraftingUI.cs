@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using Game.Core.DI;
+using Game.Core.Events;
 
 public class CraftingUI : MonoBehaviour
 {
@@ -27,6 +29,7 @@ public class CraftingUI : MonoBehaviour
     [SerializeField] private CraftingManager craftingManager;
     [SerializeField] private InventoryManager inventoryManager;
 
+    private IEventBus eventBus;
     private List<CraftingSlotUI> recipeSlotUIs = new List<CraftingSlotUI>();
     private CraftingSlotUI selectedSlot = null;
     private CraftingRecipe currentRecipe = null;
@@ -37,12 +40,14 @@ public class CraftingUI : MonoBehaviour
 
     private void Awake()
     {
-        // Get references if not assigned
+        // Get references from ServiceContainer (DI)
         if (craftingManager == null)
-            craftingManager = FindFirstObjectByType<CraftingManager>();
+            craftingManager = ServiceContainer.Instance.TryGet<CraftingManager>();
 
         if (inventoryManager == null)
-            inventoryManager = FindFirstObjectByType<InventoryManager>();
+            inventoryManager = ServiceContainer.Instance.TryGet<InventoryManager>();
+            
+        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
 
         // Setup craft button
         if (craftButton != null)
@@ -58,19 +63,27 @@ public class CraftingUI : MonoBehaviour
 
     private void OnEnable()
     {
-        // Subscribe to events
-        CraftingManager.OnCraftingStarted += OnCraftingStarted;
-        CraftingManager.OnCraftingCompleted += OnCraftingCompleted;
-        CraftingManager.OnCraftingFailed += OnCraftingFailed;
+        // Subscribe to EventBus events
+        if (eventBus != null)
+        {
+            eventBus.Subscribe<CraftingStartedEvent>(OnCraftingStartedEvent);
+            eventBus.Subscribe<CraftingCompletedEvent>(OnCraftingCompletedEvent);
+            eventBus.Subscribe<CraftingFailedEvent>(OnCraftingFailedEvent);
+        }
+        
         InventoryManager.OnInventoryChanged += RefreshRecipeList;
     }
 
     private void OnDisable()
     {
-        // Unsubscribe from events
-        CraftingManager.OnCraftingStarted -= OnCraftingStarted;
-        CraftingManager.OnCraftingCompleted -= OnCraftingCompleted;
-        CraftingManager.OnCraftingFailed -= OnCraftingFailed;
+        // Unsubscribe from EventBus events
+        if (eventBus != null)
+        {
+            eventBus.Unsubscribe<CraftingStartedEvent>(OnCraftingStartedEvent);
+            eventBus.Unsubscribe<CraftingCompletedEvent>(OnCraftingCompletedEvent);
+            eventBus.Unsubscribe<CraftingFailedEvent>(OnCraftingFailedEvent);
+        }
+        
         InventoryManager.OnInventoryChanged -= RefreshRecipeList;
     }
 
@@ -303,6 +316,22 @@ public class CraftingUI : MonoBehaviour
         {
             Debug.Log("Cannot craft - missing requirements or crafting station");
         }
+    }
+
+    // EventBus event handlers
+    private void OnCraftingStartedEvent(CraftingStartedEvent evt)
+    {
+        OnCraftingStarted(evt.Recipe);
+    }
+    
+    private void OnCraftingCompletedEvent(CraftingCompletedEvent evt)
+    {
+        OnCraftingCompleted(evt.Recipe);
+    }
+    
+    private void OnCraftingFailedEvent(CraftingFailedEvent evt)
+    {
+        OnCraftingFailed(evt.Recipe);
     }
 
     private void OnCraftingStarted(CraftingRecipe recipe)

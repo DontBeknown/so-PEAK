@@ -1,5 +1,7 @@
 using UnityEngine;
 using Game.Player.Inventory.Commands;
+using Game.Core.DI;
+using Game.UI;
 
 namespace Game.Player.Services
 {
@@ -13,21 +15,18 @@ namespace Game.Player.Services
     {
         private readonly InventoryManager _inventoryManager;
         private readonly CraftingManager _craftingManager;
-        private readonly TabbedInventoryUI _inventoryUI;
+        private readonly UIServiceProvider _uiServiceProvider;
         private readonly PlayerStats _playerStats;
         private readonly Transform _playerTransform;
         private readonly CinemachinePlayerCamera _playerCamera;
         
         // Command Pattern
         private readonly InventoryCommandInvoker _commandInvoker;
-        
-        // Cursor state tracking
-        private bool _isInventoryOpen = false;
 
         public PlayerInventoryFacade(
             InventoryManager inventoryManager,
             CraftingManager craftingManager,
-            TabbedInventoryUI inventoryUI,
+            UIServiceProvider uiServiceProvider,
             PlayerStats playerStats = null,
             Transform playerTransform = null,
             bool enableCommandDebugLogs = false,
@@ -35,10 +34,11 @@ namespace Game.Player.Services
         {
             _inventoryManager = inventoryManager;
             _craftingManager = craftingManager;
-            _inventoryUI = inventoryUI;
+            _uiServiceProvider = uiServiceProvider ?? ServiceContainer.Instance.TryGet<UIServiceProvider>();
             _playerStats = playerStats;
             _playerTransform = playerTransform;
-            _playerCamera = playerCamera ?? Object.FindFirstObjectByType<CinemachinePlayerCamera>();
+            // Use ServiceContainer instead of FindFirstObjectByType
+            _playerCamera = playerCamera ?? ServiceContainer.Instance.TryGet<CinemachinePlayerCamera>();
             
             _commandInvoker = new InventoryCommandInvoker(enableDebugLogs: enableCommandDebugLogs);
         }
@@ -46,41 +46,17 @@ namespace Game.Player.Services
         #region Inventory Management
 
         /// <summary>
-        /// Toggles the inventory UI and manages cursor visibility
+        /// Toggles the inventory UI using UIServiceProvider (SOLID: Facade pattern)
         /// </summary>
         public void ToggleInventory()
         {
-            _inventoryUI?.ToggleUI();
-            
-            // Toggle inventory state
-            _isInventoryOpen = !_isInventoryOpen;
-            
-            // Manage cursor and camera input based on inventory state
-            if (_playerCamera != null)
-            {
-                // Use the camera controller to handle cursor and input
-                _playerCamera.SetCursorLock(!_isInventoryOpen);
-            }
-            else
-            {
-                // Fallback to manual cursor control if camera not found
-                if (_isInventoryOpen)
-                {
-                    Cursor.lockState = CursorLockMode.None;
-                    Cursor.visible = true;
-                }
-                else
-                {
-                    Cursor.lockState = CursorLockMode.Locked;
-                    Cursor.visible = false;
-                }
-            }
+            _uiServiceProvider?.TogglePanel("Inventory");
         }
         
         /// <summary>
         /// Returns whether the inventory is currently open
         /// </summary>
-        public bool IsInventoryOpen => _isInventoryOpen;
+        public bool IsInventoryOpen => _uiServiceProvider?.GetPanel("Inventory")?.IsActive ?? false;
 
         /// <summary>
         /// Consumes a specific item from inventory using Command Pattern
@@ -198,9 +174,6 @@ namespace Game.Player.Services
 
         public InventoryManager InventoryManager => _inventoryManager;
         public CraftingManager CraftingManager => _craftingManager;
-        
-        [System.Obsolete("ItemDetector is deprecated. Use InteractionDetector on PlayerController instead.", false)]
-        public ItemDetector ItemDetector => null;
 
         #endregion
     }

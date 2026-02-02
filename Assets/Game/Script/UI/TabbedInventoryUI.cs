@@ -21,7 +21,7 @@ public class TabbedInventoryUI : MonoBehaviour
     [SerializeField] private Color inactiveTabColor = new Color(0.7f, 0.7f, 0.7f, 1f);
 
     [Header("Settings")]
-    [SerializeField] private bool pauseGameWhenOpen = true;
+    //[SerializeField] private bool pauseGameWhenOpen = true;
     [SerializeField] private TabType defaultTab = TabType.Inventory;
 
     private TabType currentTab = TabType.Inventory;
@@ -100,20 +100,6 @@ public class TabbedInventoryUI : MonoBehaviour
             mainPanel.SetActive(true);
         }
 
-        // Pause game if required
-        if (pauseGameWhenOpen)
-        {
-            Time.timeScale = 0f;
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-        
-        // Hide pickup prompt when inventory opens
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.HidePickupPrompt();
-        }
-
         // Switch to the specified tab
         SwitchTab(tab);
     }
@@ -129,14 +115,6 @@ public class TabbedInventoryUI : MonoBehaviour
             mainPanel.SetActive(false);
         }
 
-        // Resume game if it was paused
-        if (pauseGameWhenOpen)
-        {
-            Time.timeScale = 1f;
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
-
         // Hide both panels
         if (inventoryUI != null)
         {
@@ -146,12 +124,6 @@ public class TabbedInventoryUI : MonoBehaviour
         if (craftingUI != null)
         {
             craftingUI.HideCraftingPanel();
-        }
-        
-        // Show pickup prompt again when inventory closes
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.ShowPickupPromptIfNeeded();
         }
     }
 

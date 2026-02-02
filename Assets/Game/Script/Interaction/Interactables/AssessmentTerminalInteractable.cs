@@ -1,4 +1,6 @@
 using UnityEngine;
+using Game.Core.DI;
+using Game.UI;
 
 namespace Game.Interaction
 {
@@ -29,8 +31,15 @@ namespace Game.Interaction
         private bool isHighlighted = false;
         private float lastInteractionTime = -999f;
         private Game.Player.PlayerControllerRefactored currentPlayer;
+        private UIServiceProvider uiServiceProvider;
 
         #region IInteractable Implementation
+
+        private void Awake()
+        {
+            // Get UIServiceProvider from ServiceContainer
+            uiServiceProvider = ServiceContainer.Instance.TryGet<UIServiceProvider>();
+        }
 
         public string InteractionPrompt => customPrompt;
 
@@ -40,7 +49,7 @@ namespace Game.Interaction
         {
             get
             {
-                if (UIManager.Instance == null || UIManager.Instance.AssessmentReportUI == null)
+                if (uiServiceProvider == null)
                     return false;
                 
                 // Check cooldown
@@ -103,17 +112,16 @@ namespace Game.Interaction
 
         private void OpenAssessmentUI()
         {
-            if (UIManager.Instance == null)
+            if (uiServiceProvider == null)
             {
-                Debug.LogError("[AssessmentTerminalInteractable] UIManager not found!");
+                Debug.LogError("[AssessmentTerminalInteractable] UIServiceProvider not found!");
                 UnlockPlayer();
                 return;
             }
             
-            // Open stats tracker via UIManager
-            UIManager.Instance.OpenStatsTracker();
-            
-            Debug.Log("[AssessmentTerminalInteractable] Stats tracker opened");
+            // Open PlayerStatsTracker panel via UIServiceProvider (SOLID: Facade pattern)
+            uiServiceProvider.OpenPanel("PlayerStatsTracker");
+            Debug.Log("[AssessmentTerminalInteractable] Stats tracker opened via UIServiceProvider");
         }
 
         /// <summary>

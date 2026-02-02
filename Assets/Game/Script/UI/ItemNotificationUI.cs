@@ -4,6 +4,8 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using Game.Core.DI;
+using Game.Core.Events;
 
 /// <summary>
 /// Displays toast-style notifications for item-related events (pickup, equip, consume, etc.)
@@ -24,9 +26,13 @@ public class ItemNotificationUI : MonoBehaviour
     
     private Queue<NotificationData> notificationQueue = new Queue<NotificationData>();
     private List<GameObject> activeNotifications = new List<GameObject>();
+    private IEventBus eventBus;
     
     private void Awake()
     {
+        // Get EventBus from ServiceContainer
+        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+        
         // Start hidden
         if (notificationPanel != null)
         {
@@ -36,27 +42,76 @@ public class ItemNotificationUI : MonoBehaviour
     
     private void OnEnable()
     {
-        // Subscribe to inventory events
+        if (eventBus != null)
+        {
+            // Subscribe to inventory events via EventBus
+            eventBus.Subscribe<ItemAddedEvent>(HandleItemAddedEvent);
+            eventBus.Subscribe<ItemRemovedEvent>(HandleItemRemovedEvent);
+            eventBus.Subscribe<ItemConsumedEvent>(HandleItemConsumedEvent);
+            
+            // Subscribe to equipment events via EventBus
+            eventBus.Subscribe<ItemEquippedEvent>(HandleItemEquippedEvent);
+            eventBus.Subscribe<ItemUnequippedEvent>(HandleItemUnequippedEvent);
+        }
+        
+        // Keep legacy inventory event subscriptions for backward compatibility
         InventoryManager.OnItemAdded += HandleItemAdded;
         InventoryManager.OnItemRemoved += HandleItemRemoved;
         InventoryManager.OnItemConsumed += HandleItemConsumed;
-        
-        // Subscribe to equipment events if available
-        EquipmentManager.OnItemEquipped += HandleItemEquipped;
-        EquipmentManager.OnItemUnequipped += HandleItemUnequipped;
     }
     
     private void OnDisable()
     {
-        // Unsubscribe from events
-        InventoryManager.OnItemAdded -= HandleItemAdded;
-        InventoryManager.OnItemRemoved -= HandleItemRemoved;
-        InventoryManager.OnItemConsumed -= HandleItemConsumed;
+        if (eventBus != null)
+        {
+            // Unsubscribe from EventBus events
+            eventBus.Unsubscribe<ItemAddedEvent>(HandleItemAddedEvent);
+            eventBus.Unsubscribe<ItemRemovedEvent>(HandleItemRemovedEvent);
+            eventBus.Unsubscribe<ItemConsumedEvent>(HandleItemConsumedEvent);
+            eventBus.Unsubscribe<ItemEquippedEvent>(HandleItemEquippedEvent);
+            eventBus.Unsubscribe<ItemUnequippedEvent>(HandleItemUnequippedEvent);
+        }
         
-        EquipmentManager.OnItemEquipped -= HandleItemEquipped;
-        EquipmentManager.OnItemUnequipped -= HandleItemUnequipped;
+        // Unsubscribe from legacy events
+        /*InventoryManager.OnItemAdded -= HandleItemAdded;
+        InventoryManager.OnItemRemoved -= HandleItemRemoved;
+        InventoryManager.OnItemConsumed -= HandleItemConsumed;*/
     }
     
+    // EventBus event handlers
+    private void HandleItemAddedEvent(ItemAddedEvent evt)
+    {
+        if (evt.Item == null) return;
+        ShowNotification(evt.Item, evt.Quantity, NotificationType.Added);
+    }
+    
+    private void HandleItemRemovedEvent(ItemRemovedEvent evt)
+    {
+        if (evt.Item == null) return;
+        ShowNotification(evt.Item, evt.Quantity, NotificationType.Removed);
+    }
+    
+    private void HandleItemConsumedEvent(ItemConsumedEvent evt)
+    {
+        if (evt.Item == null) return;
+        ShowNotification(evt.Item, evt.Quantity, NotificationType.Consumed);
+    }
+    
+    private void HandleItemEquippedEvent(ItemEquippedEvent evt)
+    {
+        InventoryItem invItem = evt.Item as InventoryItem;
+        if (invItem == null) return;
+        ShowNotification(invItem, 1, NotificationType.Equipped);
+    }
+    
+    private void HandleItemUnequippedEvent(ItemUnequippedEvent evt)
+    {
+        InventoryItem invItem = evt.Item as InventoryItem;
+        if (invItem == null) return;
+        ShowNotification(invItem, 1, NotificationType.Unequipped);
+    }
+    
+    // Legacy event handlers (for backward compatibility)
     private void HandleItemAdded(InventoryItem item, int quantity)
     {
         if (item == null) return;

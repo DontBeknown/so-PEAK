@@ -3,6 +3,8 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 using System;
+using Game.Core.DI;
+using Game.Core.Events;
 
 /// <summary>
 /// Main UI controller for the equipment panel.
@@ -21,6 +23,7 @@ public class EquipmentUI : MonoBehaviour
 
     private EquipmentManager equipmentManager;
     private InventoryUI inventoryUI; // Reference to refresh inventory when unequipping
+    private IEventBus eventBus;
     private Dictionary<EquipmentSlotType, EquipmentSlotUI> slotUIs = new Dictionary<EquipmentSlotType, EquipmentSlotUI>();
     private bool isInitialized = false; // Track if slots have been created
     
@@ -28,11 +31,12 @@ public class EquipmentUI : MonoBehaviour
 
     private void Awake()
     {
-        // Find equipment manager
-        equipmentManager = FindFirstObjectByType<EquipmentManager>();
+        // Get references from ServiceContainer (DI)
+        equipmentManager = ServiceContainer.Instance.TryGet<EquipmentManager>();
+        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
         
         // Find inventory UI to refresh it when unequipping
-        inventoryUI = FindFirstObjectByType<InventoryUI>();
+        inventoryUI = ServiceContainer.Instance.TryGet<InventoryUI>();
 
         // Start hidden
         if (equipmentPanel != null)
@@ -55,6 +59,13 @@ public class EquipmentUI : MonoBehaviour
         {
             equipmentManager.OnEquipmentChanged += OnEquipmentChanged;
         }
+        
+        // Subscribe to EventBus events
+        if (eventBus != null)
+        {
+            eventBus.Subscribe<ItemEquippedEvent>(OnItemEquippedEvent);
+            eventBus.Subscribe<ItemUnequippedEvent>(OnItemUnequippedEvent);
+        }
     }
 
     private void UnsubscribeFromEvents()
@@ -62,6 +73,13 @@ public class EquipmentUI : MonoBehaviour
         if (equipmentManager != null)
         {
             equipmentManager.OnEquipmentChanged -= OnEquipmentChanged;
+        }
+        
+        // Unsubscribe from EventBus events
+        if (eventBus != null)
+        {
+            eventBus.Unsubscribe<ItemEquippedEvent>(OnItemEquippedEvent);
+            eventBus.Unsubscribe<ItemUnequippedEvent>(OnItemUnequippedEvent);
         }
     }
 
@@ -77,10 +95,10 @@ public class EquipmentUI : MonoBehaviour
         
         if (equipmentManager == null)
         {
-            equipmentManager = FindFirstObjectByType<EquipmentManager>();
+            equipmentManager = ServiceContainer.Instance.TryGet<EquipmentManager>();
             if (equipmentManager == null)
             {
-                Debug.LogWarning("EquipmentUI: EquipmentManager not found");
+                Debug.LogWarning("EquipmentUI: EquipmentManager not found in ServiceContainer");
                 return;
             }
         }
@@ -136,6 +154,19 @@ public class EquipmentUI : MonoBehaviour
         {
             slotUI.UpdateSlot(item);
         }
+    }
+    
+    // EventBus event handlers
+    private void OnItemEquippedEvent(ItemEquippedEvent evt)
+    {
+        // Refresh all slots when item is equipped
+        UpdateAllSlots();
+    }
+    
+    private void OnItemUnequippedEvent(ItemUnequippedEvent evt)
+    {
+        // Refresh all slots when item is unequipped
+        UpdateAllSlots();
     }
 
     /// <summary>

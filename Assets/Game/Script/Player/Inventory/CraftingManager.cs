@@ -2,6 +2,8 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using Game.Core.DI;
+using Game.Core.Events;
 
 public class CraftingManager : MonoBehaviour
 {
@@ -13,15 +15,14 @@ public class CraftingManager : MonoBehaviour
     [SerializeField] private bool nearCampfire = false;
     [SerializeField] private bool nearWorkbench = false;
 
-    // Events
-    public static event Action<CraftingRecipe> OnCraftingStarted;
-    public static event Action<CraftingRecipe> OnCraftingCompleted;
-    public static event Action<CraftingRecipe> OnCraftingFailed;
-
     private bool isCrafting = false;
+    private IEventBus eventBus;
 
     private void Awake()
     {
+        // Get EventBus from ServiceContainer
+        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+        
         if (inventoryManager == null)
             inventoryManager = GetComponent<InventoryManager>();
     }
@@ -71,12 +72,12 @@ public class CraftingManager : MonoBehaviour
     private IEnumerator CraftItem(CraftingRecipe recipe)
     {
         isCrafting = true;
-        OnCraftingStarted?.Invoke(recipe);
+        eventBus?.Publish(new CraftingStartedEvent(recipe));
 
         // Consume materials first
         if (!recipe.ConsumeMaterials(inventoryManager))
         {
-            OnCraftingFailed?.Invoke(recipe);
+            eventBus?.Publish(new CraftingFailedEvent(recipe, "Failed to consume materials"));
             isCrafting = false;
             yield break;
         }
@@ -87,11 +88,11 @@ public class CraftingManager : MonoBehaviour
         // Add result to inventory
         if (inventoryManager.AddItem(recipe.resultItem, recipe.resultQuantity))
         {
-            OnCraftingCompleted?.Invoke(recipe);
+            eventBus?.Publish(new CraftingCompletedEvent(recipe));
         }
         else
         {
-            OnCraftingFailed?.Invoke(recipe);
+            eventBus?.Publish(new CraftingFailedEvent(recipe, "Inventory full"));
             // TODO: Return materials to player or drop them on ground
         }
 

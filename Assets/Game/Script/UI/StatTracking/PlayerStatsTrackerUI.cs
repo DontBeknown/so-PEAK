@@ -4,12 +4,14 @@ using TMPro;
 using System.Collections.Generic;
 using Game.Player;
 using Game.Player.Services;
+using Game.Core.DI;
+using Game.UI;
 
 /// <summary>
 /// UI presenter for displaying player statistics.
 /// SRP: Only responsible for UI presentation.
 /// </summary>
-public class PlayerStatsTrackerUI : MonoBehaviour
+public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
 {
     [Header("Dependencies")]
     [SerializeField] private PlayerStatsTrackerService trackerService;
@@ -55,13 +57,17 @@ public class PlayerStatsTrackerUI : MonoBehaviour
     private StatMetricType currentGraphMetric = StatMetricType.Distance;
     private float timeSinceLastRefresh;
     
+    // IUIPanel implementation
     public bool IsActive => panel != null && panel.activeSelf;
+    public string PanelName => "PlayerStatsTracker";
+    public bool BlocksInput => true;
+    public bool UnlocksCursor => true;
     
     private void Awake()
     {
         if (trackerService == null)
         {
-            trackerService = FindFirstObjectByType<PlayerStatsTrackerService>();
+            trackerService = ServiceContainer.Instance.TryGet<PlayerStatsTrackerService>();
         }
         
         if (graphRenderer == null)
@@ -71,17 +77,17 @@ public class PlayerStatsTrackerUI : MonoBehaviour
 
         if (playerCamera == null)
         {
-            playerCamera = FindFirstObjectByType<CinemachinePlayerCamera>();
+            playerCamera = ServiceContainer.Instance.TryGet<CinemachinePlayerCamera>();
         }
         
         if (playerController == null)
         {
-            playerController = FindFirstObjectByType<PlayerControllerRefactored>();
+            playerController = ServiceContainer.Instance.TryGet<PlayerControllerRefactored>();
         }
 
         if(simpleStatsHUD == null)
         {
-            simpleStatsHUD = FindFirstObjectByType<SimpleStatsHUD>();
+            simpleStatsHUD = ServiceContainer.Instance.TryGet<SimpleStatsHUD>();
         }
         
         SetupButtons();
@@ -135,12 +141,6 @@ public class PlayerStatsTrackerUI : MonoBehaviour
 
         simpleStatsHUD.Hide();
         
-        // Hide pickup prompt when stats UI opens
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.HidePickupPrompt();
-        }
-        
         // Stop tracking when UI is opened
         if (trackerService != null)
         {
@@ -188,12 +188,6 @@ public class PlayerStatsTrackerUI : MonoBehaviour
         
         // Resume player movement
         BlockPlayerInput(false);
-        
-        // Show pickup prompt again when stats UI closes
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.ShowPickupPromptIfNeeded();
-        }
         
         // Resume tracking when UI is closed
         if (trackerService != null)

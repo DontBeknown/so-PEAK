@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Game.Player.Stat.Assessment;
+using Game.Core.DI;
 
 /// <summary>
 /// UI presenter for displaying assessment reports
@@ -48,7 +49,7 @@ public class AssessmentReportUI : MonoBehaviour
     {
         if (assessmentService == null)
         {
-            assessmentService = FindFirstObjectByType<LearningAssessmentService>();
+            assessmentService = ServiceContainer.Instance.TryGet<LearningAssessmentService>();
         }
         
         if (generateAssessmentButton != null)

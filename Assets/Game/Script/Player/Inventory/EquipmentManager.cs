@@ -2,6 +2,8 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Game.Core.DI;
+using Game.Core.Events;
 
 /// <summary>
 /// Manages all equipment slots for the player.
@@ -11,24 +13,18 @@ using System.Linq;
 public class EquipmentManager : MonoBehaviour
 {
     private Dictionary<EquipmentSlotType, EquipmentSlot> equipmentSlots;
+    private IEventBus eventBus;
 
     /// <summary>
     /// Event fired when any equipment changes (equip or unequip).
     /// </summary>
     public event Action<EquipmentSlotType, IEquippable> OnEquipmentChanged;
-    
-    /// <summary>
-    /// Static event fired when an item is equipped (for UI notifications).
-    /// </summary>
-    public static event Action<IEquippable> OnItemEquipped;
-    
-    /// <summary>
-    /// Static event fired when an item is unequipped (for UI notifications).
-    /// </summary>
-    public static event Action<IEquippable> OnItemUnequipped;
 
     private void Awake()
     {
+        // Get EventBus from ServiceContainer
+        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+        
         InitializeSlots();
     }
 
@@ -44,11 +40,11 @@ public class EquipmentManager : MonoBehaviour
             // Subscribe to slot events
             slot.OnItemEquipped += item => {
                 OnEquipmentChanged?.Invoke(slotType, item);
-                OnItemEquipped?.Invoke(item);
+                eventBus?.Publish(new ItemEquippedEvent(item));
             };
             slot.OnItemUnequipped += item => {
                 OnEquipmentChanged?.Invoke(slotType, null);
-                OnItemUnequipped?.Invoke(item);
+                eventBus?.Publish(new ItemUnequippedEvent(item));
             };
             
             equipmentSlots[slotType] = slot;

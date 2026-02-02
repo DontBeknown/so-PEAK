@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
+using Game.Core.DI;
 
 public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
@@ -34,13 +35,13 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
         inventoryUI = ui;
         slotIndex = index;
         
-        // Get equipment manager reference
-        equipmentManager = FindFirstObjectByType<EquipmentManager>();
+        // Get equipment manager reference from ServiceContainer
+        equipmentManager = ServiceContainer.Instance.TryGet<EquipmentManager>();
         
-        // Get tooltip and context menu references
-        tooltipUI = FindFirstObjectByType<TooltipUI>();
-        if(tooltipUI == null) Debug.LogWarning("TooltipUI not found in scene.");
-        contextMenuUI = FindFirstObjectByType<ContextMenuUI>();
+        // Get tooltip and context menu references from ServiceContainer
+        tooltipUI = ServiceContainer.Instance.TryGet<TooltipUI>();
+        if(tooltipUI == null) Debug.LogWarning("TooltipUI not found in ServiceContainer.");
+        contextMenuUI = ServiceContainer.Instance.TryGet<ContextMenuUI>();
 
         // Hide highlight initially
         if (highlightImage != null)

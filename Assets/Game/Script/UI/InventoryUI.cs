@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
+using Game.Core.DI;
 
 public class InventoryUI : MonoBehaviour
 {
@@ -40,13 +41,13 @@ public class InventoryUI : MonoBehaviour
 
     private void Awake()
     {
-        // Get required components
-        inventoryManager = FindFirstObjectByType<InventoryManager>();
-        equipmentManager = FindFirstObjectByType<EquipmentManager>();
-        playerStats = FindFirstObjectByType<PlayerStats>();
+        // Get required components from ServiceContainer (DI)
+        inventoryManager = ServiceContainer.Instance.TryGet<InventoryManager>();
+        equipmentManager = ServiceContainer.Instance.TryGet<EquipmentManager>();
+        playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
         
         if (tooltipUI == null)
-            tooltipUI = FindFirstObjectByType<TooltipUI>();
+            tooltipUI = ServiceContainer.Instance.TryGet<TooltipUI>();
         
 
         // Setup buttons

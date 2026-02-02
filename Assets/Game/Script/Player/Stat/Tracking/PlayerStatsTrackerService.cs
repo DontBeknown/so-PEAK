@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Game.Core.DI;
 
 /// <summary>
 /// Main service that coordinates all stat tracking.
@@ -68,13 +69,13 @@ public class PlayerStatsTrackerService : MonoBehaviour
     private void FindDependencies()
     {
         if (playerStats == null)
-            playerStats = FindFirstObjectByType<PlayerStats>();
+            playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
         
         if (playerTransform == null && playerStats != null)
             playerTransform = playerStats.transform;
         
         if (inventoryManager == null)
-            inventoryManager = FindFirstObjectByType<InventoryManager>();
+            inventoryManager = ServiceContainer.Instance.TryGet<InventoryManager>();
     }
     
     private void SubscribeToEvents()

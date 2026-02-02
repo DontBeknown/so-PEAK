@@ -1,6 +1,7 @@
 // SimpleStatsHUD.cs
 using UnityEngine;
 using UnityEngine.UI;
+using Game.Core.DI;
 
 public class SimpleStatsHUD : MonoBehaviour
 {
@@ -16,7 +17,7 @@ public class SimpleStatsHUD : MonoBehaviour
     private void Start()
     {
         if (!playerStats)
-            playerStats = FindFirstObjectByType<PlayerStats>();
+            playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
 
         if (!playerStats) return;
 
