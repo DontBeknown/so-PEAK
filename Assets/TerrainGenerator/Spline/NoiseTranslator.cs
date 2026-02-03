@@ -22,8 +22,7 @@ public class NoiseTranslator : MonoBehaviour
     public int bufferLength = 100;
 
     [Header("Falloff Mask Settings")]
-    public bool useFalloffMask = true;
-    public Vector2 peakCenter = new Vector2(0.5f, 0.5f); // normalized center (0�1)
+    [HideInInspector] private Vector2 peakCenter = new Vector2(0.5f, 0.5f); // normalized center (0 1)
     public float falloffPower = 2.5f; // controls slope shape
 
     public float meshHeightMultiplier;
@@ -36,10 +35,17 @@ public class NoiseTranslator : MonoBehaviour
     [Range(1, 5)]
     public int mapIteration;
 
+    [Header("Terrain Colors")]
+    [SerializeField] private Color roadColor = new Color(0.70f, 0.55f, 0.35f);
+    [SerializeField] private Color sideRockColor = new Color(0.35f, 0.20f, 0.10f);
+    [SerializeField] private Color fieldColor = new Color(0.20f, 0.70f, 0.20f);
+
     [HideInInspector] public Spline mainSpline;
+    [HideInInspector] public Color[,] colorMap;
     [HideInInspector] public float[,] depthMap;
     [HideInInspector] public float[,] completeMap;
     [HideInInspector] public float[,] tempHeight;
+    
 
 
     //for collect max height index and value
@@ -96,18 +102,7 @@ public class NoiseTranslator : MonoBehaviour
         //then buffer zone
         GenerateBufferArea();
         //then color map
-        Color[,] colorMap = ColorMapping();
-
-        MapDisplay display = GetComponent<MapDisplay>();
-        Debug.Log("DrawMode: " + drawMode);
-        if (drawMode == DrawMode.NoiseMap)
-        {
-            display.DrawNoiseMap(completeMap, true);
-        }
-        else if (drawMode == DrawMode.Mesh)
-        {
-            display.DrawMesh(PerlinTerrainMeshGenerator.GenerateTerrainMesh(completeMap, colorMap, meshHeightMultiplier, levelOfDetail));
-        }
+        colorMap = ColorMapping();
 
     }
 
@@ -196,7 +191,7 @@ public class NoiseTranslator : MonoBehaviour
                 //Road check from the value we get 
                 if (roadValue < 0.25f)
                 {
-                    finalColor = new Color(0.70f, 0.55f, 0.35f); // light brown
+                    finalColor = roadColor;
                 }
                 else
                 {
@@ -212,11 +207,11 @@ public class NoiseTranslator : MonoBehaviour
 
                     if (steepness > 0.15f)
                     {
-                        finalColor = new Color(0.35f, 0.20f, 0.10f); // dark brown rock
+                        finalColor = sideRockColor;
                     }
                     else
                     {
-                        finalColor = new Color(0.2f, 0.7f, 0.2f); // green grass
+                        finalColor = fieldColor;
                     }
                 }
 

@@ -42,7 +42,7 @@ public class DefaultMountainGen
         float[,] weirdness, int round, int mapWidth, int mapLength, Vector2 peakCenter)
     {
         //change falloff power from each round
-        int falloffPower = round;
+        int falloffPower = 2;
 
 
         //parallel for faster
@@ -66,7 +66,7 @@ public class DefaultMountainGen
                     // radial distance (0 = center, 1 = far edge)
                     float dx = nx - peakCenter.x;
                     float dz = nz - peakCenter.y;
-                    float dist = Mathf.Sqrt(dx * dx + dz * dz) / 0.7071f; // normalize to 0?1 range
+                    float dist = Mathf.Sqrt(dx * dx + dz * dz) / 0.7071f; // normalize to 0 1 range
 
                     // mask curve
                     float mask = Mathf.Clamp01(1f - Mathf.Pow(dist, falloffPower));
