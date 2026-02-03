@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using Game.Player.Inventory;
 
 public class CraftingSlotUI : MonoBehaviour
 {
@@ -16,17 +17,17 @@ public class CraftingSlotUI : MonoBehaviour
 
     private CraftingRecipe recipe;
     private CraftingUI craftingUI;
-    private InventoryManager inventoryManager;
+    private IInventoryService inventoryService;
     private bool canCraft = false;
 
     public CraftingRecipe Recipe => recipe;
     public bool CanCraft => canCraft;
 
-    public void Initialize(CraftingUI ui, CraftingRecipe craftingRecipe, InventoryManager inventory)
+    public void Initialize(CraftingUI ui, CraftingRecipe craftingRecipe, IInventoryService inventory)
     {
         craftingUI = ui;
         recipe = craftingRecipe;
-        inventoryManager = inventory;
+        inventoryService = inventory;
 
         UpdateDisplay();
     }
@@ -53,7 +54,7 @@ public class CraftingSlotUI : MonoBehaviour
         }
 
         // Check if can craft
-        canCraft = recipe.CanCraft(inventoryManager);
+        canCraft = recipe.CanCraft(inventoryService);
 
         // Update visual feedback
         UpdateVisuals();

@@ -4,6 +4,8 @@ using TMPro;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using Game.Core.DI;
+using Game.Core.Events;
+using Game.Player.Inventory;
 
 public class InventoryUI : MonoBehaviour
 {
@@ -29,9 +31,12 @@ public class InventoryUI : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private bool pauseGameWhenOpen = true;
 
-    private InventoryManager inventoryManager;
+    // REFACTORED: Removed InventoryManager field, now uses IInventoryService
+    private IInventoryService inventoryService;
+    private IInventoryStorage inventoryStorage;
     private EquipmentManager equipmentManager;
     private PlayerStats playerStats;
+    private IEventBus eventBus;
     private List<InventorySlotUI> slotUIs = new List<InventorySlotUI>();
     private bool isOpen = false;
     private PlayerInput playerInput;
@@ -42,9 +47,11 @@ public class InventoryUI : MonoBehaviour
     private void Awake()
     {
         // Get required components from ServiceContainer (DI)
-        inventoryManager = ServiceContainer.Instance.TryGet<InventoryManager>();
+        inventoryService = ServiceContainer.Instance.Get<IInventoryService>();
+        inventoryStorage = ServiceContainer.Instance.Get<IInventoryStorage>();
         equipmentManager = ServiceContainer.Instance.TryGet<EquipmentManager>();
         playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
+        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
         
         if (tooltipUI == null)
             tooltipUI = ServiceContainer.Instance.TryGet<TooltipUI>();
@@ -76,24 +83,31 @@ public class InventoryUI : MonoBehaviour
 
     private void SubscribeToEvents()
     {
-        if (inventoryManager != null)
+        if (eventBus != null)
         {
-            InventoryManager.OnItemAdded += OnItemChanged;
-            InventoryManager.OnItemRemoved += OnItemChanged;
-            InventoryManager.OnInventoryChanged += UpdateAllSlots;
+            eventBus.Subscribe<Game.Player.Inventory.Events.ItemAddedEvent>(OnItemAdded);
+            eventBus.Subscribe<Game.Player.Inventory.Events.ItemRemovedEvent>(OnItemRemoved);
+            eventBus.Subscribe<Game.Player.Inventory.Events.InventoryChangedEvent>(OnInventoryChanged);
+        }
+        else
+        {
+            Debug.LogWarning("[InventoryUI] EventBus not available, inventory updates will not work!");
         }
     }
 
     private void UnsubscribeFromEvents()
     {
-        InventoryManager.OnItemAdded -= OnItemChanged;
-        InventoryManager.OnItemRemoved -= OnItemChanged;
-        InventoryManager.OnInventoryChanged -= UpdateAllSlots;
+        if (eventBus != null)
+        {
+            eventBus.Unsubscribe<Game.Player.Inventory.Events.ItemAddedEvent>(OnItemAdded);
+            eventBus.Unsubscribe<Game.Player.Inventory.Events.ItemRemovedEvent>(OnItemRemoved);
+            eventBus.Unsubscribe<Game.Player.Inventory.Events.InventoryChangedEvent>(OnInventoryChanged);
+        }
     }
 
     private void CreateSlotUIs()
     {
-        if (slotsContainer == null || slotPrefab == null || inventoryManager == null) return;
+        if (slotsContainer == null || slotPrefab == null || inventoryStorage == null) return;
 
         // Clear existing slots
         foreach (Transform child in slotsContainer)
@@ -103,7 +117,7 @@ public class InventoryUI : MonoBehaviour
         slotUIs.Clear();
 
         // Create slot UIs
-        var slots = inventoryManager.GetInventorySlots();
+        var slots = inventoryStorage.GetAllSlots();
         for (int i = 0; i < slots.Count; i++)
         {
             GameObject slotObj = Instantiate(slotPrefab, slotsContainer);
@@ -179,9 +193,9 @@ public class InventoryUI : MonoBehaviour
 
     public void UpdateAllSlots()
     {
-        if (inventoryManager == null) return;
+        if (inventoryStorage == null) return;
 
-        var slots = inventoryManager.GetInventorySlots();
+        var slots = inventoryStorage.GetAllSlots();
 
         // Update existing slot UIs
         for (int i = 0; i < slotUIs.Count && i < slots.Count; i++)
@@ -225,7 +239,7 @@ public class InventoryUI : MonoBehaviour
 
     public void UseItem(int slotIndex)
     {
-        if (slotIndex < 0 || slotIndex >= slotUIs.Count || inventoryManager == null) return;
+        if (slotIndex < 0 || slotIndex >= slotUIs.Count || inventoryService == null) return;
 
         var slotUI = slotUIs[slotIndex];
         if (slotUI.IsEmpty) return;
@@ -242,8 +256,13 @@ public class InventoryUI : MonoBehaviour
         // Otherwise, consume if consumable
         if (item.isConsumable)
         {
-            inventoryManager.ConsumeItem(item);
-            UpdateStatsDisplay(); // Refresh stats after consumption
+            // ConsumeItem is a facade method on InventoryManagerRefactored
+            var inventoryManager = ServiceContainer.Instance.Get<InventoryManagerRefactored>();
+            if (inventoryManager != null)
+            {
+                inventoryManager.ConsumeItem(item);
+                UpdateStatsDisplay(); // Refresh stats after consumption
+            }
         }
     }
     
@@ -265,7 +284,7 @@ public class InventoryUI : MonoBehaviour
         // Equip the item (keep it in inventory)
         IEquippable previousItem = equipmentManager.Equip(equipItem);
         
-        Debug.Log($"Equipped {equipItem.itemName} to {equipItem.EquipmentSlot} slot");
+        //Debug.Log($"Equipped {equipItem.itemName} to {equipItem.EquipmentSlot} slot");
         
         // Update UI to show equipped status
         UpdateAllSlots();
@@ -273,15 +292,15 @@ public class InventoryUI : MonoBehaviour
 
     public void DropItem(int slotIndex)
     {
-        if (slotIndex >= 0 && slotIndex < slotUIs.Count && inventoryManager != null)
+        if (slotIndex >= 0 && slotIndex < slotUIs.Count && inventoryService != null)
         {
             var slotUI = slotUIs[slotIndex];
             if (!slotUI.IsEmpty)
             {
                 // Remove one item from inventory
                 var item = slotUI.InventorySlot.item;
-                inventoryManager.RemoveItem(item, 1);
-                Debug.Log($"Dropped {item.itemName}");
+                inventoryService.RemoveItem(item, 1);
+                //Debug.Log($"Dropped {item.itemName}");
             }
         }
     }
@@ -294,10 +313,22 @@ public class InventoryUI : MonoBehaviour
         return equipmentManager;
     }
 
-    private void OnItemChanged(InventoryItem item, int quantity)
+    // EventBus event handlers
+    private void OnItemAdded(Game.Player.Inventory.Events.ItemAddedEvent evt)
     {
-        // Update stats display when items are added/removed
         UpdateStatsDisplay();
+        UpdateAllSlots();
+    }
+
+    private void OnItemRemoved(Game.Player.Inventory.Events.ItemRemovedEvent evt)
+    {
+        UpdateStatsDisplay();
+        UpdateAllSlots();
+    }
+
+    private void OnInventoryChanged(Game.Player.Inventory.Events.InventoryChangedEvent evt)
+    {
+        UpdateAllSlots();
     }
 
     private void Update()

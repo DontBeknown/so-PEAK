@@ -38,24 +38,22 @@ namespace Game.UI
             }
             _instance = this;
             
-            // Try to get player from service container first
+            // Get player from service container
             if (playerController == null)
             {
                 playerController = ServiceContainer.Instance.TryGet<PlayerControllerRefactored>();
                 
-                // Fallback to find if not in container
                 if (playerController == null)
-                    playerController = FindFirstObjectByType<PlayerControllerRefactored>();
+                    Debug.LogWarning("[UIServiceProvider] PlayerController not registered in ServiceContainer!");
             }
             
-            // Try to get camera from service container
+            // Get camera from service container
             if (playerCamera == null)
             {
                 playerCamera = ServiceContainer.Instance.TryGet<CinemachinePlayerCamera>();
                 
-                // Fallback to find if not in container
                 if (playerCamera == null)
-                    playerCamera = FindFirstObjectByType<CinemachinePlayerCamera>();
+                    Debug.LogWarning("[UIServiceProvider] PlayerCamera not registered in ServiceContainer!");
             }
             
             // Initialize services

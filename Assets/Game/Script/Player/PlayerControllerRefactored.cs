@@ -3,6 +3,7 @@ using Game.Player.Interfaces;
 using Game.Player.Services;
 using Game.Core.DI;
 using Game.UI;
+using Game.Player.Inventory;
 
 namespace Game.Player
 {
@@ -20,7 +21,7 @@ namespace Game.Player
         [SerializeField] private bool enableInventoryCommandDebugLogs = false;
 
         [Header("Inventory System References")]
-        [SerializeField] private InventoryManager inventoryManager;
+        // InventoryManager removed - now uses IInventoryService from ServiceContainer
         [SerializeField] private CraftingManager craftingManager;
         [SerializeField] private UIServiceProvider uiServiceProvider;
         [SerializeField] private CinemachinePlayerCamera playerCamera;
@@ -97,8 +98,8 @@ namespace Game.Player
 
         private void InitializeInventory()
         {
-            // Auto-assign components
-            inventoryManager ??= GetComponent<InventoryManager>();
+            // Resolve services from ServiceContainer
+            var inventoryService = ServiceContainer.Instance.Get<IInventoryService>();
             craftingManager ??= GetComponent<CraftingManager>();
             
             // Use ServiceContainer for cross-scene references
@@ -107,9 +108,9 @@ namespace Game.Player
             if (playerCamera == null)
                 playerCamera = ServiceContainer.Instance.TryGet<CinemachinePlayerCamera>();
 
-            // Create facade with UIServiceProvider (SOLID: Dependency Injection)
+            // Create facade with IInventoryService (SOLID: Dependency Injection)
             _inventoryFacade = new PlayerInventoryFacade(
-                inventoryManager,
+                inventoryService,
                 craftingManager,
                 uiServiceProvider,
                 _model.Stats,
@@ -215,14 +216,9 @@ namespace Game.Player
         #endregion
 
         #region Public API (for UI and other systems)
-
-        [System.Obsolete("GetTargetItem is deprecated. Use InteractionDetector.NearestInteractable instead.", false)]
-        public ResourceCollector GetTargetItem() => null;
         
         public void ConsumeItem(InventoryItem item) => _inventoryFacade?.ConsumeItem(item);
         public void StartCrafting(CraftingRecipe recipe) => _inventoryFacade?.StartCrafting(recipe);
-        
-        public InventoryManager GetInventoryManager() => _inventoryFacade?.InventoryManager;
         
         public IPlayerState GetCurrentState() => _currentState;
 

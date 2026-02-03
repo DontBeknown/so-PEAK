@@ -121,7 +121,7 @@ namespace Game.Interaction
             
             // Open PlayerStatsTracker panel via UIServiceProvider (SOLID: Facade pattern)
             uiServiceProvider.OpenPanel("PlayerStatsTracker");
-            Debug.Log("[AssessmentTerminalInteractable] Stats tracker opened via UIServiceProvider");
+            //Debug.Log("[AssessmentTerminalInteractable] Stats tracker opened via UIServiceProvider");
         }
 
         /// <summary>

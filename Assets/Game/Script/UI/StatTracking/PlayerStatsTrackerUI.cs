@@ -101,7 +101,7 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
     private void SetupButtons()
     {
         if (closeButton != null)
-            closeButton.onClick.AddListener(Hide);
+            closeButton.onClick.AddListener(OnCloseButtonPress);
         
         if (statTrackingTabButton != null)
             statTrackingTabButton.onClick.AddListener(() => SwitchToTab(true));
@@ -373,5 +373,14 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
     private void BlockPlayerInput(bool block)
     {
         playerController?.SetInputBlocked(block);
+    }
+
+    private void OnCloseButtonPress(){
+        var uiService = ServiceContainer.Instance.TryGet<UIServiceProvider>();
+        if (uiService != null)
+        {
+            //Debug.Log("[PlayerStatsTrackerUI] Closing panel via UIServiceProvider");
+            uiService.ClosePanel(PanelName);
+        }
     }
 }

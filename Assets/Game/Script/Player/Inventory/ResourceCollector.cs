@@ -1,5 +1,5 @@
 using UnityEngine;
-
+using Game.Player.Inventory;
 public class ResourceCollector : MonoBehaviour
 {
     [Header("Resource Settings")]
@@ -19,7 +19,7 @@ public class ResourceCollector : MonoBehaviour
 
     public bool CanBeCollected => harvestCount < maxHarvests && resourceItem != null;
 
-    public bool CollectResource(InventoryManager inventory)
+    public bool CollectResource(IInventoryService inventory)
     {
         if (!CanBeCollected) return false;
 

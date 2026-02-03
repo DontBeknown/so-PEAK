@@ -6,11 +6,12 @@ namespace Game.Player.Inventory.Commands
     /// <summary>
     /// Command for crafting an item using a recipe.
     /// Supports undo by returning materials and removing crafted item.
+    /// REFACTORED: Now uses IInventoryService (SOLID principles)
     /// </summary>
     public class CraftItemCommand : IInventoryCommand
     {
         private readonly CraftingManager _craftingManager;
-        private readonly InventoryManager _inventoryManager;
+        private readonly IInventoryService _inventoryService;
         private readonly CraftingRecipe _recipe;
         private bool _craftedSuccessfully;
         private List<(InventoryItem item, int quantity)> _consumedMaterials;
@@ -18,18 +19,18 @@ namespace Game.Player.Inventory.Commands
         public bool CanUndo => _craftedSuccessfully && _consumedMaterials != null;
         public string Description => $"Craft {_recipe?.resultItem?.itemName ?? "Unknown Item"}";
 
-        public CraftItemCommand(CraftingManager craftingManager, InventoryManager inventoryManager, 
+        public CraftItemCommand(CraftingManager craftingManager, IInventoryService inventoryService, 
             CraftingRecipe recipe)
         {
             _craftingManager = craftingManager;
-            _inventoryManager = inventoryManager;
+            _inventoryService = inventoryService;
             _recipe = recipe;
             _consumedMaterials = new List<(InventoryItem, int)>();
         }
 
         public bool Execute()
         {
-            if (_craftingManager == null || _inventoryManager == null || _recipe == null)
+            if (_craftingManager == null || _inventoryService == null || _recipe == null)
             {
                 Debug.LogWarning("CraftItemCommand: Invalid state - cannot execute");
                 return false;
@@ -48,23 +49,27 @@ namespace Game.Player.Inventory.Commands
                 _consumedMaterials.Add((requirement.item, requirement.quantity));
             }
 
-            // Consume materials using the recipe's built-in method
-            bool materialsConsumed = _recipe.ConsumeMaterials(_inventoryManager);
-            
-            if (!materialsConsumed)
+            // Consume materials - need to do manually since recipe.ConsumeMaterials expects InventoryManager
+            foreach (var requirement in _recipe.requirements)
             {
-                Debug.LogError("Failed to consume materials");
-                _consumedMaterials.Clear();
-                return false;
+                bool removed = _inventoryService.RemoveItem(requirement.item, requirement.quantity);
+                if (!removed)
+                {
+                    Debug.LogError($"Failed to consume material {requirement.item.itemName}");
+                    // Restore what we've removed so far
+                    RestoreMaterials();
+                    _consumedMaterials.Clear();
+                    return false;
+                }
             }
 
             // Add crafted item
-            bool craftedItemAdded = _inventoryManager.AddItem(_recipe.resultItem, _recipe.resultQuantity);
+            bool craftedItemAdded = _inventoryService.AddItem(_recipe.resultItem, _recipe.resultQuantity);
             
             if (craftedItemAdded)
             {
                 _craftedSuccessfully = true;
-                Debug.Log($"Crafted {_recipe.resultItem.itemName} x{_recipe.resultQuantity}");
+                //Debug.Log($"Crafted {_recipe.resultItem.itemName} x{_recipe.resultQuantity}");
                 return true;
             }
             else
@@ -78,14 +83,14 @@ namespace Game.Player.Inventory.Commands
 
         public bool Undo()
         {
-            if (!CanUndo || _inventoryManager == null)
+            if (!CanUndo || _inventoryService == null)
             {
                 Debug.LogWarning("CraftItemCommand: Cannot undo - item not crafted");
                 return false;
             }
 
             // Remove crafted item
-            bool removed = _inventoryManager.RemoveItem(_recipe.resultItem, _recipe.resultQuantity);
+            bool removed = _inventoryService.RemoveItem(_recipe.resultItem, _recipe.resultQuantity);
             
             if (removed)
             {
@@ -110,7 +115,7 @@ namespace Game.Player.Inventory.Commands
 
             foreach (var (item, quantity) in _consumedMaterials)
             {
-                bool restored = _inventoryManager.AddItem(item, quantity);
+                bool restored = _inventoryService.AddItem(item, quantity);
                 if (!restored)
                 {
                     Debug.LogWarning($"Failed to restore material {item.itemName}");

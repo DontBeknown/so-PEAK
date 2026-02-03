@@ -46,7 +46,7 @@ public class EquipmentItem : InventoryItem, IEquippable
     /// </summary>
     public virtual void OnUnequip()
     {
-        Debug.Log($"Unequipped: {itemName} from {equipmentSlot} slot");
+        //Debug.Log($"Unequipped: {itemName} from {equipmentSlot} slot");
     }
 
     /// <summary>

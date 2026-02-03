@@ -75,6 +75,7 @@ namespace Game.Core.DI
                 return service as TService;
             }
             
+            Debug.LogWarning($"[ServiceContainer] Service {type.Name} not found");
             return null;
         }
         
@@ -95,7 +96,7 @@ namespace Game.Core.DI
             
             if (_services.Remove(type))
             {
-                Debug.Log($"[ServiceContainer] Unregistered {type.Name}");
+                //Debug.Log($"[ServiceContainer] Unregistered {type.Name}");
             }
         }
         
@@ -106,7 +107,7 @@ namespace Game.Core.DI
         public void Clear()
         {
             _services.Clear();
-            Debug.Log("[ServiceContainer] Cleared all services");
+            //Debug.Log("[ServiceContainer] Cleared all services");
         }
     }
 }

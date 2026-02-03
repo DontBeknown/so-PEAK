@@ -1,10 +1,13 @@
 using UnityEngine;
+using Game.Core.DI;
+using Game.Player.Inventory;
 
 namespace Game.Interaction
 {
     /// <summary>
     /// Simple instant-pickup interactable for collecting items.
     /// Player presses E to instantly add item to inventory.
+    /// REFACTORED: Now uses IInventoryService from ServiceContainer
     /// </summary>
     public class ItemInteractable : MonoBehaviour, IInteractable
     {
@@ -66,16 +69,16 @@ namespace Game.Interaction
             if (!CanInteract || hasBeenCollected)
                 return;
 
-            // Get inventory manager from player
-            InventoryManager inventoryManager = player.GetInventoryManager();
-            if (inventoryManager == null)
+            // Get inventory service from ServiceContainer
+            var inventoryService = ServiceContainer.Instance.Get<IInventoryService>();
+            if (inventoryService == null)
             {
-                Debug.LogError("[ItemInteractable] Player has no InventoryManager!");
+                Debug.LogError("[ItemInteractable] IInventoryService not registered in ServiceContainer!");
                 return;
             }
 
             // Try to add item to inventory
-            bool added = inventoryManager.AddItem(item, quantity);
+            bool added = inventoryService.AddItem(item, quantity);
             
             if (added)
             {
@@ -129,7 +132,7 @@ namespace Game.Interaction
                     : $"Collected {item.itemName}";
                 
                 // TODO: Connect to notification system when available
-                Debug.Log(message);
+                //Debug.Log(message);
             }
         }
 

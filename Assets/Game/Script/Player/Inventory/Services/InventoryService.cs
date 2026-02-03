@@ -1,160 +1,170 @@
-using System.Collections.Generic;
+using Game.Core.Events;
+using Game.Player.Inventory.Events;
 using UnityEngine;
-using Game.Inventory.Effects;
 
-namespace Game.Inventory
+namespace Game.Player.Inventory.Services
 {
     /// <summary>
-    /// Service layer for inventory business logic
-    /// Single Responsibility: Business rules only
-    /// Depends on abstractions (IInventoryStorage)
+    /// Business logic for inventory operations
+    /// Coordinates between storage and events
     /// </summary>
-    public class InventoryService
+    public class InventoryService : IInventoryService
     {
         private readonly IInventoryStorage _storage;
-        private readonly InventoryEvents _events;
-        private readonly PlayerStats _playerStats;
-        
-        public InventoryService(IInventoryStorage storage, InventoryEvents events, PlayerStats playerStats)
+        private readonly IEventBus _eventBus;
+
+        public InventoryService(IInventoryStorage storage, IEventBus eventBus)
         {
             _storage = storage;
-            _events = events;
-            _playerStats = playerStats;
+            _eventBus = eventBus;
         }
-        
-        /// <summary>
-        /// Adds an item to the inventory
-        /// </summary>
+
+        #region Business Operations
+
         public bool AddItem(InventoryItem item, int quantity = 1)
         {
             if (item == null || quantity <= 0)
+            {
+                Debug.LogWarning("[InventoryService] Invalid item or quantity");
                 return false;
-            
-            // Try to stack with existing items first
-            if (item.maxStackSize > 1)
-            {
-                var slotsWithItem = _storage.FindSlotsWithItem(item);
-                foreach (var slotIndex in slotsWithItem)
-                {
-                    var slot = _storage.GetSlot(slotIndex);
-                    if (slot.CanAddItem(item, quantity))
-                    {
-                        _storage.AddToSlot(slotIndex, item, quantity);
-                        _events.RaiseItemAdded(item, quantity);
-                        return true;
-                    }
-                }
             }
-            
-            // Find empty slot
-            int emptySlot = _storage.FindEmptySlot();
-            if (emptySlot >= 0)
+
+            if (!CanFitItem(item, quantity))
             {
-                _storage.AddToSlot(emptySlot, item, quantity);
-                _events.RaiseItemAdded(item, quantity);
-                return true;
+                Debug.LogWarning($"[InventoryService] Cannot fit {quantity}x {item.itemName}");
+                return false;
             }
+
+            bool success = _storage.AddItem(item, quantity);
             
-            return false; // Inventory full
+            if (success)
+            {
+                //Debug.Log($"[InventoryService] Added {quantity}x {item.itemName}");
+                PublishItemAdded(item, quantity);
+                PublishInventoryChanged();
+            }
+
+            return success;
         }
-        
-        /// <summary>
-        /// Removes an item from the inventory
-        /// </summary>
+
         public bool RemoveItem(InventoryItem item, int quantity = 1)
         {
             if (item == null || quantity <= 0)
-                return false;
-            
-            int remainingToRemove = quantity;
-            var slotsWithItem = _storage.FindSlotsWithItem(item);
-            
-            foreach (var slotIndex in slotsWithItem)
             {
-                if (remainingToRemove <= 0)
-                    break;
-                
-                var slot = _storage.GetSlot(slotIndex);
-                int canRemove = Mathf.Min(slot.quantity, remainingToRemove);
-                
-                _storage.RemoveFromSlot(slotIndex, canRemove);
-                remainingToRemove -= canRemove;
-                _events.RaiseItemRemoved(item, canRemove);
+                Debug.LogWarning("[InventoryService] Invalid item or quantity");
+                return false;
             }
-            
-            return remainingToRemove == 0;
-        }
-        
-        /// <summary>
-        /// Consumes an item and applies its effects
-        /// </summary>
-        public bool ConsumeItem(InventoryItem item)
-        {
-            if (item == null || !item.isConsumable)
-                return false;
-            
-            if (!HasItem(item, 1))
-                return false;
-            
-            // Create effects from item data
-            var effects = ConsumableEffectFactory.CreateEffects(new System.Collections.Generic.List<ConsumableEffect>(item.consumableEffects ?? new ConsumableEffect[0]));
-            
-            // Apply all effects to injected PlayerStats
-            foreach (var effect in effects)
+
+            if (!_storage.HasItem(item, quantity))
             {
-                if (effect.CanApply(_playerStats))
+                Debug.LogWarning($"[InventoryService] Not enough {item.itemName}");
+                return false;
+            }
+
+            bool success = _storage.RemoveItem(item, quantity);
+            
+            if (success)
+            {
+                //Debug.Log($"[InventoryService] Removed {quantity}x {item.itemName}");
+                PublishItemRemoved(item, quantity);
+                PublishInventoryChanged();
+            }
+
+            return success;
+        }
+
+        public bool HasItem(InventoryItem item, int quantity = 1)
+        {
+            return _storage.HasItem(item, quantity);
+        }
+
+        public bool TransferItem(InventoryItem item, int quantity, IInventoryStorage targetStorage)
+        {
+            if (targetStorage == null)
+            {
+                Debug.LogWarning("[InventoryService] Target storage is null");
+                return false;
+            }
+
+            // Check if we have the item
+            if (!_storage.HasItem(item, quantity))
+            {
+                Debug.LogWarning($"[InventoryService] Not enough {item.itemName} to transfer");
+                return false;
+            }
+
+            // Check if target can fit the item
+            if (!targetStorage.CanAddItem(item, quantity))
+            {
+                Debug.LogWarning($"[InventoryService] Target cannot fit {quantity}x {item.itemName}");
+                return false;
+            }
+
+            // Remove from source
+            if (!_storage.RemoveItem(item, quantity))
+                return false;
+
+            // Add to target
+            if (!targetStorage.AddItem(item, quantity))
+            {
+                // Rollback: add back to source
+                _storage.AddItem(item, quantity);
+                return false;
+            }
+
+            //Debug.Log($"[InventoryService] Transferred {quantity}x {item.itemName}");
+            PublishInventoryChanged();
+            return true;
+        }
+
+        public void ClearInventory()
+        {
+            // Not implemented in the guide, but useful for future
+            Debug.LogWarning("[InventoryService] ClearInventory not implemented");
+        }
+
+        public bool CanFitItem(InventoryItem item, int quantity)
+        {
+            return _storage.CanAddItem(item, quantity);
+        }
+
+        public int GetTotalWeight()
+        {
+            int totalWeight = 0;
+            var slots = _storage.GetAllSlots();
+            
+            foreach (var slot in slots)
+            {
+                if (!slot.IsEmpty && slot.item != null)
                 {
-                    effect.Apply(_playerStats);
+                    // Note: InventoryItem doesn't have a weight property in the current implementation
+                    // This is a placeholder for when weight is added
+                    // totalWeight += slot.item.weight * slot.quantity;
                 }
             }
             
-            // Remove the consumed item
-            RemoveItem(item, 1);
-            _events.RaiseItemConsumed(item, 1);
-            
-            return true;
+            return totalWeight;
         }
-        
-        /// <summary>
-        /// Checks if inventory has a specific item
-        /// </summary>
-        public bool HasItem(InventoryItem item, int quantity = 1)
+
+        #endregion
+
+        #region Event Publishing
+
+        private void PublishItemAdded(InventoryItem item, int quantity)
         {
-            var slotsWithItem = _storage.FindSlotsWithItem(item);
-            int totalQuantity = 0;
-            
-            foreach (var slotIndex in slotsWithItem)
-            {
-                var slot = _storage.GetSlot(slotIndex);
-                totalQuantity += slot.quantity;
-            }
-            
-            return totalQuantity >= quantity;
+            _eventBus.Publish(new Game.Player.Inventory.Events.ItemAddedEvent(item, quantity));
         }
-        
-        /// <summary>
-        /// Gets the total quantity of an item in inventory
-        /// </summary>
-        public int GetItemQuantity(InventoryItem item)
+
+        private void PublishItemRemoved(InventoryItem item, int quantity)
         {
-            var slotsWithItem = _storage.FindSlotsWithItem(item);
-            int totalQuantity = 0;
-            
-            foreach (var slotIndex in slotsWithItem)
-            {
-                var slot = _storage.GetSlot(slotIndex);
-                totalQuantity += slot.quantity;
-            }
-            
-            return totalQuantity;
+            _eventBus.Publish(new Game.Player.Inventory.Events.ItemRemovedEvent(item, quantity));
         }
-        
-        /// <summary>
-        /// Gets all inventory slots (read-only)
-        /// </summary>
-        public IReadOnlyList<InventorySlot> GetSlots()
+
+        private void PublishInventoryChanged()
         {
-            return _storage.GetSlots();
+            _eventBus.Publish(new Game.Player.Inventory.Events.InventoryChangedEvent());
         }
+
+        #endregion
     }
 }

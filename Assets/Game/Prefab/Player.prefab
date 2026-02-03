@@ -6766,7 +6766,6 @@ GameObject:
   - component: {fileID: 988247627514051869}
   - component: {fileID: 4962120396931287550}
   - component: {fileID: 4013136103283677608}
-  - component: {fileID: 5019247002343706418}
   - component: {fileID: 981263882377947087}
   - component: {fileID: 7899176700243506759}
   - component: {fileID: 8878475526830187220}
@@ -6774,6 +6773,7 @@ GameObject:
   - component: {fileID: 7749627013475655508}
   - component: {fileID: 4319261038100501006}
   - component: {fileID: 6903466817524714061}
+  - component: {fileID: 3540277609948867354}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -6839,7 +6839,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.Player.PlayerControllerRefactored
   config: {fileID: 11400000, guid: 915e55fbd5b5e72459d5b7e5ec939b2d, type: 2}
   enableInventoryCommandDebugLogs: 0
-  inventoryManager: {fileID: 5019247002343706418}
   craftingManager: {fileID: 981263882377947087}
   uiServiceProvider: {fileID: 0}
   playerCamera: {fileID: 0}
@@ -6884,21 +6883,6 @@ MonoBehaviour:
     current: 100
     rateTime: 0.12
     rateElev: 0.0005
---- !u!114 &5019247002343706418
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4482526209655570014}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 462a9584e6b8b7b49a6c8d9e43055ffa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InventoryManager
-  initialSlots: 10
-  maxSlots: 30
-  playerStats: {fileID: 4013136103283677608}
 --- !u!114 &981263882377947087
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6913,7 +6897,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CraftingManager
   availableRecipes:
   - {fileID: 11400000, guid: b01bb3e53119ffc4c990e258d9596ad5, type: 2}
-  inventoryManager: {fileID: 5019247002343706418}
   nearCampfire: 0
   nearWorkbench: 0
 --- !u!114 &7899176700243506759
@@ -6958,7 +6941,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStatsTrackerService
   playerStats: {fileID: 4013136103283677608}
   playerTransform: {fileID: 437050701338270975}
-  inventoryManager: {fileID: 5019247002343706418}
   maxDataPoints: 100
   snapshotInterval: 5
   minPathDistance: 1
@@ -7020,6 +7002,20 @@ MonoBehaviour:
   markerInRangeColor: {r: 1, g: 1, b: 1, a: 0.7}
   markerSelectedColor: {r: 0.9528302, g: 0.8873516, b: 0.05842829, a: 1}
   markerDepletedColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
+--- !u!114 &3540277609948867354
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4482526209655570014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d25c81a9d170de44bda366485a341b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Player.Inventory.InventoryManagerRefactored
+  initialInventorySize: 20
+  playerStats: {fileID: 4013136103283677608}
 --- !u!1 &4494736775984268260
 GameObject:
   m_ObjectHideFlags: 0
@@ -10848,7 +10844,7 @@ MonoBehaviour:
   autoFindServices: 1
   playerController: {fileID: 4962120396931287550}
   playerStats: {fileID: 4013136103283677608}
-  inventoryManager: {fileID: 5019247002343706418}
+  inventoryManagerRefactored: {fileID: 3540277609948867354}
   craftingManager: {fileID: 981263882377947087}
   equipmentManager: {fileID: 7899176700243506759}
   inventoryUI: {fileID: 8485813984265435022}
@@ -14292,7 +14288,6 @@ MonoBehaviour:
   craftingProgressBar: {fileID: 6282097100896938978}
   craftingProgressSlider: {fileID: 3639372518660353423}
   craftingManager: {fileID: 981263882377947087}
-  inventoryManager: {fileID: 5019247002343706418}
 --- !u!114 &5622039186541756336
 MonoBehaviour:
   m_ObjectHideFlags: 0

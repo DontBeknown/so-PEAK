@@ -44,7 +44,7 @@ namespace Game.UI
             if (!_panels.ContainsKey(panel.PanelName))
             {
                 _panels[panel.PanelName] = panel;
-                Debug.Log($"[UIPanelController] Registered panel: {panel.PanelName}");
+                //Debug.Log($"[UIPanelController] Registered panel: {panel.PanelName}");
             }
         }
         
@@ -140,6 +140,9 @@ namespace Game.UI
         /// </summary>
         public bool IsAnyPanelOpen()
         {
+
+            //Debug.Log($"[UIPanelController] Active panels: {string.Join(", ", _activePanels.Select(p => p.PanelName))}");
+            
             return _activePanels.Count > 0;
         }
         

@@ -45,19 +45,18 @@ public class ItemNotificationUI : MonoBehaviour
         if (eventBus != null)
         {
             // Subscribe to inventory events via EventBus
-            eventBus.Subscribe<ItemAddedEvent>(HandleItemAddedEvent);
-            eventBus.Subscribe<ItemRemovedEvent>(HandleItemRemovedEvent);
-            eventBus.Subscribe<ItemConsumedEvent>(HandleItemConsumedEvent);
+            eventBus.Subscribe<Game.Player.Inventory.Events.ItemAddedEvent>(HandleItemAddedEvent);
+            eventBus.Subscribe<Game.Player.Inventory.Events.ItemRemovedEvent>(HandleItemRemovedEvent);
+            eventBus.Subscribe<Game.Player.Inventory.Events.ItemConsumedEvent>(HandleItemConsumedEvent);
             
             // Subscribe to equipment events via EventBus
             eventBus.Subscribe<ItemEquippedEvent>(HandleItemEquippedEvent);
             eventBus.Subscribe<ItemUnequippedEvent>(HandleItemUnequippedEvent);
         }
-        
-        // Keep legacy inventory event subscriptions for backward compatibility
-        InventoryManager.OnItemAdded += HandleItemAdded;
-        InventoryManager.OnItemRemoved += HandleItemRemoved;
-        InventoryManager.OnItemConsumed += HandleItemConsumed;
+        else
+        {
+            Debug.LogWarning("[ItemNotificationUI] EventBus not available, notifications will not work!");
+        }
     }
     
     private void OnDisable()
@@ -65,36 +64,31 @@ public class ItemNotificationUI : MonoBehaviour
         if (eventBus != null)
         {
             // Unsubscribe from EventBus events
-            eventBus.Unsubscribe<ItemAddedEvent>(HandleItemAddedEvent);
-            eventBus.Unsubscribe<ItemRemovedEvent>(HandleItemRemovedEvent);
-            eventBus.Unsubscribe<ItemConsumedEvent>(HandleItemConsumedEvent);
+            eventBus.Unsubscribe<Game.Player.Inventory.Events.ItemAddedEvent>(HandleItemAddedEvent);
+            eventBus.Unsubscribe<Game.Player.Inventory.Events.ItemRemovedEvent>(HandleItemRemovedEvent);
+            eventBus.Unsubscribe<Game.Player.Inventory.Events.ItemConsumedEvent>(HandleItemConsumedEvent);
             eventBus.Unsubscribe<ItemEquippedEvent>(HandleItemEquippedEvent);
             eventBus.Unsubscribe<ItemUnequippedEvent>(HandleItemUnequippedEvent);
         }
-        
-        // Unsubscribe from legacy events
-        /*InventoryManager.OnItemAdded -= HandleItemAdded;
-        InventoryManager.OnItemRemoved -= HandleItemRemoved;
-        InventoryManager.OnItemConsumed -= HandleItemConsumed;*/
     }
     
     // EventBus event handlers
-    private void HandleItemAddedEvent(ItemAddedEvent evt)
+    private void HandleItemAddedEvent(Game.Player.Inventory.Events.ItemAddedEvent evt)
     {
         if (evt.Item == null) return;
         ShowNotification(evt.Item, evt.Quantity, NotificationType.Added);
     }
     
-    private void HandleItemRemovedEvent(ItemRemovedEvent evt)
+    private void HandleItemRemovedEvent(Game.Player.Inventory.Events.ItemRemovedEvent evt)
     {
         if (evt.Item == null) return;
         ShowNotification(evt.Item, evt.Quantity, NotificationType.Removed);
     }
     
-    private void HandleItemConsumedEvent(ItemConsumedEvent evt)
+    private void HandleItemConsumedEvent(Game.Player.Inventory.Events.ItemConsumedEvent evt)
     {
         if (evt.Item == null) return;
-        ShowNotification(evt.Item, evt.Quantity, NotificationType.Consumed);
+        ShowNotification(evt.Item, 1, NotificationType.Consumed);
     }
     
     private void HandleItemEquippedEvent(ItemEquippedEvent evt)
@@ -107,39 +101,6 @@ public class ItemNotificationUI : MonoBehaviour
     private void HandleItemUnequippedEvent(ItemUnequippedEvent evt)
     {
         InventoryItem invItem = evt.Item as InventoryItem;
-        if (invItem == null) return;
-        ShowNotification(invItem, 1, NotificationType.Unequipped);
-    }
-    
-    // Legacy event handlers (for backward compatibility)
-    private void HandleItemAdded(InventoryItem item, int quantity)
-    {
-        if (item == null) return;
-        ShowNotification(item, quantity, NotificationType.Added);
-    }
-    
-    private void HandleItemRemoved(InventoryItem item, int quantity)
-    {
-        if (item == null) return;
-        ShowNotification(item, quantity, NotificationType.Removed);
-    }
-    
-    private void HandleItemConsumed(InventoryItem item, int quantity)
-    {
-        if (item == null) return;
-        ShowNotification(item, quantity, NotificationType.Consumed);
-    }
-    
-    private void HandleItemEquipped(IEquippable item)
-    {
-        InventoryItem invItem = item as InventoryItem;
-        if (invItem == null) return;
-        ShowNotification(invItem, 1, NotificationType.Equipped);
-    }
-    
-    private void HandleItemUnequipped(IEquippable item)
-    {
-        InventoryItem invItem = item as InventoryItem;
         if (invItem == null) return;
         ShowNotification(invItem, 1, NotificationType.Unequipped);
     }

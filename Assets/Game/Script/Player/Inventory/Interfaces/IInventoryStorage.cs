@@ -1,57 +1,29 @@
 using System.Collections.Generic;
 
-namespace Game.Inventory
+namespace Game.Player.Inventory
 {
     /// <summary>
-    /// Interface for inventory data storage
-    /// Follows Dependency Inversion Principle
-    /// Allows swapping storage implementations (memory, file, database)
+    /// Handles inventory data storage only
     /// </summary>
     public interface IInventoryStorage
     {
-        /// <summary>
-        /// Gets all inventory slots
-        /// </summary>
-        IReadOnlyList<InventorySlot> GetSlots();
-        
-        /// <summary>
-        /// Gets a specific slot by index
-        /// </summary>
+        // Query operations
+        IReadOnlyList<InventorySlot> GetAllSlots();
         InventorySlot GetSlot(int index);
+        int GetSlotCount();
         
-        /// <summary>
-        /// Finds the first empty slot
-        /// </summary>
-        int FindEmptySlot();
+        // Item operations
+        bool AddItem(InventoryItem item, int quantity);
+        bool RemoveItem(InventoryItem item, int quantity);
+        bool HasItem(InventoryItem item, int quantity = 1);
+        int GetItemQuantity(InventoryItem item);
         
-        /// <summary>
-        /// Finds slots containing a specific item
-        /// </summary>
-        List<int> FindSlotsWithItem(InventoryItem item);
+        // Capacity management
+        bool CanAddItem(InventoryItem item, int quantity);
+        bool ExpandInventory(int additionalSlots);
+        int GetEmptySlotCount();
         
-        /// <summary>
-        /// Adds items to a specific slot
-        /// </summary>
-        bool AddToSlot(int slotIndex, InventoryItem item, int quantity);
-        
-        /// <summary>
-        /// Removes items from a specific slot
-        /// </summary>
-        bool RemoveFromSlot(int slotIndex, int quantity);
-        
-        /// <summary>
-        /// Clears a specific slot
-        /// </summary>
-        void ClearSlot(int slotIndex);
-        
-        /// <summary>
-        /// Gets total number of slots
-        /// </summary>
-        int SlotCount { get; }
-        
-        /// <summary>
-        /// Checks if storage is full
-        /// </summary>
-        bool IsFull();
+        // Utility
+        int FindStackableSlot(InventoryItem item, int quantity);
     }
 }

@@ -15,7 +15,7 @@ namespace Game.Inventory.Effects
             if (target is PlayerStats stats)
             {
                 stats.Heal(_value);
-                Debug.Log($"[HealthEffect] Restored {_value} health");
+                //Debug.Log($"[HealthEffect] Restored {_value} health");
             }
         }
         
@@ -42,7 +42,7 @@ namespace Game.Inventory.Effects
             if (target is PlayerStats stats)
             {
                 stats.Eat(_value);
-                Debug.Log($"[HungerEffect] Restored {_value} hunger");
+                //Debug.Log($"[HungerEffect] Restored {_value} hunger");
             }
         }
         
@@ -62,7 +62,7 @@ namespace Game.Inventory.Effects
             if (target is PlayerStats stats)
             {
                 stats.Drink(_value);
-                Debug.Log($"[ThirstEffect] Restored {_value} thirst");
+                //Debug.Log($"[ThirstEffect] Restored {_value} thirst");
             }
         }
         
@@ -82,7 +82,7 @@ namespace Game.Inventory.Effects
             if (target is PlayerStats stats)
             {
                 stats.RestoreStamina(_value);
-                Debug.Log($"[StaminaEffect] Restored {_value} stamina");
+                //Debug.Log($"[StaminaEffect] Restored {_value} stamina");
             }
         }
         
@@ -102,7 +102,7 @@ namespace Game.Inventory.Effects
             if (target is PlayerStats stats)
             {
                 stats.ModifyTemperature(_value);
-                Debug.Log($"[TemperatureEffect] Modified temperature by {_value}");
+                //Debug.Log($"[TemperatureEffect] Modified temperature by {_value}");
             }
         }
         

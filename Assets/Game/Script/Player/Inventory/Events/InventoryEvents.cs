@@ -1,7 +1,48 @@
 using System;
 
-namespace Game.Inventory
+namespace Game.Player.Inventory.Events
 {
+    // Event classes for EventBus pattern
+    public class ItemAddedEvent
+    {
+        public InventoryItem Item { get; }
+        public int Quantity { get; }
+
+        public ItemAddedEvent(InventoryItem item, int quantity)
+        {
+            Item = item;
+            Quantity = quantity;
+        }
+    }
+
+    public class ItemRemovedEvent
+    {
+        public InventoryItem Item { get; }
+        public int Quantity { get; }
+
+        public ItemRemovedEvent(InventoryItem item, int quantity)
+        {
+            Item = item;
+            Quantity = quantity;
+        }
+    }
+
+    public class ItemConsumedEvent
+    {
+        public InventoryItem Item { get; }
+
+        public ItemConsumedEvent(InventoryItem item)
+        {
+            Item = item;
+        }
+    }
+
+    public class InventoryChangedEvent
+    {
+        // Empty event, just signals a change occurred
+    }
+
+    // Legacy instance-based events (keep for backward compatibility during migration)
     /// <summary>
     /// Instance-based events for inventory changes
     /// Replaces static events to avoid global coupling

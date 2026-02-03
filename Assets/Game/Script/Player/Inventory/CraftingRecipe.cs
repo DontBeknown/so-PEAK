@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Game.Player.Inventory;
 
 [CreateAssetMenu(fileName = "New Recipe", menuName = "Crafting/Recipe")]
 public class CraftingRecipe : ScriptableObject
@@ -21,7 +22,7 @@ public class CraftingRecipe : ScriptableObject
     public bool requiresCampfire = false;
     public bool requiresWorkbench = false;
 
-    public bool CanCraft(InventoryManager inventory)
+    public bool CanCraft(IInventoryService inventory)
     {
         foreach (var requirement in requirements)
         {
@@ -33,7 +34,7 @@ public class CraftingRecipe : ScriptableObject
         return true;
     }
 
-    public bool ConsumeMaterials(InventoryManager inventory)
+    public bool ConsumeMaterials(IInventoryService inventory)
     {
         if (!CanCraft(inventory)) return false;
 

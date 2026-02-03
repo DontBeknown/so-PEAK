@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System;
 using Game.Core.DI;
 using Game.Core.Events;
+using Game.Player.Inventory;
 
 public class CraftingManager : MonoBehaviour
 {
     [Header("Crafting Settings")]
     [SerializeField] private List<CraftingRecipe> availableRecipes;
-    [SerializeField] private InventoryManager inventoryManager;
+    // REFACTORED: Removed InventoryManager field, now uses IInventoryService
 
     [Header("Crafting Stations")]
     [SerializeField] private bool nearCampfire = false;
@@ -17,14 +18,15 @@ public class CraftingManager : MonoBehaviour
 
     private bool isCrafting = false;
     private IEventBus eventBus;
+    private IInventoryService inventoryService;
+    private IInventoryStorage inventoryStorage;
 
     private void Awake()
     {
-        // Get EventBus from ServiceContainer
+        // Get services from ServiceContainer
         eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
-        
-        if (inventoryManager == null)
-            inventoryManager = GetComponent<InventoryManager>();
+        inventoryService = ServiceContainer.Instance.Get<IInventoryService>();
+        inventoryStorage = ServiceContainer.Instance.Get<IInventoryStorage>();
     }
 
     public List<CraftingRecipe> GetAvailableRecipes()
@@ -53,7 +55,7 @@ public class CraftingManager : MonoBehaviour
         if (recipe == null) return false;
 
         // Check materials
-        if (!recipe.CanCraft(inventoryManager)) return false;
+        if (!recipe.CanCraft(inventoryService)) return false;
 
         // Check crafting station requirements
         if (recipe.requiresCampfire && !nearCampfire) return false;
@@ -75,7 +77,7 @@ public class CraftingManager : MonoBehaviour
         eventBus?.Publish(new CraftingStartedEvent(recipe));
 
         // Consume materials first
-        if (!recipe.ConsumeMaterials(inventoryManager))
+        if (!recipe.ConsumeMaterials(inventoryService))
         {
             eventBus?.Publish(new CraftingFailedEvent(recipe, "Failed to consume materials"));
             isCrafting = false;
@@ -86,7 +88,7 @@ public class CraftingManager : MonoBehaviour
         yield return new WaitForSeconds(recipe.craftingTime);
 
         // Add result to inventory
-        if (inventoryManager.AddItem(recipe.resultItem, recipe.resultQuantity))
+        if (inventoryService.AddItem(recipe.resultItem, recipe.resultQuantity))
         {
             eventBus?.Publish(new CraftingCompletedEvent(recipe));
         }

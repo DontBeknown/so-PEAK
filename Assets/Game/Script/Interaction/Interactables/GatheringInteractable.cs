@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using DG.Tweening;
+using Game.Core.DI;
 
 namespace Game.Interaction
 {
@@ -144,8 +145,12 @@ namespace Game.Interaction
             // Trigger player animation (if animator available)
             // TODO: Implement animation system
             
-            // Find and setup progress bar in prompt UI
-            promptUI = FindFirstObjectByType<Game.Interaction.UI.InteractionPromptUI>();
+            // Get prompt UI from service container or cache
+            if (promptUI == null)
+            {
+                promptUI = ServiceContainer.Instance.TryGet<Game.Interaction.UI.InteractionPromptUI>();
+            }
+            
             if (promptUI != null)
             {
                 promptUI.ShowProgressBar();
@@ -154,7 +159,7 @@ namespace Game.Interaction
             // Start gathering coroutine
             gatheringCoroutine = StartCoroutine(GatheringProcess());
             
-            Debug.Log($"[GatheringInteractable] Started gathering {InteractionPrompt}");
+            //Debug.Log($"[GatheringInteractable] Started gathering {InteractionPrompt}");
         }
 
         private IEnumerator GatheringProcess()
@@ -202,15 +207,15 @@ namespace Game.Interaction
             if (!isCurrentlyGathering)
                 return;
 
-            Debug.Log($"[GatheringInteractable] Gathering complete!");
+            //Debug.Log($"[GatheringInteractable] Gathering complete!");
             
             // Add items to inventory
             if (currentPlayer != null && resourceItem != null)
             {
-                InventoryManager inventory = currentPlayer.GetInventoryManager();
-                if (inventory != null)
+                var inventoryService = Game.Core.DI.ServiceContainer.Instance.Get<Game.Player.Inventory.IInventoryService>();
+                if (inventoryService != null)
                 {
-                    bool added = inventory.AddItem(resourceItem, resourcesPerGather);
+                    bool added = inventoryService.AddItem(resourceItem, resourcesPerGather);
                     if (added)
                     {
                         ShowCompletionNotification();
@@ -245,7 +250,7 @@ namespace Game.Interaction
             if (!isCurrentlyGathering)
                 return;
 
-            Debug.Log($"[GatheringInteractable] Gathering cancelled: {reason}");
+            //Debug.Log($"[GatheringInteractable] Gathering cancelled: {reason}");
             
             // Play cancel sound
             if (gatherCancelSound != null)
@@ -254,7 +259,7 @@ namespace Game.Interaction
             }
             
             // Show notification
-            Debug.Log("Gathering cancelled!");
+            //Debug.Log("Gathering cancelled!");
             
             CleanupGathering();
         }
@@ -333,7 +338,7 @@ namespace Game.Interaction
                 ? $"Collected {resourcesPerGather}x {resourceItem.itemName}"
                 : $"Collected {resourceItem.itemName}";
             
-            Debug.Log(message);
+            //Debug.Log(message);
             // TODO: Connect to notification system
         }
 

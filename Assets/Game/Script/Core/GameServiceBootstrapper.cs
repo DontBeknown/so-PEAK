@@ -5,6 +5,7 @@ using Game.Player;
 using Game.Interaction;
 using Game.UI;
 using Game.Player.Stat.Assessment;
+using Game.Player.Inventory;
 
 namespace Game.Core
 {
@@ -22,7 +23,8 @@ namespace Game.Core
         [Header("Manual References (Optional)")]
         [SerializeField] private PlayerControllerRefactored playerController;
         [SerializeField] private PlayerStats playerStats;
-        [SerializeField] private InventoryManager inventoryManager;
+        // REFACTORED: InventoryManager removed - services registered by InventoryManagerRefactored
+        [SerializeField] private InventoryManagerRefactored inventoryManagerRefactored; 
         [SerializeField] private CraftingManager craftingManager;
         [SerializeField] private EquipmentManager equipmentManager;
         [SerializeField] private TabbedInventoryUI inventoryUI;
@@ -85,13 +87,12 @@ namespace Game.Core
                     Debug.Log("[GameServiceBootstrapper] PlayerStats found and registered");
             }
             
-            // Find and register inventory
-            var inventory = FindFirstObjectByType<InventoryManager>();
-            if (inventory != null)
+            // REFACTORED: InventoryManager services now registered by InventoryManagerRefactored.RegisterServices()
+            // Find and ensure InventoryManagerRefactored initializes
+            var inventoryRefactored = FindFirstObjectByType<InventoryManagerRefactored>();
+            if (inventoryRefactored != null && enableDebugLogs)
             {
-                container.Register(inventory);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] InventoryManager found and registered");
+                Debug.Log("[GameServiceBootstrapper] InventoryManagerRefactored found (services will be auto-registered)");
             }
             
             // Find and register crafting
@@ -166,6 +167,15 @@ namespace Game.Core
                     Debug.Log("[GameServiceBootstrapper] InteractionDetector found and registered");
             }
             
+            // Register InteractionPromptUI
+            var interactionPromptUI = FindFirstObjectByType<Game.Interaction.UI.InteractionPromptUI>();
+            if (interactionPromptUI != null)
+            {
+                container.Register(interactionPromptUI);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] InteractionPromptUI found and registered");
+            }
+            
             // Register ItemNotificationUI
             var itemNotificationUI = FindFirstObjectByType<ItemNotificationUI>();
             if (itemNotificationUI != null)
@@ -237,13 +247,6 @@ namespace Game.Core
                 container.Register(playerStats);
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] PlayerStats manually registered");
-            }
-            
-            if (inventoryManager != null)
-            {
-                container.Register(inventoryManager);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] InventoryManager manually registered");
             }
             
             if (craftingManager != null)

@@ -1,4 +1,6 @@
 using UnityEngine;
+using Game.Core.DI;
+using Game.Player.Inventory;
 
 namespace Game.Interaction
 {
@@ -6,6 +8,7 @@ namespace Game.Interaction
     /// Adapter component that wraps the existing ResourceCollector class
     /// to make it compatible with the new IInteractable system.
     /// This provides backwards compatibility during migration.
+    /// REFACTORED: Now uses IInventoryService from ServiceContainer
     /// 
     /// Usage: Add this component alongside ResourceCollector on existing objects.
     /// </summary>
@@ -61,16 +64,16 @@ namespace Game.Interaction
             if (!CanInteract)
                 return;
 
-            // Get inventory manager from player
-            InventoryManager inventoryManager = player.GetInventoryManager();
-            if (inventoryManager == null)
+            // Get inventory service from ServiceContainer
+            var inventoryService = ServiceContainer.Instance.Get<IInventoryService>();
+            if (inventoryService == null)
             {
-                Debug.LogError("[ResourceCollectorInteractable] Player has no InventoryManager!");
+                Debug.LogError("[ResourceCollectorInteractable] IInventoryService not registered in ServiceContainer!");
                 return;
             }
 
             // Use ResourceCollector's existing collection logic
-            bool collected = resourceCollector.CollectResource(inventoryManager);
+            bool collected = resourceCollector.CollectResource(inventoryService);
             
             if (!collected)
             {

@@ -2,6 +2,7 @@ using UnityEngine;
 using Game.Player.Inventory.Commands;
 using Game.Core.DI;
 using Game.UI;
+using Game.Player.Inventory;
 
 namespace Game.Player.Services
 {
@@ -10,10 +11,12 @@ namespace Game.Player.Services
     /// Provides a simplified interface for inventory, crafting, and item detection.
     /// Now uses Command Pattern for undo/redo support.
     /// Follows Facade Pattern to hide complexity of inventory subsystem.
+    /// REFACTORED: Now uses IInventoryService (SOLID principles)
     /// </summary>
     public class PlayerInventoryFacade
     {
-        private readonly InventoryManager _inventoryManager;
+        private readonly IInventoryService _inventoryService;
+        private readonly IInventoryStorage _inventoryStorage;
         private readonly CraftingManager _craftingManager;
         private readonly UIServiceProvider _uiServiceProvider;
         private readonly PlayerStats _playerStats;
@@ -24,7 +27,7 @@ namespace Game.Player.Services
         private readonly InventoryCommandInvoker _commandInvoker;
 
         public PlayerInventoryFacade(
-            InventoryManager inventoryManager,
+            IInventoryService inventoryService,
             CraftingManager craftingManager,
             UIServiceProvider uiServiceProvider,
             PlayerStats playerStats = null,
@@ -32,7 +35,8 @@ namespace Game.Player.Services
             bool enableCommandDebugLogs = false,
             CinemachinePlayerCamera playerCamera = null)
         {
-            _inventoryManager = inventoryManager;
+            _inventoryService = inventoryService ?? ServiceContainer.Instance.Get<IInventoryService>();
+            _inventoryStorage = ServiceContainer.Instance.Get<IInventoryStorage>();
             _craftingManager = craftingManager;
             _uiServiceProvider = uiServiceProvider ?? ServiceContainer.Instance.TryGet<UIServiceProvider>();
             _playerStats = playerStats;
@@ -63,10 +67,10 @@ namespace Game.Player.Services
         /// </summary>
         public bool ConsumeItem(InventoryItem item)
         {
-            if (_inventoryManager == null || item == null)
+            if (_inventoryService == null || item == null)
                 return false;
 
-            var command = new UseItemCommand(_inventoryManager, item, _playerStats);
+            var command = new UseItemCommand(_inventoryService, item, _playerStats);
             return _commandInvoker.Execute(command);
         }
 
@@ -75,15 +79,15 @@ namespace Game.Player.Services
         /// </summary>
         public bool QuickUseConsumable()
         {
-            if (_inventoryManager == null)
+            if (_inventoryService == null || _inventoryStorage == null)
                 return false;
 
-            var slots = _inventoryManager.GetInventorySlots();
+            var slots = _inventoryStorage.GetAllSlots();
             foreach (var slot in slots)
             {
                 if (!slot.IsEmpty && slot.item.isConsumable)
                 {
-                    var command = new UseItemCommand(_inventoryManager, slot.item, _playerStats);
+                    var command = new UseItemCommand(_inventoryService, slot.item, _playerStats);
                     return _commandInvoker.Execute(command);
                 }
             }
@@ -96,13 +100,13 @@ namespace Game.Player.Services
         /// </summary>
         public bool DropItem(InventoryItem item)
         {
-            if (_inventoryManager == null || item == null || _playerTransform == null)
+            if (_inventoryService == null || item == null || _playerTransform == null)
                 return false;
 
             Vector3 dropPosition = _playerTransform.position + Vector3.up;
             Vector3 dropDirection = _playerTransform.forward;
             
-            var command = new DropItemCommand(_inventoryManager, item, dropPosition, dropDirection);
+            var command = new DropItemCommand(_inventoryService, item, dropPosition, dropDirection);
             return _commandInvoker.Execute(command);
         }
 
@@ -115,10 +119,10 @@ namespace Game.Player.Services
         /// </summary>
         public void StartCrafting(CraftingRecipe recipe)
         {
-            if (_craftingManager == null || _inventoryManager == null || recipe == null)
+            if (_craftingManager == null || _inventoryService == null || recipe == null)
                 return;
 
-            var command = new CraftItemCommand(_craftingManager, _inventoryManager, recipe);
+            var command = new CraftItemCommand(_craftingManager, _inventoryService, recipe);
             _commandInvoker.Execute(command);
         }
 
@@ -171,8 +175,6 @@ namespace Game.Player.Services
         #endregion
 
         #region Component Access (for backward compatibility)
-
-        public InventoryManager InventoryManager => _inventoryManager;
         public CraftingManager CraftingManager => _craftingManager;
 
         #endregion

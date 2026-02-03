@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Game.Core.DI;
+using Game.Core.Events;
 
 /// <summary>
 /// Main service that coordinates all stat tracking.
@@ -12,7 +13,7 @@ public class PlayerStatsTrackerService : MonoBehaviour
     [Header("Dependencies")]
     [SerializeField] private PlayerStats playerStats;
     [SerializeField] private Transform playerTransform;
-    [SerializeField] private InventoryManager inventoryManager;
+    // REFACTORED: InventoryManager removed - uses EventBus for ItemConsumed events
     
     [Header("Settings")]
     [SerializeField] private int maxDataPoints = 100;
@@ -27,6 +28,7 @@ public class PlayerStatsTrackerService : MonoBehaviour
     private ConsumableTracker consumableTracker;
     private PathTracker pathTracker;
     private RiskTracker riskTracker;
+    private IEventBus eventBus;
     
     // State
     private bool isTracking;
@@ -74,8 +76,10 @@ public class PlayerStatsTrackerService : MonoBehaviour
         if (playerTransform == null && playerStats != null)
             playerTransform = playerStats.transform;
         
-        if (inventoryManager == null)
-            inventoryManager = ServiceContainer.Instance.TryGet<InventoryManager>();
+        // REFACTORED: No longer needs InventoryManager - uses EventBus
+        
+        if (eventBus == null)
+            eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
     }
     
     private void SubscribeToEvents()
@@ -87,7 +91,10 @@ public class PlayerStatsTrackerService : MonoBehaviour
             playerStats.OnFatigueChanged += HandleFatigueChanged;
         }
         
-        InventoryManager.OnItemConsumed += HandleItemConsumed;
+        if (eventBus != null)
+        {
+            eventBus.Subscribe<Game.Player.Inventory.Events.ItemConsumedEvent>(HandleItemConsumedEvent);
+        }
     }
     
     private void UnsubscribeFromEvents()
@@ -99,7 +106,10 @@ public class PlayerStatsTrackerService : MonoBehaviour
             playerStats.OnFatigueChanged -= HandleFatigueChanged;
         }
         
-        InventoryManager.OnItemConsumed -= HandleItemConsumed;
+        if (eventBus != null)
+        {
+            eventBus.Unsubscribe<Game.Player.Inventory.Events.ItemConsumedEvent>(HandleItemConsumedEvent);
+        }
     }
     
     /// <summary>
@@ -202,14 +212,12 @@ public class PlayerStatsTrackerService : MonoBehaviour
         fatigueTracker.RecordValue(newValue);
     }
     
-    private void HandleItemConsumed(InventoryItem item, int quantity)
+    // EventBus handler for item consumption
+    private void HandleItemConsumedEvent(Game.Player.Inventory.Events.ItemConsumedEvent evt)
     {
-        if (item != null)
+        if (evt.Item != null)
         {
-            for (int i = 0; i < quantity; i++)
-            {
-                consumableTracker.RecordConsumable(item); // Pass InventoryItem object
-            }
+            consumableTracker.RecordConsumable(evt.Item);
         }
     }
     

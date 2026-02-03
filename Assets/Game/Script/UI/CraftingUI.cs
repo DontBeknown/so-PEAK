@@ -4,6 +4,7 @@ using TMPro;
 using System.Collections.Generic;
 using Game.Core.DI;
 using Game.Core.Events;
+using Game.Player.Inventory;
 
 public class CraftingUI : MonoBehaviour
 {
@@ -27,9 +28,11 @@ public class CraftingUI : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private CraftingManager craftingManager;
-    [SerializeField] private InventoryManager inventoryManager;
+    // REFACTORED: Removed InventoryManager field, now uses IInventoryService
 
     private IEventBus eventBus;
+    private IInventoryService inventoryService;
+    private IInventoryStorage inventoryStorage;
     private List<CraftingSlotUI> recipeSlotUIs = new List<CraftingSlotUI>();
     private CraftingSlotUI selectedSlot = null;
     private CraftingRecipe currentRecipe = null;
@@ -44,8 +47,8 @@ public class CraftingUI : MonoBehaviour
         if (craftingManager == null)
             craftingManager = ServiceContainer.Instance.TryGet<CraftingManager>();
 
-        if (inventoryManager == null)
-            inventoryManager = ServiceContainer.Instance.TryGet<InventoryManager>();
+        inventoryService = ServiceContainer.Instance.Get<IInventoryService>();
+        inventoryStorage = ServiceContainer.Instance.Get<IInventoryStorage>();
             
         eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
 
@@ -69,9 +72,8 @@ public class CraftingUI : MonoBehaviour
             eventBus.Subscribe<CraftingStartedEvent>(OnCraftingStartedEvent);
             eventBus.Subscribe<CraftingCompletedEvent>(OnCraftingCompletedEvent);
             eventBus.Subscribe<CraftingFailedEvent>(OnCraftingFailedEvent);
+            eventBus.Subscribe<Game.Player.Inventory.Events.InventoryChangedEvent>(OnInventoryChangedEvent);
         }
-        
-        InventoryManager.OnInventoryChanged += RefreshRecipeList;
     }
 
     private void OnDisable()
@@ -82,9 +84,8 @@ public class CraftingUI : MonoBehaviour
             eventBus.Unsubscribe<CraftingStartedEvent>(OnCraftingStartedEvent);
             eventBus.Unsubscribe<CraftingCompletedEvent>(OnCraftingCompletedEvent);
             eventBus.Unsubscribe<CraftingFailedEvent>(OnCraftingFailedEvent);
+            eventBus.Unsubscribe<Game.Player.Inventory.Events.InventoryChangedEvent>(OnInventoryChangedEvent);
         }
-        
-        InventoryManager.OnInventoryChanged -= RefreshRecipeList;
     }
 
     public void ShowCraftingPanel()
@@ -133,7 +134,7 @@ public class CraftingUI : MonoBehaviour
 
             if (slotUI != null)
             {
-                slotUI.Initialize(this, recipe, inventoryManager);
+                slotUI.Initialize(this, recipe, inventoryService);
                 recipeSlotUIs.Add(slotUI);
 
                 // Add click handler
@@ -242,9 +243,9 @@ public class CraftingUI : MonoBehaviour
                 icon.enabled = true;
             }
 
-            if (text != null && inventoryManager != null)
+            if (text != null && inventoryStorage != null)
             {
-                int hasAmount = inventoryManager.GetItemCount(requirement.item);
+                int hasAmount = inventoryStorage.GetItemQuantity(requirement.item);
                 int needAmount = requirement.quantity;
                 bool hasEnough = hasAmount >= needAmount;
 
@@ -319,6 +320,11 @@ public class CraftingUI : MonoBehaviour
     }
 
     // EventBus event handlers
+    private void OnInventoryChangedEvent(Game.Player.Inventory.Events.InventoryChangedEvent evt)
+    {
+        RefreshRecipeList();
+    }
+    
     private void OnCraftingStartedEvent(CraftingStartedEvent evt)
     {
         OnCraftingStarted(evt.Recipe);

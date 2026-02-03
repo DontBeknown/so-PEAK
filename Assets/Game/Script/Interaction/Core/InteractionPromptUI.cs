@@ -134,11 +134,13 @@ namespace Game.Interaction.UI
         private void HandleInteractableChanged(IInteractable interactable)
         {
             currentInteractable = interactable;
+            //Debug.Log($"[InteractionPromptUI] Interactable changed: {interactable?.InteractionPrompt ?? "null"}");
             UpdatePromptText();
         }
 
         private void HandleInteractableInRange(bool inRange)
         {
+            //Debug.Log($"[InteractionPromptUI] Interactable in range: {inRange}, current: {currentInteractable?.InteractionPrompt ?? "null"}");
             if (inRange && currentInteractable != null)
             {
                 ShowPrompt();
@@ -157,7 +159,7 @@ namespace Game.Interaction.UI
         {
             // Immediately hide prompt when any panel opens
             HidePrompt();
-            Debug.Log("[InteractionPromptUI] Hiding prompt due to panel opened: " + evt.PanelName);
+            //Debug.Log("[InteractionPromptUI] Hiding prompt due to panel opened: " + evt.PanelName);
         }
         
         /// <summary>
@@ -166,19 +168,38 @@ namespace Game.Interaction.UI
         /// </summary>
         private void HandlePanelClosed(PanelClosedEvent evt)
         {
+            //Debug.Log($"[InteractionPromptUI] Panel closed: {evt.PanelName}");
+            
             // Check if we should show prompt again when panel closes
             if (currentInteractable != null && interactionDetector != null)
             {
                 var uiService = ServiceContainer.Instance.TryGet<UIServiceProvider>();
+                bool anyPanelOpen = uiService != null && uiService.IsAnyPanelOpen();
+                var nearestInteractable = interactionDetector.NearestInteractable;
+                
+                //Debug.Log($"[InteractionPromptUI] Current: {currentInteractable?.InteractionPrompt ?? "null"}, Nearest: {nearestInteractable?.InteractionPrompt ?? "null"}, AnyPanelOpen: {anyPanelOpen}");
                 
                 // Only show if no other panels are open and interactable still in range
-                if (uiService != null && !uiService.IsAnyPanelOpen())
+                if (uiService != null && !anyPanelOpen)
                 {
-                    if (interactionDetector.NearestInteractable == currentInteractable)
+                    if (nearestInteractable == currentInteractable)
                     {
+                        //Debug.Log("[InteractionPromptUI] Attempting to show prompt after panel closed");
                         ShowPrompt();
                     }
+                    else
+                    {
+                        //Debug.Log("[InteractionPromptUI] Nearest interactable changed, not showing prompt");
+                    }
                 }
+                else
+                {
+                    //Debug.Log("[InteractionPromptUI] Not showing: UIService null or another panel is open");
+                }
+            }
+            else
+            {
+                //Debug.Log($"[InteractionPromptUI] Not showing: currentInteractable={currentInteractable != null}, detector={interactionDetector != null}");
             }
         }
 
@@ -202,13 +223,27 @@ namespace Game.Interaction.UI
 
         private void ShowPrompt()
         {
-            if (isVisible) return;
+            //Debug.Log($"[InteractionPromptUI] ShowPrompt called, isVisible={isVisible}");
+            
+            if (isVisible)
+            {
+                //Debug.Log("[InteractionPromptUI] Already visible, skipping");
+                return;
+            }
             
             // Don't show prompt if any UI panels are open (SOLID: SRP - self-manages visibility)
             var uiService = ServiceContainer.Instance.TryGet<UIServiceProvider>();
-            if (uiService != null && uiService.IsAnyPanelOpen())
+            bool anyPanelOpen = uiService != null && uiService.IsAnyPanelOpen();
+            
+            //Debug.Log($"[InteractionPromptUI] UIService found: {uiService != null}, AnyPanelOpen: {anyPanelOpen}");
+            
+            if (anyPanelOpen)
+            {
+                //Debug.Log("[InteractionPromptUI] Panel is open, not showing prompt");
                 return;
+            }
 
+            //Debug.Log($"[InteractionPromptUI] Showing prompt: {currentInteractable?.InteractionPrompt}");
             isVisible = true;
             promptContainer.SetActive(true);
             UpdatePromptText();
@@ -224,6 +259,8 @@ namespace Game.Interaction.UI
 
         private void HidePrompt()
         {
+            //Debug.Log($"[InteractionPromptUI] HidePrompt called, isVisible={isVisible}");
+            
             if (!isVisible) return;
 
             isVisible = false;
