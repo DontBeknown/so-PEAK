@@ -41,8 +41,15 @@ public class Falloff : MonoBehaviour
 
     Texture2D _texIsland, _texMountain;
 
-    void OnEnable() { Refresh(); }
-    void OnValidate() { Refresh(); }
+    void OnEnable() 
+    { 
+        if (Application.isPlaying) Refresh(); 
+    }
+    
+    void OnValidate() 
+    { 
+        if (!Application.isPlaying) Refresh(); 
+    }
 
     void Refresh()
     {

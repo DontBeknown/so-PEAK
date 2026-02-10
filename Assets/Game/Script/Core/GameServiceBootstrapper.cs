@@ -6,6 +6,7 @@ using Game.Interaction;
 using Game.UI;
 using Game.Player.Stat.Assessment;
 using Game.Player.Inventory;
+using Game.Environment.DayNight;
 
 namespace Game.Core
 {
@@ -23,7 +24,6 @@ namespace Game.Core
         [Header("Manual References (Optional)")]
         [SerializeField] private PlayerControllerRefactored playerController;
         [SerializeField] private PlayerStats playerStats;
-        // REFACTORED: InventoryManager removed - services registered by InventoryManagerRefactored
         [SerializeField] private InventoryManagerRefactored inventoryManagerRefactored; 
         [SerializeField] private CraftingManager craftingManager;
         [SerializeField] private EquipmentManager equipmentManager;
@@ -192,6 +192,16 @@ namespace Game.Core
                 container.Register(simpleStatsHUD);
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] SimpleStatsHUD found and registered");
+            }
+            
+            // Register DayNightCycleManager
+            var dayNightManager = FindFirstObjectByType<DayNightCycleManager>();
+            if (dayNightManager != null)
+            {
+                container.Register<IDayNightCycleService>(dayNightManager);
+                container.Register<DayNightCycleManager>(dayNightManager);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] DayNightCycleManager found and registered");
             }
             
             // Register PlayerStatsTrackerUI

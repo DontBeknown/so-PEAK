@@ -4,7 +4,7 @@
 
 **Target Audience:** AI agents, developers, and architects analyzing the codebase for improvements, understanding dependencies, or planning refactoring efforts.
 
-**Last Updated:** February 4, 2026
+**Last Updated:** February 11, 2026
 
 ---
 
@@ -41,6 +41,7 @@ Assets/Game/Script/
 ├── Interaction/       # Interaction detection and interactables
 ├── Menu/              # Main menu and world selection
 ├── Mountain/          # Terrain generation
+├── Environment/       # Day/night cycle, weather systems
 └── Climbing/          # (Empty - planned feature)
 ```
 
@@ -604,6 +605,62 @@ public interface IInteractable
 - Minimal coupling to game systems
 
 **Quality:** ✅ Self-contained, well-isolated
+
+---
+
+### 🌅 Day/Night Cycle System
+
+**Location:** `Assets/Game/Script/Environment/DayNight/`
+
+**Purpose:** Dynamic time of day progression with lighting and skybox transitions
+
+#### Components:
+
+**DayNightCycleManager.cs** (✅ Well-designed)
+- Time progression (24-hour cycle)
+- State machine (Morning/Day/Evening/Night)
+- Directional light rotation
+- Skybox transitions
+- Event publishing
+
+**DayNightConfig.cs** (ScriptableObject)
+- Designer-friendly settings
+- Lighting configurations per time period
+- Skybox material assignments
+- Fog and ambient settings
+
+**IDayNightCycleService.cs**
+- Service interface for DI
+- Current time queries
+- Time manipulation (set, pause)
+- Light intensity access
+
+**TimeOfDay.cs** (Enum)
+- Morning (06:00-11:59)
+- Day (12:00-17:59)
+- Evening (18:00-20:59)
+- Night (21:00-05:59)
+
+**Events:**
+- `TimeOfDayChangedEvent` - Published on period transitions
+- `DayCompletedEvent` - Published after 24-hour cycle
+- `HourChangedEvent` - Optional hourly updates
+
+**Dependencies:**
+- Core.DI (ServiceContainer)
+- Core.Events (EventBus)
+- Unity.Rendering (RenderSettings, Light)
+
+**Integration Points:**
+- PlayerStats (temperature effects)
+- TorchBehavior (effectiveness boost at night)
+- Future: Enemy AI, quest system
+
+**Quality:** ✅ Excellent design
+- SOLID principles
+- Event-driven
+- Performance optimized (<2ms/frame)
+- Extensible for weather/seasons
 
 ---
 

@@ -13,9 +13,10 @@
 6. [UI System Dependencies](#ui-system-dependencies)
 7. [Interaction System Dependencies](#interaction-system-dependencies)
 8. [New Systems: Torch & Canteen](#new-systems-torch--canteen)
-9. [Service Container Registry](#service-container-registry)
-10. [Event Flow](#event-flow)
-11. [Dependency Matrix](#dependency-matrix)
+9. [Day/Night Cycle System](#daynight-cycle-system)
+10. [Service Container Registry](#service-container-registry)
+11. [Event Flow](#event-flow)
+12. [Dependency Matrix](#dependency-matrix)
 
 ---
 
@@ -888,6 +889,203 @@ ContextMenuUI.ShowInventoryMenu()
 
 ---
 
+## Day/Night Cycle System
+
+### System Architecture
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│         DayNightCycleManager (MonoBehaviour)                 │
+│            [Scene Manager - Time & Lighting]                 │
+└───┬──────────────────────────────────────────────────────────┘
+    │
+    ├─► Implements: IDayNightCycleService
+    │   │
+    │   ├─► float CurrentTime
+    │   ├─► TimeOfDay CurrentTimeOfDay
+    │   ├─► float DayProgress
+    │   ├─► bool IsPaused
+    │   ├─► SetTime(float hours)
+    │   ├─► SetTimeOfDay(TimeOfDay)
+    │   ├─► SetPaused(bool)
+    │   ├─► GetLightIntensity()
+    │   └─► GetAmbientColor()
+    │
+    ├─► Depends On:
+    │   ├─► DayNightConfig (ScriptableObject)
+    │   ├─► Light (Directional light reference)
+    │   ├─► SkyboxBlender (optional)
+    │   └─► IEventBus (ServiceContainer)
+    │
+    ├─► Manages:
+    │   ├─► Time progression (0-24 hours)
+    │   ├─► TimeOfDay state (Morning/Day/Evening/Night)
+    │   ├─► Light rotation (sun/moon movement)
+    │   ├─► Light color & intensity
+    │   ├─► Ambient lighting
+    │   ├─► Fog density (optional)
+    │   └─► Skybox transitions
+    │
+    └─► Publishes Events:
+        ├─► TimeOfDayChangedEvent
+        ├─► DayCompletedEvent
+        └─► HourChangedEvent (optional)
+```
+
+### Configuration & Data
+
+```
+DayNightConfig (ScriptableObject)
+├─► Cycle Settings:
+│   ├─► float dayDurationInSeconds
+│   ├─► float startTime
+│   └─► float skyboxTransitionDuration
+│
+├─► Time Ranges:
+│   ├─► float morningStartHour (6.0)
+│   ├─► float dayStartHour (12.0)
+│   ├─► float eveningStartHour (18.0)
+│   └─► float nightStartHour (21.0)
+│
+├─► Skybox Materials:
+│   ├─► Material morningSkybox
+│   ├─► Material daySkybox
+│   ├─► Material eveningSkybox
+│   └─► Material nightSkybox
+│
+└─► Lighting Settings (per TimeOfDay):
+    ├─► Morning: Color, Intensity, Rotation, Ambient, Fog
+    ├─► Day: Color, Intensity, Rotation, Ambient, Fog
+    ├─► Evening: Color, Intensity, Rotation, Ambient, Fog
+    └─► Night: Color, Intensity, Rotation, Ambient, Fog
+
+TimeOfDay (Enum)
+├─► Morning  (06:00 - 11:59)
+├─► Day      (12:00 - 17:59)
+├─► Evening  (18:00 - 20:59)
+└─► Night    (21:00 - 05:59)
+```
+
+### Skybox Blending System (Optional)
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│         SkyboxBlender (MonoBehaviour)                        │
+│            [Smooth Skybox Transitions]                       │
+└───┬──────────────────────────────────────────────────────────┘
+    │
+    ├─► Uses: Custom/BlendedSkybox shader
+    │   │
+    │   ├─► Blends two cubemap skyboxes
+    │   ├─► Supports HDR with exposure control
+    │   ├─► Independent rotation per skybox
+    │   └─► Smooth interpolation (0-1)
+    │
+    ├─► Methods:
+    │   ├─► StartBlend(fromSkybox, toSkybox)
+    │   ├─► SetBlend(float 0-1)
+    │   ├─► FinishBlend(finalSkybox)
+    │   ├─► SetExposure(float)
+    │   └─► IsBlending()
+    │
+    └─► Fallback: Simple cross-fade if not used
+```
+
+### Event System Integration
+
+```
+TimeOfDayChangedEvent (class)
+├─► TimeOfDay previousTimeOfDay
+├─► TimeOfDay newTimeOfDay
+└─► float currentTime
+
+DayCompletedEvent (class)
+└─► int dayNumber
+
+HourChangedEvent (class)
+└─► int hour (0-23)
+```
+
+### Integration with Existing Systems
+
+```
+PlayerStats Integration:
+├─► Subscribe to: TimeOfDayChangedEvent
+├─► Night → Apply cold temperature effect
+└─► Day → Apply warm temperature bonus
+
+Torch System Integration:
+├─► Subscribe to: TimeOfDayChangedEvent
+├─► Night → Increase torch effectiveness (1.5x radius)
+└─► Night → Double warmth bonus importance
+
+Enemy AI Integration (Future):
+├─► Subscribe to: TimeOfDayChangedEvent
+├─► Night → More aggressive behavior
+└─► Day → Normal behavior
+
+Quest System Integration (Future):
+├─► Subscribe to: TimeOfDayChangedEvent
+├─► Time-based quest triggers
+└─► Day/night specific objectives
+```
+
+### Dependencies
+
+```
+DayNightCycleManager Dependencies:
+├─► Unity.Rendering
+│   ├─► RenderSettings (skybox, ambient, fog)
+│   ├─► DynamicGI (environment updates)
+│   └─► Light component
+│
+├─► ServiceContainer
+│   └─► IEventBus (event publishing)
+│
+├─► Configuration
+│   ├─► DayNightConfig (ScriptableObject)
+│   └─► SkyboxBlender (optional)
+│
+└─► Scene References
+    ├─► Light directionalLight (required)
+    └─► SkyboxBlender skyboxBlender (optional)
+```
+
+### Editor Tools
+
+```
+SkyboxSetupUtility (Editor Script)
+├─► Menu: Tools/Day Night Cycle
+│   │
+│   ├─► Create Blended Skybox Material
+│   ├─► Setup Day Night Manager
+│   ├─► Add SkyboxBlender Component
+│   └─► Complete Setup (All Steps)
+│
+└─► Auto-configures:
+    ├─► Creates BlendedSkybox material
+    ├─► Assigns shader (Custom/BlendedSkybox)
+    ├─► Creates manager GameObject
+    ├─► Finds directional light
+    └─► Links all components
+
+DayNightCycleManagerEditor (Custom Inspector)
+├─► Runtime Information Display:
+│   ├─► Current time (0-24h)
+│   ├─► Current time period
+│   ├─► Progress percentage
+│   ├─► Pause state
+│   ├─► Light intensity
+│   └─► Ambient color
+│
+└─► Debug Controls:
+    ├─► Time slider (manual time control)
+    ├─► Pause/Resume button
+    └─► Quick jump buttons (Morning/Day/Evening/Night)
+```
+
+---
+
 ## Service Container Registry
 
 ### Complete Registration Map
@@ -1121,6 +1319,8 @@ TorchBehavior.UpdateBehavior()
 | **CanteenBehavior** | CanteenItem | HeldItemBehaviorMgr | None | None |
 | **WaterSourceInteractable** | ServiceContainer, EquipmentManager, InteractionPromptUI, CanteenItem | InteractionDetector | None | None |
 | **HeldItemStateManager** | None | TorchItem, CanteenItem | None | None |
+| **DayNightCycleManager** | ServiceContainer, EventBus, DayNightConfig, Light, SkyboxBlender | PlayerStats, Torch system | TimeOfDayChangedEvent, DayCompletedEvent | None |
+| **SkyboxBlender** | Custom/BlendedSkybox shader | DayNightCycleManager | None | None |
 
 ### Circular Dependency Detection
 

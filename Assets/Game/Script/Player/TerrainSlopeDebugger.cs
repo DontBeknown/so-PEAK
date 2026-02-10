@@ -7,7 +7,7 @@ using UnityEngine;
 public class TerrainSlopeDebugger : MonoBehaviour
 {
     [SerializeField] private PlayerStats stats;
-    [SerializeField] private bool showDebugInfo = true;
+    //[SerializeField] private bool showDebugInfo = true;
     [SerializeField] private bool drawGroundNormal = true;
     [SerializeField] private float normalLineLength = 2f;
 
@@ -95,7 +95,7 @@ public class TerrainSlopeDebugger : MonoBehaviour
 
     private void OnGUI()
     {
-        if (!showDebugInfo) return;
+        /*if (!Application.isPlaying || !showDebugInfo) return;
 
         GUIStyle style = new GUIStyle();
         style.fontSize = 11;
@@ -152,7 +152,7 @@ public class TerrainSlopeDebugger : MonoBehaviour
             GUI.color = originalColor;
         }
         
-        GUILayout.EndArea();
+        GUILayout.EndArea();*/
     }
 
     private void OnDrawGizmos()
