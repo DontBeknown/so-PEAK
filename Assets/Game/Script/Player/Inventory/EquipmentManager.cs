@@ -22,10 +22,14 @@ public class EquipmentManager : MonoBehaviour
 
     private void Awake()
     {
-        // Get EventBus from ServiceContainer
-        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
-        
         InitializeSlots();
+    }
+
+    private void Start()
+    {
+        // Get EventBus from ServiceContainer
+        // Done in Start() to ensure EventBus has been registered by GameServiceBootstrapper
+        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
     }
 
     private void InitializeSlots()

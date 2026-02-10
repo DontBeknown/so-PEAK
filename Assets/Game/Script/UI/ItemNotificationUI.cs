@@ -30,37 +30,67 @@ public class ItemNotificationUI : MonoBehaviour
     
     private void Awake()
     {
-        // Get EventBus from ServiceContainer
-        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+        //Debug.Log("[ItemNotificationUI] Awake called");
         
         // Start hidden
         if (notificationPanel != null)
         {
             notificationPanel.SetActive(true);
+            //Debug.Log("[ItemNotificationUI] Notification panel activated");
+        }
+        else
+        {
+            Debug.LogError("[ItemNotificationUI] Notification panel is not assigned in inspector!");
+        }
+        
+        // Validate references
+        if (notificationContainer == null)
+        {
+            Debug.LogError("[ItemNotificationUI] Notification container is not assigned in inspector!");
+        }
+        if (notificationPrefab == null)
+        {
+            Debug.LogError("[ItemNotificationUI] Notification prefab is not assigned in inspector!");
+        }
+    }
+
+    private void Start()
+    {
+        //Debug.Log("[ItemNotificationUI] Start called");
+        
+        // Get EventBus from ServiceContainer
+        // Done in Start() to ensure EventBus has been registered by GameServiceBootstrapper
+        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+        
+        if (eventBus != null)
+        {
+            //Debug.Log("[ItemNotificationUI] EventBus successfully retrieved from ServiceContainer");
+            
+            // Subscribe here instead of OnEnable to ensure eventBus is available
+            eventBus.Subscribe<Game.Player.Inventory.Events.ItemAddedEvent>(HandleItemAddedEvent);
+            eventBus.Subscribe<Game.Player.Inventory.Events.ItemRemovedEvent>(HandleItemRemovedEvent);
+            eventBus.Subscribe<Game.Player.Inventory.Events.ItemConsumedEvent>(HandleItemConsumedEvent);
+            eventBus.Subscribe<ItemEquippedEvent>(HandleItemEquippedEvent);
+            eventBus.Subscribe<ItemUnequippedEvent>(HandleItemUnequippedEvent);
+            
+            //Debug.Log("[ItemNotificationUI] Successfully subscribed to all events");
+        }
+        else
+        {
+            Debug.LogError("[ItemNotificationUI] EventBus not found in ServiceContainer! Notifications will not work!");
         }
     }
     
     private void OnEnable()
     {
-        if (eventBus != null)
-        {
-            // Subscribe to inventory events via EventBus
-            eventBus.Subscribe<Game.Player.Inventory.Events.ItemAddedEvent>(HandleItemAddedEvent);
-            eventBus.Subscribe<Game.Player.Inventory.Events.ItemRemovedEvent>(HandleItemRemovedEvent);
-            eventBus.Subscribe<Game.Player.Inventory.Events.ItemConsumedEvent>(HandleItemConsumedEvent);
-            
-            // Subscribe to equipment events via EventBus
-            eventBus.Subscribe<ItemEquippedEvent>(HandleItemEquippedEvent);
-            eventBus.Subscribe<ItemUnequippedEvent>(HandleItemUnequippedEvent);
-        }
-        else
-        {
-            Debug.LogWarning("[ItemNotificationUI] EventBus not available, notifications will not work!");
-        }
+        // Moved subscription to Start() to ensure eventBus is available
+        //Debug.Log("[ItemNotificationUI] OnEnable called");
     }
     
     private void OnDisable()
     {
+        //Debug.Log("[ItemNotificationUI] OnDisable called");
+        
         if (eventBus != null)
         {
             // Unsubscribe from EventBus events
@@ -69,39 +99,71 @@ public class ItemNotificationUI : MonoBehaviour
             eventBus.Unsubscribe<Game.Player.Inventory.Events.ItemConsumedEvent>(HandleItemConsumedEvent);
             eventBus.Unsubscribe<ItemEquippedEvent>(HandleItemEquippedEvent);
             eventBus.Unsubscribe<ItemUnequippedEvent>(HandleItemUnequippedEvent);
+            
+            //Debug.Log("[ItemNotificationUI] Successfully unsubscribed from all events");
         }
     }
     
     // EventBus event handlers
     private void HandleItemAddedEvent(Game.Player.Inventory.Events.ItemAddedEvent evt)
     {
-        if (evt.Item == null) return;
+        //Debug.Log($"[ItemNotificationUI] ItemAddedEvent received: {evt.Item?.itemName} x{evt.Quantity}");
+        
+        if (evt.Item == null)
+        {
+            //Debug.LogWarning("[ItemNotificationUI] ItemAddedEvent has null item!");
+            return;
+        }
         ShowNotification(evt.Item, evt.Quantity, NotificationType.Added);
     }
     
     private void HandleItemRemovedEvent(Game.Player.Inventory.Events.ItemRemovedEvent evt)
     {
-        if (evt.Item == null) return;
+        //Debug.Log($"[ItemNotificationUI] ItemRemovedEvent received: {evt.Item?.itemName} x{evt.Quantity}");
+        
+        if (evt.Item == null)
+        {
+            //Debug.LogWarning("[ItemNotificationUI] ItemRemovedEvent has null item!");
+            return;
+        }
         ShowNotification(evt.Item, evt.Quantity, NotificationType.Removed);
     }
     
     private void HandleItemConsumedEvent(Game.Player.Inventory.Events.ItemConsumedEvent evt)
     {
-        if (evt.Item == null) return;
+        //Debug.Log($"[ItemNotificationUI] ItemConsumedEvent received: {evt.Item?.itemName}");
+        
+        if (evt.Item == null)
+        {
+            //Debug.LogWarning("[ItemNotificationUI] ItemConsumedEvent has null item!");
+            return;
+        }
         ShowNotification(evt.Item, 1, NotificationType.Consumed);
     }
     
     private void HandleItemEquippedEvent(ItemEquippedEvent evt)
     {
+        //Debug.Log($"[ItemNotificationUI] ItemEquippedEvent received: {evt.Item}");
+        
         InventoryItem invItem = evt.Item as InventoryItem;
-        if (invItem == null) return;
+        if (invItem == null)
+        {
+            //Debug.LogWarning("[ItemNotificationUI] ItemEquippedEvent item is not an InventoryItem!");
+            return;
+        }
         ShowNotification(invItem, 1, NotificationType.Equipped);
     }
     
     private void HandleItemUnequippedEvent(ItemUnequippedEvent evt)
     {
+        //Debug.Log($"[ItemNotificationUI] ItemUnequippedEvent received: {evt.Item}");
+        
         InventoryItem invItem = evt.Item as InventoryItem;
-        if (invItem == null) return;
+        if (invItem == null)
+        {
+            //Debug.LogWarning("[ItemNotificationUI] ItemUnequippedEvent item is not an InventoryItem!");
+            return;
+        }
         ShowNotification(invItem, 1, NotificationType.Unequipped);
     }
     
@@ -110,8 +172,25 @@ public class ItemNotificationUI : MonoBehaviour
     /// </summary>
     public void ShowNotification(InventoryItem item, int quantity, NotificationType type)
     {
-        if (item == null || notificationPrefab == null || notificationContainer == null)
+        //Debug.Log($"[ItemNotificationUI] ShowNotification called: {item?.itemName} x{quantity} ({type})");
+        
+        if (item == null)
+        {
+            Debug.LogError("[ItemNotificationUI] ShowNotification called with null item!");
             return;
+        }
+        
+        if (notificationPrefab == null)
+        {
+            Debug.LogError("[ItemNotificationUI] Cannot show notification - notificationPrefab is null!");
+            return;
+        }
+        
+        if (notificationContainer == null)
+        {
+            Debug.LogError("[ItemNotificationUI] Cannot show notification - notificationContainer is null!");
+            return;
+        }
         
         // Create notification data
         NotificationData data = new NotificationData
@@ -121,15 +200,21 @@ public class ItemNotificationUI : MonoBehaviour
             type = type
         };
         
+        //Debug.Log($"[ItemNotificationUI] Creating notification for: {data.item.itemName}");
+        
         // Create and display notification
         CreateNotification(data);
     }
     
     private void CreateNotification(NotificationData data)
     {
+        //Debug.Log($"[ItemNotificationUI] CreateNotification called for: {data.item.itemName}");
+        
         // Check if we've reached max notifications
         if (activeNotifications.Count >= maxVisibleNotifications)
         {
+            //Debug.Log($"[ItemNotificationUI] Max notifications reached ({maxVisibleNotifications}), removing oldest");
+            
             // Remove oldest notification properly
             if (activeNotifications.Count > 0)
             {
@@ -145,9 +230,12 @@ public class ItemNotificationUI : MonoBehaviour
         }
         
         // Instantiate notification
+        //Debug.Log($"[ItemNotificationUI] Instantiating notification prefab");
         GameObject notificationObj = Instantiate(notificationPrefab, notificationContainer);
         notificationObj.SetActive(true);
         activeNotifications.Add(notificationObj);
+        
+        //Debug.Log($"[ItemNotificationUI] Notification created: {notificationObj.name}, Active count: {activeNotifications.Count}");
         
         // Setup notification content
         SetupNotificationContent(notificationObj, data);

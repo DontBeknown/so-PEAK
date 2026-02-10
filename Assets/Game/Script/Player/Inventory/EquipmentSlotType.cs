@@ -8,5 +8,6 @@ public enum EquipmentSlotType
     Head,
     Body,
     Foot,
-    Hand
+    Hand,
+    HeldItem    // For torch, canteen - only one can be held at a time
 }

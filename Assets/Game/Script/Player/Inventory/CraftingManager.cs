@@ -21,9 +21,10 @@ public class CraftingManager : MonoBehaviour
     private IInventoryService inventoryService;
     private IInventoryStorage inventoryStorage;
 
-    private void Awake()
+    private void Start()
     {
         // Get services from ServiceContainer
+        // Done in Start() to ensure InventoryManagerRefactored has registered services in its Awake()
         eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
         inventoryService = ServiceContainer.Instance.Get<IInventoryService>();
         inventoryStorage = ServiceContainer.Instance.Get<IInventoryStorage>();

@@ -22,6 +22,14 @@ public class ContextMenuUI : MonoBehaviour
     private Canvas canvas;
     private RectTransform canvasRect;
     private List<GameObject> activeButtons = new List<GameObject>();
+    
+    // For dynamic menu updates
+    private InventorySlotUI currentSlotUI;
+    private InventoryUI currentInventoryUI;
+    private EquipmentManager currentEquipmentManager;
+    private bool isInventoryMenu;
+    private bool lastCanteenCanDrink;
+    private Coroutine cooldownCheckCoroutine; 
 
     public bool IsVisible => contextMenuPanel.activeSelf;
 
@@ -67,6 +75,34 @@ public class ContextMenuUI : MonoBehaviour
             }
         }
     }
+    
+    private System.Collections.IEnumerator CheckCanteenCooldown()
+    {
+        while (isInventoryMenu && currentSlotUI != null && !currentSlotUI.IsEmpty)
+        {
+            var item = currentSlotUI.InventorySlot.item;
+            CanteenItem canteenItem = item as CanteenItem;
+            
+            if (canteenItem != null)
+            {
+                // Only refresh if state changed
+                bool canDrinkNow = canteenItem.CanDrink();
+                if (canDrinkNow != lastCanteenCanDrink)
+                {
+                    lastCanteenCanDrink = canDrinkNow;
+                    RefreshInventoryMenu();
+                }
+            }
+            else
+            {
+                // Not a canteen, stop checking
+                yield break;
+            }
+            
+            // Check every 0.1 seconds instead of every frame
+            yield return new WaitForSecondsRealtime(0.1f);
+        }
+    }
 
     /// <summary>
     /// Show context menu for an inventory item.
@@ -75,14 +111,57 @@ public class ContextMenuUI : MonoBehaviour
     {
         if (slotUI == null || slotUI.IsEmpty) return;
 
+        // Store context for dynamic updates
+        currentSlotUI = slotUI;
+        currentInventoryUI = inventoryUI;
+        currentEquipmentManager = equipmentManager;
+        isInventoryMenu = true;
+
+        // Initialize canteen state tracking
+        CanteenItem canteen = slotUI.InventorySlot.item as CanteenItem;
+        if (canteen != null)
+        {
+            lastCanteenCanDrink = canteen.CanDrink();
+            
+            // Start cooldown check coroutine
+            if (cooldownCheckCoroutine != null)
+            {
+                StopCoroutine(cooldownCheckCoroutine);
+            }
+            cooldownCheckCoroutine = StartCoroutine(CheckCanteenCooldown());
+        }
+
         ClearButtons();
 
         var item = slotUI.InventorySlot.item;
         EquipmentItem equipItem = item as EquipmentItem;
+        CanteenItem canteenItem = item as CanteenItem; // Check for canteen
 
         // Check if item is equipment
         if (equipItem != null)
         {
+            // Special handling for canteen
+            if (canteenItem != null)
+            {
+                // Add Drink option - always shown but disabled if can't drink
+                if (canteenItem.CanDrink())
+                {
+                    AddButton("Drink", () => {
+                        var playerStats = Game.Core.DI.ServiceContainer.Instance.TryGet<PlayerStats>();
+                        if (canteenItem.Drink(playerStats))
+                        {
+                            inventoryUI?.UpdateAllSlots();
+                        }
+                        HideMenu();
+                    });
+                }
+                else
+                {
+                    // Disabled button when empty or on cooldown
+                    AddButton("Drink", null);
+                }
+            }
+            
             // Check if already equipped
             bool isEquipped = equipmentManager != null && 
                              (UnityEngine.Object)equipmentManager.GetEquippedItem(equipItem.EquipmentSlot) == equipItem;
@@ -129,6 +208,12 @@ public class ContextMenuUI : MonoBehaviour
     {
         if (slotUI == null || slotUI.IsEmpty) return;
 
+        // Clear inventory context
+        currentSlotUI = null;
+        currentInventoryUI = null;
+        currentEquipmentManager = null;
+        isInventoryMenu = false;
+
         ClearButtons();
 
         // Only option for equipped items is to unequip
@@ -155,9 +240,18 @@ public class ContextMenuUI : MonoBehaviour
 
         if (button != null)
         {
-            button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(() => onClick?.Invoke());
+            if (onClick != null)
+            {
+                button.onClick.RemoveAllListeners();
+                button.onClick.AddListener(() => onClick?.Invoke());
+            }
+            else
+            {
+                // Disabled button - null onClick means it's just informational
+                button.interactable = false;
+            }
         }
+        
 
         activeButtons.Add(buttonObj);
     }
@@ -186,6 +280,95 @@ public class ContextMenuUI : MonoBehaviour
     {
         contextMenuPanel.SetActive(false);
         ClearButtons();
+        
+        // Stop cooldown check coroutine
+        if (cooldownCheckCoroutine != null)
+        {
+            StopCoroutine(cooldownCheckCoroutine);
+            cooldownCheckCoroutine = null;
+        }
+        
+        // Clear context
+        currentSlotUI = null;
+        currentInventoryUI = null;
+        currentEquipmentManager = null;
+        isInventoryMenu = false;
+    }
+    
+    private void RefreshInventoryMenu()
+    {
+        if (currentSlotUI == null || currentSlotUI.IsEmpty) return;
+        
+        ClearButtons();
+        
+        var item = currentSlotUI.InventorySlot.item;
+        EquipmentItem equipItem = item as EquipmentItem;
+        CanteenItem canteenItem = item as CanteenItem;
+
+        // Check if item is equipment
+        if (equipItem != null)
+        {
+            // Special handling for canteen
+            if (canteenItem != null)
+            {
+                // Add Drink option - always shown but disabled if can't drink
+                if (canteenItem.CanDrink())
+                {
+                    AddButton("Drink", () => {
+                        var playerStats = Game.Core.DI.ServiceContainer.Instance.TryGet<PlayerStats>();
+                        if (canteenItem.Drink(playerStats))
+                        {
+                            currentInventoryUI?.UpdateAllSlots();
+                        }
+                        HideMenu();
+                    });
+                }
+                else
+                {
+                    // Disabled button when empty or on cooldown
+                    AddButton("Drink", null);
+                }
+            }
+            
+            // Check if already equipped
+            bool isEquipped = currentEquipmentManager != null && 
+                             (UnityEngine.Object)currentEquipmentManager.GetEquippedItem(equipItem.EquipmentSlot) == equipItem;
+
+            if (isEquipped)
+            {
+                AddButton("Unequip", () => {
+                    currentEquipmentManager?.Unequip(equipItem.EquipmentSlot);
+                    currentInventoryUI?.UpdateAllSlots();
+                    HideMenu();
+                });
+            }
+            else
+            {
+                AddButton("Equip", () => {
+                    currentEquipmentManager?.Equip(equipItem);
+                    currentInventoryUI?.UpdateAllSlots();
+                    HideMenu();
+                });
+            }
+        }
+        else if (item.isConsumable)
+        {
+            // Consumable item
+            AddButton("Consume", () => {
+                currentInventoryUI?.UseItem(currentSlotUI.SlotIndex);
+                HideMenu();
+            });
+        }
+
+        // All items can be dropped
+        AddButton("Drop", () => {
+            currentInventoryUI?.DropItem(currentSlotUI.SlotIndex);
+            HideMenu();
+        });
+        
+        // Force layout rebuild
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(menuRect);
     }
 
     private void UpdatePosition()

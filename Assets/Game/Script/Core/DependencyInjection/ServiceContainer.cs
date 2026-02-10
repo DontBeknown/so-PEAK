@@ -59,6 +59,10 @@ namespace Game.Core.DI
             {
                 return service as TService;
             }
+            else
+            {
+                Debug.LogWarning($"[ServiceContainer] Service {type.Name} not found");
+            }
             
             throw new InvalidOperationException($"Service {type.Name} is not registered");
         }

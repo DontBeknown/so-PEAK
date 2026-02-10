@@ -43,15 +43,6 @@ public class CraftingUI : MonoBehaviour
 
     private void Awake()
     {
-        // Get references from ServiceContainer (DI)
-        if (craftingManager == null)
-            craftingManager = ServiceContainer.Instance.TryGet<CraftingManager>();
-
-        inventoryService = ServiceContainer.Instance.Get<IInventoryService>();
-        inventoryStorage = ServiceContainer.Instance.Get<IInventoryStorage>();
-            
-        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
-
         // Setup craft button
         if (craftButton != null)
         {
@@ -62,6 +53,19 @@ public class CraftingUI : MonoBehaviour
         // Hide progress bar initially
         if (craftingProgressBar != null)
             craftingProgressBar.SetActive(false);
+    }
+
+    private void Start()
+    {
+        // Get references from ServiceContainer (DI)
+        // Done in Start() to ensure InventoryManagerRefactored has registered services in its Awake()
+        if (craftingManager == null)
+            craftingManager = ServiceContainer.Instance.TryGet<CraftingManager>();
+
+        inventoryService = ServiceContainer.Instance.Get<IInventoryService>();
+        inventoryStorage = ServiceContainer.Instance.Get<IInventoryStorage>();
+            
+        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
     }
 
     private void OnEnable()

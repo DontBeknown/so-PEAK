@@ -20,6 +20,9 @@ public class InventoryUI : MonoBehaviour
     
     [Header("Tooltip")]
     [SerializeField] private TooltipUI tooltipUI;
+    
+    [Header("Context Menu")]
+    [SerializeField] private ContextMenuUI contextMenuUI;
 
     [Header("Stats Display")]
     // Sliders have been moved to `SimpleStatsHUD`; keep text elements here only.
@@ -46,17 +49,6 @@ public class InventoryUI : MonoBehaviour
 
     private void Awake()
     {
-        // Get required components from ServiceContainer (DI)
-        inventoryService = ServiceContainer.Instance.Get<IInventoryService>();
-        inventoryStorage = ServiceContainer.Instance.Get<IInventoryStorage>();
-        equipmentManager = ServiceContainer.Instance.TryGet<EquipmentManager>();
-        playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
-        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
-        
-        if (tooltipUI == null)
-            tooltipUI = ServiceContainer.Instance.TryGet<TooltipUI>();
-        
-
         // Setup buttons
         if (closeButton != null)
             closeButton.onClick.AddListener(CloseInventory);
@@ -67,6 +59,20 @@ public class InventoryUI : MonoBehaviour
 
     private void Start()
     {
+        // Get required components from ServiceContainer (DI)
+        // Done in Start() to ensure InventoryManagerRefactored has registered services in its Awake()
+        inventoryService = ServiceContainer.Instance.Get<IInventoryService>();
+        inventoryStorage = ServiceContainer.Instance.Get<IInventoryStorage>();
+        equipmentManager = ServiceContainer.Instance.TryGet<EquipmentManager>();
+        playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
+        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+        
+        if (tooltipUI == null)
+            tooltipUI = ServiceContainer.Instance.TryGet<TooltipUI>();
+        
+        if (contextMenuUI == null)
+            contextMenuUI = ServiceContainer.Instance.TryGet<ContextMenuUI>();
+        
         CreateSlotUIs();
         SubscribeToEvents();
         UpdateAllSlots();
@@ -188,6 +194,11 @@ public class InventoryUI : MonoBehaviour
         if (tooltipUI != null)
         {
             tooltipUI.HideTooltip();
+        }
+        
+        if (contextMenuUI != null)
+        {
+            contextMenuUI.HideMenu();
         }
     }
 
@@ -333,12 +344,17 @@ public class InventoryUI : MonoBehaviour
 
     private void Update()
     {
-
+      // Update stats display in real-time when inventory is open
+        if (isOpen)
+        {
+            UpdateStatsDisplay();
+        }
     }
 
     // Methods for tabbed UI support - show/hide panel without managing pause/cursor state
     public void ShowInventoryPanel()
     {
+        isOpen = true;  
         if (inventoryPanel != null)
         {
             inventoryPanel.SetActive(true);
@@ -356,6 +372,7 @@ public class InventoryUI : MonoBehaviour
 
     public void HideInventoryPanel()
     {
+        isOpen = false;  
         if (inventoryPanel != null)
         {
             inventoryPanel.SetActive(false);
@@ -371,6 +388,11 @@ public class InventoryUI : MonoBehaviour
         if (equipmentUI != null)
         {
             equipmentUI.HideEquipmentPanel();
+        }
+
+        if (contextMenuUI != null)
+        {
+            contextMenuUI.HideMenu();
         }
     }
 }

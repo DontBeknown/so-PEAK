@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Game.Player.Inventory.HeldItems;
 
 /// <summary>
 /// Displays item/equipment details in a tooltip near the mouse cursor.
@@ -98,10 +99,29 @@ public class TooltipUI : MonoBehaviour
         // Update stats (for equipment)
         if (itemStatsText != null)
         {
+            System.Text.StringBuilder statsBuilder = new System.Text.StringBuilder();
+            
+            // Show state for held equipment items (torch durability, canteen charges)
+            if (item is HeldEquipmentItem heldItem)
+            {
+                string stateDesc = GetHeldItemStateText(heldItem);
+                if (!string.IsNullOrEmpty(stateDesc))
+                {
+                    statsBuilder.AppendLine(stateDesc);
+                }
+            }
+            
+            // Show stat modifiers for equipment
             EquipmentItem equipItem = item as EquipmentItem;
             if (equipItem != null && equipItem.StatModifiers != null && equipItem.StatModifiers.Count > 0)
             {
-                itemStatsText.text = GetStatModifiersText(equipItem);
+                if (statsBuilder.Length > 0) statsBuilder.AppendLine();
+                statsBuilder.Append(GetStatModifiersText(equipItem));
+            }
+            
+            if (statsBuilder.Length > 0)
+            {
+                itemStatsText.text = statsBuilder.ToString().TrimEnd();
                 itemStatsText.gameObject.SetActive(true);
             }
             else
@@ -175,6 +195,22 @@ public class TooltipUI : MonoBehaviour
         }
 
         return item.isConsumable ? "<color=#4CAF50>Consumable</color>" : "<color=#888888>Item</color>";
+    }
+    
+    private string GetHeldItemStateText(HeldEquipmentItem heldItem)
+    {
+        if (heldItem is TorchItem torchItem)
+        {
+            string durability = torchItem.GetStateDescription();
+            return $"<b>Durability:</b> <color=#FFA500>{durability}</color>";
+        }
+        else if (heldItem is CanteenItem canteenItem)
+        {
+            string charges = canteenItem.GetStateDescription();
+            return $"<b>Charges:</b> <color=#4FC3F7>{charges}</color>";
+        }
+        
+        return "";
     }
 
     private string GetStatModifiersText(EquipmentItem equipment)
