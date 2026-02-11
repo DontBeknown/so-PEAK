@@ -31,6 +31,39 @@ public static class BufferGen
 
     }
 
+    // Use this strictly for the Road Mask so the edges don't turn into roads!
+    public static void GenRoadMaskWithBuffer(float[,] oldMask, float[,] newMask, int bufferSize)
+    {
+        int newWidth = newMask.GetLength(0);
+        int newLength = newMask.GetLength(1);
+        int halfBuffer = bufferSize / 2;
+        int oldWidth = oldMask.GetLength(0);
+        int oldLength = oldMask.GetLength(1);
+
+        Parallel.For(0, newLength, z =>
+        {
+            for (int x = 0; x < newWidth; x++)
+            {
+                // Check if we are inside the ORIGINAL 1000x1000 area
+                bool isInsideOriginal =
+                    (x >= halfBuffer && x < newWidth - halfBuffer) &&
+                    (z >= halfBuffer && z < newLength - halfBuffer);
+
+                if (isInsideOriginal)
+                {
+                    // Copy the exact road data
+                    newMask[x, z] = oldMask[x - halfBuffer, z - halfBuffer];
+                }
+                else
+                {
+                    // WE ARE IN THE BUFFER. 1.0f means "NO ROAD HERE"
+                    newMask[x, z] = 1.0f;
+                }
+            }
+        });
+    }
+
+
 
     //first we get the relative coordinates
     public static Vector2Int GetReferenceCoordinate(int x, int z, float[,] oldHeightMap, int halfBuffer)

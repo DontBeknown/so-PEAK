@@ -20,3 +20,10 @@ public struct MapData
         this.colourMap = colourMap;
     }
 }
+//Tree
+public struct TreeInstance
+{
+    public Vector3 position;
+    public Quaternion rotation;
+    public Vector3 scale;
+}

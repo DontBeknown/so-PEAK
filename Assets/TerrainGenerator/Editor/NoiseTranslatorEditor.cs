@@ -14,7 +14,7 @@ public class NoiseTranslatorEditor : Editor
         {
             
 
-            if (nt.ContinentalNoise == null || nt.ErosionNoise == null || nt.WeirdnessNoise == null)
+            if (nt.ContinentalNoise == null || nt.ErosionNoise_1 == null || nt.WeirdnessNoise == null)
             {
                 Debug.LogError("Assign all 3 noise maps first!");
                 return;

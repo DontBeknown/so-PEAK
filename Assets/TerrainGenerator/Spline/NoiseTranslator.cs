@@ -12,9 +12,15 @@ public class NoiseTranslator : MonoBehaviour
 
     [Header("Noise Sources")]
     public MapGenerator ContinentalNoise;
-    public MapGenerator ErosionNoise;
+    public MapGenerator ErosionNoise_1;
+    public MapGenerator ErosionNoise_2;
+    public MapGenerator ErosionNoise_3;
     public MapGenerator WeirdnessNoise;
     public MapGenerator RoadNoise;
+    public MapGenerator TreeNoise;
+
+    [Header("Visualizers")]
+    public TreePreviewer treePreviewer; // Assign this in Inspector!
 
     [Header("Map Size")]
     public int mapWidth = 1000;
@@ -22,10 +28,16 @@ public class NoiseTranslator : MonoBehaviour
     public int bufferLength = 100;
 
     [Header("Falloff Mask Settings")]
-    [HideInInspector] private Vector2 peakCenter = new Vector2(0.5f, 0.5f); // normalized center (0 1)
-    public float falloffPower = 2.5f; // controls slope shape
+    public Vector2[] peakCenterArray = new Vector2[3]
+    {
+        new Vector2(0.2f, 0.2f),
+        new Vector2(0.2f, 0.8f),
+        new Vector2(0.8f, 0.8f)
+    };
+    public float falloffPower = 1.5f; 
 
     public float meshHeightMultiplier;
+    public float mountainRadiusMeters;
     public AnimationCurve meshHeightCurve;
     public AnimationCurve roadHeightCurve;
 
@@ -34,6 +46,8 @@ public class NoiseTranslator : MonoBehaviour
     public int levelOfDetail;
     [Range(1, 5)]
     public int mapIteration;
+
+
 
     [Header("Terrain Colors")]
     [SerializeField] private Color roadColor = new Color(0.70f, 0.55f, 0.35f);
@@ -45,15 +59,17 @@ public class NoiseTranslator : MonoBehaviour
     [HideInInspector] public float[,] depthMap;
     [HideInInspector] public float[,] completeMap;
     [HideInInspector] public float[,] tempHeight;
-    
+    [HideInInspector] public float[,] treeNoiseMap;
+    [HideInInspector] public float[,] roadRidge;
+
 
 
     //for collect max height index and value
     private float maxHeight = 0f;
-    List<Vector2Int> peakPoints = new List<Vector2Int>();
+    List<List<Vector2Int>> peakPointsArray = new List<List<Vector2Int>>();
 
-    //collect mapNoise Bcs im lazy
-    private float[,] roadRidge;
+
+    
 
     //init Spline
     public void InitMainSpline()
@@ -75,16 +91,26 @@ public class NoiseTranslator : MonoBehaviour
 
         //this also random new noise
         ContinentalNoise.GenerateMap();
-        ErosionNoise.GenerateMap();
+        ErosionNoise_1.GenerateMap();
+        ErosionNoise_2.GenerateMap();
+        ErosionNoise_3.GenerateMap();
         WeirdnessNoise.GenerateMap();
 
         float[,] continentalness = ContinentalNoise.noiseMap;
-        float[,] erosion = ErosionNoise.noiseMap;
+        float[,] erosion_1 = ErosionNoise_1.noiseMap;
+        float[,] erosion_2 = ErosionNoise_2.noiseMap;
+        float[,] erosion_3 = ErosionNoise_3.noiseMap;
         float[,] weirdness = WeirdnessNoise.noiseMap;
 
+        float[][,] erosionArray = new float[3][,];
+        erosionArray[0] = ErosionNoise_1.noiseMap;
+        erosionArray[1] = ErosionNoise_2.noiseMap;
+        erosionArray[2] = ErosionNoise_3.noiseMap;
 
-        DefaultMountainGen.MountainTerarainGen(mainSpline, mapIteration, depthMap, continentalness, erosion, weirdness,
-            meshHeightCurve, peakCenter);
+
+
+        DefaultMountainGen.MultipleMountainTerarainGen(mainSpline, mapIteration, depthMap, continentalness, erosionArray, weirdness,
+            meshHeightCurve, peakCenterArray, falloffPower, mountainRadiusMeters, peakPointsArray);
     
 
         
@@ -95,14 +121,73 @@ public class NoiseTranslator : MonoBehaviour
     {
         //first gen mountain
         DepthNoise();
-        //find peaks coordinates here
-        FindPeakPoints(depthMap, peakPoints);
+        ////find peaks coordinates here
+        //FindPeakPoints(depthMap, peakPoints);
         //then carve a road
         ErodedMountain();
         //then buffer zone
         GenerateBufferArea();
         //then color map
         colorMap = ColorMapping();
+
+        TreeNoise.GenerateMap();
+        treeNoiseMap = TreeNoise.noiseMap;
+
+        ////////////////////DEBUG WILL DELETE THIS LATER ////////////////////////////////
+        // This block only exists inside the Unity Editor
+        #if UNITY_EDITOR
+                // Only draw the full "Preview" map if the game is NOT playing
+                // This prevents the big debug mesh from overlapping your chunks
+                if (!Application.isPlaying)
+                {
+                    MapDisplay display = GetComponent<MapDisplay>();
+                    if (display != null)
+                    {
+                        if (drawMode == DrawMode.NoiseMap)
+                        {
+                            display.DrawNoiseMap(completeMap, true);
+                        }
+                        else if (drawMode == DrawMode.Mesh)
+                        {
+                            display.DrawMesh(PerlinTerrainMeshGenerator.GenerateTerrainMesh(
+                                completeMap, colorMap, meshHeightMultiplier, levelOfDetail));
+
+                            ////////////////TREE TEST//////////
+                            // B. Plant the Debug Trees
+                            // Only happens when you explicitly ask for the Mesh view
+                            if (treePreviewer != null)
+                            {
+                                // 1. Setup the new 1100x1100 arrays
+                                float[,] expandedTreeNoise = new float[mapWidth+bufferLength, mapLength+bufferLength];
+                                float[,] expandedRoadMask = new float[mapWidth + bufferLength, mapLength + bufferLength];
+
+                                // 2. Expand them!
+                                // Trees fade to 0 (No trees at the edge)
+                                BufferGen.GenMapWithBuffer(treeNoiseMap, expandedTreeNoise, bufferLength);
+
+                                // Roads default to 1 (No roads at the edge)
+                                BufferGen.GenRoadMaskWithBuffer(roadRidge, expandedRoadMask, bufferLength);
+
+                                treePreviewer.GenerateDebugTrees(
+                                            expandedTreeNoise,
+                                            completeMap,
+                                            expandedRoadMask,
+                                            meshHeightMultiplier,
+                                            200
+                                        );
+
+
+
+                            }
+
+
+
+                        }
+
+                    }
+                }
+        #endif
+
 
     }
 
@@ -116,32 +201,7 @@ public class NoiseTranslator : MonoBehaviour
     
 
 
-    private void FindPeakPoints(float[,] depthMap, List<Vector2Int> peakPoints)
-    {
-        maxHeight = 0f;
-        peakPoints.Clear();
-
-        int width = depthMap.GetLength(0);
-        int length = depthMap.GetLength(1);
-
-        for (int z = 0; z < length; z++)
-        {
-            for (int x = 0; x < width; x++)
-            {
-                if (depthMap[x, z] > maxHeight)
-                {
-                    maxHeight = depthMap[x, z];
-                    peakPoints.Clear();
-                    peakPoints.Add(new Vector2Int(x, z));
-                }
-                else if (Mathf.Approximately(depthMap[x, z], maxHeight))
-                {
-                    peakPoints.Add(new Vector2Int(x, z));
-                }
-            }
-        }
-
-    }
+    
 
 
 
@@ -151,7 +211,7 @@ public class NoiseTranslator : MonoBehaviour
         RoadNoise.GenerateMap();
         roadRidge = RoadNoise.noiseMap;
 
-        RoadCarver.CarveRoad(depthMap, roadRidge, peakPoints, maxHeight, roadHeightCurve);
+        RoadCarver.CarveRoad(depthMap, roadRidge, peakPointsArray, maxHeight, roadHeightCurve);
         
     }
 

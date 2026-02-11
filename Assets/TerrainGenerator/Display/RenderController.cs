@@ -11,6 +11,12 @@ public class RenderController : MonoBehaviour
     public Transform player;
     public Material mapMaterial;
 
+    [Header("Tree Settings")]
+    public GameObject treePrefab;
+    public float treeSpacing = 2.0f;
+    public float minTreeHeight = 2.0f;
+    public float maxTreeHeight = 12.0f;
+    public int treeLimiter = 100;
     // --- SETTINGS ---
     // Remember to set this back to 241 after testing small chunks!
     public int chunkSize = 41;
@@ -20,6 +26,10 @@ public class RenderController : MonoBehaviour
     private float[,] globalHeightMap;
     private Color[,] globalColorMap;
     public Color fieldColor;
+
+
+    // NEW: Store the mathematical data for all trees here!
+    private Dictionary<Vector2Int, List<TreeInstance>> globalTreeData;
 
     // --- STATE ---
     // Dictionary value is 'null' while loading
@@ -48,7 +58,32 @@ public class RenderController : MonoBehaviour
             globalHeightMap = worldGen.completeMap;
             globalColorMap = worldGen.colorMap;
 
-            // 3. Start Loop
+            // 3. GENERATE TREE DATA (Math only, no lag!)
+            // Make sure these maps are accessible from your NoiseTranslator script
+            //  Setup the new 1100x1100 arrays
+            float[,] expandedTreeNoise = new float[worldGen.mapWidth + worldGen.bufferLength, worldGen.mapLength + worldGen.bufferLength];
+            float[,] expandedRoadMask = new float[worldGen.mapWidth + worldGen.bufferLength, worldGen.mapLength + worldGen.bufferLength];
+
+            //  Expand them!
+            // Trees fade to 0 (No trees at the edge)
+            BufferGen.GenMapWithBuffer(worldGen.treeNoiseMap, expandedTreeNoise, worldGen.bufferLength);
+
+            // Roads default to 1 (No roads at the edge)
+            BufferGen.GenRoadMaskWithBuffer(worldGen.roadRidge, expandedRoadMask, worldGen.bufferLength);
+
+
+            globalTreeData = TreePlanter.GenerateTreeData(
+                expandedTreeNoise,    
+                globalHeightMap,
+                expandedRoadMask,
+                minTreeHeight,
+                maxTreeHeight,        
+                worldGen.meshHeightMultiplier,
+                chunkSize - 1,            // CRITICAL: Pass (chunkSize - 1) so keys match RenderController!
+                treeSpacing
+            );
+
+            // 4. Start Loop
             UpdateVisibleChunks();
         }
         else
@@ -69,8 +104,8 @@ public class RenderController : MonoBehaviour
         }
 
         // --- 2. CHECK PLAYER POSITION ---
-        int currentX = Mathf.RoundToInt(player.position.x / (chunkSize - 1));
-        int currentY = Mathf.RoundToInt(player.position.z / (chunkSize - 1));
+        int currentX = Mathf.FloorToInt(player.position.x / (chunkSize - 1));
+        int currentY = Mathf.FloorToInt(player.position.z / (chunkSize - 1));
         Vector2Int playerCoord = new Vector2Int(currentX, currentY);
 
         if (playerCoord != currentChunkCoord)
@@ -110,6 +145,7 @@ public class RenderController : MonoBehaviour
 
         foreach (Vector2Int coord in coordsToRemove)
         {
+            // Because trees are parented to the chunk, Destroying the chunk destroys the trees automatically!
             if (terrainChunks[coord] != null) Destroy(terrainChunks[coord]);
             terrainChunks.Remove(coord);
         }
@@ -139,12 +175,21 @@ public class RenderController : MonoBehaviour
 
     void FinalizeChunk(Vector2Int coord, MeshData meshData)
     {
-        // Safety: If player left area, cancel spawn
         if (!terrainChunks.ContainsKey(coord)) return;
 
-        // 4. UNITY OBJECT CREATION (Matches your old CreateChunk logic)
         GameObject chunkObj = new GameObject($"Chunk_{coord.x}_{coord.y}");
-        chunkObj.transform.position = new Vector3(coord.x * (chunkSize - 1), 0, coord.y * (chunkSize - 1));
+
+        // THE FIX: Calculate the center offset
+        float meshCenterOffset = (chunkSize - 1) / 2f;
+
+        // Shift the chunk so its bottom-left corner is the anchor, not its center
+        float worldX = (coord.x * (chunkSize - 1)) + meshCenterOffset;
+
+        // NOTE: If MapSlicer is drawing Z normally now, we add the offset. 
+        // (If it was inverted, we might have to subtract, but try adding first!)
+        float worldZ = (coord.y * (chunkSize - 1)) + meshCenterOffset;
+
+        chunkObj.transform.position = new Vector3(worldX, 0, worldZ);
         chunkObj.transform.parent = this.transform;
 
         var mf = chunkObj.AddComponent<MeshFilter>();
@@ -153,10 +198,29 @@ public class RenderController : MonoBehaviour
 
         Mesh finalMesh = meshData.CreateMesh();
         mf.mesh = finalMesh;
-        mc.sharedMesh = finalMesh; // Physics Fix Included!
+        mc.sharedMesh = finalMesh;
         mr.material = mapMaterial;
 
-        // 5. UPDATE DICTIONARY
+        // --- NEW: SPAWN THE TREES FOR THIS CHUNK ---
+        if (treePrefab != null && globalTreeData != null && globalTreeData.ContainsKey(coord))
+        {
+            int treeLimit = 0; // NEW: Start a counter
+
+            foreach (var treeData in globalTreeData[coord])
+            {
+                if (treeLimit >= treeLimiter) break; // NEW: Abort if we hit 100 trees in this chunk!
+
+                // Instantiate at the exact world position
+                GameObject t = Instantiate(treePrefab, treeData.position, treeData.rotation);
+                t.transform.localScale = treeData.scale;
+
+                // Parent the tree to the Chunk GameObject
+                t.transform.parent = chunkObj.transform;
+
+                treeLimit++; // NEW: Increase the counter
+            }
+        }
+        // -------------------------------------------
         terrainChunks[coord] = chunkObj;
     }
 }
