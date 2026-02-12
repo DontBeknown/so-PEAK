@@ -108,7 +108,7 @@ namespace Game.Interaction
 
         #region Editor Helpers
 
-        private void OnDrawGizmos()
+        /*private void OnDrawGizmos()
         {
             // Show adapter status in editor
             if (resourceCollector != null && resourceCollector.CanBeCollected)
@@ -116,7 +116,7 @@ namespace Game.Interaction
                 Gizmos.color = Color.cyan;
                 Gizmos.DrawWireSphere(transform.position + Vector3.up * 0.5f, 0.2f);
             }
-        }
+        }*/
 
         #endregion
     }

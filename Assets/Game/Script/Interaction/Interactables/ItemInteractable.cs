@@ -145,7 +145,7 @@ namespace Game.Interaction
 
         #region Editor Gizmos
 
-        private void OnDrawGizmos()
+        /*private void OnDrawGizmos()
         {
             // Draw a small sphere to show interaction point
             Gizmos.color = hasBeenCollected ? Color.gray : Color.yellow;
@@ -160,7 +160,7 @@ namespace Game.Interaction
                 UnityEditor.Handles.Label(transform.position + Vector3.up * 0.5f, 
                     $"{item.itemName} x{quantity}");
             }
-        }
+        }*/
 
         #endregion
     }

@@ -149,7 +149,7 @@ namespace Game.Interaction
 
         #region Editor Helpers
 
-        private void OnDrawGizmos()
+        /*private void OnDrawGizmos()
         {
             // Draw terminal icon in editor
             Gizmos.color = highlightColor;
@@ -164,7 +164,7 @@ namespace Game.Interaction
         {
             // Draw label in editor
             UnityEditor.Handles.Label(transform.position + Vector3.up, "Assessment Terminal");
-        }
+        }*/
 
         #endregion
     }
