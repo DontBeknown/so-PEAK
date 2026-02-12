@@ -5,6 +5,13 @@ using Game.Core.DI;
 
 namespace Game.Interaction
 {
+    [System.Serializable]
+    public class ResourceDrop
+    {
+        public InventoryItem item;
+        public int amount = 1;
+    }
+
     /// <summary>
     /// Timed gathering interactable requiring player to HOLD E button.
     /// Locks player movement during gathering, shows progress bar, and can be cancelled.
@@ -13,14 +20,14 @@ namespace Game.Interaction
     public class GatheringInteractable : MonoBehaviour, IInteractable
     {
         [Header("Resource Settings")]
-        [SerializeField] private InventoryItem resourceItem;
-        [SerializeField] private int resourcesPerGather = 3;
+        [SerializeField] private ResourceDrop[] resourceDrops;
         [SerializeField] private string customPrompt = ""; // e.g., "Berries", "Iron Ore"
         
         [Header("Gathering Settings")]
         [SerializeField] private float gatherDuration = 3f;
         [SerializeField] private bool isMultiUse = true; // Can be gathered multiple times?
         [SerializeField] private float respawnTime = 60f; // Only used if multiUse
+        [SerializeField] private bool destroyOnUse = true; // Destroy object after use (only applies if not multiUse)
         
         [Header("Interaction Settings")]
         [SerializeField] private float interactionPriority = 1.2f; // Slightly higher than instant items
@@ -57,8 +64,8 @@ namespace Game.Interaction
                 if (!string.IsNullOrEmpty(customPrompt))
                     return $"Gather {customPrompt}";
                 
-                if (resourceItem != null)
-                    return $"Gather {resourceItem.itemName}";
+                if (resourceDrops != null && resourceDrops.Length > 0 && resourceDrops[0].item != null)
+                    return $"Gather {resourceDrops[0].item.itemName}";
                 
                 return "Gather Resource";
             }
@@ -66,7 +73,7 @@ namespace Game.Interaction
 
         public string InteractionVerb => "Hold to";
 
-        public bool CanInteract => !isCurrentlyGathering && !isDepleted && resourceItem != null;
+        public bool CanInteract => !isCurrentlyGathering && !isDepleted && resourceDrops != null && resourceDrops.Length > 0;
 
         public float InteractionPriority => interactionPriority;
 
@@ -119,6 +126,16 @@ namespace Game.Interaction
 
             isCurrentlyGathering = true;
             currentGatherProgress = 0f;
+            
+            // Disable interaction detector to prevent other prompts
+            if (currentPlayer != null)
+            {
+                var detector = currentPlayer.GetComponent<Game.Interaction.InteractionDetector>();
+                if (detector != null)
+                {
+                    detector.DisableDetection();
+                }
+            }
             
             // Lock player movement
             if (currentPlayer != null)
@@ -210,16 +227,19 @@ namespace Game.Interaction
             //Debug.Log($"[GatheringInteractable] Gathering complete!");
             
             // Add items to inventory
-            if (currentPlayer != null && resourceItem != null)
+            if (currentPlayer != null && resourceDrops != null && resourceDrops.Length > 0)
             {
                 var inventoryService = Game.Core.DI.ServiceContainer.Instance.Get<Game.Player.Inventory.IInventoryService>();
                 if (inventoryService != null)
                 {
-                    bool added = inventoryService.AddItem(resourceItem, resourcesPerGather);
-                    if (added)
+                    foreach (var drop in resourceDrops)
                     {
-                        ShowCompletionNotification();
+                        if (drop.item != null && drop.amount > 0)
+                        {
+                            inventoryService.AddItem(drop.item, drop.amount);
+                        }
                     }
+                    ShowCompletionNotification();
                 }
             }
             
@@ -233,7 +253,14 @@ namespace Game.Interaction
             if (!isMultiUse)
             {
                 isDepleted = true;
-                DestroyResource();
+                if (destroyOnUse)
+                {
+                    DestroyResource();
+                }
+                else
+                {
+                    UpdateDepletedVisual();
+                }
             }
             else
             {
@@ -291,6 +318,16 @@ namespace Game.Interaction
                 promptUI = null;
             }
             
+            // Re-enable interaction detector
+            if (currentPlayer != null)
+            {
+                var detector = currentPlayer.GetComponent<Game.Interaction.InteractionDetector>();
+                if (detector != null)
+                {
+                    detector.EnableDetection();
+                }
+            }
+            
             // Unlock player
             if (currentPlayer != null)
             {
@@ -334,9 +371,21 @@ namespace Game.Interaction
 
         private void ShowCompletionNotification()
         {
-            string message = resourcesPerGather > 1
-                ? $"Collected {resourcesPerGather}x {resourceItem.itemName}"
-                : $"Collected {resourceItem.itemName}";
+            if (resourceDrops == null || resourceDrops.Length == 0)
+                return;
+
+            string message = "";
+            if (resourceDrops.Length == 1 && resourceDrops[0].item != null)
+            {
+                var drop = resourceDrops[0];
+                message = drop.amount > 1
+                    ? $"Collected {drop.amount}x {drop.item.itemName}"
+                    : $"Collected {drop.item.itemName}";
+            }
+            else
+            {
+                message = "Collected resources";
+            }
             
             //Debug.Log(message);
             // TODO: Connect to notification system
@@ -353,7 +402,7 @@ namespace Game.Interaction
 
         #region Editor Helpers
 
-        private void OnDrawGizmos()
+        /*private void OnDrawGizmos()
         {
             Color gizmoColor = isDepleted ? Color.gray : (isCurrentlyGathering ? Color.green : Color.yellow);
             Gizmos.color = gizmoColor;
@@ -362,12 +411,12 @@ namespace Game.Interaction
 
         private void OnDrawGizmosSelected()
         {
-            string label = resourceItem != null 
-                ? $"{resourceItem.itemName} x{resourcesPerGather}\n{gatherDuration}s gather"
+            string label = resourceDrops != null && resourceDrops.Length > 0 && resourceDrops[0].item != null
+                ? $"{resourceDrops[0].item.itemName} x{resourceDrops[0].amount}\n{gatherDuration}s gather"
                 : "Gathering Node";
             
             UnityEditor.Handles.Label(transform.position + Vector3.up * 2f, label);
-        }
+        }*/
 
         #endregion
     }

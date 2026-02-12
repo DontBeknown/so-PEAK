@@ -47,10 +47,12 @@ namespace Game.Interaction
         private CharacterController characterController;
         private UIServiceProvider uiServiceProvider;
         private float stillTimer = 0f; // Tracks how long player has been standing still
+        private bool isEnabled = true; // Can be disabled during certain actions (like gathering)
 
         // Properties
         public IInteractable NearestInteractable => nearestInteractable;
         public bool HasInteractableInRange => nearestInteractable != null;
+        public bool IsEnabled => isEnabled;
 
         private void Awake()
         {
@@ -83,6 +85,10 @@ namespace Game.Interaction
 
         private void Update()
         {
+            // Skip update if detector is disabled
+            if (!isEnabled)
+                return;
+            
             // Optimize by updating at intervals
             updateTimer += Time.deltaTime;
             if (updateTimer >= updateInterval)
@@ -227,6 +233,55 @@ namespace Game.Interaction
         public void ForceUpdate()
         {
             UpdateNearestInteractable();
+        }
+        
+        /// <summary>
+        /// Disable detection temporarily (e.g., during gathering interactions)
+        /// </summary>
+        public void DisableDetection()
+        {
+            if (!isEnabled) return;
+            
+            isEnabled = false;
+            
+            // Clear current highlight
+            if (nearestInteractable != null)
+            {
+                nearestInteractable.OnHighlighted(false);
+            }
+            
+            // Hide all markers
+            if (enableUIMarkers)
+            {
+                foreach (var kvp in markerMap)
+                {
+                    if (kvp.Value != null)
+                    {
+                        kvp.Value.HideInstant();
+                    }
+                }
+            }
+            
+            // Notify that we lost the interactable
+            if (nearestInteractable != null)
+            {
+                nearestInteractable = null;
+                OnNearestInteractableChanged?.Invoke(null);
+                OnInteractableInRange?.Invoke(false);
+            }
+        }
+        
+        /// <summary>
+        /// Re-enable detection after it was disabled
+        /// </summary>
+        public void EnableDetection()
+        {
+            if (isEnabled) return;
+            
+            isEnabled = true;
+            
+            // Force immediate update to find new nearest interactable
+            ForceUpdate();
         }
         
         private void CreateMarkerForInteractable(IInteractable interactable)

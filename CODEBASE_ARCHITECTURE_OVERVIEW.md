@@ -491,6 +491,10 @@ public class InteractionDetector : MonoBehaviour
     public event Action<IInteractable> OnInteractableInRange;
     public event Action OnNoInteractableInRange;
     
+    // Detection control
+    public void DisableDetection(); // Prevents overlapping prompts
+    public void EnableDetection();
+    
     // Detection
     private void DetectInteractables();
     
@@ -505,21 +509,53 @@ public interface IInteractable
 {
     bool CanInteract { get; }
     string InteractionPrompt { get; }
-    int InteractionPriority { get; }
+    string InteractionVerb { get; }
+    float InteractionPriority { get; }
     void Interact(PlayerControllerRefactored player);
     void OnHighlighted(bool highlighted);
     Transform GetTransform();
 }
 ```
 
+**HoldInteractableBase.cs** (✅ NEW - Template Method Pattern)
+```csharp
+public abstract class HoldInteractableBase : MonoBehaviour, IInteractable
+{
+    // Handles ALL common hold-to-interact logic:
+    // - Progress tracking & UI updates
+    // - Input checking (button held/released)
+    // - Player locking/unlocking
+    // - Interaction detector disable/enable (prevents overlapping prompts)
+    // - Audio playback & coroutine management
+    
+    // Derived classes only implement:
+    protected abstract void OnHoldComplete(); // Custom interaction logic
+    public abstract string InteractionPrompt { get; }
+    public abstract bool CanInteract { get; }
+    
+    // Optional overrides:
+    protected virtual void OnHoldStart() { }
+    protected virtual void OnHoldUpdate(float progress) { }
+    protected virtual void OnHoldCancel(string reason) { }
+}
+```
+
 **Interactables:**
-- `ResourceNode.cs` - Harvestable resources
-- `ItemPickup.cs` - Collectible items
-- Additional interactables in Interactables/ folder
+
+*Hold-to-Interact (using HoldInteractableBase):*
+- `GatheringInteractable.cs` - Resource gathering (berries, ore, herbs)
+- `WaterSourceInteractable.cs` - Canteen refilling
+- `CraftingBenchInteractable.cs` - Example of simple hold interactable (~30 lines)
+
+*Instant Interaction:*
+- `ItemInteractable.cs` - Instant item pickup
+- `AssessmentTerminalInteractable.cs` - Terminal interaction
+- `ResourceCollectorInteractable.cs` - Resource collection
 
 **InteractionPromptUI.cs**
 - Shows interaction prompt
 - Updates based on nearest interactable
+- Progress bar support for hold interactions
 
 **Utilities:**
 - `InteractionAudioManager.cs` - Interaction sounds
@@ -529,10 +565,19 @@ public interface IInteractable
 - Interface-based
 - Priority system
 - Event-driven
+- Template Method pattern for hold interactions
+- DRY principle (no code duplication)
 - Extensible
+
+**Design Patterns:**
+- **Template Method**: HoldInteractableBase defines algorithm, derived classes implement steps
+- **Strategy**: Different interactable types for different behaviors
+- **Observer**: Event-driven detection and prompts
 
 **Dependencies:**
 - Player (PlayerControllerRefactored)
+- Core.DI (ServiceContainer)
+- UI (InteractionPromptUI)
 - Minimal coupling
 
 ---
@@ -795,9 +840,10 @@ GameServiceBootstrapper (Entry Point)
 
 3. **Interaction System**
    - Location: `Interaction/Core/`
-   - Pattern: Interface-based
+   - Pattern: Interface-based, Template Method
    - Quality: Excellent
    - Extensibility: High
+   - DRY: HoldInteractableBase eliminates code duplication
 
 4. **Player Services**
    - Location: `Player/Services/`
@@ -879,10 +925,12 @@ GameServiceBootstrapper (Entry Point)
 2. Command Pattern ✅
 3. Facade Pattern ✅
 4. Adapter Pattern ✅
-5. Service Locator ⚠️ (being replaced with DI)
-6. Singleton ⚠️ (being phased out)
+5. Template Method Pattern ✅ (HoldInteractableBase)
+6. Strategy Pattern ✅ (Consumable effects, interactable types)
 7. Observer/Event Pattern ✅
-8. Strategy Pattern ❌ (needed for consumable effects)
+8. Dependency Injection ✅ (ServiceContainer)
+9. Service Locator ⚠️ (replaced with DI)
+10. Singleton ⚠️ (phased out, using DI)
 
 ### Architectural Principles
 - SOLID Principles (partial implementation)

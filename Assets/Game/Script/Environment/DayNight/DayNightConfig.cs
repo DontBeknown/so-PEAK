@@ -128,17 +128,29 @@ namespace Game.Environment.DayNight
         [Tooltip("Enable fog density changes based on time of day")]
         public bool useFog = true;
         
+        [Tooltip("Fog color during morning")]
+        public Color morningFogColor = new Color(0.8f, 0.85f, 0.9f);
+        
         [Tooltip("Fog density during morning")]
         [Range(0f, 0.1f)]
         public float morningFogDensity = 0.01f;
+        
+        [Tooltip("Fog color during day")]
+        public Color dayFogColor = new Color(0.9f, 0.95f, 1f);
         
         [Tooltip("Fog density during day")]
         [Range(0f, 0.1f)]
         public float dayFogDensity = 0.005f;
         
+        [Tooltip("Fog color during evening")]
+        public Color eveningFogColor = new Color(0.6f, 0.5f, 0.6f);
+        
         [Tooltip("Fog density during evening")]
         [Range(0f, 0.1f)]
         public float eveningFogDensity = 0.015f;
+        
+        [Tooltip("Fog color during night (black for darker atmosphere)")]
+        public Color nightFogColor = Color.black;
         
         [Tooltip("Fog density during night")]
         [Range(0f, 0.1f)]

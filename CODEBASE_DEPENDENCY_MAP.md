@@ -1313,11 +1313,13 @@ TorchBehavior.UpdateBehavior()
 | **ContextMenuUI** | EquipmentManager, PlayerStats, CanteenItem | InventoryUI, EquipmentUI | None | None |
 | **InteractionDetector** | None | PlayerController | OnInteractableInRange, OnNoInteractableInRange | None |
 | **InteractionPromptUI** | InteractionDetector | All IInteractables | None | OnInteractableInRange, OnNoInteractableInRange |
+| **HoldInteractableBase** | ServiceContainer, InteractionDetector, InteractionPromptUI | GatheringInteractable, WaterSourceInteractable, etc. | None | None |
+| **GatheringInteractable** | HoldInteractableBase, InventoryService | InteractionDetector | None | None |
+| **WaterSourceInteractable** | HoldInteractableBase, EquipmentManager, InteractionPromptUI, CanteenItem | InteractionDetector | None | None |
 | **TorchItem** | HeldItemStateManager | EquipmentManager | None | None |
 | **TorchBehavior** | ServiceContainer, PlayerStats, InventoryService, TorchItem | HeldItemBehaviorMgr | None | None |
 | **CanteenItem** | HeldItemStateManager, PlayerStats | EquipmentManager, ContextMenuUI | None | None |
 | **CanteenBehavior** | CanteenItem | HeldItemBehaviorMgr | None | None |
-| **WaterSourceInteractable** | ServiceContainer, EquipmentManager, InteractionPromptUI, CanteenItem | InteractionDetector | None | None |
 | **HeldItemStateManager** | None | TorchItem, CanteenItem | None | None |
 | **DayNightCycleManager** | ServiceContainer, EventBus, DayNightConfig, Light, SkyboxBlender | PlayerStats, Torch system | TimeOfDayChangedEvent, DayCompletedEvent | None |
 | **SkyboxBlender** | Custom/BlendedSkybox shader | DayNightCycleManager | None | None |

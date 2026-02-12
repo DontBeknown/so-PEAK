@@ -125,6 +125,16 @@ namespace Game.Interaction
             isCurrentlyRefilling = true;
             currentRefillProgress = 0f;
             
+            // Disable interaction detector to prevent other prompts
+            if (currentPlayer != null)
+            {
+                var detector = currentPlayer.GetComponent<Game.Interaction.InteractionDetector>();
+                if (detector != null)
+                {
+                    detector.DisableDetection();
+                }
+            }
+            
             // Lock player movement
             if (currentPlayer != null)
             {
@@ -251,6 +261,16 @@ namespace Game.Interaction
             {
                 promptUI.HideProgressBar();
                 promptUI = null;
+            }
+            
+            // Re-enable interaction detector
+            if (currentPlayer != null)
+            {
+                var detector = currentPlayer.GetComponent<Game.Interaction.InteractionDetector>();
+                if (detector != null)
+                {
+                    detector.EnableDetection();
+                }
             }
             
             // Unlock player

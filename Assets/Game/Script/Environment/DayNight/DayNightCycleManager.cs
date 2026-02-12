@@ -248,6 +248,11 @@ namespace Game.Environment.DayNight
             if (config.useFog)
             {
                 RenderSettings.fog = true;
+                RenderSettings.fogColor = Color.Lerp(
+                    RenderSettings.fogColor,
+                    settings.fogColor,
+                    Time.deltaTime * 2f
+                );
                 RenderSettings.fogDensity = Mathf.Lerp(
                     RenderSettings.fogDensity,
                     settings.fogDensity,
@@ -256,7 +261,7 @@ namespace Game.Environment.DayNight
             }
         }
         
-        private (Color lightColor, float intensity, Vector3 rotation, Color ambientColor, float ambientIntensity, float fogDensity) GetLightingSettingsForTime()
+        private (Color lightColor, float intensity, Vector3 rotation, Color ambientColor, float ambientIntensity, Color fogColor, float fogDensity) GetLightingSettingsForTime()
         {
             // Return settings based on current time of day
             switch (_currentTimeOfDay)
@@ -268,6 +273,7 @@ namespace Game.Environment.DayNight
                         config.morningSunRotation,
                         config.morningAmbientColor,
                         config.morningAmbientIntensity,
+                        config.morningFogColor,
                         config.morningFogDensity
                     );
                     
@@ -278,6 +284,7 @@ namespace Game.Environment.DayNight
                         config.daySunRotation,
                         config.dayAmbientColor,
                         config.dayAmbientIntensity,
+                        config.dayFogColor,
                         config.dayFogDensity
                     );
                     
@@ -288,6 +295,7 @@ namespace Game.Environment.DayNight
                         config.eveningSunRotation,
                         config.eveningAmbientColor,
                         config.eveningAmbientIntensity,
+                        config.eveningFogColor,
                         config.eveningFogDensity
                     );
                     
@@ -298,11 +306,12 @@ namespace Game.Environment.DayNight
                         config.nightMoonRotation,
                         config.nightAmbientColor,
                         config.nightAmbientIntensity,
+                        config.nightFogColor,
                         config.nightFogDensity
                     );
                     
                 default:
-                    return (Color.white, 1f, Vector3.zero, Color.gray, 1f, 0.01f);
+                    return (Color.white, 1f, Vector3.zero, Color.gray, 1f, Color.white, 0.01f);
             }
         }
         
