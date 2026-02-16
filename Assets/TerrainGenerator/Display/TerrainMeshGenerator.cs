@@ -53,8 +53,6 @@ public static class PerlinTerrainMeshGenerator
                 vertexIndex++;
             }
         }
-        Debug.Log("Max mesh height: " + maxHeight); // Output max height
-        Debug.Log("Min mesh height: " + minHeight); // Output max height
         return meshData;
 
     }

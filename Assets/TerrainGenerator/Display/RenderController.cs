@@ -1,15 +1,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Threading.Tasks; // Needed for Threading
-using System.Collections.Concurrent; // Needed for the Queue
+using System.Collections.Concurrent;
+using UnityEditor.ShaderGraph.Legacy; // Needed for the Queue
 
 public class RenderController : MonoBehaviour
 {
-    public NoiseTranslator worldGen;
-
+    
     [Header("References")]
     public Transform player;
     public Material mapMaterial;
+    public NoiseTranslator worldGen;
+    public PlayerSpawner spawner;
 
     [Header("Tree Settings")]
     public GameObject treePrefab;
@@ -27,6 +29,8 @@ public class RenderController : MonoBehaviour
     private Color[,] globalColorMap;
     public Color fieldColor;
 
+
+    private bool playerHasSpawned = false;
 
     // NEW: Store the mathematical data for all trees here!
     private Dictionary<Vector2Int, List<TreeInstance>> globalTreeData;
@@ -82,6 +86,7 @@ public class RenderController : MonoBehaviour
                 chunkSize - 1,            // CRITICAL: Pass (chunkSize - 1) so keys match RenderController!
                 treeSpacing
             );
+
 
             // 4. Start Loop
             UpdateVisibleChunks();
@@ -222,5 +227,11 @@ public class RenderController : MonoBehaviour
         }
         // -------------------------------------------
         terrainChunks[coord] = chunkObj;
+
+        if (!playerHasSpawned)
+        {
+            spawner.TeleportToSpawn();
+            playerHasSpawned = true;
+        }
     }
 }

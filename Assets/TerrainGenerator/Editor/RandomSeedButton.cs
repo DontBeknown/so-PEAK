@@ -7,6 +7,9 @@ public class RandomSeedButton : Editor
 {
     public override void OnInspectorGUI()
     {
+
+        DrawDefaultInspector();
+
         RandomSeed randomSeed = (RandomSeed)target;
 
         if (GUILayout.Button("Generate Random Seed"))
