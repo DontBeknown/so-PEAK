@@ -1,0 +1,30 @@
+using System;
+using System.Collections.Generic;
+
+public interface ISaveLoadService
+{
+    // World Management
+    WorldSaveData CreateNewWorld(string worldName, SeedData seedData);
+    bool SaveWorld(WorldSaveData saveData);
+    WorldSaveData LoadWorld(string worldGuid);
+    bool DeleteWorld(string worldGuid);
+    List<SaveMetadata> GetAllWorlds();
+    
+    // Auto-save
+    void EnableAutoSave(float intervalSeconds);
+    void DisableAutoSave();
+    void PerformAutoSave();
+    
+    // Backup
+    bool CreateBackup(string worldGuid);
+    bool RestoreFromBackup(string worldGuid, DateTime backupDate);
+    List<DateTime> GetBackups(string worldGuid);
+    
+    // Validation
+    bool ValidateSaveFile(string worldGuid);
+    
+    // Events
+    event Action<WorldSaveData> OnWorldSaved;
+    event Action<WorldSaveData> OnWorldLoaded;
+    event Action<string> OnWorldDeleted;
+}

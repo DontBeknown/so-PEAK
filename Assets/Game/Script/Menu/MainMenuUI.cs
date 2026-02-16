@@ -17,6 +17,9 @@ namespace Game.Menu
         [SerializeField] private Button playButton;
         [SerializeField] private Button settingsButton;
         [SerializeField] private Button quitButton;
+        
+        [Header("Debug")]
+        [SerializeField] private bool enableDebug = false;
 
         private void Start()
         {
@@ -45,13 +48,13 @@ namespace Game.Menu
 
         private void OnSettingsClicked()
         {
-            Debug.Log("Settings button clicked - TODO: Implement settings menu");
+            if (enableDebug) Debug.Log("Settings button clicked - TODO: Implement settings menu");
             // TODO: Open settings menu
         }
 
         private void OnQuitClicked()
         {
-            Debug.Log("Quit button clicked");
+            if (enableDebug) Debug.Log("Quit button clicked");
             #if UNITY_EDITOR
                 UnityEditor.EditorApplication.isPlaying = false;
             #else
@@ -64,18 +67,19 @@ namespace Game.Menu
             mainMenuPanel.SetActive(true);
             if (worldSelectionUI != null)
             {
-                worldSelectionUI.gameObject.SetActive(false);
+                worldSelectionUI.ShowWorldSelection(false);
             }
         }
 
         private void ShowWorldSelection()
         {
-            mainMenuPanel.SetActive(false);
+
             if (worldSelectionUI != null)
             {
-                worldSelectionUI.gameObject.SetActive(true);
+                worldSelectionUI.ShowWorldSelection(true);
                 worldSelectionUI.RefreshWorldList();
             }
+            mainMenuPanel.SetActive(false);
         }
     }
 }

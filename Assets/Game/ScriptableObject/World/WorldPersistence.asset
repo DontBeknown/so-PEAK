@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8430f5c731bf91f439ec2e0ee4bac4ca, type: 3}
+  m_Name: WorldPersistence
+  m_EditorClassIdentifier: Assembly-CSharp::WorldPersistenceManager
+  currentWorldGuid: 
+  currentWorldName: 
+  currentSeedData:
+    seed1: 
+    seed2: 
+    seed3: 
+  isNewWorld: 0
+  shouldLoadWorld: 0
+  playerStartPosition: {x: 0, y: 10, z: 0}
+  playerStartRotation: {x: 0, y: 0, z: 0, w: 1}

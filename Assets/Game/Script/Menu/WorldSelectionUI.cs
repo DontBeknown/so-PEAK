@@ -1,8 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine.SceneManagement;
+using System.Linq;
+
 namespace Game.Menu
 {
     /// <summary>
@@ -29,15 +32,39 @@ namespace Game.Menu
         [SerializeField] private GameObject deleteModeUI;
         [SerializeField] private Button cancelDeleteButton;
         [SerializeField] private TextMeshProUGUI deleteModeButtonText;
+        
+        [Header("System")]
+        [SerializeField] private WorldPersistenceManager worldPersistence;
+        [SerializeField] private SaveLoadService saveLoadService;
+        [SerializeField] private string gameplaySceneName = "TerrainGenDemo";
+        
+        [Header("Loading")]
+        [SerializeField] private LoadingPanelUI loadingPanel;
+        [SerializeField] private float minLoadingDuration = 1.5f; // Minimum time to show loading screen
+        
+        [Header("Debug")]
+        [SerializeField] private bool enableDebug = false;
 
         private List<WorldSlotUI> worldSlots = new List<WorldSlotUI>();
         private bool isDeleteMode = false;
 
-        // Placeholder for world data - will be replaced with actual save/load system
-        private List<WorldData> worlds = new List<WorldData>();
-
         private void Start()
         {
+            // Validate references
+            if (saveLoadService == null)
+            {
+                saveLoadService = SaveLoadService.Instance;
+                if (saveLoadService == null)
+                {
+                    Debug.LogError("[WorldSelectionUI] SaveLoadService not available!");
+                }
+            }
+            
+            if (loadingPanel == null)
+            {
+                Debug.LogWarning("[WorldSelectionUI] LoadingPanelUI not assigned in Inspector!");
+            }
+            
             // Setup button listeners
             backButton.onClick.AddListener(OnBackClicked);
             createWorldButton.onClick.AddListener(OnCreateWorldClicked);
@@ -48,8 +75,7 @@ namespace Game.Menu
                 cancelDeleteButton.onClick.AddListener(OnCancelDeleteClicked);
             }
 
-            // Initialize with some placeholder worlds for testing
-            InitializePlaceholderWorlds();
+            // Load worlds from save system
             RefreshWorldList();
         }
 
@@ -66,14 +92,6 @@ namespace Game.Menu
             }
         }
 
-        private void InitializePlaceholderWorlds()
-        {
-            // TODO: Replace with actual save/load system
-            worlds.Add(new WorldData("My First World", 12345, "2025-11-26", 120));
-            worlds.Add(new WorldData("Adventure Time", 67890, "2025-11-25", 45));
-            worlds.Add(new WorldData("Mountain Peak", 11111, "2025-11-24", 200));
-        }
-
         public void RefreshWorldList()
         {
             // Clear existing slots
@@ -86,10 +104,26 @@ namespace Game.Menu
             }
             worldSlots.Clear();
 
-            // Create new slots for each world
-            foreach (var worldData in worlds)
+            if (saveLoadService == null)
             {
-                CreateWorldSlot(worldData);
+                saveLoadService = SaveLoadService.Instance;
+                if (saveLoadService == null)
+                {
+                    Debug.LogError("[WorldSelectionUI] SaveLoadService not available!");
+                    return;
+                }
+            }
+
+            // Get all worlds from save system
+            var worldMetadata = saveLoadService.GetAllWorlds();
+            
+            // Sort by last played date (most recent first)
+            worldMetadata = worldMetadata.OrderByDescending(w => w.lastPlayedDate).ToList();
+
+            // Create new slots for each world
+            foreach (var metadata in worldMetadata)
+            {
+                CreateWorldSlot(metadata);
             }
 
             // Reapply delete mode to all slots if active
@@ -108,21 +142,21 @@ namespace Game.Menu
             UpdateDeleteModeUI();
         }
 
-        private void CreateWorldSlot(WorldData worldData)
+        private void CreateWorldSlot(SaveMetadata metadata)
         {
             GameObject slotObj = Instantiate(worldSlotPrefab, worldListContainer);
             WorldSlotUI slot = slotObj.GetComponent<WorldSlotUI>();
             
             if (slot != null)
             {
-                slot.Initialize(worldData, OnWorldSelected, OnWorldDeleted);
+                slot.Initialize(metadata, OnWorldSelected, OnWorldDeleted);
                 worldSlots.Add(slot);
             }
         }
 
         private void OnBackClicked()
         {
-            Debug.Log("Back button clicked - Returning to main menu");
+            if (enableDebug) Debug.Log("Back button clicked - Returning to main menu");
             
             // Exit delete mode if active
             if (isDeleteMode)
@@ -137,12 +171,12 @@ namespace Game.Menu
                 mainMenu.ShowMainMenu();
             }
             
-            gameObject.SetActive(false);
+            worldSelectionPanel.SetActive(false);
         }
 
         private void OnCreateWorldClicked()
         {
-            Debug.Log("Create World button clicked");
+            if (enableDebug) Debug.Log("Create World button clicked");
             ShowWorldCreation();
         }
 
@@ -170,7 +204,7 @@ namespace Game.Menu
                 }
             }
 
-            Debug.Log($"Delete mode: {(isDeleteMode ? "ENABLED" : "DISABLED")}");
+            if (enableDebug) Debug.Log($"Delete mode: {(isDeleteMode ? "ENABLED" : "DISABLED")}");
         }
 
         private void UpdateDeleteModeUI()
@@ -187,7 +221,7 @@ namespace Game.Menu
             }
         }
 
-        private void OnWorldSelected(WorldData worldData)
+        private void OnWorldSelected(SaveMetadata metadata)
         {
             if (isDeleteMode)
             {
@@ -195,20 +229,99 @@ namespace Game.Menu
                 return;
             }
 
-            //Debug.Log($"World selected: {worldData.WorldName}");
-            // TODO: Load the world and switch to game scene
-            LoadWorld(worldData);
+            if (saveLoadService == null)
+            {
+                Debug.LogError("[WorldSelectionUI] Cannot load world - SaveLoadService not available");
+                return;
+            }
+
+            // Show loading panel
+            if (loadingPanel != null)
+            {
+                loadingPanel.Show();
+            }
+
+            // Hide world selection panel after loading panel is visible
+            worldSelectionPanel.SetActive(false);
+
+            if (enableDebug) Debug.Log($"Loading world: {metadata.worldName} (GUID: {metadata.worldGuid})");
+            
+            // Start loading with loading panel
+            StartCoroutine(LoadWorldWithLoadingScreen(metadata));
         }
 
-        private void OnWorldDeleted(WorldData worldData)
+        private IEnumerator LoadWorldWithLoadingScreen(SaveMetadata metadata)
         {
-            Debug.Log($"Deleting world: {worldData.WorldName}");
-            // TODO: Implement actual world deletion from save system
-            worlds.Remove(worldData);
+            
+            float startTime = Time.time;
+
+            // Load the world data
+            loadingPanel?.SetProgress(0.3f);
+            loadingPanel?.SetLoadingMessage("Loading world data...");
+            
+            WorldSaveData worldData = saveLoadService.LoadWorld(metadata.worldGuid);
+            
+            if (worldData == null)
+            {
+                if (enableDebug) Debug.LogError($"Failed to load world: {metadata.worldName}");
+                if (loadingPanel != null)
+                {
+                    loadingPanel.Hide();
+                }
+                yield break;
+            }
+            
+            yield return new WaitForSeconds(0.3f);
+            loadingPanel?.SetProgress(0.6f);
+            loadingPanel?.SetLoadingMessage("Preparing environment...");
+            
+            // Prepare world persistence for scene transition
+            if (worldPersistence != null)
+            {
+                worldPersistence.PrepareLoadWorld(worldData);
+            }
+            else
+            {
+                Debug.LogError("[WorldSelectionUI] WorldPersistenceManager not assigned!");
+            }
+
+            yield return new WaitForSeconds(0.3f);
+            loadingPanel?.SetProgress(0.9f);
+
+            // Ensure minimum loading duration for smooth UX
+            float elapsed = Time.time - startTime;
+            if (elapsed < minLoadingDuration)
+            {
+                yield return new WaitForSeconds(minLoadingDuration - elapsed);
+            }
+
+            loadingPanel?.SetProgress(1f);
+            loadingPanel?.SetLoadingMessage("Loading scene...");
+            
+            yield return new WaitForSeconds(0.2f);
+
+            // Load gameplay scene
+            SceneManager.LoadScene(gameplaySceneName);
+        }
+
+        private void OnWorldDeleted(SaveMetadata metadata)
+        {
+            if (saveLoadService == null)
+            {
+                Debug.LogError("[WorldSelectionUI] Cannot delete world - SaveLoadService not available");
+                return;
+            }
+            
+            if (enableDebug) Debug.Log($"Deleting world: {metadata.worldName}");
+            
+            // Delete through save system
+            saveLoadService.DeleteWorld(metadata.worldGuid);
+            
+            // Refresh the list
             RefreshWorldList();
 
             // Exit delete mode if no worlds left
-            if (worlds.Count == 0)
+            if (worldSlots.Count == 0)
             {
                 SetDeleteMode(false);
             }
@@ -223,29 +336,19 @@ namespace Game.Menu
             }
         }
 
-        public void ShowWorldSelection()
+        public void ShowWorldSelection(bool isShow = true)
         {
-            worldSelectionPanel.SetActive(true);
-            if (worldCreateUI != null)
+            worldSelectionPanel.SetActive(isShow);
+            if (isShow)
             {
-                worldCreateUI.gameObject.SetActive(false);
+                RefreshWorldList();
             }
-            RefreshWorldList();
         }
 
-        public void AddWorld(WorldData worldData)
+        public void AddWorld(WorldSaveData worldData)
         {
-            worlds.Add(worldData);
+            // Just refresh the list - save system handles persistence
             RefreshWorldList();
-        }
-
-        private void LoadWorld(WorldData worldData)
-        {
-            // TODO: Implement actual world loading
-            Debug.Log($"Loading world: {worldData.WorldName} (Seed: {worldData.Seed})");
-            
-            // Placeholder: Load game scene
-            SceneManager.LoadScene("TerrainGenDemo");
         }
     }
 }

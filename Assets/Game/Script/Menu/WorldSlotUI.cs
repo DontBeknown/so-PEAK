@@ -27,15 +27,18 @@ namespace Game.Menu
         [SerializeField] private Color normalColor = new Color(0.8f, 0.8f, 0.8f, 1f);
         [SerializeField] private Color hoverColor = new Color(1f, 1f, 1f, 1f);
         [SerializeField] private Color deleteColor = new Color(1f, 0.5f, 0.5f, 1f);
+        
+        [Header("Debug")]
+        [SerializeField] private bool enableDebug = false;
 
-        private WorldData worldData;
-        private Action<WorldData> onWorldSelected;
-        private Action<WorldData> onWorldDeleted;
+        private SaveMetadata worldMetadata;
+        private Action<SaveMetadata> onWorldSelected;
+        private Action<SaveMetadata> onWorldDeleted;
         private bool isDeleteMode = false;
 
-        public void Initialize(WorldData data, Action<WorldData> onSelect, Action<WorldData> onDelete)
+        public void Initialize(SaveMetadata metadata, Action<SaveMetadata> onSelect, Action<SaveMetadata> onDelete)
         {
-            worldData = data;
+            worldMetadata = metadata;
             onWorldSelected = onSelect;
             onWorldDeleted = onDelete;
 
@@ -69,32 +72,34 @@ namespace Game.Menu
 
         private void UpdateUI()
         {
-            if (worldData == null)
+            if (worldMetadata == null)
                 return;
 
             // Update world name
             if (worldNameText != null)
             {
-                worldNameText.text = worldData.WorldName;
+                worldNameText.text = worldMetadata.worldName;
             }
 
             // Update world info (seed, last played, play time)
             if (seedText != null)
             {
-                seedText.text = $"Seed: {worldData.Seed}";
+                // Display seed in 3-part format (seed1-seed2-seed3)
+                string seedDisplay = $"{worldMetadata.seed1}-{worldMetadata.seed2}-{worldMetadata.seed3}";
+                seedText.text = $"Seed: {seedDisplay}";
             }
 
             if (lastPlayedText != null)
             {
-                lastPlayedText.text = $"Last Played: {worldData.LastPlayed}";
+                lastPlayedText.text = $"Last Played: {worldMetadata.lastPlayedDate:yyyy-MM-dd HH:mm}";
             }
 
             if (playTimeText != null)
             {
-                if (worldData.PlayTimeMinutes > 0)
+                if (worldMetadata.totalPlayTime > 0)
                 {
-                    int hours = worldData.PlayTimeMinutes / 60;
-                    int minutes = worldData.PlayTimeMinutes % 60;
+                    int hours = (int)(worldMetadata.totalPlayTime / 3600f);
+                    int minutes = (int)((worldMetadata.totalPlayTime % 3600f) / 60f);
                     playTimeText.text = $"Play Time: {hours}h {minutes}m";
                     playTimeText.gameObject.SetActive(true);
                 }
@@ -145,8 +150,8 @@ namespace Game.Menu
                 return;
             }
 
-            //Debug.Log($"World slot clicked: {worldData.WorldName}");
-            onWorldSelected?.Invoke(worldData);
+            if (enableDebug) Debug.Log($"World slot clicked: {worldMetadata.worldName}");
+            onWorldSelected?.Invoke(worldMetadata);
         }
 
         private void OnDeleteClicked()
@@ -157,10 +162,10 @@ namespace Game.Menu
                 return;
             }
 
-            Debug.Log($"Delete button clicked for: {worldData.WorldName}");
+            if (enableDebug) Debug.Log($"Delete button clicked for: {worldMetadata.worldName}");
             
             // Optional: Add confirmation dialog here
-            onWorldDeleted?.Invoke(worldData);
+            onWorldDeleted?.Invoke(worldMetadata);
         }
 
         // Mouse hover effects - implements IPointerEnterHandler

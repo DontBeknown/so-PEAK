@@ -40,7 +40,7 @@ namespace Game.Core.DI
             
             if (_services.ContainsKey(type))
             {
-                Debug.LogWarning($"[ServiceContainer] Service {type.Name} is already registered. Overwriting.");
+                //Debug.LogWarning($"[ServiceContainer] Service {type.Name} is already registered. Overwriting.");
             }
             
             _services[type] = instance;

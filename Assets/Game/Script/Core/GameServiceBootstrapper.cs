@@ -239,6 +239,17 @@ namespace Game.Core
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] PlayerStatsTrackerService found and registered");
             }
+            
+            // Find and register SaveLoadService
+            var saveLoadService = FindFirstObjectByType<SaveLoadService>();
+            if (saveLoadService != null)
+            {
+                container.Register<ISaveLoadService>(saveLoadService);
+                container.Register(saveLoadService);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] SaveLoadService found and registered");
+            }
+
         }
         
         private void RegisterManualServices()

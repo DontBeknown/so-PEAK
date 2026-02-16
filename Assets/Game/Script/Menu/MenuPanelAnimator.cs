@@ -1,19 +1,21 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
+using DG.Tweening;
 
 namespace Game.Menu
 {
     /// <summary>
     /// Helper class for menu UI transitions and animations
     /// Add this component to panels that need fade or scale animations
+    /// Uses DOTween for smooth animations
     /// </summary>
     [RequireComponent(typeof(CanvasGroup))]
     public class MenuPanelAnimator : MonoBehaviour
     {
         [Header("Animation Settings")]
-        [SerializeField] private float fadeSpeed = 5f;
-        //[SerializeField] private float scaleSpeed = 5f;
+        [SerializeField] private float animationDuration = 0.3f;
+        [SerializeField] private Ease fadeEase = Ease.OutQuad;
+        [SerializeField] private Ease scaleEase = Ease.OutBack;
         [SerializeField] private bool fadeOnEnable = true;
         [SerializeField] private bool scaleOnEnable = false;
 
@@ -23,7 +25,7 @@ namespace Game.Menu
 
         private CanvasGroup canvasGroup;
         private RectTransform rectTransform;
-        private Coroutine currentAnimation;
+        private Sequence currentAnimation;
 
         private void Awake()
         {
@@ -39,114 +41,92 @@ namespace Game.Menu
             }
         }
 
+        private void OnDisable()
+        {
+            // Kill any active animations when disabled
+            if (currentAnimation != null && currentAnimation.IsActive())
+            {
+                currentAnimation.Kill();
+                currentAnimation = null;
+            }
+        }
+
         public void PlayShowAnimation()
         {
-            if (currentAnimation != null)
+            // Kill any existing animation
+            if (currentAnimation != null && currentAnimation.IsActive())
             {
-                StopCoroutine(currentAnimation);
+                currentAnimation.Kill();
             }
 
-            currentAnimation = StartCoroutine(ShowAnimation());
+            // Initialize starting values
+            if (fadeOnEnable)
+            {
+                canvasGroup.alpha = 0f;
+            }
+
+            if (scaleOnEnable)
+            {
+                rectTransform.localScale = startScale;
+            }
+
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+
+            // Create animation sequence
+            currentAnimation = DOTween.Sequence();
+
+            if (fadeOnEnable)
+            {
+                currentAnimation.Join(canvasGroup.DOFade(1f, animationDuration).SetEase(fadeEase));
+            }
+
+            if (scaleOnEnable)
+            {
+                currentAnimation.Join(rectTransform.DOScale(targetScale, animationDuration).SetEase(scaleEase));
+            }
+
+            currentAnimation.OnComplete(() =>
+            {
+                canvasGroup.interactable = true;
+                canvasGroup.blocksRaycasts = true;
+                currentAnimation = null;
+            });
+
+            currentAnimation.SetLink(gameObject);
         }
 
         public void PlayHideAnimation(System.Action onComplete = null)
         {
-            if (currentAnimation != null)
+            // Kill any existing animation
+            if (currentAnimation != null && currentAnimation.IsActive())
             {
-                StopCoroutine(currentAnimation);
-            }
-
-            currentAnimation = StartCoroutine(HideAnimation(onComplete));
-        }
-
-        private IEnumerator ShowAnimation()
-        {
-            // Initialize
-            if (fadeOnEnable)
-            {
-                canvasGroup.alpha = 0f;
-            }
-
-            if (scaleOnEnable)
-            {
-                rectTransform.localScale = startScale;
+                currentAnimation.Kill();
             }
 
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
 
-            // Animate
-            float progress = 0f;
-            while (progress < 1f)
-            {
-                progress += Time.deltaTime * fadeSpeed;
+            // Create animation sequence
+            currentAnimation = DOTween.Sequence();
 
-                if (fadeOnEnable)
-                {
-                    canvasGroup.alpha = Mathf.Lerp(0f, 1f, progress);
-                }
-
-                if (scaleOnEnable)
-                {
-                    rectTransform.localScale = Vector3.Lerp(startScale, targetScale, progress);
-                }
-
-                yield return null;
-            }
-
-            // Finalize
             if (fadeOnEnable)
             {
-                canvasGroup.alpha = 1f;
+                currentAnimation.Join(canvasGroup.DOFade(0f, animationDuration).SetEase(fadeEase));
             }
 
             if (scaleOnEnable)
             {
-                rectTransform.localScale = targetScale;
+                currentAnimation.Join(rectTransform.DOScale(startScale, animationDuration).SetEase(scaleEase));
             }
 
-            canvasGroup.interactable = true;
-            canvasGroup.blocksRaycasts = true;
-
-            currentAnimation = null;
-        }
-
-        private IEnumerator HideAnimation(System.Action onComplete)
-        {
-            canvasGroup.interactable = false;
-            canvasGroup.blocksRaycasts = false;
-
-            float progress = 0f;
-            while (progress < 1f)
+            currentAnimation.OnComplete(() =>
             {
-                progress += Time.deltaTime * fadeSpeed;
+                currentAnimation = null;
+                onComplete?.Invoke();
+            });
 
-                if (fadeOnEnable)
-                {
-                    canvasGroup.alpha = Mathf.Lerp(1f, 0f, progress);
-                }
-
-                if (scaleOnEnable)
-                {
-                    rectTransform.localScale = Vector3.Lerp(targetScale, startScale, progress);
-                }
-
-                yield return null;
-            }
-
-            // Finalize
-            if (fadeOnEnable)
-            {
-                canvasGroup.alpha = 0f;
-            }
-
-            if (scaleOnEnable)
-            {
-                rectTransform.localScale = startScale;
-            }
-
-            currentAnimation = null;
-            onComplete?.Invoke();
+            currentAnimation.SetLink(gameObject);
         }
 
         /// <summary>
@@ -154,9 +134,9 @@ namespace Game.Menu
         /// </summary>
         public void Show()
         {
-            if (currentAnimation != null)
+            if (currentAnimation != null && currentAnimation.IsActive())
             {
-                StopCoroutine(currentAnimation);
+                currentAnimation.Kill();
                 currentAnimation = null;
             }
 
@@ -172,9 +152,9 @@ namespace Game.Menu
         /// </summary>
         public void Hide()
         {
-            if (currentAnimation != null)
+            if (currentAnimation != null && currentAnimation.IsActive())
             {
-                StopCoroutine(currentAnimation);
+                currentAnimation.Kill();
                 currentAnimation = null;
             }
 
