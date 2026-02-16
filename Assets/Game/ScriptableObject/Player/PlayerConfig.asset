@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8682bdef8a18cb749a33588ac6e4d295, type: 3}
   m_Name: PlayerConfig
   m_EditorClassIdentifier: Assembly-CSharp::PlayerConfig
-  baseWalkSpeed: 10
+  baseWalkSpeed: 5
   baseClimbSpeed: 2
   jumpForce: 5
   rotationSmoothness: 10
@@ -45,8 +45,8 @@ MonoBehaviour:
   fatigueStaminaPenaltyThreshold: 50
   fatigueSpeedPenaltyThreshold: 70
   hungerDrainPerSecond: 0.2
-  hungerHurtThreshold: 30
+  hungerHurtThreshold: 10
   starvationDPS: 1
   thirstDrainPerSecond: 0.35
-  thirstHurtThreshold: 40
+  thirstHurtThreshold: 10
   dehydrationDPS: 2
