@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Game.Menu;
+using UnityEngine.SceneManagement;
+using UnityEditor.SceneManagement;
 
 public class SaveSystemEditorWindow : EditorWindow
 {
@@ -254,6 +256,14 @@ public class SaveSystemEditorWindow : EditorWindow
         EditorGUILayout.LabelField(world.worldName, EditorStyles.boldLabel);
         GUILayout.FlexibleSpace();
         
+        // Load button (only enabled in Play mode)
+        EditorGUI.BeginDisabledGroup(!EditorApplication.isPlaying);
+        if (GUILayout.Button("Load", GUILayout.Width(60)))
+        {
+            LoadWorldInEditor(world);
+        }
+        EditorGUI.EndDisabledGroup();
+        
         if (GUILayout.Button("Edit", GUILayout.Width(60)))
         {
             EditWorld(world);
@@ -344,6 +354,79 @@ public class SaveSystemEditorWindow : EditorWindow
         showCreateWorld = false;
         
         // Debug.Log($"Created world: {newWorldName}");
+    }
+    
+    private void LoadWorldInEditor(SaveMetadata world)
+    {
+        // Validate we're in Play mode
+        if (!EditorApplication.isPlaying)
+        {
+            EditorUtility.DisplayDialog("Error", 
+                "Can only load worlds in Play mode! Enter Play mode first.", 
+                "OK");
+            return;
+        }
+        
+        // Get SaveLoadService
+        if (saveLoadService == null)
+        {
+            saveLoadService = FindFirstObjectByType<SaveLoadService>();
+        }
+        
+        if (saveLoadService == null)
+        {
+            EditorUtility.DisplayDialog("Error", 
+                "SaveLoadService not found in scene! Make sure the scene has SaveLoadService.", 
+                "OK");
+            return;
+        }
+        
+        // Load world data into SaveLoadService (this sets currentWorldSave)
+        WorldSaveData saveData = saveLoadService.LoadWorld(world.worldGuid);
+        
+        if (saveData == null)
+        {
+            EditorUtility.DisplayDialog("Error", 
+                $"Failed to load world '{world.worldName}'. Check console for details.", 
+                "OK");
+            return;
+        }
+        
+        // Load WorldPersistenceManager asset
+        const string worldPersistencePath = "Assets/Game/ScriptableObject/World/WorldPersistence.asset";
+        WorldPersistenceManager worldPersistence = AssetDatabase.LoadAssetAtPath<WorldPersistenceManager>(worldPersistencePath);
+        
+        if (worldPersistence == null)
+        {
+            EditorUtility.DisplayDialog("Error", 
+                $"WorldPersistenceManager asset not found at path:\n{worldPersistencePath}\n\nPlease create it or update the path.", 
+                "OK");
+            return;
+        }
+        
+        // Prepare world persistence for loading
+        worldPersistence.PrepareLoadWorld(saveData);
+        
+        // Mark asset as dirty and save
+        EditorUtility.SetDirty(worldPersistence);
+        AssetDatabase.SaveAssets();
+        
+        Debug.Log($"[SaveSystemEditor] Loaded world '{world.worldName}' into SaveLoadService and updated WorldPersistenceManager");
+        
+        // Get current scene
+        Scene currentScene = SceneManager.GetActiveScene();
+        
+        // Confirm before reloading
+        if (EditorUtility.DisplayDialog("Reload Scene", 
+            $"World '{world.worldName}' loaded successfully!\n\nReload scene '{currentScene.name}' to initialize the world?\n\n" +
+            "Warning: Any unsaved changes in the current scene will be lost.", 
+            "Reload Scene", "Cancel"))
+        {
+            // Reload the current scene
+            EditorSceneManager.LoadScene(currentScene.path, LoadSceneMode.Single);
+            
+            Debug.Log($"[SaveSystemEditor] Scene '{currentScene.name}' reloaded. GameplaySceneInitializer will now initialize the loaded world.");
+        }
     }
     
     private void EditWorld(SaveMetadata world)

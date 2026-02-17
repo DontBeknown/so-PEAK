@@ -10,6 +10,12 @@ public class PlayerSpawner : MonoBehaviour
     public Transform playerTransform;
 
     [SerializeField] private bool loadFromSave = true;
+    
+    [Header("Raycast Settings")]
+    [SerializeField] private float raycastHeight = 100f; // Height above position to start raycast
+    [SerializeField] private float raycastDistance = 200f; // Max distance to raycast down
+    [SerializeField] private LayerMask groundLayers = -1; // Layers to check for ground (default: everything)
+    
     public void TeleportToSpawn()
     {
         if (playerTransform == null)
@@ -28,8 +34,24 @@ public class PlayerSpawner : MonoBehaviour
         if(!SaveLoadService.Instance.IsNewWorld() && loadFromSave)
         {
            WorldSaveData saveData = SaveLoadService.Instance.CurrentWorldSave;
-           targetSpawnPosition = new Vector3(saveData.playerData.position[0], saveData.playerData.position[1] + 10, saveData.playerData.position[2]);
-           Debug.Log($"Loaded player position from save: {targetSpawnPosition}");
+           Vector3 savedXZ = new Vector3(saveData.playerData.position[0], 0f, saveData.playerData.position[2]);
+           
+           // Raycast down from above the saved position to find ground
+           Vector3 raycastStart = new Vector3(savedXZ.x, saveData.playerData.position[1] + raycastHeight, savedXZ.z);
+           RaycastHit hit;
+           
+           if (Physics.Raycast(raycastStart, Vector3.down, out hit, raycastDistance, groundLayers))
+           {
+               // Found ground - use hit point Y position
+               targetSpawnPosition = new Vector3(savedXZ.x, hit.point.y, savedXZ.z);
+               Debug.Log($"Loaded player position from save with raycast: {targetSpawnPosition} (hit: {hit.collider.name})");
+           }
+           else
+           {
+               // No ground found - use default Y position with saved XZ
+               targetSpawnPosition = new Vector3(savedXZ.x, targetSpawnPosition.y, savedXZ.z);
+               Debug.LogWarning($"Raycast found no ground at saved position. Using default Y: {targetSpawnPosition}");
+           }
         }
         else
         {

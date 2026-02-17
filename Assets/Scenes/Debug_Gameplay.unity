@@ -2686,8 +2686,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::VolumeBlurController
   hungerCriticalThreshold: 30
   thirstCriticalThreshold: 30
-  hungerSevereThreshold: 10
-  thirstSevereThreshold: 10
+  hungerSevereThreshold: 20
+  thirstSevereThreshold: 20
   maxBlurIntensity: 1
   useWorstStat: 1
   fadeInDuration: 0.67
