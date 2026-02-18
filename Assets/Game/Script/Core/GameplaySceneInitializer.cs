@@ -12,9 +12,13 @@ public class GameplaySceneInitializer : MonoBehaviour
     
     [Header("Debug")]
     [SerializeField] private bool enableDebug = false;
-    
+    private void Awake()
+    {
+       //Debug.Log($"[GameplaySceneInitializer] Awake called.");
+    }
     private void Start()
     {
+        //Debug.Log($"[GameplaySceneInitializer] Start called.");
         // Get save load service (from Inspector or persisted instance)
         if (saveLoadService == null)
         {

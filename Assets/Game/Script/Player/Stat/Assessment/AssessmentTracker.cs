@@ -108,7 +108,7 @@ namespace Game.Player.Stat.Assessment
         /// </summary>
         private void OnDrawGizmos()
         {
-            if (statsTracker == null)
+            /*if (statsTracker == null)
                 return;
             
             var pathTracker = statsTracker.GetPathTracker();
@@ -141,7 +141,7 @@ namespace Game.Player.Stat.Assessment
             {
                 Gizmos.color = Color.green;
                 Gizmos.DrawWireSphere(risk.location, 0.7f);
-            }
+            }*/
         }
 #endif
     }

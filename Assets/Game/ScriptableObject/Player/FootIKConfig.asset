@@ -16,7 +16,7 @@ MonoBehaviour:
   rotationWeight: 1
   groundLayer:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 384
   raycastDistance: 1.5
   raycastUpOffset: 1
   footOffset: 0.05
@@ -27,7 +27,7 @@ MonoBehaviour:
   climbingFootReachDistance: 0
   climbingFootOffset: 0.08
   enablePelvisAdjustment: 1
-  pelvisUpDownSpeed: 5
+  pelvisUpDownSpeed: 15
   pelvisOffset: 0.1
   maxPelvisAdjustment: 0.5
   smoothSpeed: 10

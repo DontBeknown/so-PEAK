@@ -135,6 +135,10 @@ namespace Game.Player
 
         private void UpdateState()
         {
+            // Skip if controller is disabled
+            if (_model?.Controller != null && !_model.Controller.enabled)
+                return;
+
             if (_currentState != null && _inputHandler != null)
             {
                 _currentState.FixedUpdate(_model, _inputHandler.MoveInput);

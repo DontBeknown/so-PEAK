@@ -28,6 +28,9 @@ public class RenderController : MonoBehaviour
     private Color[,] globalColorMap;
     public Color fieldColor;
 
+    [Header("Climbable")]
+    [SerializeField] private int climbableLayer;
+
     // --- SEEDS ---
     private int globalWorldSeed;
     public int seed1;
@@ -213,6 +216,8 @@ public class RenderController : MonoBehaviour
         var mf = chunkObj.AddComponent<MeshFilter>();
         var mr = chunkObj.AddComponent<MeshRenderer>();
         var mc = chunkObj.AddComponent<MeshCollider>();
+
+        chunkObj.layer = climbableLayer;
 
         Mesh finalMesh = meshData.CreateMesh();
         mf.mesh = finalMesh;

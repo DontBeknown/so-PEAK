@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8430f5c731bf91f439ec2e0ee4bac4ca, type: 3}
   m_Name: WorldPersistence
   m_EditorClassIdentifier: Assembly-CSharp::WorldPersistenceManager
-  currentWorldGuid: 3efc5f67-4e52-40c5-abe8-34d8ee504b1b
-  currentWorldName: Hello 1
+  currentWorldGuid: 9d5df6d9-69ff-4fba-9c28-ba86c6c89272
+  currentWorldName: Hello World 2
   currentSeedData:
-    seed1: 45088003
-    seed2: 46352278
-    seed3: 54527191
+    seed1: 91904011
+    seed2: 39504818
+    seed3: 65520314
   isNewWorld: 0
   shouldLoadWorld: 1
-  playerStartPosition: {x: 266.1857, y: 259.63788, z: 205.66832}
-  playerStartRotation: {x: 0, y: -0.048086017, z: 0, w: 0.99884325}
+  playerStartPosition: {x: 304.3, y: 167.87613, z: 145.85242}
+  playerStartRotation: {x: 0, y: -0.5503477, z: 0, w: 0.8349356}
