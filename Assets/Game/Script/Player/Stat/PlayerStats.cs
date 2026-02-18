@@ -29,14 +29,6 @@ public class PlayerStats : MonoBehaviour
 
     private void Awake()
     {
-        // Auto-assign equipment manager if not set
-        equipmentManager ??= GetComponent<EquipmentManager>();
-        
-        // Initialize stat modifier calculator
-        if (equipmentManager != null)
-        {
-            statModifierCalculator = new StatModifierApplicator(equipmentManager);
-        }
         
         health ??= new HealthStat();
         hunger ??= new HungerStat();
@@ -57,6 +49,18 @@ public class PlayerStats : MonoBehaviour
         health.OnDamaged += (amount) => OnHealthDamaged?.Invoke(amount);
         stamina.OnDrained += (amount) => OnStaminaDrained?.Invoke(amount);
         fatigue.OnChanged += (c, m) => OnFatigueChanged?.Invoke(c);
+    }
+
+    private void Start()
+    {
+        // Auto-assign equipment manager if not set
+        equipmentManager ??= GetComponent<EquipmentManager>();
+        
+        // Initialize stat modifier calculator
+        if (equipmentManager != null)
+        {
+            statModifierCalculator = new StatModifierApplicator(equipmentManager);
+        }
     }
 
     private void Update()
