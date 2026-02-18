@@ -13,6 +13,7 @@ public static class RoadCarver
 
         public void GenerateWalkableCurve(float startHeight, float endHeight, float tierLength)
         {
+
             p0 = startHeight;
             p2 = endHeight;
 
@@ -50,7 +51,7 @@ public static class RoadCarver
 
 
 
-    public static void CarveRoad(float[,] depthMap, float[,] roadRidge, List<List<Vector2Int>> allMountainPeakPoints, float maxHeight, AnimationCurve roadHeightCurve)
+    public static void CarveRoad(float[,] depthMap, float[,] roadRidge, List<List<Vector2Int>> allMountainPeakPoints, float maxHeight, AnimationCurve roadHeightCurve, int seed)
     {
         Vector2Int[] repPeaks = new Vector2Int[allMountainPeakPoints.Count];
         float[] peakHeights = new float[allMountainPeakPoints.Count];
@@ -99,7 +100,7 @@ public static class RoadCarver
             int tierCount = Mathf.CeilToInt(maxDist / ringWidth) + 1;
 
             // 2. Init Dartboard logic
-            RoadCurveProfile[,] dartboard = InitializeDartboard(peakHeights[i], tierCount, ringWidth);
+            RoadCurveProfile[,] dartboard = InitializeDartboard(peakHeights[i], tierCount, ringWidth, seed);
 
             // 3. Generate the height map for this mountain
             float[,] mountainRoadMap = GenerateHeightMapFromDartboard(dartboard, repPeaks[i], mapWidth, mapLength, ringWidth);
@@ -190,8 +191,10 @@ public static class RoadCarver
     }
 
     // --- 5. INITIALIZE DARTBOARD ---
-    private static RoadCurveProfile[,] InitializeDartboard(float peakHeight, int tierCount, float ringWidth)
+    private static RoadCurveProfile[,] InitializeDartboard(float peakHeight, int tierCount, float ringWidth, int seed)
     {
+        UnityEngine.Random.InitState(seed);
+
         RoadCurveProfile[,] sectors = new RoadCurveProfile[8, tierCount];
 
         for (int s = 0; s < 8; s++)

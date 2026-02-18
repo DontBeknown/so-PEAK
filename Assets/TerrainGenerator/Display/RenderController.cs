@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Threading.Tasks; // Needed for Threading
 using System.Collections.Concurrent;
-using UnityEditor.ShaderGraph.Legacy; // Needed for the Queue
 
 public class RenderController : MonoBehaviour
 {
@@ -29,6 +28,12 @@ public class RenderController : MonoBehaviour
     private Color[,] globalColorMap;
     public Color fieldColor;
 
+    // --- SEEDS ---
+    private int globalWorldSeed;
+    public int seed1;
+    public int seed2;
+    public int seed3;
+
 
     private bool playerHasSpawned = false;
 
@@ -51,12 +56,20 @@ public class RenderController : MonoBehaviour
 
     void Start()
     {
+        Debug.LogError("[RenderController] Start Func");
+
+
+        //load seed logic here
+        LoadSeed();
+
+
         if (worldGen == null) worldGen = GetComponent<NoiseTranslator>();
 
         if (worldGen != null)
         {
             // 1. Generate Data (Matches your old function name)
-            worldGen.TerrainDrawing();
+            //passing seed here
+            worldGen.TerrainDrawing(seed1);
 
             // 2. Grab References (Matches your old variable names)
             globalHeightMap = worldGen.completeMap;
@@ -232,6 +245,60 @@ public class RenderController : MonoBehaviour
         {
             spawner.TeleportToSpawn();
             playerHasSpawned = true;
+        }
+    }
+
+    private void LoadSeed()
+    {
+        var saveService = SaveLoadService.Instance;
+
+        if (saveService == null)
+        {
+            Debug.LogError("[RenderController] SaveLoadService not found!");
+            return;
+        }
+
+        // Get current world save data
+        WorldSaveData currentWorld = saveService.CurrentWorldSave;
+
+        if (currentWorld == null)
+        {
+            Debug.LogError("[RenderController] No world is currently loaded!");
+            return;
+        }
+
+        // Access your friend's string seed data
+        SeedData seedData = currentWorld.seedData;
+
+        // --- THE CONVERSION HAPPENS HERE ---
+        // We immediately turn their strings into your rock-solid integers.
+        seed1 = GetDeterministicHashCode(seedData.seed1);
+        seed2 = GetDeterministicHashCode(seedData.seed2);
+        seed3 = GetDeterministicHashCode(seedData.seed3);
+
+        Debug.LogError("[RenderController] Load Complete!");
+
+    }
+
+    /////// Hash for turning string to text, we use this instead of unity built it because the resetting issue.
+    private int GetDeterministicHashCode(string str)
+    {
+        if (string.IsNullOrEmpty(str)) return 0; // Failsafe for empty seeds
+
+        unchecked
+        {
+            int hash1 = 5381;
+            int hash2 = hash1;
+
+            for (int i = 0; i < str.Length && str[i] != '\0'; i += 2)
+            {
+                hash1 = ((hash1 << 5) + hash1) ^ str[i];
+                if (i == str.Length - 1 || str[i + 1] == '\0')
+                    break;
+                hash2 = ((hash2 << 5) + hash2) ^ str[i + 1];
+            }
+
+            return hash1 + (hash2 * 1566083941);
         }
     }
 }

@@ -17,17 +17,18 @@ public class MapGenerator : MonoBehaviour
     public Vector2 offset;
 
     public bool usePowerMode = false;
-    public bool autoRandomSeed = false;
+    public bool useRandomSeed = false;
     public bool ridgesNoise = false;
     public bool autoUpdate;
 
     public float[,] noiseMap;
 
-    public void GenerateMap()
+    public void GenerateMap(int randomSeed)
     {
-        if (autoRandomSeed)
+        //modify auto random seed into using seed that it passed
+        if (useRandomSeed)
         {
-            seed = Random.Range(0, 1000000);
+            seed = randomSeed;
         }
         
         noiseMap = Noise.GenerateNoiseMap(mapWidth, mapHeight, seed, noiseScale, octaves, persistance, lacunarity, offset);

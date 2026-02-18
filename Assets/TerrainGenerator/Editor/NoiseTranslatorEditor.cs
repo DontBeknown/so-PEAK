@@ -8,20 +8,22 @@ public class NoiseTranslatorEditor : Editor
     {
         DrawDefaultInspector(); // Draws all normal inspector fields
 
-        NoiseTranslator nt = (NoiseTranslator)target;
+        //unused will delete later
 
-        if (GUILayout.Button("Generate Depth Map"))
-        {
+        //NoiseTranslator nt = (NoiseTranslator)target;
+
+        //if (GUILayout.Button("Generate Depth Map"))
+        //{
             
 
-            if (nt.ContinentalNoise == null || nt.ErosionNoise_1 == null || nt.WeirdnessNoise == null)
-            {
-                Debug.LogError("Assign all 3 noise maps first!");
-                return;
-            }
+        //    if (nt.ContinentalNoise == null || nt.ErosionNoise_1 == null || nt.WeirdnessNoise == null)
+        //    {
+        //        Debug.LogError("Assign all 3 noise maps first!");
+        //        return;
+        //    }
 
-            nt.TerrainDrawing();
-            Debug.Log("Depth map generated!");
-        }
+        //    nt.TerrainDrawing();
+        //    Debug.Log("Depth map generated!");
+        //}
     }
 }

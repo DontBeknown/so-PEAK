@@ -82,7 +82,7 @@ public class NoiseTranslator : MonoBehaviour
 
 
     //do the depth noise algorithm
-    public void DepthNoise()
+    public void DepthNoise(int seed)
     {
         depthMap = new float[mapWidth, mapLength];
 
@@ -91,11 +91,11 @@ public class NoiseTranslator : MonoBehaviour
 
 
         //this also random new noise
-        ContinentalNoise.GenerateMap();
-        ErosionNoise_1.GenerateMap();
-        ErosionNoise_2.GenerateMap();
-        ErosionNoise_3.GenerateMap();
-        WeirdnessNoise.GenerateMap();
+        ContinentalNoise.GenerateMap(seed);
+        ErosionNoise_1.GenerateMap(seed);
+        ErosionNoise_2.GenerateMap(seed+1);
+        ErosionNoise_3.GenerateMap(seed+2);
+        WeirdnessNoise.GenerateMap(seed);
 
         float[,] continentalness = ContinentalNoise.noiseMap;
         float[,] erosion_1 = ErosionNoise_1.noiseMap;
@@ -111,27 +111,27 @@ public class NoiseTranslator : MonoBehaviour
 
 
         DefaultMountainGen.MultipleMountainTerarainGen(mainSpline, mapIteration, depthMap, continentalness, erosionArray, weirdness,
-            meshHeightCurve, peakCenterArray, falloffPower, mountainRadiusMeters, peakPointsArray);
+            meshHeightCurve, peakCenterArray, falloffPower, mountainRadiusMeters, peakPointsArray, seed);
     
 
         
     }
 
 
-    public void TerrainDrawing()
+    public void TerrainDrawing(int seed)
     {
         //first gen mountain
-        DepthNoise();
+        DepthNoise(seed);
         ////find peaks coordinates here
         //FindPeakPoints(depthMap, peakPoints);
         //then carve a road
-        ErodedMountain();
+        ErodedMountain(seed);
         //then buffer zone
         GenerateBufferArea();
         //then color map
         colorMap = ColorMapping();
 
-        TreeNoise.GenerateMap();
+        TreeNoise.GenerateMap(seed);
         treeNoiseMap = TreeNoise.noiseMap;
 
         ////////////////////DEBUG WILL DELETE THIS LATER ////////////////////////////////
@@ -206,13 +206,13 @@ public class NoiseTranslator : MonoBehaviour
 
 
 
-    private void ErodedMountain()
+    private void ErodedMountain(int seed)
     {
         //Generate the road mask
-        RoadNoise.GenerateMap();
+        RoadNoise.GenerateMap(seed);
         roadRidge = RoadNoise.noiseMap;
 
-        RoadCarver.CarveRoad(depthMap, roadRidge, peakPointsArray, maxHeight, roadHeightCurve);
+        RoadCarver.CarveRoad(depthMap, roadRidge, peakPointsArray, maxHeight, roadHeightCurve, seed);
         
     }
 

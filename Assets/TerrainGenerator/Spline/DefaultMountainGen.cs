@@ -6,8 +6,13 @@ public class DefaultMountainGen
 {
     //Multiple one
     public static void MultipleMountainTerarainGen(Spline mainSpline, int mapIteration, float[,] depthMap,
-        float[,] continentalness, float[][,] erosionArray, float[,] weirdness, AnimationCurve meshHeightCurve, Vector2[] peakCenterArray, float fallOffPower, float mountainRadiusMeters, List<List<Vector2Int>> allMountainPeakPoints)
+        float[,] continentalness, float[][,] erosionArray, float[,] weirdness, AnimationCurve meshHeightCurve, Vector2[] peakCenterArray, float fallOffPower, float mountainRadiusMeters, List<List<Vector2Int>> allMountainPeakPoints, int seed)
     {
+        //initiate randomseed here
+        UnityEngine.Random.InitState(seed);
+
+
+
         //HARDCODED peaks count
         int peaksCount = 3;
 
