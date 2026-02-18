@@ -43,11 +43,7 @@ public class SaveSystemEditorWindow : EditorWindow
         }
         else
         {
-            saveLoadService = FindFirstObjectByType<SaveLoadService>();
-            if(saveLoadService == null)
-            {
-                // Debug.LogWarning("SaveLoadService not found in scene! Save Manager will operate in file mode.");
-            }
+            EnsureSaveLoadService();
         }
         
         // Load seed config (safe - it's an asset)
@@ -62,6 +58,21 @@ public class SaveSystemEditorWindow : EditorWindow
         }
         
         RefreshWorldList();
+    }
+    
+    /// <summary>
+    /// Ensures SaveLoadService is found when needed. Call this before any action that requires the service.
+    /// </summary>
+    private void EnsureSaveLoadService()
+    {
+        if (saveLoadService == null && EditorApplication.isPlaying && !EditorApplication.isCompiling)
+        {
+            saveLoadService = FindFirstObjectByType<SaveLoadService>();
+            if (saveLoadService == null)
+            {
+                // Debug.LogWarning("SaveLoadService not found in scene! Save Manager will operate in file mode.");
+            }
+        }
     }
     
     private void OnGUI()
@@ -92,26 +103,9 @@ public class SaveSystemEditorWindow : EditorWindow
         
         if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, GUILayout.Width(80)))
         {
-            if (saveLoadService == null)
-            {
-                if (EditorApplication.isCompiling || !EditorApplication.isPlaying)
-                {
-                    saveLoadService = null;
-                }
-                else
-                {
-                    saveLoadService = FindFirstObjectByType<SaveLoadService>();
-                    if(saveLoadService == null)
-                    {
-                        // Debug.LogWarning("SaveLoadService not found in scene! Save Manager will operate in file mode.");
-                    }
-                }
-            }
-
+            EnsureSaveLoadService();
             RefreshWorldList();
-
             RefreshWorldSelectionUI();
-            
         }
         
         if (GUILayout.Button("Clear All Saves", EditorStyles.toolbarButton, GUILayout.Width(120)))
@@ -293,6 +287,8 @@ public class SaveSystemEditorWindow : EditorWindow
     
     private void RefreshWorldList()
     {
+        EnsureSaveLoadService();
+        
         if (saveLoadService != null)
         {
             allWorlds = saveLoadService.GetAllWorlds();
@@ -314,19 +310,21 @@ public class SaveSystemEditorWindow : EditorWindow
         }
     }
 
-    private void RefreshWorldSelectionUI(){
-        
+    private void RefreshWorldSelectionUI()
+    {
         if (EditorApplication.isCompiling || !EditorApplication.isPlaying)
         {
             worldSelectionUI = null;
             return;
         }
         
-        if(worldSelectionUI == null){
+        if (worldSelectionUI == null)
+        {
             worldSelectionUI = FindFirstObjectByType<WorldSelectionUI>();
         }
 
-        if(worldSelectionUI != null && worldSelectionUI.gameObject.activeInHierarchy){
+        if (worldSelectionUI != null && worldSelectionUI.gameObject.activeInHierarchy)
+        {
             worldSelectionUI.RefreshWorldList();    
         }
     }
@@ -339,14 +337,15 @@ public class SaveSystemEditorWindow : EditorWindow
             return;
         }
         
-        SeedData seedData = new SeedData(seed1, seed2, seed3);
+        EnsureSaveLoadService();
         
         if (saveLoadService == null)
         {
-            EditorUtility.DisplayDialog("Error", "SaveLoadService not found in scene!", "OK");
+            EditorUtility.DisplayDialog("Error", "SaveLoadService not found in scene! Make sure you're in Play mode and the scene has SaveLoadService.", "OK");
             return;
         }
         
+        SeedData seedData = new SeedData(seed1, seed2, seed3);
         saveLoadService.CreateNewWorld(newWorldName, seedData);
         
         RefreshWorldList();
@@ -367,11 +366,8 @@ public class SaveSystemEditorWindow : EditorWindow
             return;
         }
         
-        // Get SaveLoadService
-        if (saveLoadService == null)
-        {
-            saveLoadService = FindFirstObjectByType<SaveLoadService>();
-        }
+        // Ensure SaveLoadService is found
+        EnsureSaveLoadService();
         
         if (saveLoadService == null)
         {
@@ -411,7 +407,7 @@ public class SaveSystemEditorWindow : EditorWindow
         EditorUtility.SetDirty(worldPersistence);
         AssetDatabase.SaveAssets();
         
-        Debug.Log($"[SaveSystemEditor] Loaded world '{world.worldName}' into SaveLoadService and updated WorldPersistenceManager");
+        // Debug.Log($"[SaveSystemEditor] Loaded world '{world.worldName}' into SaveLoadService and updated WorldPersistenceManager");
         
         // Get current scene
         Scene currentScene = SceneManager.GetActiveScene();
@@ -425,7 +421,7 @@ public class SaveSystemEditorWindow : EditorWindow
             // Reload the current scene
             EditorSceneManager.LoadScene(currentScene.path, LoadSceneMode.Single);
             
-            Debug.Log($"[SaveSystemEditor] Scene '{currentScene.name}' reloaded. GameplaySceneInitializer will now initialize the loaded world.");
+            // Debug.Log($"[SaveSystemEditor] Scene '{currentScene.name}' reloaded. GameplaySceneInitializer will now initialize the loaded world.");
         }
     }
     
@@ -436,12 +432,15 @@ public class SaveSystemEditorWindow : EditorWindow
     
     private void DeleteWorld(string worldGuid)
     {
+        EnsureSaveLoadService();
+        
         if (saveLoadService != null)
         {
             saveLoadService.DeleteWorld(worldGuid);
         }
         else
         {
+            // Fallback to direct file system operation
             string savePath = Path.Combine(Application.persistentDataPath, "Saves", $"{worldGuid}.sav");
             if (File.Exists(savePath))
             {
@@ -530,6 +529,12 @@ public class WorldSaveDataEditorWindow : EditorWindow
     private void LoadSaveData()
     {
         var saveLoadService = FindFirstObjectByType<SaveLoadService>();
+        if (saveLoadService == null && EditorApplication.isPlaying && !EditorApplication.isCompiling)
+        {
+            // Try again to find the service
+            saveLoadService = FindFirstObjectByType<SaveLoadService>();
+        }
+        
         if (saveLoadService != null)
         {
             saveData = saveLoadService.LoadWorld(worldGuid);
@@ -585,10 +590,20 @@ public class WorldSaveDataEditorWindow : EditorWindow
     private void SaveWorldData()
     {
         var saveLoadService = FindFirstObjectByType<SaveLoadService>();
+        if (saveLoadService == null && EditorApplication.isPlaying && !EditorApplication.isCompiling)
+        {
+            // Try again to find the service
+            saveLoadService = FindFirstObjectByType<SaveLoadService>();
+        }
+        
         if (saveLoadService != null)
         {
             saveLoadService.SaveWorld(saveData);
             EditorUtility.DisplayDialog("Success", "World saved successfully!", "OK");
+        }
+        else
+        {
+            EditorUtility.DisplayDialog("Error", "SaveLoadService not found in scene!", "OK");
         }
     }
 }
