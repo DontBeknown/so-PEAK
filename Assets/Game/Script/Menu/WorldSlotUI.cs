@@ -18,29 +18,28 @@ namespace Game.Menu
         [SerializeField] private TextMeshProUGUI lastPlayedText;
         [SerializeField] private TextMeshProUGUI playTimeText;
         [SerializeField] private Button selectButton;
-        [SerializeField] private Button deleteButton;
 
         [Header("Visual States")]
-        [SerializeField] private GameObject normalModeVisuals;
-        [SerializeField] private GameObject deleteModeVisuals;
         [SerializeField] private Image backgroundImage;
         [SerializeField] private Color normalColor = new Color(0.8f, 0.8f, 0.8f, 1f);
         [SerializeField] private Color hoverColor = new Color(1f, 1f, 1f, 1f);
-        [SerializeField] private Color deleteColor = new Color(1f, 0.5f, 0.5f, 1f);
+        [SerializeField] private Color selectedColor = new Color(0.4f, 0.7f, 1f, 1f);
+        [SerializeField] private Color selectedHoverColor = new Color(0.5f, 0.8f, 1f, 1f);
         
         [Header("Debug")]
         [SerializeField] private bool enableDebug = false;
 
         private SaveMetadata worldMetadata;
         private Action<SaveMetadata> onWorldSelected;
-        private Action<SaveMetadata> onWorldDeleted;
-        private bool isDeleteMode = false;
+        private bool isSelected = false;
 
-        public void Initialize(SaveMetadata metadata, Action<SaveMetadata> onSelect, Action<SaveMetadata> onDelete)
+        public bool IsSelected => isSelected;
+        public SaveMetadata WorldMetadata => worldMetadata;
+
+        public void Initialize(SaveMetadata metadata, Action<SaveMetadata> onSelect)
         {
             worldMetadata = metadata;
             onWorldSelected = onSelect;
-            onWorldDeleted = onDelete;
 
             UpdateUI();
 
@@ -48,11 +47,6 @@ namespace Game.Menu
             if (selectButton != null)
             {
                 selectButton.onClick.AddListener(OnSelectClicked);
-            }
-
-            if (deleteButton != null)
-            {
-                deleteButton.onClick.AddListener(OnDeleteClicked);
             }
         }
 
@@ -62,11 +56,6 @@ namespace Game.Menu
             if (selectButton != null)
             {
                 selectButton.onClick.RemoveListener(OnSelectClicked);
-            }
-
-            if (deleteButton != null)
-            {
-                deleteButton.onClick.RemoveListener(OnDeleteClicked);
             }
         }
 
@@ -91,7 +80,7 @@ namespace Game.Menu
 
             if (lastPlayedText != null)
             {
-                lastPlayedText.text = $"Last Played: {worldMetadata.lastPlayedDate:yyyy-MM-dd HH:mm}";
+                lastPlayedText.text = $"{worldMetadata.lastPlayedDate:dd/MM/yyyy}";
             }
 
             if (playTimeText != null)
@@ -100,7 +89,7 @@ namespace Game.Menu
                 {
                     int hours = (int)(worldMetadata.totalPlayTime / 3600f);
                     int minutes = (int)((worldMetadata.totalPlayTime % 3600f) / 60f);
-                    playTimeText.text = $"Play Time: {hours}h {minutes}m";
+                    playTimeText.text = $"{hours}h {minutes}m";
                     playTimeText.gameObject.SetActive(true);
                 }
                 else
@@ -109,92 +98,71 @@ namespace Game.Menu
                 }
             }
 
-            // Hide info panel by default
-            if (worldInfoPanel != null)
-            {
-                worldInfoPanel.SetActive(false);
-            }
-        }
-
-        public void SetDeleteMode(bool enabled)
-        {
-            isDeleteMode = enabled;
-
-            // Show/hide appropriate visuals
-            if (normalModeVisuals != null)
-                normalModeVisuals.SetActive(!isDeleteMode);
-
-            if (deleteModeVisuals != null)
-                deleteModeVisuals.SetActive(isDeleteMode);
-
-            // Update background color
-            if (backgroundImage != null)
-            {
-                backgroundImage.color = isDeleteMode ? deleteColor : normalColor;
-            }
-
-            // Update button interactability
-            if (selectButton != null)
-            {
-                selectButton.interactable = !isDeleteMode;
-            }
-
-            deleteButton.gameObject.SetActive(isDeleteMode);
-        }
-
-        private void OnSelectClicked()
-        {
-            if (isDeleteMode)
-            {
-                Debug.LogWarning("Cannot select world in delete mode");
-                return;
-            }
-
-            if (enableDebug) Debug.Log($"World slot clicked: {worldMetadata.worldName}");
-            onWorldSelected?.Invoke(worldMetadata);
-        }
-
-        private void OnDeleteClicked()
-        {
-            if (!isDeleteMode)
-            {
-                Debug.LogWarning("Delete button should only be active in delete mode");
-                return;
-            }
-
-            if (enableDebug) Debug.Log($"Delete button clicked for: {worldMetadata.worldName}");
-            
-            // Optional: Add confirmation dialog here
-            onWorldDeleted?.Invoke(worldMetadata);
-        }
-
-        // Mouse hover effects - implements IPointerEnterHandler
-        public void OnPointerEnter(PointerEventData eventData)
-        {
-            if (backgroundImage != null && !isDeleteMode)
-            {
-                backgroundImage.color = hoverColor;
-            }
-
-            // Show world info on hover
+            // Always show info panel (changed from hover-only behavior)
             if (worldInfoPanel != null)
             {
                 worldInfoPanel.SetActive(true);
             }
         }
 
-        // Mouse hover effects - implements IPointerExitHandler
-        public void OnPointerExit(PointerEventData eventData)
+        /// <summary>
+        /// Mark this slot as selected
+        /// </summary>
+        public void Select()
         {
-            if (backgroundImage != null && !isDeleteMode)
+            isSelected = true;
+            UpdateBackgroundColor();
+
+            if (enableDebug) Debug.Log($"World slot selected: {worldMetadata.worldName}");
+        }
+
+        /// <summary>
+        /// Mark this slot as deselected
+        /// </summary>
+        public void Deselect()
+        {
+            isSelected = false;
+            UpdateBackgroundColor();
+
+            if (enableDebug) Debug.Log($"World slot deselected: {worldMetadata.worldName}");
+        }
+
+        private void UpdateBackgroundColor()
+        {
+            if (backgroundImage == null)
+                return;
+
+            if (isSelected)
+            {
+                backgroundImage.color = selectedColor;
+            }
+            else
             {
                 backgroundImage.color = normalColor;
             }
+        }
 
-            // Hide world info when not hovering
-            if (worldInfoPanel != null)
+        private void OnSelectClicked()
+        {
+            if (enableDebug) Debug.Log($"World slot clicked: {worldMetadata.worldName}");
+            onWorldSelected?.Invoke(worldMetadata);
+        }
+
+        // Mouse hover effects - implements IPointerEnterHandler
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (backgroundImage != null)
             {
-                worldInfoPanel.SetActive(false);
+                backgroundImage.color = isSelected ? selectedHoverColor : hoverColor;
+            }
+        }
+
+        // Mouse hover effects - implements IPointerExitHandler
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            if (backgroundImage != null)
+            {
+                backgroundImage.color = isSelected ? selectedColor : normalColor;
             }
         }
     }

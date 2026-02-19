@@ -25,13 +25,11 @@ namespace Game.Menu
         [Header("Buttons")]
         [SerializeField] private Button backButton;
         [SerializeField] private Button createWorldButton;
-        [SerializeField] private Button deleteModeButton;
+        [SerializeField] private Button loadWorldButton;
+        [SerializeField] private Button deleteWorldButton;
 
-        [Header("Delete Mode")]
-        [SerializeField] private GameObject normalModeUI;
-        [SerializeField] private GameObject deleteModeUI;
-        [SerializeField] private Button cancelDeleteButton;
-        [SerializeField] private TextMeshProUGUI deleteModeButtonText;
+        [Header("Confirmation Dialog")]
+        [SerializeField] private ConfirmationDialogUI confirmationDialog;
         
         [Header("System")]
         [SerializeField] private WorldPersistenceManager worldPersistence;
@@ -46,7 +44,8 @@ namespace Game.Menu
         [SerializeField] private bool enableDebug = false;
 
         private List<WorldSlotUI> worldSlots = new List<WorldSlotUI>();
-        private bool isDeleteMode = false;
+        private SaveMetadata currentSelectedWorld = null;
+        private WorldSlotUI currentSelectedSlot = null;
 
         private void Start()
         {
@@ -68,12 +67,11 @@ namespace Game.Menu
             // Setup button listeners
             backButton.onClick.AddListener(OnBackClicked);
             createWorldButton.onClick.AddListener(OnCreateWorldClicked);
-            deleteModeButton.onClick.AddListener(OnDeleteModeToggled);
+            loadWorldButton.onClick.AddListener(OnLoadWorldClicked);
+            deleteWorldButton.onClick.AddListener(OnDeleteWorldClicked);
             
-            if (cancelDeleteButton != null)
-            {
-                cancelDeleteButton.onClick.AddListener(OnCancelDeleteClicked);
-            }
+            // Initialize button states (Load/Delete disabled until selection)
+            UpdateActionButtonStates();
 
             // Load worlds from save system
             RefreshWorldList();
@@ -84,12 +82,8 @@ namespace Game.Menu
             // Clean up listeners
             backButton.onClick.RemoveListener(OnBackClicked);
             createWorldButton.onClick.RemoveListener(OnCreateWorldClicked);
-            deleteModeButton.onClick.RemoveListener(OnDeleteModeToggled);
-            
-            if (cancelDeleteButton != null)
-            {
-                cancelDeleteButton.onClick.RemoveListener(OnCancelDeleteClicked);
-            }
+            loadWorldButton.onClick.RemoveListener(OnLoadWorldClicked);
+            deleteWorldButton.onClick.RemoveListener(OnDeleteWorldClicked);
         }
 
         public void RefreshWorldList()
@@ -126,20 +120,18 @@ namespace Game.Menu
                 CreateWorldSlot(metadata);
             }
 
-            // Reapply delete mode to all slots if active
-            if (isDeleteMode)
+            // Clear selection if the selected world was deleted
+            if (currentSelectedWorld != null)
             {
-                foreach (var slot in worldSlots)
+                bool stillExists = worldMetadata.Any(w => w.worldGuid == currentSelectedWorld.worldGuid);
+                if (!stillExists)
                 {
-                    if (slot != null)
-                    {
-                        slot.SetDeleteMode(true);
-                    }
+                    ClearSelection();
                 }
             }
 
-            // Update delete mode UI
-            UpdateDeleteModeUI();
+            // Update button states
+            UpdateActionButtonStates();
         }
 
         private void CreateWorldSlot(SaveMetadata metadata)
@@ -149,7 +141,7 @@ namespace Game.Menu
             
             if (slot != null)
             {
-                slot.Initialize(metadata, OnWorldSelected, OnWorldDeleted);
+                slot.Initialize(metadata, OnWorldSlotSelected);
                 worldSlots.Add(slot);
             }
         }
@@ -158,11 +150,8 @@ namespace Game.Menu
         {
             if (enableDebug) Debug.Log("Back button clicked - Returning to main menu");
             
-            // Exit delete mode if active
-            if (isDeleteMode)
-            {
-                SetDeleteMode(false);
-            }
+            // Clear selection
+            ClearSelection();
 
             // Return to main menu
             MainMenuUI mainMenu = FindFirstObjectByType<MainMenuUI>();
@@ -180,54 +169,146 @@ namespace Game.Menu
             ShowWorldCreation();
         }
 
-        private void OnDeleteModeToggled()
+        private void OnLoadWorldClicked()
         {
-            SetDeleteMode(!isDeleteMode);
-        }
-
-        private void OnCancelDeleteClicked()
-        {
-            SetDeleteMode(false);
-        }
-
-        private void SetDeleteMode(bool enabled)
-        {
-            isDeleteMode = enabled;
-            UpdateDeleteModeUI();
-
-            // Update all world slots
-            foreach (var slot in worldSlots)
+            if (currentSelectedWorld == null)
             {
-                if (slot != null)
-                {
-                    slot.SetDeleteMode(isDeleteMode);
-                }
-            }
-
-            if (enableDebug) Debug.Log($"Delete mode: {(isDeleteMode ? "ENABLED" : "DISABLED")}");
-        }
-
-        private void UpdateDeleteModeUI()
-        {
-            if (normalModeUI != null)
-                normalModeUI.SetActive(!isDeleteMode);
-            
-            if (deleteModeUI != null)
-                deleteModeUI.SetActive(isDeleteMode);
-
-            if (deleteModeButtonText != null)
-            {
-                deleteModeButtonText.text = isDeleteMode ? "Cancel Delete" : "Delete Worlds";
-            }
-        }
-
-        private void OnWorldSelected(SaveMetadata metadata)
-        {
-            if (isDeleteMode)
-            {
-                Debug.LogWarning("Cannot select world in delete mode");
+                Debug.LogWarning("[WorldSelectionUI] No world selected");
                 return;
             }
+
+            if (enableDebug) Debug.Log($"Loading world: {currentSelectedWorld.worldName}");
+            
+            // Disable all buttons during loading
+            SetButtonsInteractable(false);
+            
+            LoadWorld(currentSelectedWorld);
+        }
+
+        private void OnDeleteWorldClicked()
+        {
+            if (currentSelectedWorld == null)
+            {
+                Debug.LogWarning("[WorldSelectionUI] No world selected");
+                return;
+            }
+
+            if (confirmationDialog == null)
+            {
+                Debug.LogError("[WorldSelectionUI] ConfirmationDialog not assigned!");
+                return;
+            }
+
+            string worldName = currentSelectedWorld.worldName;
+            if (enableDebug) Debug.Log($"Delete requested for world: {worldName}");
+
+            // Show confirmation dialog
+            confirmationDialog.Show(
+                title: "Are you sure you want to delete this save?",
+                message: $"Delete world '{worldName}' This action cannot be undone.",
+                onConfirm: () => ConfirmDeleteWorld(currentSelectedWorld),
+                onCancel: null,
+                confirmText: "Yes",
+                cancelText: "No"
+            );
+        }
+
+        private void ConfirmDeleteWorld(SaveMetadata metadata)
+        {
+            if (saveLoadService == null)
+            {
+                Debug.LogError("[WorldSelectionUI] Cannot delete world - SaveLoadService not available");
+                return;
+            }
+            
+            if (enableDebug) Debug.Log($"Confirmed deletion of world: {metadata.worldName}");
+            
+            // Delete through save system
+            saveLoadService.DeleteWorld(metadata.worldGuid);
+            
+            // Clear selection
+            ClearSelection();
+            
+            // Refresh the list
+            RefreshWorldList();
+        }
+
+        /// <summary>
+        /// Called when a world slot is clicked - selects the world
+        /// </summary>
+        private void OnWorldSlotSelected(SaveMetadata metadata)
+        {
+            if (enableDebug) Debug.Log($"World slot selected: {metadata.worldName}");
+            
+            // Deselect previous slot
+            if (currentSelectedSlot != null)
+            {
+                currentSelectedSlot.Deselect();
+            }
+            
+            // Find and select new slot
+            currentSelectedSlot = worldSlots.FirstOrDefault(s => s.WorldMetadata.worldGuid == metadata.worldGuid);
+            if (currentSelectedSlot != null)
+            {
+                currentSelectedSlot.Select();
+            }
+            
+            // Update current selection
+            currentSelectedWorld = metadata;
+            
+            // Update button states
+            UpdateActionButtonStates();
+        }
+
+        /// <summary>
+        /// Clear the current world selection
+        /// </summary>
+        private void ClearSelection()
+        {
+            if (currentSelectedSlot != null)
+            {
+                currentSelectedSlot.Deselect();
+                currentSelectedSlot = null;
+            }
+            
+            currentSelectedWorld = null;
+            UpdateActionButtonStates();
+        }
+
+        /// <summary>
+        /// Update Load/Delete button interactability based on selection
+        /// </summary>
+        private void UpdateActionButtonStates()
+        {
+            bool hasSelection = currentSelectedWorld != null;
+            
+            if (loadWorldButton != null)
+            {
+                loadWorldButton.interactable = hasSelection;
+            }
+            
+            if (deleteWorldButton != null)
+            {
+                deleteWorldButton.interactable = hasSelection;
+            }
+        }
+
+        /// <summary>
+        /// Set all buttons interactable/non-interactable (used during loading)
+        /// </summary>
+        private void SetButtonsInteractable(bool interactable)
+        {
+            if (backButton != null) backButton.interactable = interactable;
+            if (createWorldButton != null) createWorldButton.interactable = interactable;
+            if (loadWorldButton != null) loadWorldButton.interactable = interactable;
+            if (deleteWorldButton != null) deleteWorldButton.interactable = interactable;
+        }
+
+        /// <summary>
+        /// Load the selected world
+        /// </summary>
+        private void LoadWorld(SaveMetadata metadata)
+        {
 
             if (saveLoadService == null)
             {
@@ -304,29 +385,6 @@ namespace Game.Menu
             SceneManager.LoadScene(gameplaySceneName);
         }
 
-        private void OnWorldDeleted(SaveMetadata metadata)
-        {
-            if (saveLoadService == null)
-            {
-                Debug.LogError("[WorldSelectionUI] Cannot delete world - SaveLoadService not available");
-                return;
-            }
-            
-            if (enableDebug) Debug.Log($"Deleting world: {metadata.worldName}");
-            
-            // Delete through save system
-            saveLoadService.DeleteWorld(metadata.worldGuid);
-            
-            // Refresh the list
-            RefreshWorldList();
-
-            // Exit delete mode if no worlds left
-            if (worldSlots.Count == 0)
-            {
-                SetDeleteMode(false);
-            }
-        }
-
         private void ShowWorldCreation()
         {
             worldSelectionPanel.SetActive(false);
@@ -349,6 +407,21 @@ namespace Game.Menu
         {
             // Just refresh the list - save system handles persistence
             RefreshWorldList();
+        }
+
+        /// <summary>
+        /// Select a world by its GUID (e.g., after creating a new world)
+        /// </summary>
+        public void SelectWorldByGuid(string worldGuid)
+        {
+            if (string.IsNullOrEmpty(worldGuid))
+                return;
+
+            var slot = worldSlots.FirstOrDefault(s => s.WorldMetadata.worldGuid == worldGuid);
+            if (slot != null)
+            {
+                OnWorldSlotSelected(slot.WorldMetadata);
+            }
         }
     }
 }

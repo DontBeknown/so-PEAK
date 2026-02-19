@@ -170,12 +170,14 @@ namespace Game.Menu
                 worldSelectionUI.RefreshWorldList();
             }
             
-            // Return to world selection instead of loading directly
+            // Return to world selection and auto-select the newly created world
             if (enableDebug) Debug.Log($"World created successfully: {worldName}");
             
             if (worldSelectionUI != null)
             {
                 worldSelectionUI.ShowWorldSelection(true);
+                // Auto-select the newly created world so player can immediately load it
+                worldSelectionUI.SelectWorldByGuid(newWorld.worldGuid);
             }
             
             gameObject.SetActive(false);
