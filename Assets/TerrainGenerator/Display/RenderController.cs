@@ -11,6 +11,10 @@ public class RenderController : MonoBehaviour
     public Material mapMaterial;
     public NoiseTranslator worldGen;
     public PlayerSpawner spawner;
+    
+    [Header("Camera Settings")]
+    [Tooltip("Name of the child transform on player to use as camera aim target (e.g., 'CameraTarget', 'Head'). Leave empty to use player root.")]
+    public string cameraAimTargetName = "CameraTarget";
 
     [Header("Tree Settings")]
     public GameObject treePrefab;
@@ -116,6 +120,7 @@ public class RenderController : MonoBehaviour
     void Update()
     {
         if (globalHeightMap == null) return;
+        if (player == null) return; // Player hasn't spawned yet
 
         // --- 1. PROCESS QUEUE (The New Part) ---
         // Every frame, check if a thread finished a job
@@ -248,9 +253,99 @@ public class RenderController : MonoBehaviour
 
         if (!playerHasSpawned)
         {
-            spawner.TeleportToSpawn();
+            StartCoroutine(SpawnPlayerSequence());
             playerHasSpawned = true;
         }
+    }
+
+    private System.Collections.IEnumerator SpawnPlayerSequence()
+    {
+        //Debug.Log("[RenderController] Starting player spawn sequence...");
+        
+        // Call PlayerSpawner's coroutine and wait for it to complete
+        yield return StartCoroutine(spawner.SpawnPlayer());
+        
+        // Get the spawned player reference
+        Transform spawnedPlayer = spawner.SpawnedPlayer;
+        
+        if (spawnedPlayer == null)
+        {
+            Debug.LogError("[RenderController] PlayerSpawner failed to spawn player!");
+            yield break;
+        }
+        
+        // Update our player reference
+        player = spawnedPlayer;
+        //Debug.Log($"[RenderController] Player reference updated to {player.name}");
+        
+        // Update all system references to the new player
+        UpdatePlayerReferences(spawnedPlayer);
+        
+        //Debug.Log("[RenderController] Player spawn sequence complete!");
+    }
+
+    private void UpdatePlayerReferences(Transform newPlayer)
+    {
+        //Debug.Log("[RenderController] Updating player references across systems...");
+        
+        // 1. Update ServiceContainer registrations via GameServiceBootstrapper
+        var bootstrapper = FindFirstObjectByType<Game.Core.GameServiceBootstrapper>();
+        if (bootstrapper != null)
+        {
+            bootstrapper.UpdatePlayerServices(newPlayer);
+        }
+        else
+        {
+            Debug.LogWarning("[RenderController] GameServiceBootstrapper not found - player services not updated!");
+        }
+        
+        // 2. Update UIServiceProvider with new player references
+        var uiServiceProvider = FindFirstObjectByType<Game.UI.UIServiceProvider>();
+        if (uiServiceProvider != null)
+        {
+            uiServiceProvider.UpdatePlayerReferences(newPlayer);
+        }
+        else
+        {
+            Debug.LogWarning("[RenderController] UIServiceProvider not found - UI player references not updated!");
+        }
+        
+        // 3. Find camera aim target on player
+        Transform cameraAimTarget = newPlayer; // Default to player root
+        if (!string.IsNullOrEmpty(cameraAimTargetName))
+        {
+            Transform foundTarget = newPlayer.Find(cameraAimTargetName);
+            if (foundTarget != null)
+            {
+                cameraAimTarget = foundTarget;
+                //Debug.Log($"[RenderController] Found camera aim target: {cameraAimTarget.name}");
+            }
+            else
+            {
+                Debug.LogWarning($"[RenderController] Camera aim target '{cameraAimTargetName}' not found on player. Using player root instead.");
+            }
+        }
+        
+        // 4. Update Cinemachine camera targets
+        // Try to use CinemachinePlayerCamera service if available
+        var cameraController = FindFirstObjectByType<CinemachinePlayerCamera>();
+        if (cameraController != null)
+        {
+            cameraController.UpdateCameraTargets(newPlayer, cameraAimTarget);
+        }
+        else
+        {
+            // Fallback: Update cameras directly
+            var cinemachineCameras = FindObjectsByType<Unity.Cinemachine.CinemachineCamera>(FindObjectsSortMode.None);
+            foreach (var cam in cinemachineCameras)
+            {
+                cam.Follow = newPlayer;           // Follow the player root for position
+                cam.LookAt = cameraAimTarget;     // Look at the camera aim point (e.g., head level)
+                //Debug.Log($"[RenderController] Updated camera '{cam.name}' - Follow: {newPlayer.name}, LookAt: {cameraAimTarget.name}");
+            }
+        }
+        
+        //Debug.Log("[RenderController] All player references updated successfully");
     }
 
     private void LoadSeed()

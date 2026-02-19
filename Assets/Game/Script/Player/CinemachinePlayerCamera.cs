@@ -18,6 +18,39 @@ public class CinemachinePlayerCamera : MonoBehaviour, ICameraInputController
         cinemachineCameras = FindObjectsByType<CinemachineCamera>(FindObjectsSortMode.None);
     }
 
+    /// <summary>
+    /// Updates all Cinemachine cameras to target the specified player transform.
+    /// Call this after spawning a new player at runtime.
+    /// </summary>
+    /// <param name="playerTransform">The root transform of the player</param>
+    /// <param name="cameraAimTarget">Optional specific target for LookAt (e.g., head). If null, uses playerTransform.</param>
+    public void UpdateCameraTargets(Transform playerTransform, Transform cameraAimTarget = null)
+    {
+        if (playerTransform == null)
+        {
+            Debug.LogError("[CinemachinePlayerCamera] Cannot update camera targets - playerTransform is null!");
+            return;
+        }
+        
+        // Refresh camera cache
+        CacheCinemachineCameras();
+        
+        Transform lookAtTarget = cameraAimTarget != null ? cameraAimTarget : playerTransform;
+        
+        if (cinemachineCameras != null)
+        {
+            foreach (var cam in cinemachineCameras)
+            {
+                if (cam != null)
+                {
+                    cam.Follow = playerTransform;
+                    cam.LookAt = lookAtTarget;
+                    //Debug.Log($"[CinemachinePlayerCamera] Updated camera '{cam.name}' - Follow: {playerTransform.name}, LookAt: {lookAtTarget.name}");
+                }
+            }
+        }
+    }
+
     public void SetCursorLock(bool locked)
     {
         if (locked)

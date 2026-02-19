@@ -306,6 +306,50 @@ namespace Game.Core
             }
         }
         
+        /// <summary>
+        /// Updates player service references after runtime player instantiation.
+        /// Call this after spawning a new player GameObject to update ServiceContainer registrations.
+        /// </summary>
+        public void UpdatePlayerServices(Transform playerTransform)
+        {
+            if (playerTransform == null)
+            {
+                Debug.LogError("[GameServiceBootstrapper] Cannot update player services - playerTransform is null!");
+                return;
+            }
+            
+            var container = ServiceContainer.Instance;
+            
+            // Update PlayerControllerRefactored
+            var playerController = playerTransform.GetComponent<PlayerControllerRefactored>();
+            if (playerController != null)
+            {
+                container.Register(playerController);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] PlayerControllerRefactored updated in ServiceContainer");
+            }
+            else
+            {
+                Debug.LogWarning("[GameServiceBootstrapper] PlayerControllerRefactored component not found on player!");
+            }
+            
+            // Update PlayerStats
+            var stats = playerTransform.GetComponent<PlayerStats>();
+            if (stats != null)
+            {
+                container.Register(stats);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] PlayerStats updated in ServiceContainer");
+            }
+            else
+            {
+                Debug.LogWarning("[GameServiceBootstrapper] PlayerStats component not found on player!");
+            }
+            
+            if (enableDebugLogs)
+                Debug.Log("[GameServiceBootstrapper] Player services updated successfully");
+        }
+        
         private void OnDestroy()
         {
             // Optional: Clear services when destroyed

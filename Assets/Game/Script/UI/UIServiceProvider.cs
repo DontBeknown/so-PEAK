@@ -78,6 +78,61 @@ namespace Game.UI
                 Debug.Log("[UIServiceProvider] Services initialized");
         }
         
+        /// <summary>
+        /// Ensures services are initialized. Call this if you need to access UIServiceProvider early.
+        /// </summary>
+        public void EnsureInitialized()
+        {
+            if (_panelController == null)
+            {
+                if (enableDebugLogs)
+                    Debug.LogWarning("[UIServiceProvider] Services not initialized, initializing now...");
+                InitializeServices();
+                RegisterAllPanels();
+            }
+        }
+        
+        /// <summary>
+        /// Updates player references when a new player is spawned at runtime.
+        /// Call this after instantiating a new player GameObject.
+        /// </summary>
+        public void UpdatePlayerReferences(Transform playerTransform)
+        {
+            if (playerTransform == null)
+            {
+                Debug.LogWarning("[UIServiceProvider] Cannot update player references - playerTransform is null!");
+                return;
+            }
+            
+            // Update player controller reference
+            playerController = playerTransform.GetComponent<PlayerControllerRefactored>();
+            if (playerController == null)
+            {
+                Debug.LogError("[UIServiceProvider] PlayerControllerRefactored not found on new player!");
+                return;
+            }
+            
+            // Get camera from ServiceContainer (should be updated by RenderController)
+            playerCamera = ServiceContainer.Instance.TryGet<CinemachinePlayerCamera>();
+            
+            // Recreate input blocker with new player references
+            _inputBlocker = new PlayerInputBlocker(playerController, playerCamera);
+            
+            // Update panel controller with new input blocker
+            if (_panelController != null && _inputBlocker != null)
+            {
+                // Panel controller needs to be recreated to use new input blocker
+                var eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+                _panelController = new UIPanelController(_cursorManager, _inputBlocker, eventBus);
+                
+                // Re-register all panels
+                RegisterAllPanels();
+            }
+            
+            if (enableDebugLogs)
+                Debug.Log("[UIServiceProvider] Player references updated successfully");
+        }
+        
         private void RegisterAllPanels()
         {
             // Find all IUIPanel implementations in scene
@@ -98,13 +153,41 @@ namespace Game.UI
         public ICursorManager CursorManager => _cursorManager;
         public IInputBlocker InputBlocker => _inputBlocker;
         
-        // Convenience methods
-        public void OpenPanel(string panelName) => _panelController.OpenPanel(panelName);
-        public void ClosePanel(string panelName) => _panelController.ClosePanel(panelName);
-        public void TogglePanel(string panelName) => _panelController.TogglePanel(panelName);
-        public void CloseAllPanels() => _panelController.CloseAllPanels();
-        public bool IsAnyPanelOpen() => _panelController.IsAnyPanelOpen();
-        public IUIPanel GetPanel(string panelName) => _panelController.GetPanel(panelName);
-        public T GetPanel<T>() where T : class, IUIPanel => _panelController.GetPanel<T>();
+        // Convenience methods with null safety
+        public void OpenPanel(string panelName)
+        {
+            if (_panelController != null)
+                _panelController.OpenPanel(panelName);
+            else if (enableDebugLogs)
+                Debug.LogWarning("[UIServiceProvider] PanelController not initialized yet");
+        }
+        
+        public void ClosePanel(string panelName)
+        {
+            if (_panelController != null)
+                _panelController.ClosePanel(panelName);
+            else if (enableDebugLogs)
+                Debug.LogWarning("[UIServiceProvider] PanelController not initialized yet");
+        }
+        
+        public void TogglePanel(string panelName)
+        {
+            if (_panelController != null)
+                _panelController.TogglePanel(panelName);
+            else if (enableDebugLogs)
+                Debug.LogWarning("[UIServiceProvider] PanelController not initialized yet");
+        }
+        
+        public void CloseAllPanels()
+        {
+            if (_panelController != null)
+                _panelController.CloseAllPanels();
+        }
+        
+        public bool IsAnyPanelOpen() => _panelController?.IsAnyPanelOpen() ?? false;
+        
+        public IUIPanel GetPanel(string panelName) => _panelController?.GetPanel(panelName);
+        
+        public T GetPanel<T>() where T : class, IUIPanel => _panelController?.GetPanel<T>();
     }
 }

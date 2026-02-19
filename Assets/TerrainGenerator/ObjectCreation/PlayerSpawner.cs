@@ -8,8 +8,8 @@ public class PlayerSpawner : MonoBehaviour
     public Vector3 targetSpawnPosition;
 
     [Header("Player References")]
-    public Transform playerTransform;
-    [SerializeField] private FootIKControllerRefactored footIKController;
+    [SerializeField] private GameObject playerPrefab;
+    [SerializeField] private Transform spawnMarkerTransform;
 
     [Header("UI References")]
     [SerializeField] private GameObject loadingScreen; 
@@ -20,19 +20,28 @@ public class PlayerSpawner : MonoBehaviour
     [SerializeField] private float raycastHeight = 100f; // Height above position to start raycast
     [SerializeField] private float raycastDistance = 200f; // Max distance to raycast down
     [SerializeField] private LayerMask groundLayers = -1; // Layers to check for ground (default: everything)
-    [SerializeField] private float spawnDelay = 0.5f; // Delay in seconds before teleporting (to let terrain load)
+    [SerializeField] private float spawnDelay = 0.5f; // Delay in seconds before spawning (to let terrain load)
     [SerializeField] private float spawnHeightOffset = 10f; // Small offset to prevent ground clipping
     
-    public void TeleportToSpawn()
+    // Stores the spawned player reference after successful spawn
+    public Transform SpawnedPlayer { get; private set; }
+    
+    public IEnumerator SpawnPlayer()
     {
-        StartCoroutine(TeleportToSpawnDelayed());
+        return SpawnPlayerDelayed();
     }
     
-    private System.Collections.IEnumerator TeleportToSpawnDelayed()
+    private System.Collections.IEnumerator SpawnPlayerDelayed()
     {
-        if (playerTransform == null)
+        if (playerPrefab == null)
         {
-            //Debug.LogError("[PlayerSpawner] Player Transform is not assigned!");
+            Debug.LogError("[PlayerSpawner] Player Prefab is not assigned!");
+            yield break;
+        }
+
+        if (spawnMarkerTransform == null)
+        {
+            Debug.LogError("[PlayerSpawner] Spawn Marker Transform is not assigned!");
             yield break;
         }
 
@@ -41,19 +50,7 @@ public class PlayerSpawner : MonoBehaviour
             loadingScreen.SetActive(true);
         }
 
-        // Disable FootIK during spawn to prevent pelvis adjustment interference
-        if (footIKController != null)
-        {
-            footIKController.SetFootIKEnabled(false);
-        }
-
-        // 1. GET THE CONTROLLER
-        CharacterController cc = playerTransform.GetComponent<CharacterController>();
-
-        // 2. DISABLE IT (Sedate the patient)
-        if (cc != null) cc.enabled = false;
-
-        // 3. DETERMINE TARGET XZ POSITION (without proper Y yet)
+        // 1. DETERMINE TARGET XZ POSITION (without proper Y yet)
         Vector3 targetXZ;
         float savedY = targetSpawnPosition.y; // Store default Y
         
@@ -61,54 +58,55 @@ public class PlayerSpawner : MonoBehaviour
         {
            WorldSaveData saveData = SaveLoadService.Instance.CurrentWorldSave;
            targetXZ = new Vector3(saveData.playerData.position[0], saveData.playerData.position[1], saveData.playerData.position[2]);
-           //Debug.Log($"[Saved Spawn] Using saved XZ position: {targetXZ}");
+           //Debug.Log($"[PlayerSpawner] Using saved position: {targetXZ}");
         }
         else
         {
             targetXZ = targetSpawnPosition;
-            //Debug.Log($"[Default Spawn] Using default spawn position: {targetXZ}");
+            //Debug.Log($"[PlayerSpawner] Using default spawn position: {targetXZ}");
         }
 
-        // 4. MOVE PLAYER TO TARGET XZ FIRST (to trigger chunk generation)
-        playerTransform.position = targetXZ;
-        //Debug.Log($"[Step 1] Moved player to target position to trigger chunk generation: {targetXZ}");
+        // 2. MOVE SPAWN MARKER TO TARGET POSITION (to trigger chunk generation)
+        spawnMarkerTransform.position = targetXZ;
+        //Debug.Log($"[PlayerSpawner] Moved spawn marker to {targetXZ} to trigger chunk generation");
 
-        // 5. WAIT FOR CHUNKS TO GENERATE AND MESH COLLIDERS TO BAKE
+        // 3. WAIT FOR CHUNKS TO GENERATE AND MESH COLLIDERS TO BAKE
         yield return new WaitForSeconds(spawnDelay);
 
-        // 6. NOW DO THE RAYCAST TO FIND GROUND
+        // 4. NOW DO THE RAYCAST TO FIND GROUND
         Vector3 raycastStart = new Vector3(targetXZ.x, targetXZ.y + raycastHeight, targetXZ.z);
         Vector3 raycastEnd = raycastStart + Vector3.down * raycastDistance;
         RaycastHit hit;
         
-        //Debug.Log($"[Step 2] Raycast Start: {raycastStart}, End: {raycastEnd}, Distance: {raycastDistance}, LayerMask: {groundLayers.value}");
+        //Debug.Log($"[PlayerSpawner] Raycasting from {raycastStart} down {raycastDistance} units");
         
+        Vector3 finalSpawnPosition;
         if (Physics.Raycast(raycastStart, Vector3.down, out hit, raycastDistance, groundLayers, QueryTriggerInteraction.Ignore))
         {
             // Found ground - use hit point Y position with small offset
-            targetSpawnPosition = new Vector3(targetXZ.x, hit.point.y + spawnHeightOffset, targetXZ.z);
-            //Debug.Log($"[Step 2] Found ground with raycast: {targetSpawnPosition} (hit: {hit.collider.name}, distance: {hit.distance})");
+            finalSpawnPosition = new Vector3(targetXZ.x, hit.point.y + spawnHeightOffset, targetXZ.z);
+            //Debug.Log($"[PlayerSpawner] Found ground at Y={hit.point.y}, spawning at {finalSpawnPosition} (collider: {hit.collider.name})");
             //Debug.DrawLine(raycastStart, hit.point, Color.green, 120f);
         }
         else
         {
-            // No ground found - keep current Y
-            targetSpawnPosition = targetXZ;
-            //Debug.LogWarning($"[Step 2] Raycast found no ground. Keeping current position: {targetSpawnPosition}");
+            // No ground found - use target position as-is
+            finalSpawnPosition = targetXZ;
+            //Debug.LogWarning($"[PlayerSpawner] Raycast found no ground. Using position as-is: {finalSpawnPosition}");
             //Debug.DrawLine(raycastStart, raycastEnd, Color.red, 120f);
         }
 
-        // 7. ADJUST PLAYER Y POSITION TO GROUND
-        playerTransform.position = targetSpawnPosition;
-        //Debug.Log($"[Step 3] Final player position: {targetSpawnPosition}");
+        // 5. INSTANTIATE PLAYER PREFAB AT FINAL POSITION
+        GameObject spawnedPlayerObj = Instantiate(playerPrefab, finalSpawnPosition, Quaternion.identity);
+        SpawnedPlayer = spawnedPlayerObj.transform;
+        
+        //Debug.Log($"[PlayerSpawner] Player instantiated at {finalSpawnPosition}");
 
-        // 8. RE-ENABLE IT (Wake the patient up)
-        if (cc != null) cc.enabled = true;
-
-        // Re-enable FootIK after spawn is complete
-        if (footIKController != null)
+        // 6. DESTROY THE SPAWN MARKER (no longer needed)
+        if (spawnMarkerTransform != null)
         {
-            footIKController.SetFootIKEnabled(true);
+            Destroy(spawnMarkerTransform.gameObject);
+            //Debug.Log("[PlayerSpawner] Spawn marker destroyed");
         }
 
         yield return new WaitForSeconds(spawnDelay);
@@ -117,5 +115,7 @@ public class PlayerSpawner : MonoBehaviour
         {
             loadingScreen.SetActive(false);
         }
+
+        //Debug.Log("[PlayerSpawner] Spawn sequence complete!");
     }
 }

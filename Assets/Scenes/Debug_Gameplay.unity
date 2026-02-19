@@ -283,71 +283,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2273090025642553181, guid: f254b774e8e34b34b87ce5699382600e, type: 3}
   m_PrefabInstance: {fileID: 2141563270}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &314329015
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 314329017}
-  - component: {fileID: 314329016}
-  - component: {fileID: 314329018}
-  m_Layer: 0
-  m_Name: DayNightCycleManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &314329016
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 314329015}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dca20015cd7eb344c9cb2f57e19d1b3c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game.Environment.DayNight.DayNightCycleManager
-  config: {fileID: 11400000, guid: 41e7ea2379c57e14db77d0b6139b6e58, type: 2}
-  directionalLight: {fileID: 410087040}
-  skyboxBlender: {fileID: 314329018}
-  showDebugInfo: 0
---- !u!4 &314329017
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 314329015}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.23885, y: 0, z: 1.54518}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &314329018
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 314329015}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d2627275fe4a2ef4bb0d9886e47a8681, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game.Environment.DayNight.SkyboxBlender
-  blendMaterial: {fileID: 2100000, guid: 3def1e9fc16bd2144bd256a5c1a158a9, type: 2}
-  currentSkybox1: {fileID: 0}
-  currentSkybox2: {fileID: 0}
-  currentBlend: 0
 --- !u!4 &316156465 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2273090025642553181, guid: f254b774e8e34b34b87ce5699382600e, type: 3}
@@ -795,17 +730,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f254b774e8e34b34b87ce5699382600e, type: 3}
---- !u!114 &427982712 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3116391827116786440, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
-  m_PrefabInstance: {fileID: 2384161705258028316}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a381e833edd308d4998422b363d1fe25, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game.UI.UIServiceProvider
 --- !u!1 &466029976
 GameObject:
   m_ObjectHideFlags: 0
@@ -1616,6 +1540,71 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -10.77, y: 1, z: -6.08}
   m_LocalScale: {x: 1, y: 2, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &781106339
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 781106342}
+  - component: {fileID: 781106341}
+  - component: {fileID: 781106340}
+  m_Layer: 0
+  m_Name: DayNightCycleManager (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &781106340
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 781106339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2627275fe4a2ef4bb0d9886e47a8681, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Environment.DayNight.SkyboxBlender
+  blendMaterial: {fileID: 2100000, guid: 3def1e9fc16bd2144bd256a5c1a158a9, type: 2}
+  currentSkybox1: {fileID: 0}
+  currentSkybox2: {fileID: 0}
+  currentBlend: 0
+--- !u!114 &781106341
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 781106339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dca20015cd7eb344c9cb2f57e19d1b3c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Environment.DayNight.DayNightCycleManager
+  config: {fileID: 11400000, guid: 41e7ea2379c57e14db77d0b6139b6e58, type: 2}
+  directionalLight: {fileID: 410087040}
+  skyboxBlender: {fileID: 781106340}
+  showDebugInfo: 0
+--- !u!4 &781106342
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 781106339}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.23885, y: 0, z: 1.54518}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -2640,70 +2629,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1467779544
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1467779545}
-  - component: {fileID: 1467779546}
-  m_Layer: 0
-  m_Name: VolumeBlurController
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1467779545
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1467779544}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2007343540}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1467779546
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1467779544}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e3082789af3f6e040816fb0cdf787103, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::VolumeBlurController
-  hungerCriticalThreshold: 30
-  thirstCriticalThreshold: 30
-  hungerSevereThreshold: 20
-  thirstSevereThreshold: 20
-  maxBlurIntensity: 1
-  useWorstStat: 1
-  fadeInDuration: 0.67
-  fadeOutDuration: 0.4
-  dofFocusDistance: 10
-  dofMinAperture: 5.6
-  dofMaxAperture: 32
-  dofFocalLength: 50
-  motionBlurMinIntensity: 0
-  motionBlurMaxIntensity: 0.5
-  motionBlurClamp: 0.05
-  updateInterval: 0.1
-  customVolumeProfile: {fileID: 11400000, guid: 55b0ed8e9642f7246a6076470c5dd427, type: 2}
-  volumePriority: 1000
-  useCustomVolumeProfile: 1
-  enableDebugLogs: 0
 --- !u!1001 &1489974087
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2716,41 +2641,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: FreeLook Camera
       objectReference: {fileID: 0}
-    - target: {fileID: 2586610401821327760, guid: 58854d0314857384e99d50b20e0bca2b, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 6303755441122776018, guid: 58854d0314857384e99d50b20e0bca2b, type: 3}
       propertyPath: Target.TrackingTarget
       value: 
       objectReference: {fileID: 1956372156}
-    - target: {fileID: 8158065339699778569, guid: 58854d0314857384e99d50b20e0bca2b, type: 3}
-      propertyPath: Radius
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 8158065339699778569, guid: 58854d0314857384e99d50b20e0bca2b, type: 3}
-      propertyPath: VerticalAxis.Value
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8158065339699778569, guid: 58854d0314857384e99d50b20e0bca2b, type: 3}
-      propertyPath: VerticalAxis.Center
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8158065339699778569, guid: 58854d0314857384e99d50b20e0bca2b, type: 3}
-      propertyPath: VerticalAxis.Range.x
-      value: -70
-      objectReference: {fileID: 0}
-    - target: {fileID: 8158065339699778569, guid: 58854d0314857384e99d50b20e0bca2b, type: 3}
-      propertyPath: VerticalAxis.Range.y
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 9108703191267389818, guid: 58854d0314857384e99d50b20e0bca2b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.361
       objectReference: {fileID: 0}
     - target: {fileID: 9108703191267389818, guid: 58854d0314857384e99d50b20e0bca2b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 203.52
+      value: 3.52
       objectReference: {fileID: 0}
     - target: {fileID: 9108703191267389818, guid: 58854d0314857384e99d50b20e0bca2b, type: 3}
       propertyPath: m_LocalPosition.z
@@ -3224,21 +3125,13 @@ PrefabInstance:
       propertyPath: m_Name
       value: Camera
       objectReference: {fileID: 0}
-    - target: {fileID: 2194320368388967808, guid: 6f28fcee0172ec4478f9bf87c3e4ecfe, type: 3}
-      propertyPath: m_RenderPostProcessing
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4713516763340851747, guid: 6f28fcee0172ec4478f9bf87c3e4ecfe, type: 3}
-      propertyPath: field of view
-      value: 60.000004
-      objectReference: {fileID: 0}
     - target: {fileID: 6235778966729067428, guid: 6f28fcee0172ec4478f9bf87c3e4ecfe, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.361
       objectReference: {fileID: 0}
     - target: {fileID: 6235778966729067428, guid: 6f28fcee0172ec4478f9bf87c3e4ecfe, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 203.52
+      value: 3.52
       objectReference: {fileID: 0}
     - target: {fileID: 6235778966729067428, guid: 6f28fcee0172ec4478f9bf87c3e4ecfe, type: 3}
       propertyPath: m_LocalPosition.z
@@ -3524,11 +3417,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24e3635ee42300d4ebc10327ab0f3757, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CinemachinePlayerCamera
---- !u!4 &2007343540 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 437050701338270975, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
-  m_PrefabInstance: {fileID: 2384161705258028316}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2014641996
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4128,7 +4016,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 437050701338270975, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 200
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 437050701338270975, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
       propertyPath: m_LocalPosition.z
@@ -4242,14 +4130,6 @@ PrefabInstance:
       propertyPath: playerCamera
       value: 
       objectReference: {fileID: 2006899472}
-    - target: {fileID: 4013136103283677608, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
-      propertyPath: hunger.hurtThreshold
-      value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 4013136103283677608, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
-      propertyPath: thirst.hurtThreshold
-      value: 10
-      objectReference: {fileID: 0}
     - target: {fileID: 4249064960835618528, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -4266,10 +4146,6 @@ PrefabInstance:
       propertyPath: playerCamera
       value: 
       objectReference: {fileID: 2006899472}
-    - target: {fileID: 4962120396931287550, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
-      propertyPath: uiServiceProvider
-      value: 
-      objectReference: {fileID: 427982712}
     - target: {fileID: 5192237939471458678, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
       propertyPath: m_SizeDelta.x
       value: 0
@@ -4310,6 +4186,10 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8171185202481339921, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: directionalLight
+      value: 
+      objectReference: {fileID: 410087040}
     - target: {fileID: 8253572899871340571, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -4326,24 +4206,9 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8789668539895052543, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0.361
-      objectReference: {fileID: 0}
-    - target: {fileID: 8789668539895052543, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.52
-      objectReference: {fileID: 0}
-    - target: {fileID: 8977435438102725891, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
-      propertyPath: m_Material
-      value: 
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 437050701338270975, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1467779545}
+    m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
 --- !u!1001 &7434104977167900875
@@ -4440,6 +4305,6 @@ SceneRoots:
   - {fileID: 1919263422}
   - {fileID: 1489974087}
   - {fileID: 2384161705258028316}
-  - {fileID: 314329017}
   - {fileID: 1652582981}
+  - {fileID: 781106342}
   - {fileID: 957156643}

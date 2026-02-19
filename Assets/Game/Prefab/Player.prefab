@@ -2109,7 +2109,7 @@ Transform:
   m_GameObject: {fileID: 1257679845743203407}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.691, z: 0}
+  m_LocalPosition: {x: 0.361, y: 1.52, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6799,6 +6799,7 @@ Transform:
   - {fileID: 8789668539895052543}
   - {fileID: 5510900426120375645}
   - {fileID: 5129918775616817247}
+  - {fileID: 5546374463585999974}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!143 &988247627514051869
@@ -6841,7 +6842,7 @@ MonoBehaviour:
   config: {fileID: 11400000, guid: 915e55fbd5b5e72459d5b7e5ec939b2d, type: 2}
   enableInventoryCommandDebugLogs: 0
   craftingManager: {fileID: 981263882377947087}
-  uiServiceProvider: {fileID: 0}
+  uiServiceProvider: {fileID: 3116391827116786440}
   playerCamera: {fileID: 0}
   interactionDetector: {fileID: 6903466817524714061}
 --- !u!114 &4013136103283677608
@@ -6857,7 +6858,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStats
   config: {fileID: 11400000, guid: 915e55fbd5b5e72459d5b7e5ec939b2d, type: 2}
-  equipmentManager: {fileID: 0}
+  equipmentManager: {fileID: 7899176700243506759}
   health:
     max: 100
     current: 100
@@ -6865,13 +6866,13 @@ MonoBehaviour:
     max: 100
     current: 100
     gainPerSecond: 0.2
-    hurtThreshold: 70
+    hurtThreshold: 10
     damagePerSecond: 1
   thirst:
     max: 100
     current: 100
     gainPerSecond: 0.35
-    hurtThreshold: 60
+    hurtThreshold: 10
     damagePerSecond: 2
   stamina:
     max: 100
@@ -8414,6 +8415,70 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!1 &5346914514374473130
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5546374463585999974}
+  - component: {fileID: 2880690713724498753}
+  m_Layer: 0
+  m_Name: VolumeBlurController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5546374463585999974
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5346914514374473130}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 437050701338270975}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2880690713724498753
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5346914514374473130}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3082789af3f6e040816fb0cdf787103, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VolumeBlurController
+  hungerCriticalThreshold: 30
+  thirstCriticalThreshold: 30
+  hungerSevereThreshold: 20
+  thirstSevereThreshold: 20
+  maxBlurIntensity: 1
+  useWorstStat: 1
+  fadeInDuration: 0.67
+  fadeOutDuration: 0.4
+  dofFocusDistance: 10
+  dofMinAperture: 5.6
+  dofMaxAperture: 32
+  dofFocalLength: 50
+  motionBlurMinIntensity: 0
+  motionBlurMaxIntensity: 0.5
+  motionBlurClamp: 0.05
+  updateInterval: 0.1
+  customVolumeProfile: {fileID: 11400000, guid: 55b0ed8e9642f7246a6076470c5dd427, type: 2}
+  volumePriority: 1000
+  useCustomVolumeProfile: 1
+  enableDebugLogs: 0
 --- !u!1 &5443583505192748323
 GameObject:
   m_ObjectHideFlags: 0
