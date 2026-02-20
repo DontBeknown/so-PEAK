@@ -61,6 +61,13 @@ public class PlayerStats : MonoBehaviour
         {
             statModifierCalculator = new StatModifierApplicator(equipmentManager);
         }
+
+        // Force all survivial stats to full — clears any stale serialized values
+        // from previous play sessions saved back into the prefab/scene.
+        hunger.ResetToFull();
+        thirst.ResetToFull();
+        health.ResetToFull();
+        stamina.ResetToFull();
     }
 
     private void Update()

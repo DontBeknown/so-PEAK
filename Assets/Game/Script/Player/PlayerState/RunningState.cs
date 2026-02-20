@@ -86,6 +86,13 @@ public class RunningState : IPlayerState
             float fatigueReduction = 1f - fatigueSpeedPenalty;
             float combinedMultiplier = 1f - Mathf.Clamp01(toblerReduction + fatigueReduction);
 
+            // Stamina exhaustion: severely reduce speed when stamina hits 0
+            bool isExhausted = model.Stats != null && model.Stats.Stamina <= 0f;
+            if (isExhausted && config != null)
+            {
+                combinedMultiplier *= config.staminaExhaustedSpeedMultiplier;
+            }
+
             horizontal *= combinedMultiplier;
         }
 

@@ -44,4 +44,13 @@ public class Stat : IStat
     protected void RaiseChanged() => OnChanged?.Invoke(current, max);
 
     public virtual void Tick(float deltaTime) { }
+
+    /// <summary>
+    /// Resets current to max. Called at game start to clear any stale serialized values.
+    /// </summary>
+    public void ResetToFull()
+    {
+        current = max;
+        RaiseChanged();
+    }
 }

@@ -32,6 +32,8 @@ public class PlayerConfig : ScriptableObject
     public float jumpStaminaCost = 20f;
     public float sprintStaminaDrainPerSecond = 25f;
     public float climbStaminaDrainPerSecond = 10f;
+    [Tooltip("Speed multiplier applied when stamina reaches 0 (e.g. 0.4 = 40% of normal speed)")]
+    public float staminaExhaustedSpeedMultiplier = 0.4f;
 
     [Header("Stamina Regen")]
     public float staminaRegenPerSecond = 15f;
