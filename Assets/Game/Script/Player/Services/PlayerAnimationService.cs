@@ -18,6 +18,8 @@ namespace Game.Player.Services
         private static readonly int VerticalHash = Animator.StringToHash("Vertical");
         private static readonly int IsClimbingHash = Animator.StringToHash("isClimbing");
         private static readonly int IsWalkingHash = Animator.StringToHash("isWalking");
+        private static readonly int IsRunningHash = Animator.StringToHash("isRunning");
+        private static readonly int SpeedMultiplierHash = Animator.StringToHash("SpeedMultiplier");
         private static readonly int IsFallingHash = Animator.StringToHash("isFalling");
         private static readonly int IsGroundedHash = Animator.StringToHash("isGround");
 
@@ -66,6 +68,18 @@ namespace Game.Player.Services
         {
             if (_animator == null) return;
             _animator.SetBool(IsWalkingHash, isWalking);
+        }
+
+        public void SetRunning(bool isRunning)
+        {
+            if (_animator == null) return;
+            _animator.SetBool(IsRunningHash, isRunning);
+        }
+
+        public void SetSpeedMultiplier(float multiplier)
+        {
+            if (_animator == null) return;
+            _animator.SetFloat(SpeedMultiplierHash, multiplier);
         }
 
         public void SetFalling(bool isFalling)

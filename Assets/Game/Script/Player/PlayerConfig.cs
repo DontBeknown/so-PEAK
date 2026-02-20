@@ -6,6 +6,10 @@ public class PlayerConfig : ScriptableObject
     [Header("Movement - Base Values")]
     [Tooltip("Base walk speed on flat terrain")]
     public float baseWalkSpeed = 3f;
+    [Tooltip("Max sprint speed (1.5x walk speed)")]
+    public float baseRunSpeed = 4.5f;
+    [Tooltip("How fast speed ramps between walk and run (higher = snappier)")]
+    public float runAcceleration = 8f;
     [Tooltip("Base climb speed")]
     public float baseClimbSpeed = 2f;
     public float jumpForce = 5f;
@@ -65,11 +69,15 @@ public class PlayerConfig : ScriptableObject
     public float hungerDrainPerSecond = 0.2f;
     public float hungerHurtThreshold = 30f;
     public float starvationDPS = 1f;
+    [Tooltip("Hunger drains this many times faster while sprinting")]
+    public float hungerSprintMultiplier = 2f;
 
     [Header("Thirst")]
     public float thirstDrainPerSecond = 0.35f;
     public float thirstHurtThreshold = 40f;
     public float dehydrationDPS = 2f;
+    [Tooltip("Thirst drains this many times faster while sprinting")]
+    public float thirstSprintMultiplier = 2.5f;
 
 
 }

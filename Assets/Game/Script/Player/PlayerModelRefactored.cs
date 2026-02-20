@@ -100,6 +100,7 @@ public class PlayerModelRefactored
 
     // Direct config properties (reads live values from Inspector for easy debugging)
     public float WalkSpeed => _config.baseWalkSpeed;
+    public float RunSpeed => _config.baseRunSpeed;
     public float ClimbSpeed => _config.baseClimbSpeed;
     public float JumpForce => _config.jumpForce;
     public float RotationSmoothness => _config.rotationSmoothness;
@@ -129,6 +130,17 @@ public class PlayerModelRefactored
         if (!IsGrounded()) return;
 
         Vector3 horizontal = new Vector3(moveDirection.x, 0f, moveDirection.z) * WalkSpeed;
+        Velocity = new Vector3(horizontal.x, JumpForce, horizontal.z);
+    }
+
+    /// <summary>
+    /// Jump with explicit horizontal speed (used by RunningState to preserve sprint momentum).
+    /// </summary>
+    public void JumpWithMomentum(Vector3 moveDirection, float speed)
+    {
+        if (!IsGrounded()) return;
+
+        Vector3 horizontal = new Vector3(moveDirection.x, 0f, moveDirection.z) * speed;
         Velocity = new Vector3(horizontal.x, JumpForce, horizontal.z);
     }
 

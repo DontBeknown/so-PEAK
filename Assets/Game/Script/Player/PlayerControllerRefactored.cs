@@ -151,16 +151,52 @@ namespace Game.Player
             if (_currentState is ClimbingState)
                 return;
 
-            // Check for falling
-            if (!_physicsService.IsGrounded())
+            bool isGrounded = _physicsService.IsGrounded();
+            bool isSprintHeld = _inputHandler != null && _inputHandler.IsSprintHeld;
+            bool isMoving = _inputHandler != null && _inputHandler.MoveInput.sqrMagnitude > 0.01f;
+
+            // ── Airborne check ─────────────────────────────────────────
+            if (!isGrounded)
             {
                 if (!(_currentState is FallingState))
                 {
                     //TransitionTo(new FallingState(this));
                 }
+                return;
             }
-            // Return to walking when landed
-            else if (!(_currentState is WalkingState))
+
+            // ── Grounded transitions ───────────────────────────────────
+
+            // Landing from a fall — sprint-held lands into RunningState
+            if (_currentState is FallingState)
+            {
+                if (isSprintHeld && isMoving)
+                {
+                    TransitionTo(new RunningState(this));
+                }
+                else
+                {
+                    TransitionTo(new WalkingState(this));
+                }
+                return;
+            }
+
+            // Walking → Running (sprint pressed while moving)
+            if (_currentState is WalkingState && isSprintHeld && isMoving)
+            {
+                TransitionTo(new RunningState(this));
+                return;
+            }
+
+            // Running → Walking (sprint released, stopped moving, or input ceased)
+            if (_currentState is RunningState && (!isSprintHeld || !isMoving))
+            {
+                TransitionTo(new WalkingState(this));
+                return;
+            }
+
+            // Fallback: ensure we're in a grounded state
+            if (!(_currentState is WalkingState) && !(_currentState is RunningState))
             {
                 TransitionTo(new WalkingState(this));
             }

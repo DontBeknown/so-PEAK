@@ -28,6 +28,19 @@ namespace Game.Player.Interfaces
         void SetWalking(bool isWalking);
 
         /// <summary>
+        /// Sets the running/sprinting animation state
+        /// </summary>
+        /// <param name="isRunning">True if player is running</param>
+        void SetRunning(bool isRunning);
+
+        /// <summary>
+        /// Sets the speed multiplier for walk/run animation blending.
+        /// 0 = walk speed, 1 = full run speed.
+        /// </summary>
+        /// <param name="multiplier">Blend value between 0 and 1</param>
+        void SetSpeedMultiplier(float multiplier);
+
+        /// <summary>
         /// Sets the falling animation state
         /// </summary>
         /// <param name="isFalling">True if player is falling</param>

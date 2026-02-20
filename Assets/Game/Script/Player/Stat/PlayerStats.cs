@@ -36,8 +36,8 @@ public class PlayerStats : MonoBehaviour
         stamina ??= new StaminaStat();
         fatigue ??= new FatigueStat();
 
-        hunger.Init(config.hungerDrainPerSecond, config.hungerHurtThreshold, config.starvationDPS);
-        thirst.Init(config.thirstDrainPerSecond, config.thirstHurtThreshold, config.dehydrationDPS);
+        hunger.Init(config.hungerDrainPerSecond, config.hungerHurtThreshold, config.starvationDPS, config.hungerSprintMultiplier);
+        thirst.Init(config.thirstDrainPerSecond, config.thirstHurtThreshold, config.dehydrationDPS, config.thirstSprintMultiplier);
         stamina.Init(config.staminaRegenPerSecond, config.staminaDrainCooldown, config.climbStaminaDrainPerSecond);
         fatigue.Init(config.maxFatigue, config.fatigueRateTime, config.fatigueRateElev);
 
@@ -107,9 +107,16 @@ public class PlayerStats : MonoBehaviour
         stamina.SetWalking(walking);
     }
 
+    public void SetRunning(bool running)
+    {
+        stamina.SetRunning(running);
+    }
+
     public void OnSprint(bool sprinting)
     {
         isSprinting = sprinting;
+        hunger.SetSprinting(sprinting);
+        thirst.SetSprinting(sprinting);
     }
 
     public void ConsumeStamina(float amount) => stamina.Drain(amount);

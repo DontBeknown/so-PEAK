@@ -12,6 +12,7 @@ public class StaminaStat : Stat
     private bool draining;
     private bool isClimbing;
     private bool isWalking;
+    private bool isRunning;
     
     public event Action<float> OnDrained;
     
@@ -33,8 +34,8 @@ public class StaminaStat : Stat
             return;
         }
 
-        // Apply terrain-based drain if moving
-        if (currentSlopeDrain > 0f && isWalking)
+        // Apply terrain-based drain if moving (walking or running)
+        if (currentSlopeDrain > 0f && (isWalking || isRunning))
         {
             Drain(currentSlopeDrain * deltaTime);
             currentSlopeDrain = 0f; // Reset after applying
@@ -49,7 +50,7 @@ public class StaminaStat : Stat
         {
             if (cooldownTimer > 0f)
                 cooldownTimer -= deltaTime;
-            else if (isWalking) // Only regen when in walking state
+            else if (isWalking && !isRunning) // Only regen when walking, not sprinting
                 Add(regenPerSecond * deltaTime);
         }
     }
@@ -69,6 +70,11 @@ public class StaminaStat : Stat
     public void SetWalking(bool walking)
     {
         isWalking = walking;
+    }
+
+    public void SetRunning(bool running)
+    {
+        isRunning = running;
     }
 
     /// <summary>

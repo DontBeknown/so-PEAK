@@ -17,6 +17,8 @@ namespace Game.Player.Services
         
         private Vector2 _moveInput;
         private bool _inputBlocked = false;
+        private float _sprintPressTime = -1f;
+        private const float SprintInputBufferTime = 0.15f;
 
         // Events for UI/Inventory actions
         public System.Action OnInteractRequested;
@@ -24,7 +26,25 @@ namespace Game.Player.Services
         public System.Action OnQuickUseRequested;
 
         public Vector2 MoveInput => _moveInput;
-        
+
+        /// <summary>
+        /// Returns true if the sprint button is held down. Includes a brief input buffer
+        /// to smooth out rapid press/release jitter.
+        /// </summary>
+        public bool IsSprintHeld
+        {
+            get
+            {
+                if (IsInputBlocked()) return false;
+                if (_inputActions.Player.Sprint.IsPressed())
+                {
+                    _sprintPressTime = Time.time;
+                    return true;
+                }
+                return Time.time - _sprintPressTime < SprintInputBufferTime;
+            }
+        }
+
         /// <summary>
         /// Returns true if the pickup/interact button is currently held down
         /// </summary>
