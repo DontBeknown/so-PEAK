@@ -29,7 +29,8 @@ public class FootIKControllerRefactored : MonoBehaviour
     private float _rightFootIKWeight;
 
     // State tracking
-    private bool _isClimbing;
+    private bool _isAirborne;
+    private bool _wasAirborne;
 
     private void Start()
     {
@@ -65,8 +66,20 @@ public class FootIKControllerRefactored : MonoBehaviour
     {
         if (animator == null || !enableFootIK) return;
 
-        // Check climbing state
-        UpdateClimbingState();
+        // Check if player is in a non-grounded state
+        UpdateAirborneState();
+
+        // Detect landing: was airborne, now grounded
+        if (_wasAirborne && !_isAirborne)
+        {
+            // Reset pelvis to prevent stale Y position causing a bounce
+            _pelvisAdjuster.Reset();
+            
+            // Zero out IK weights so they fade in smoothly
+            _leftFootIKWeight = 0f;
+            _rightFootIKWeight = 0f;
+        }
+        _wasAirborne = _isAirborne;
 
         // Switch strategy based on state
         UpdateStrategy();
@@ -79,31 +92,31 @@ public class FootIKControllerRefactored : MonoBehaviour
         float rightFootOffset = _currentStrategy.ProcessFootIK(AvatarIKGoal.RightFoot, animator, transform);
 
         // Adjust pelvis (only for ground movement)
-        if (!_isClimbing)
+        if (!_isAirborne)
         {
             _pelvisAdjuster.AdjustPelvisHeight(leftFootOffset, rightFootOffset, animator);
         }
     }
 
-    private void UpdateClimbingState()
+    private void UpdateAirborneState()
     {
         if (playerController != null)
         {
             var state = playerController.GetCurrentState();
-            _isClimbing = state is ClimbingState
+            _isAirborne = state is ClimbingState
                        || state is MantlingState
                        || state is FallingState;
         }
         else
         {
             // Fallback to animator parameter
-            _isClimbing = animator.GetBool("isClimbing");
+            _isAirborne = animator.GetBool("isClimbing");
         }
     }
 
     private void UpdateStrategy()
     {
-        IFootIKStrategy newStrategy = _isClimbing ? 
+        IFootIKStrategy newStrategy = _isAirborne ? 
             (IFootIKStrategy)_climbingHandler : _groundHandler;
 
         if (newStrategy != _currentStrategy)
@@ -158,7 +171,7 @@ public class FootIKControllerRefactored : MonoBehaviour
             _pelvisAdjuster = new PelvisAdjuster(config);
             
             // Reapply current strategy
-            SetStrategy(_isClimbing ? (IFootIKStrategy)_climbingHandler : _groundHandler);
+            SetStrategy(_isAirborne ? (IFootIKStrategy)_climbingHandler : _groundHandler);
         }
     }
 }
