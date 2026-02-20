@@ -28,6 +28,10 @@ public class PlayerConfig : ScriptableObject
     public float groundCheckDistance = 0.3f;
     public LayerMask groundLayer = -1;
 
+    [Header("Coyote Time")]
+    [Tooltip("Grace period (seconds) after leaving the ground before transitioning to fall state")]
+    public float coyoteTimeDuration = 0.15f;
+
     [Header("Stamina")]
     public float jumpStaminaCost = 20f;
     public float sprintStaminaDrainPerSecond = 25f;

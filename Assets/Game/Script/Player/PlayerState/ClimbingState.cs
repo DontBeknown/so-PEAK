@@ -35,8 +35,9 @@ public class ClimbingState : IPlayerState
 
     public void Exit(PlayerModelRefactored model)
     {
-        model.GetAnimationService().SetClimbing(false);
-        model.Stats?.SetClimbing(false);
+        // Climbing animation and stamina drain cleanup is handled by the
+        // next state (MantlingState or FallingState) to avoid animation
+        // conflicts during the transition.
     }
 
     public void HandleInput(PlayerModelRefactored model, Vector2 input) { }
@@ -120,16 +121,16 @@ public class ClimbingState : IPlayerState
 
     private void FinishClimbToTop(PlayerModelRefactored model, Vector3 topPoint)
     {
-        // If you have a climb-up animation, trigger here and snap on event.
-        model.SnapToTop(topPoint);
-
         // Face forward along the surface normal's tangent (optional)
         Vector3 forward = Vector3.ProjectOnPlane(model.Transform.forward, Vector3.up);
         if (forward.sqrMagnitude > 0.0001f)
             model.Transform.forward = forward.normalized;
 
-        // Use state transitioner
-        TransitionToWalking(model);
+        // Play climb-up animation, which will snap to top Point when finished
+        if (_stateTransitioner != null)
+        {
+            _stateTransitioner.TransitionTo(new MantlingState(_stateTransitioner, topPoint));
+        }
     }
 
     public void OnJump(PlayerModelRefactored model, Vector2 input)

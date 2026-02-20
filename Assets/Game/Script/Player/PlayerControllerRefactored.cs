@@ -33,6 +33,12 @@ namespace Game.Player
         private PlayerModelRefactored _model;
         private IPlayerState _currentState;
         
+        // Coyote time - grace period before falling
+        private float _coyoteTimer;
+        
+        // Last horizontal velocity for momentum carry-over to FallingState
+        private Vector3 _lastHorizontalVelocity;
+        
         // Services
         private PlayerInputHandler _inputHandler;
         private PlayerInventoryFacade _inventoryFacade;
@@ -147,22 +153,42 @@ namespace Game.Player
 
         private void HandleAutomaticTransitions()
         {
-            // Don't interrupt climbing with automatic transitions
-            if (_currentState is ClimbingState)
+            // Don't interrupt climbing or mantling with automatic transitions
+            if (_currentState is ClimbingState || _currentState is MantlingState)
                 return;
 
             bool isGrounded = _physicsService.IsGrounded();
             bool isSprintHeld = _inputHandler != null && _inputHandler.IsSprintHeld;
             bool isMoving = _inputHandler != null && _inputHandler.MoveInput.sqrMagnitude > 0.01f;
 
-            // ── Airborne check ─────────────────────────────────────────
+            // ── Airborne check (with coyote time) ────────────────────────
             if (!isGrounded)
             {
                 if (!(_currentState is FallingState))
                 {
-                    //TransitionTo(new FallingState(this));
+                    _coyoteTimer += Time.fixedDeltaTime;
+
+                    if (_coyoteTimer >= config.coyoteTimeDuration)
+                    {
+                        TransitionTo(new FallingState(this, _lastHorizontalVelocity));
+                    }
                 }
                 return;
+            }
+
+            // Reset coyote timer when grounded
+            _coyoteTimer = 0f;
+
+            // Track horizontal velocity while grounded for momentum carry-over
+            if (isMoving && _inputHandler != null)
+            {
+                Vector3 moveDir = _model.GetCameraProvider().GetWorldDirection(_inputHandler.MoveInput);
+                float speed = isSprintHeld ? _model.RunSpeed : _model.WalkSpeed;
+                _lastHorizontalVelocity = moveDir * speed;
+            }
+            else
+            {
+                _lastHorizontalVelocity = Vector3.zero;
             }
 
             // ── Grounded transitions ───────────────────────────────────

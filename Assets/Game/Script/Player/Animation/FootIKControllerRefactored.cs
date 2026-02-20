@@ -89,7 +89,10 @@ public class FootIKControllerRefactored : MonoBehaviour
     {
         if (playerController != null)
         {
-            _isClimbing = playerController.GetCurrentState() is ClimbingState;
+            var state = playerController.GetCurrentState();
+            _isClimbing = state is ClimbingState
+                       || state is MantlingState
+                       || state is FallingState;
         }
         else
         {
