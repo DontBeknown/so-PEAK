@@ -1,5 +1,7 @@
 using UnityEngine;
 using Game.Core.DI;
+using Game.Core.Events;
+using Game.Environment.DayNight;
 using Game.UI;
 
 namespace Game.Interaction
@@ -32,6 +34,9 @@ namespace Game.Interaction
         private float lastInteractionTime = -999f;
         private Game.Player.PlayerControllerRefactored currentPlayer;
         private UIServiceProvider uiServiceProvider;
+        private IDayNightCycleService _dayNightService;
+        private IEventBus _eventBus;
+        private bool _isWaitingForPanelClose = false;
 
         #region IInteractable Implementation
 
@@ -39,6 +44,8 @@ namespace Game.Interaction
         {
             // Get UIServiceProvider from ServiceContainer
             uiServiceProvider = ServiceContainer.Instance.TryGet<UIServiceProvider>();
+            _dayNightService = ServiceContainer.Instance.TryGet<IDayNightCycleService>();
+            _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
         }
 
         public string InteractionPrompt => customPrompt;
@@ -106,6 +113,13 @@ namespace Game.Interaction
             
             // Open assessment UI
             OpenAssessmentUI();
+            
+            // Subscribe to panel close to trigger skip to next morning
+            if (_eventBus != null && !_isWaitingForPanelClose)
+            {
+                _isWaitingForPanelClose = true;
+                _eventBus.Subscribe<PanelClosedEvent>(OnPanelClosed);
+            }
         }
 
         #endregion
@@ -129,6 +143,20 @@ namespace Game.Interaction
         /// </summary>
         public void OnAssessmentUIClosed()
         {
+            UnlockPlayer();
+        }
+        
+        private void OnPanelClosed(PanelClosedEvent evt)
+        {
+            if (evt.PanelName != "PlayerStatsTracker") return;
+            
+            // Unsubscribe immediately so this only fires once per interaction
+            _eventBus?.Unsubscribe<PanelClosedEvent>(OnPanelClosed);
+            _isWaitingForPanelClose = false;
+            
+            // Skip time to next morning
+            _dayNightService?.SkipToNextMorning();
+            
             UnlockPlayer();
         }
 

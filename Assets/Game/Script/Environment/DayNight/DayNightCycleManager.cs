@@ -1,4 +1,5 @@
 using UnityEngine;
+using DG.Tweening;
 using Game.Core.DI;
 using Game.Core.Events;
 
@@ -22,6 +23,7 @@ namespace Game.Environment.DayNight
         
         // State
         private float _currentTime;
+        private int _currentDay = 1;
         private TimeOfDay _currentTimeOfDay;
         private TimeOfDay _previousTimeOfDay;
         private bool _isPaused = false;
@@ -29,6 +31,9 @@ namespace Game.Environment.DayNight
         // Skybox blending
         private float _skyboxBlendProgress = 0f;
         private bool _isTransitioning = false;
+        
+        // DOTween lighting transition
+        private Sequence _lightingSequence;
         
         // Services
         private IEventBus _eventBus;
@@ -39,6 +44,7 @@ namespace Game.Environment.DayNight
         public TimeOfDay CurrentTimeOfDay => _currentTimeOfDay;
         public float DayProgress => _currentTime / 24f;
         public bool IsPaused => _isPaused;
+        public int CurrentDay => _currentDay;
         
         public void SetTime(float hours)
         {
@@ -87,6 +93,36 @@ namespace Game.Environment.DayNight
             return settings.ambientColor;
         }
         
+        public void SkipToNextMorning()
+        {
+            _currentDay++;
+            _previousTimeOfDay = _currentTimeOfDay;
+            _currentTime = config.morningStartHour;
+            _currentTimeOfDay = TimeOfDay.Morning;
+            
+            // Snap lighting instantly (no tween on a time skip)
+            _lightingSequence?.Kill();
+            ApplyLightingSettingsImmediate();
+            StartSkyboxTransition();
+            
+            // Publish events
+            if (_eventBus != null)
+            {
+                _eventBus.Publish(new DayCompletedEvent { dayNumber = _currentDay });
+                _eventBus.Publish(new TimeOfDayChangedEvent
+                {
+                    previousTimeOfDay = _previousTimeOfDay,
+                    newTimeOfDay = _currentTimeOfDay,
+                    currentTime = _currentTime
+                });
+            }
+            
+            if (showDebugInfo)
+            {
+                Debug.Log($"[DayNightCycle] Skipped to Day {_currentDay} morning ({config.morningStartHour:F1}h)");
+            }
+        }
+        
         #endregion
         
         #region Unity Lifecycle
@@ -125,10 +161,15 @@ namespace Game.Environment.DayNight
                 return;
             }
             
-            // Apply initial settings
-            ApplyLightingSettings();
+            // Snap to initial settings instantly — no tween on first frame
+            ApplyLightingSettingsImmediate();
             RenderSettings.skybox = config.GetSkyboxForTime(_currentTimeOfDay);
             DynamicGI.UpdateEnvironment();
+        }
+        
+        private void OnDestroy()
+        {
+            _lightingSequence?.Kill();
         }
         
         private void Update()
@@ -143,24 +184,22 @@ namespace Game.Environment.DayNight
             if (_currentTime >= 24f)
             {
                 _currentTime -= 24f;
+                _currentDay++;
                 
                 // Publish day completed event
                 if (_eventBus != null)
                 {
-                    _eventBus.Publish(new DayCompletedEvent { dayNumber = GetCurrentDay() });
+                    _eventBus.Publish(new DayCompletedEvent { dayNumber = _currentDay });
                 }
                 
                 if (showDebugInfo)
                 {
-                    Debug.Log($"[DayNightCycle] Day {GetCurrentDay()} completed!");
+                    Debug.Log($"[DayNightCycle] Day {_currentDay} started!");
                 }
             }
             
-            // Check for time of day change
+            // Check for time of day change (fires DOTween lighting transition on period change)
             UpdateTimeOfDay();
-            
-            // Update lighting
-            ApplyLightingSettings();
             
             // Update skybox transition
             if (_isTransitioning)
@@ -182,8 +221,9 @@ namespace Game.Environment.DayNight
                 _previousTimeOfDay = _currentTimeOfDay;
                 _currentTimeOfDay = newTimeOfDay;
                 
-                // Start skybox transition
+                // Start skybox + lighting DOTween transition
                 StartSkyboxTransition();
+                StartLightingTransition();
                 
                 // Publish event
                 if (_eventBus != null)
@@ -203,61 +243,79 @@ namespace Game.Environment.DayNight
             }
         }
         
-        private int GetCurrentDay()
-        {
-            return Mathf.FloorToInt(Time.time / config.dayDurationInSeconds);
-        }
-        
         #endregion
         
         #region Lighting
         
-        private void ApplyLightingSettings()
+        /// <summary>
+        /// Instantly snaps all lighting to the current time-of-day target values.
+        /// Used on first frame and when skipping time.
+        /// </summary>
+        private void ApplyLightingSettingsImmediate()
         {
             if (directionalLight == null) return;
             
-            var settings = GetLightingSettingsForTime();
+            var s = GetLightingSettingsForTime();
+            directionalLight.color = s.lightColor;
+            directionalLight.intensity = s.intensity;
+            directionalLight.transform.rotation = Quaternion.Euler(s.rotation);
+            RenderSettings.ambientLight = s.ambientColor;
+            RenderSettings.ambientIntensity = s.ambientIntensity;
             
-            // Smooth interpolation for gradual changes
-            directionalLight.color = Color.Lerp(directionalLight.color, settings.lightColor, Time.deltaTime * 2f);
-            directionalLight.intensity = Mathf.Lerp(directionalLight.intensity, settings.intensity, Time.deltaTime * 2f);
-            
-            // Rotate light (sun/moon movement)
-            Quaternion targetRotation = Quaternion.Euler(settings.rotation);
-            directionalLight.transform.rotation = Quaternion.Slerp(
-                directionalLight.transform.rotation,
-                targetRotation,
-                Time.deltaTime * 0.5f
-            );
-            
-            // Ambient lighting
-            RenderSettings.ambientLight = Color.Lerp(
-                RenderSettings.ambientLight,
-                settings.ambientColor,
-                Time.deltaTime * 2f
-            );
-            
-            // Ambient intensity
-            RenderSettings.ambientIntensity = Mathf.Lerp(
-                RenderSettings.ambientIntensity,
-                settings.ambientIntensity,
-                Time.deltaTime * 2f
-            );
-            
-            // Fog (optional)
             if (config.useFog)
             {
                 RenderSettings.fog = true;
-                RenderSettings.fogColor = Color.Lerp(
-                    RenderSettings.fogColor,
-                    settings.fogColor,
-                    Time.deltaTime * 2f
-                );
-                RenderSettings.fogDensity = Mathf.Lerp(
-                    RenderSettings.fogDensity,
-                    settings.fogDensity,
-                    Time.deltaTime * 2f
-                );
+                RenderSettings.fogColor = s.fogColor;
+                RenderSettings.fogDensity = s.fogDensity;
+            }
+        }
+        
+        /// <summary>
+        /// Tweens all lighting values to the current time-of-day targets over skyboxTransitionDuration.
+        /// Kills any previous lighting tween before starting.
+        /// </summary>
+        private void StartLightingTransition()
+        {
+            if (directionalLight == null) return;
+            
+            var s = GetLightingSettingsForTime();
+            float duration = config.skyboxTransitionDuration;
+            
+            _lightingSequence?.Kill();
+            _lightingSequence = DOTween.Sequence().SetLink(gameObject);
+            
+            // Directional light
+            _lightingSequence.Join(directionalLight.DOColor(s.lightColor, duration).SetEase(Ease.InOutSine));
+            _lightingSequence.Join(directionalLight.DOIntensity(s.intensity, duration).SetEase(Ease.InOutSine));
+            _lightingSequence.Join(directionalLight.transform.DORotate(s.rotation, duration).SetEase(Ease.InOutSine));
+            
+            // Ambient
+            _lightingSequence.Join(
+                DOTween.To(() => RenderSettings.ambientLight,
+                           x => RenderSettings.ambientLight = x,
+                           s.ambientColor, duration).SetEase(Ease.InOutSine));
+            _lightingSequence.Join(
+                DOTween.To(() => RenderSettings.ambientIntensity,
+                           x => RenderSettings.ambientIntensity = x,
+                           s.ambientIntensity, duration).SetEase(Ease.InOutSine));
+            
+            // Fog
+            if (config.useFog)
+            {
+                RenderSettings.fog = true;
+                _lightingSequence.Join(
+                    DOTween.To(() => RenderSettings.fogColor,
+                               x => RenderSettings.fogColor = x,
+                               s.fogColor, duration).SetEase(Ease.InOutSine));
+                _lightingSequence.Join(
+                    DOTween.To(() => RenderSettings.fogDensity,
+                               x => RenderSettings.fogDensity = x,
+                               s.fogDensity, duration).SetEase(Ease.InOutSine));
+            }
+            
+            if (showDebugInfo)
+            {
+                Debug.Log($"[DayNightCycle] Lighting DOTween transition started ({duration}s)");
             }
         }
         

@@ -57,5 +57,15 @@ namespace Game.Environment.DayNight
         /// </summary>
         /// <returns>Current ambient color</returns>
         Color GetAmbientColor();
+        
+        /// <summary>
+        /// Current in-game day number (starts at 1)
+        /// </summary>
+        int CurrentDay { get; }
+        
+        /// <summary>
+        /// Skip time forward to the start of the next morning (increments the day counter)
+        /// </summary>
+        void SkipToNextMorning();
     }
 }

@@ -1,6 +1,9 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using Game.UI;
+using Game.Core.DI;
+using Game.Player;
 
 public class PlayerSpawner : MonoBehaviour
 {
@@ -101,6 +104,22 @@ public class PlayerSpawner : MonoBehaviour
         SpawnedPlayer = spawnedPlayerObj.transform;
         
         //Debug.Log($"[PlayerSpawner] Player instantiated at {finalSpawnPosition}");
+        
+        // 5.5. UPDATE UI SERVICE PROVIDER WITH NEW PLAYER REFERENCE
+        UIServiceProvider uiService = ServiceContainer.Instance.TryGet<UIServiceProvider>();
+        if (uiService != null)
+        {
+            uiService.UpdatePlayerReferences(SpawnedPlayer);
+            //Debug.Log("[PlayerSpawner] Updated UIServiceProvider with new player reference");
+        }
+        
+        // 5.6. INITIALIZE PLAYER INVENTORY (after UI is ready)
+        var playerController = spawnedPlayerObj.GetComponent<Game.Player.PlayerControllerRefactored>();
+        if (playerController != null)
+        {
+            playerController.InitializeInventory();
+            //Debug.Log("[PlayerSpawner] Initialized player inventory");
+        }
 
         // 6. DESTROY THE SPAWN MARKER (no longer needed)
         if (spawnMarkerTransform != null)

@@ -50,8 +50,8 @@ namespace Game.Player
         {
             InitializeModel();
             InitializeServices();
-            InitializeInventory();
             InitializeInteraction();
+            InitializeInventory(); // Try to initialize - will be called again by PlayerSpawner if this fails
         }
 
         private void Start()
@@ -102,17 +102,36 @@ namespace Game.Player
             _inputHandler.OnQuickUseRequested += HandleQuickUse;
         }
 
-        private void InitializeInventory()
+        /// <summary>
+        /// Initialize inventory system. Call this after the player is spawned and UI services are ready.
+        /// </summary>
+        public void InitializeInventory()
         {
+            // Skip if already initialized
+            if (_inventoryFacade != null)
+            {
+                Debug.LogWarning("[PlayerControllerRefactored] InitializeInventory called but facade already exists.");
+                return;
+            }
+            
             // Resolve services from ServiceContainer
             var inventoryService = ServiceContainer.Instance.Get<IInventoryService>();
             craftingManager ??= GetComponent<CraftingManager>();
             
-            // Use ServiceContainer for cross-scene references
+            // Use ServiceContainer for cross-scene references (may not be available immediately after spawn)
             if (uiServiceProvider == null)
-                uiServiceProvider = ServiceContainer.Instance.TryGet<UIServiceProvider>();
+            {
+                uiServiceProvider = FindFirstObjectByType<UIServiceProvider>();
+                if (uiServiceProvider == null)
+                    Debug.LogWarning("[PlayerControllerRefactored] UIServiceProvider not found in scene. UI features may be limited.");
+            }
+            
             if (playerCamera == null)
+            {
                 playerCamera = ServiceContainer.Instance.TryGet<CinemachinePlayerCamera>();
+                if (playerCamera == null)
+                    Debug.LogWarning("[PlayerControllerRefactored] CinemachinePlayerCamera not found. Camera features may be limited.");
+            }
 
             // Create facade with IInventoryService (SOLID: Dependency Injection)
             _inventoryFacade = new PlayerInventoryFacade(
