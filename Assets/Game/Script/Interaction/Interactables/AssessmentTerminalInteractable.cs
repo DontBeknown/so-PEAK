@@ -30,8 +30,17 @@ namespace Game.Interaction
         [SerializeField] private bool useCooldown = false;
         [SerializeField] private float cooldownTime = 2f;
         
+        [Header("Terminal Behaviour")]
+        [Tooltip("If true, this terminal can only be interacted with once.")]
+        [SerializeField] private bool oneTimeUse = false;
+        [Tooltip("If true, closing the assessment UI will skip time to the next morning.")]
+        [SerializeField] private bool skipDayOnUse = true;
+        [Tooltip("If true, closing the assessment UI will fully reset the player's fatigue stat.")]
+        [SerializeField] private bool resetFatigueOnUse = true;
+        
         private bool isHighlighted = false;
         private float lastInteractionTime = -999f;
+        private bool _hasBeenUsed = false;
         private Game.Player.PlayerControllerRefactored currentPlayer;
         private UIServiceProvider uiServiceProvider;
         private IDayNightCycleService _dayNightService;
@@ -57,6 +66,10 @@ namespace Game.Interaction
             get
             {
                 if (uiServiceProvider == null)
+                    return false;
+                
+                // One-time-use terminals are permanently disabled after first use
+                if (oneTimeUse && _hasBeenUsed)
                     return false;
                 
                 // Check cooldown
@@ -154,8 +167,27 @@ namespace Game.Interaction
             _eventBus?.Unsubscribe<PanelClosedEvent>(OnPanelClosed);
             _isWaitingForPanelClose = false;
             
-            // Skip time to next morning
-            _dayNightService?.SkipToNextMorning();
+            // Skip time to next morning only if configured
+            if (skipDayOnUse)
+            {
+                _dayNightService?.SkipToNextMorning();
+            }
+            
+            // Reset fatigue (rest) only if configured
+            if (resetFatigueOnUse && currentPlayer != null)
+            {
+                var playerStats = currentPlayer.GetComponent<PlayerStats>();
+                playerStats?.FullRest();
+            }
+            
+            // Mark as used for one-time-use terminals
+            if (oneTimeUse)
+            {
+                _hasBeenUsed = true;
+                // Hide highlight so it no longer appears interactive
+                if (highlightEffect != null)
+                    highlightEffect.SetActive(false);
+            }
             
             UnlockPlayer();
         }

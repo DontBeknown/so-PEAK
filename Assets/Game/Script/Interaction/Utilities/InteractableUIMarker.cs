@@ -40,7 +40,7 @@ namespace Game.Interaction.UI
         private Camera mainCamera;
         private Transform targetTransform;
         private bool isVisible = false;
-        private bool isSelected = false;
+        //private bool isSelected = false;
         private Vector2 initialLocalPosition;
         private Tweener scaleTween;
         private Tweener fadeTween;
@@ -195,7 +195,7 @@ namespace Game.Interaction.UI
             
             currentState = MarkerState.InRange;
             isVisible = true;
-            isSelected = false;
+            //isSelected = false;
             
             AnimateToState(inRangeColor, scaleNormal);
         }
@@ -209,7 +209,7 @@ namespace Game.Interaction.UI
             
             currentState = MarkerState.Selected;
             isVisible = true;
-            isSelected = true;
+            //isSelected = true;
             
             AnimateToState(selectedColor, scaleSelected);
         }
@@ -223,7 +223,7 @@ namespace Game.Interaction.UI
             
             currentState = MarkerState.Depleted;
             isVisible = true;
-            isSelected = false;
+            //isSelected = false;
             
             AnimateToState(depletedColor, scaleNormal * 0.8f);
         }
@@ -237,7 +237,7 @@ namespace Game.Interaction.UI
             
             currentState = MarkerState.Hidden;
             isVisible = false;
-            isSelected = false;
+            //isSelected = false;
             
             // Kill existing tweens
             scaleTween?.Kill();
@@ -260,7 +260,7 @@ namespace Game.Interaction.UI
             
             currentState = MarkerState.Hidden;
             isVisible = false;
-            isSelected = false;
+            //isSelected = false;
             
             // Kill existing tweens
             scaleTween?.Kill();
