@@ -83,6 +83,7 @@ public class WorldStateSaveData
     // Environment
     public string currentWeather;
     public float temperature;
+    public int level;
     
     // Interactables
     public List<InteractableStateSaveData> interactableStates;

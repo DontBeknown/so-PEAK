@@ -37,6 +37,7 @@ namespace Game.Interaction
         [SerializeField] private bool skipDayOnUse = true;
         [Tooltip("If true, closing the assessment UI will fully reset the player's fatigue stat.")]
         [SerializeField] private bool resetFatigueOnUse = true;
+        [SerializeField] private bool progressNextLevelOnUse = false; 
         
         private bool isHighlighted = false;
         private float lastInteractionTime = -999f;
@@ -180,6 +181,12 @@ namespace Game.Interaction
                 playerStats?.FullRest();
             }
             
+            // Progress to next level if configured
+            if (progressNextLevelOnUse)
+            {
+                SaveLoadService.Instance?.ProgressToNextLevel();
+            }
+
             // Mark as used for one-time-use terminals
             if (oneTimeUse)
             {

@@ -82,7 +82,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     
     #region World Management
     
-    public WorldSaveData CreateNewWorld(string worldName, SeedData seedData)
+    public WorldSaveData CreateNewWorld(string worldName, SeedData seedData, int level = 1)
     {
         WorldSaveData newWorld = new WorldSaveData
         {
@@ -95,14 +95,14 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             gameVersion = Application.version,
             saveVersion = CURRENT_SAVE_VERSION,
             playerData = CreateDefaultPlayerData(),
-            worldState = CreateDefaultWorldState()
+            worldState = CreateDefaultWorldState(level)
         };
         
         currentWorldSave = newWorld;
         SaveWorld(newWorld);
         UpdateMetadata(newWorld);
         
-        if (enableDebug) Debug.Log($"Created new world: {worldName} with seed: {seedData.FullSeed}");
+        if (enableDebug) Debug.Log($"Created new world: {worldName} (Level {level}) with seed: {seedData.FullSeed}");
         
         return newWorld;
     }
@@ -389,6 +389,30 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     {
         return IsNewWorld();
     }
+
+    /// <summary>
+    /// Increments the world level by 1 and immediately saves.
+    /// </summary>
+    public void ProgressToNextLevel()
+    {
+        if (currentWorldSave == null) return;
+
+        if (currentWorldSave.worldState == null)
+            currentWorldSave.worldState = CreateDefaultWorldState();
+
+        currentWorldSave.worldState.level++;
+        SaveWorld(currentWorldSave);
+
+        if (enableDebug) Debug.Log($"[SaveLoadService] Progressed to level {currentWorldSave.worldState.level}");
+    }
+
+    /// <summary>
+    /// Returns the current world level from the active save.
+    /// </summary>
+    public int GetCurrentLevel()
+    {
+        return currentWorldSave?.worldState?.level ?? 1;
+    }
     
     #endregion
     
@@ -610,7 +634,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         };
     }
     
-    private WorldStateSaveData CreateDefaultWorldState()
+    private WorldStateSaveData CreateDefaultWorldState(int level = 1)
     {
         return new WorldStateSaveData
         {
@@ -618,6 +642,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             dayNumber = 1,
             currentWeather = "Clear",
             temperature = 20f,
+            level = level,
             interactableStates = new List<InteractableStateSaveData>(),
             resourceNodes = new List<ResourceNodeSaveData>()
         };

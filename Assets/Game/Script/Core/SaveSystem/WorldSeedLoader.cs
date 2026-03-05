@@ -8,7 +8,7 @@ public class WorldSeedLoader : MonoBehaviour
 {
     private void Start()
     {
-        //LoadCurrentWorldSeed();
+        LoadCurrentWorldSeed();
     }
     
     private void LoadCurrentWorldSeed()
@@ -30,6 +30,8 @@ public class WorldSeedLoader : MonoBehaviour
             return;
         }
         
+
+        int currentLevel = currentWorld.worldState.level;
         // Access seed data
         SeedData seedData = currentWorld.seedData;
         
@@ -46,6 +48,7 @@ public class WorldSeedLoader : MonoBehaviour
         Debug.Log($"[WorldSeedLoader] Seed Part 2: {seed2}");
         Debug.Log($"[WorldSeedLoader] Seed Part 3: {seed3}");
         Debug.Log($"[WorldSeedLoader] Full Seed: {fullSeed}");
+        Debug.Log($"[WorldSeedLoader] Current Level: {currentLevel}");
         
         // Use the seed for terrain generation
         GenerateTerrainWithSeed(fullSeed);

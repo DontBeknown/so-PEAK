@@ -7,6 +7,7 @@ public class WorldPersistenceManager : ScriptableObject
     public string currentWorldGuid;
     public string currentWorldName;
     public SeedData currentSeedData;
+    public int level = 1;
     
     [Header("World State")]
     public bool isNewWorld;
@@ -17,11 +18,12 @@ public class WorldPersistenceManager : ScriptableObject
     public Quaternion playerStartRotation = Quaternion.identity;
     
     // Set when creating new world
-    public void PrepareNewWorld(string worldName, SeedData seedData, string worldGuid)
+    public void PrepareNewWorld(string worldName, SeedData seedData, string worldGuid, int level = 1)
     {
         currentWorldGuid = worldGuid;
         currentWorldName = worldName;
         currentSeedData = seedData;
+        this.level = level;
         isNewWorld = true;
         shouldLoadWorld = false;
         
@@ -35,6 +37,7 @@ public class WorldPersistenceManager : ScriptableObject
         currentWorldGuid = saveData.worldGuid;
         currentWorldName = saveData.worldName;
         currentSeedData = saveData.seedData;
+        this.level = saveData.worldState != null ? saveData.worldState.level : 1;
         isNewWorld = false;
         shouldLoadWorld = true;
         

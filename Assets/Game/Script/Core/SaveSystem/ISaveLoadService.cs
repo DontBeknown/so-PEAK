@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public interface ISaveLoadService
 {
     // World Management
-    WorldSaveData CreateNewWorld(string worldName, SeedData seedData);
+    WorldSaveData CreateNewWorld(string worldName, SeedData seedData, int level = 1);
     bool SaveWorld(WorldSaveData saveData);
     WorldSaveData LoadWorld(string worldGuid);
     bool DeleteWorld(string worldGuid);
@@ -19,6 +19,10 @@ public interface ISaveLoadService
     bool CreateBackup(string worldGuid);
     bool RestoreFromBackup(string worldGuid, DateTime backupDate);
     List<DateTime> GetBackups(string worldGuid);
+    
+    // Level progression
+    void ProgressToNextLevel();
+    int GetCurrentLevel();
     
     // Validation
     bool ValidateSaveFile(string worldGuid);

@@ -1451,6 +1451,9 @@ MonoBehaviour:
   highlightColor: {r: 0, g: 1, b: 1, a: 1}
   useCooldown: 0
   cooldownTime: 2
+  oneTimeUse: 0
+  skipDayOnUse: 1
+  resetFatigueOnUse: 1
 --- !u!65 &727518819
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1555,6 +1558,7 @@ GameObject:
   - component: {fileID: 781106342}
   - component: {fileID: 781106341}
   - component: {fileID: 781106340}
+  - component: {fileID: 781106343}
   m_Layer: 0
   m_Name: DayNightCycleManager (1)
   m_TagString: Untagged
@@ -1609,6 +1613,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &781106343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 781106339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3163d6e749c44f41b799205aa8e1aa8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldSeedLoader
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -2009,7 +2025,6 @@ GameObject:
   m_Component:
   - component: {fileID: 957156643}
   - component: {fileID: 957156642}
-  - component: {fileID: 957156641}
   m_Layer: 0
   m_Name: SaveNLoadManager
   m_TagString: Untagged
@@ -2017,22 +2032,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &957156641
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 957156640}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3a3035ce31ef9d647a940a0136682aa2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameplaySceneInitializer
-  worldPersistence: {fileID: 11400000, guid: 85be4fbf52e94dd419bde035e2a662f1, type: 2}
-  playerPrefab: {fileID: 0}
-  saveLoadService: {fileID: 957156642}
-  enableDebug: 0
 --- !u!114 &957156642
 MonoBehaviour:
   m_ObjectHideFlags: 0
