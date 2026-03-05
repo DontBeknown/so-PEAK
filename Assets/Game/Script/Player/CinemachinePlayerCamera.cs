@@ -98,7 +98,6 @@ public class CinemachinePlayerCamera : MonoBehaviour, ICameraInputController
                 }
             }
         }
-           
     }
 
     public bool IsCursorLocked() => Cursor.lockState == CursorLockMode.Locked;
