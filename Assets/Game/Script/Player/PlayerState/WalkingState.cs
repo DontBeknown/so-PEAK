@@ -184,8 +184,8 @@ public class WalkingState : IPlayerState
     {
         if (model.Stats != null)
         {
-            model.Stats.OnJump(); 
-            if (model.Stats.Stamina < 0.01f) return; 
+            if (model.Stats.Stamina < model.Stats.Config.jumpStaminaCost) return;
+            model.Stats.OnJump();
         }
 
         if (input.sqrMagnitude <= 0.01f)
