@@ -20,9 +20,14 @@ namespace Game.Player.Inventory
         [SerializeField] private int initialInventorySize = 20;
         [SerializeField] private PlayerStats playerStats;
 
+        [Header("Grid Inventory")]
+        [SerializeField] private int gridWidth = 10;
+        [SerializeField] private int gridHeight = 6;
+
         #region Private Fields
 
         private IInventoryStorage _storage;
+        private GridInventoryStorage _gridStorage;
         private IInventoryService _service;
         private IConsumableEffectSystem _effectSystem;
         private IEventBus _eventBus;
@@ -70,9 +75,9 @@ namespace Game.Player.Inventory
                 return;
             }
 
-            // Create storage layer
-            _storage = new InventoryStorage(initialInventorySize, 100);
-            //Debug.Log($"[InventoryManagerRefactored] Storage initialized with {initialInventorySize} slots");
+            // Create grid storage layer
+            _gridStorage = new GridInventoryStorage(gridWidth, gridHeight);
+            _storage = new GridStorageAdapter(_gridStorage);
 
             // Create service layer
             _service = new InventoryService(_storage, _eventBus);
@@ -94,7 +99,7 @@ namespace Game.Player.Inventory
             //Debug.Log("[InventoryManagerRefactored] Self registered");
 
             container.Register<IInventoryStorage>(_storage);
-            //Debug.Log("[InventoryManagerRefactored] IInventoryStorage registered");
+            container.Register(_gridStorage);
 
             container.Register<IInventoryService>(_service);
             //Debug.Log("[InventoryManagerRefactored] IInventoryService registered");
@@ -201,23 +206,66 @@ namespace Game.Player.Inventory
 
         #region Direct Access (for migration period)
 
-        /// <summary>
-        /// Provides direct access to storage during migration
-        /// Remove this after full migration
-        /// </summary>
         public IInventoryStorage Storage => _storage;
-
-        /// <summary>
-        /// Provides direct access to service during migration
-        /// Remove this after full migration
-        /// </summary>
         public IInventoryService Service => _service;
-
-        /// <summary>
-        /// Provides direct access to effect system during migration
-        /// Remove this after full migration
-        /// </summary>
         public IConsumableEffectSystem EffectSystem => _effectSystem;
+
+        #endregion
+
+        #region Grid API
+
+        public GridInventoryStorage GridStorage => _gridStorage;
+        public Vector2Int GridSize => new Vector2Int(gridWidth, gridHeight);
+
+        public Storage.GridPlacement PlaceItemAt(InventoryItem item, Vector2Int pos)
+        {
+            var placement = _gridStorage.PlaceItem(item, pos);
+            if (placement != null)
+            {
+                _eventBus.Publish(new Events.ItemPlacedEvent(item, pos, item.gridSize));
+                _eventBus.Publish(new Events.InventoryChangedEvent());
+            }
+            return placement;
+        }
+
+        public bool MoveItem(Storage.GridPlacement placement, Vector2Int newPos)
+        {
+            if (placement == null) return false;
+            var oldPos = placement.Position;
+            bool success = _gridStorage.MoveItem(placement, newPos);
+            if (success)
+            {
+                _eventBus.Publish(new Events.ItemMovedEvent(placement.Item, oldPos, newPos));
+            }
+            return success;
+        }
+
+        public void RemoveFromGrid(Storage.GridPlacement placement)
+        {
+            if (placement == null) return;
+            var item = placement.Item;
+            var pos = placement.Position;
+            _gridStorage.RemoveItem(placement);
+            _eventBus.Publish(new Events.ItemRemovedFromGridEvent(item, pos));
+            _eventBus.Publish(new Events.ItemRemovedEvent(item, 1));
+            _eventBus.Publish(new Events.InventoryChangedEvent());
+        }
+
+        public System.Collections.Generic.List<Storage.GridPlacement> GetAllPlacements()
+        {
+            return _gridStorage.GetAllPlacements();
+        }
+
+        public bool RotateItem(Storage.GridPlacement placement)
+        {
+            if (placement == null) return false;
+            bool success = _gridStorage.RotateItem(placement);
+            if (success)
+            {
+                _eventBus.Publish(new Events.InventoryChangedEvent());
+            }
+            return success;
+        }
 
         #endregion
     }

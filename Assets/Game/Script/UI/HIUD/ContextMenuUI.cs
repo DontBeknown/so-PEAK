@@ -31,6 +31,10 @@ public class ContextMenuUI : MonoBehaviour
     private bool lastCanteenCanDrink;
     private Coroutine cooldownCheckCoroutine; 
 
+    // For grid item menu
+    private GridInventoryUI currentGridUI;
+    private GridItemUI currentGridItemUI;
+
     public bool IsVisible => contextMenuPanel.activeSelf;
 
     private void Awake()
@@ -225,6 +229,94 @@ public class ContextMenuUI : MonoBehaviour
         ShowMenu();
     }
 
+    /// <summary>
+    /// Show context menu for a grid inventory item.
+    /// </summary>
+    public void ShowGridItemMenu(GridInventoryUI gridUI, GridItemUI itemUI)
+    {
+        if (gridUI == null || itemUI == null || itemUI.Placement == null) return;
+
+        // Clear slot-based context
+        currentSlotUI = null;
+        currentInventoryUI = null;
+        currentEquipmentManager = null;
+        isInventoryMenu = false;
+
+        // Store grid context
+        currentGridUI = gridUI;
+        currentGridItemUI = itemUI;
+
+        ClearButtons();
+
+        var item = itemUI.Placement.Item;
+        EquipmentItem equipItem = item as EquipmentItem;
+
+        if (equipItem != null)
+        {
+            // Canteen special handling
+            CanteenItem canteenItem = item as CanteenItem;
+            if (canteenItem != null)
+            {
+                if (canteenItem.CanDrink())
+                {
+                    AddButton("Drink", () => {
+                        var playerStats = Game.Core.DI.ServiceContainer.Instance.TryGet<PlayerStats>();
+                        canteenItem.Drink(playerStats);
+                        HideMenu();
+                    });
+                }
+                else
+                {
+                    AddButton("Drink", null);
+                }
+            }
+
+            // Equip / Unequip
+            var eqManager = Game.Core.DI.ServiceContainer.Instance.TryGet<EquipmentManager>();
+            bool isEquipped = eqManager != null &&
+                (UnityEngine.Object)eqManager.GetEquippedItem(equipItem.EquipmentSlot) == equipItem;
+
+            if (isEquipped)
+            {
+                AddButton("Unequip", () => {
+                    eqManager?.Unequip(equipItem.EquipmentSlot);
+                    HideMenu();
+                });
+            }
+            else
+            {
+                AddButton("Equip", () => {
+                    gridUI.UseItem(itemUI);
+                    HideMenu();
+                });
+            }
+        }
+        else if (item.isConsumable)
+        {
+            AddButton("Consume", () => {
+                gridUI.UseItem(itemUI);
+                HideMenu();
+            });
+        }
+
+        // Rotate — only useful for non-square items
+        if (item.gridSize.x != item.gridSize.y)
+        {
+            AddButton("Rotate", () => {
+                gridUI.RotateItem(itemUI);
+                HideMenu();
+            });
+        }
+
+        // All items can be dropped
+        AddButton("Drop", () => {
+            gridUI.DropItem(itemUI);
+            HideMenu();
+        });
+
+        ShowMenu();
+    }
+
     private void AddButton(string label, Action onClick)
     {
         GameObject buttonObj = Instantiate(buttonPrefab, buttonContainer);
@@ -292,6 +384,8 @@ public class ContextMenuUI : MonoBehaviour
         currentSlotUI = null;
         currentInventoryUI = null;
         currentEquipmentManager = null;
+        currentGridUI = null;
+        currentGridItemUI = null;
         isInventoryMenu = false;
     }
     

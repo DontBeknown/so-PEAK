@@ -4,47 +4,50 @@ using Game.UI;
 namespace Game.UI.Adapters
 {
     /// <summary>
-    /// Adapter for InventoryUI (legacy) to work with UIServiceProvider
-    /// Wraps the legacy InventoryUI to implement IUIPanel interface
+    /// Adapter for GridInventoryUI to work with UIServiceProvider.
+    /// Wraps GridInventoryUI to implement the IUIPanel interface.
     /// </summary>
     public class InventoryUIAdapter : MonoBehaviour, IUIPanel
     {
-        [SerializeField] private InventoryUI inventoryUI;
+        [SerializeField] private GridInventoryUI gridInventoryUI;
         
         public string PanelName => "Inventory";
-        public bool IsActive => inventoryUI != null && inventoryUI.gameObject.activeInHierarchy;
+        public bool IsActive => gridInventoryUI != null && gridInventoryUI.gameObject.activeInHierarchy;
         public bool BlocksInput => true;
         public bool UnlocksCursor => true;
         
         private void Awake()
         {
-            if (inventoryUI == null)
+            if (gridInventoryUI == null)
             {
-                inventoryUI = GetComponent<InventoryUI>();
+                gridInventoryUI = GetComponent<GridInventoryUI>();
             }
         }
         
         public void Show()
         {
-            if (inventoryUI != null)
+            if (gridInventoryUI != null)
             {
-                inventoryUI.ShowInventoryPanel();
+                gridInventoryUI.ShowInventoryPanel();
             }
         }
         
         public void Hide()
         {
-            if (inventoryUI != null)
+            if (gridInventoryUI != null)
             {
-                inventoryUI.HideInventoryPanel();
+                gridInventoryUI.HideInventoryPanel();
             }
         }
         
         public void Toggle()
         {
-            if (inventoryUI != null)
+            if (gridInventoryUI != null)
             {
-                inventoryUI.ToggleInventory();
+                if (gridInventoryUI.IsOpen)
+                    gridInventoryUI.HideInventoryPanel();
+                else
+                    gridInventoryUI.ShowInventoryPanel();
             }
         }
     }

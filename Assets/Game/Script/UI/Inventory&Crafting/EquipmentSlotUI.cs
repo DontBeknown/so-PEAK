@@ -165,9 +165,15 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
 
     public void OnDrop(PointerEventData eventData)
     {
-        // Handle drag-and-drop from inventory
-        // This will be implemented when drag-and-drop is added
-        Debug.Log($"Item dropped on {slotType} slot");
+        // Handle drag-and-drop from grid inventory
+        var gridItem = eventData.pointerDrag?.GetComponent<GridItemUI>();
+        if (gridItem == null || gridItem.Placement == null) return;
+
+        var equipItem = gridItem.Placement.Item as EquipmentItem;
+        if (equipItem != null && equipItem.EquipmentSlot == slotType)
+        {
+            TryEquipItem(equipItem);
+        }
     }
 
     /// <summary>

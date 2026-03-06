@@ -14,6 +14,9 @@ public class InventoryItem : ScriptableObject
     public ItemType itemType;
     public ItemCategory category;
 
+    [Header("Grid Size (cells)")]
+    public Vector2Int gridSize = Vector2Int.one;
+
     [Header("Consumable Properties")]
     public bool isConsumable = false;
     public ConsumableEffect[] consumableEffects;
@@ -21,6 +24,11 @@ public class InventoryItem : ScriptableObject
     [Header("Crafting Properties")]
     public bool isCraftingMaterial = false;
     public bool isCraftedItem = false;
+
+    private void OnValidate()
+    {
+        gridSize = Vector2Int.Max(gridSize, Vector2Int.one);
+    }
 }
 
 [System.Serializable]

@@ -21,8 +21,8 @@ public class EquipmentUI : MonoBehaviour
     [Header("Character Preview (Optional)")]
     [SerializeField] private Image characterPreview;
 
-    private EquipmentManager equipmentManager;
-    private InventoryUI inventoryUI; // Reference to refresh inventory when unequipping
+    [Header("References")]
+    [SerializeField] private EquipmentManager equipmentManager;
     private IEventBus eventBus;
     private Dictionary<EquipmentSlotType, EquipmentSlotUI> slotUIs = new Dictionary<EquipmentSlotType, EquipmentSlotUI>();
     private bool isInitialized = false; // Track if slots have been created
@@ -31,13 +31,6 @@ public class EquipmentUI : MonoBehaviour
 
     private void Awake()
     {
-        // Get references from ServiceContainer (DI)
-        equipmentManager = ServiceContainer.Instance.TryGet<EquipmentManager>();
-        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
-        
-        // Find inventory UI to refresh it when unequipping
-        inventoryUI = ServiceContainer.Instance.TryGet<InventoryUI>();
-
         // Start hidden
         if (equipmentPanel != null)
             equipmentPanel.SetActive(false);
@@ -45,6 +38,10 @@ public class EquipmentUI : MonoBehaviour
 
     private void Start()
     {
+        // Get references from ServiceContainer (DI)
+        if(equipmentManager == null) equipmentManager = ServiceContainer.Instance.TryGet<EquipmentManager>();
+        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+
         SubscribeToEvents();
     }
 

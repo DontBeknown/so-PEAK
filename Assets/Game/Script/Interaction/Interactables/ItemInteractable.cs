@@ -15,6 +15,11 @@ namespace Game.Interaction
         [SerializeField] private InventoryItem item;
         [SerializeField] private int quantity = 1;
         [SerializeField] private string customPrompt = ""; // Optional custom prompt
+
+        /// <summary>The InventoryItem this interactable gives.</summary>
+        public InventoryItem Item => item;
+        /// <summary>How many of the item this interactable gives.</summary>
+        public int Quantity => quantity;
         
         [Header("Interaction Settings")]
         [SerializeField] private float interactionPriority = 1f;
@@ -25,9 +30,19 @@ namespace Game.Interaction
         [SerializeField] private AudioClip pickupSound;
         [SerializeField] private GameObject pickupParticles;
         [SerializeField] private bool destroyOnPickup = true;
+
+        [Header("Multiple Use")]
+        [SerializeField] private bool allowMultipleUse = false;
+        [SerializeField] private int maxUses = 0; // 0 = unlimited; > 0 = limited number of uses
         
         private bool isHighlighted = false;
         private bool hasBeenCollected = false;
+        private int remainingUses;
+
+        private void Start()
+        {
+            remainingUses = maxUses;
+        }
 
         #region IInteractable Implementation
 
@@ -82,22 +97,34 @@ namespace Game.Interaction
             
             if (added)
             {
-                hasBeenCollected = true;
-                
                 // Play pickup feedback
                 PlayPickupFeedback();
                 
                 // Show notification
                 ShowPickupNotification();
-                
-                // Destroy or disable the object
-                if (destroyOnPickup)
+
+                bool usesExhausted = false;
+
+                if (!allowMultipleUse)
                 {
-                    Destroy(gameObject);
+                    usesExhausted = true;
                 }
-                else
+                else if (maxUses > 0)
                 {
-                    gameObject.SetActive(false);
+                    remainingUses--;
+                    if (remainingUses <= 0)
+                        usesExhausted = true;
+                }
+                // else: unlimited uses — never exhausted
+
+                if (usesExhausted)
+                {
+                    hasBeenCollected = true;
+
+                    if (destroyOnPickup)
+                        Destroy(gameObject);
+                    else
+                        gameObject.SetActive(false);
                 }
             }
             else
@@ -141,6 +168,10 @@ namespace Game.Interaction
             // Ensure quantity is at least 1
             if (quantity < 1)
                 quantity = 1;
+
+            // Ensure maxUses is non-negative
+            if (maxUses < 0)
+                maxUses = 0;
         }
 
         #region Editor Gizmos

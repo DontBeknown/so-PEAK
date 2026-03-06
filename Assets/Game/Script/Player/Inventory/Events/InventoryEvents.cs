@@ -42,6 +42,48 @@ namespace Game.Player.Inventory.Events
         // Empty event, just signals a change occurred
     }
 
+    // ── Grid-specific events ──
+
+    public class ItemPlacedEvent
+    {
+        public InventoryItem Item { get; }
+        public UnityEngine.Vector2Int Position { get; }
+        public UnityEngine.Vector2Int Size { get; }
+
+        public ItemPlacedEvent(InventoryItem item, UnityEngine.Vector2Int position, UnityEngine.Vector2Int size)
+        {
+            Item = item;
+            Position = position;
+            Size = size;
+        }
+    }
+
+    public class ItemMovedEvent
+    {
+        public InventoryItem Item { get; }
+        public UnityEngine.Vector2Int OldPosition { get; }
+        public UnityEngine.Vector2Int NewPosition { get; }
+
+        public ItemMovedEvent(InventoryItem item, UnityEngine.Vector2Int oldPosition, UnityEngine.Vector2Int newPosition)
+        {
+            Item = item;
+            OldPosition = oldPosition;
+            NewPosition = newPosition;
+        }
+    }
+
+    public class ItemRemovedFromGridEvent
+    {
+        public InventoryItem Item { get; }
+        public UnityEngine.Vector2Int Position { get; }
+
+        public ItemRemovedFromGridEvent(InventoryItem item, UnityEngine.Vector2Int position)
+        {
+            Item = item;
+            Position = position;
+        }
+    }
+
     // Legacy instance-based events (keep for backward compatibility during migration)
     /// <summary>
     /// Instance-based events for inventory changes

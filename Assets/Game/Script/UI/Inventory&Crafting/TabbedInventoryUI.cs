@@ -13,7 +13,7 @@ public class TabbedInventoryUI : MonoBehaviour
     [SerializeField] private Button craftingTabButton;
 
     [Header("Tab Panels")]
-    [SerializeField] private InventoryUI inventoryUI;
+    [SerializeField] private GridInventoryUI inventoryUI;
     [SerializeField] private CraftingUI craftingUI;
 
     [Header("Tab Visual Feedback")]
@@ -60,7 +60,7 @@ public class TabbedInventoryUI : MonoBehaviour
 
         // Find components if not assigned
         if (inventoryUI == null)
-            inventoryUI = GetComponentInChildren<InventoryUI>(true);
+            inventoryUI = GetComponentInChildren<GridInventoryUI>(true);
 
         if (craftingUI == null)
             craftingUI = GetComponentInChildren<CraftingUI>(true);

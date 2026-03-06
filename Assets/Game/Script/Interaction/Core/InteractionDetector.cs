@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System;
 using Game.Interaction.UI;
 using Game.UI;
+using Game.Core.DI;
 
 namespace Game.Interaction
 {
@@ -81,6 +82,8 @@ namespace Game.Interaction
                 markerContainer = containerObj.transform;
                 markerContainer.SetParent(markerCanvas.transform, false);
             }
+
+            ServiceContainer.Instance.Register(this);
         }
 
         private void Update()
