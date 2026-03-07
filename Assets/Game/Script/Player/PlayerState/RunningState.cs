@@ -72,7 +72,7 @@ public class RunningState : IPlayerState
 
         if (horizontal.sqrMagnitude > 0.01f)
         {
-            float toblerMultiplier = CalculateSlopeEffects(model, horizontal);
+            var (toblerMultiplier, groundNormal) = CalculateSlopeEffects(model, horizontal);
 
             // Fatigue penalty (additive with slope penalty)
             float fatigueSpeedPenalty = 1f;
@@ -94,9 +94,14 @@ public class RunningState : IPlayerState
             }
 
             horizontal *= combinedMultiplier;
+
+            // Align movement along the slope surface so the player follows terrain contours
+            float slopeAngle = Vector3.Angle(Vector3.up, groundNormal);
+            if (slopeAngle > 0.5f)
+                horizontal = Vector3.ProjectOnPlane(horizontal, groundNormal).normalized * horizontal.magnitude;
         }
 
-        Vector3 motion = new Vector3(horizontal.x, model.Velocity.y, horizontal.z);
+        Vector3 motion = new Vector3(horizontal.x, model.Velocity.y + horizontal.y, horizontal.z);
         model.Move(motion);
 
         // ── Rotation ───────────────────────────────────────────────────
@@ -158,10 +163,10 @@ public class RunningState : IPlayerState
     /// Re-uses WalkingState's Tobler slope formula but applies the higher
     /// sprint stamina drain rate.  Uphill slopes add a 0–50 % surcharge.
     /// </summary>
-    private float CalculateSlopeEffects(PlayerModelRefactored model, Vector3 horizontalVelocity)
+    private (float multiplier, Vector3 groundNormal) CalculateSlopeEffects(PlayerModelRefactored model, Vector3 horizontalVelocity)
     {
         var config = model.Stats?.Config;
-        if (config == null) return 1f;
+        if (config == null) return (1f, Vector3.up);
 
         // Ground normal via raycast
         Vector3 groundNormal = Vector3.up;
@@ -215,6 +220,6 @@ public class RunningState : IPlayerState
             }
         }
 
-        return toblerMultiplier;
+        return (toblerMultiplier, groundNormal);
     }
 }

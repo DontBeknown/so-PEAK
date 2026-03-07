@@ -26,7 +26,7 @@ MonoBehaviour:
     m_Bits: 128
   climbingFootReachDistance: 0
   climbingFootOffset: 0.08
-  enablePelvisAdjustment: 0
+  enablePelvisAdjustment: 1
   pelvisUpDownSpeed: 15
   pelvisOffset: 0.1
   maxPelvisAdjustment: 0.5

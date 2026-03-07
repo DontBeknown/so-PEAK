@@ -65,7 +65,7 @@ public class WalkingState : IPlayerState
         // Calculate slope effects (stamina drain and fatigue accumulation)
         if (horizontal.sqrMagnitude > 0.01f)
         {
-            float toblerSpeedMultiplier = CalculateSlopeEffects(model, horizontal);
+            var (toblerSpeedMultiplier, groundNormal) = CalculateSlopeEffects(model, horizontal);
             
             // Combine slope and fatigue penalties additively
             float fatigueSpeedPenalty = 1f;
@@ -88,9 +88,14 @@ public class WalkingState : IPlayerState
             }
             
             horizontal *= combinedMultiplier;
+
+            // Align movement along the slope surface so the player follows terrain contours
+            float slopeAngle = Vector3.Angle(Vector3.up, groundNormal);
+            if (slopeAngle > 0.5f)
+                horizontal = Vector3.ProjectOnPlane(horizontal, groundNormal).normalized * horizontal.magnitude;
         }
         
-        Vector3 motion = new Vector3(horizontal.x, model.Velocity.y, horizontal.z);
+        Vector3 motion = new Vector3(horizontal.x, model.Velocity.y + horizontal.y, horizontal.z);
         model.Move(motion);
 
         // Rotate to face movement direction
@@ -114,10 +119,10 @@ public class WalkingState : IPlayerState
     /// Formula: speed = base_speed * exp(-3.5 * abs(slope + 0.05))
     /// Returns speed multiplier to apply
     /// </summary>
-    private float CalculateSlopeEffects(PlayerModelRefactored model, Vector3 horizontalVelocity)
+    private (float multiplier, Vector3 groundNormal) CalculateSlopeEffects(PlayerModelRefactored model, Vector3 horizontalVelocity)
     {
         var config = model.Stats?.Config;
-        if (config == null) return 1f;
+        if (config == null) return (1f, Vector3.up);
         
         // Get ground normal via raycast
         Vector3 groundNormal = Vector3.up;
@@ -177,7 +182,7 @@ public class WalkingState : IPlayerState
             }
         }
         
-        return toblerSpeedMultiplier;
+        return (toblerSpeedMultiplier, groundNormal);
     }
 
     public void OnJump(PlayerModelRefactored model, Vector2 input)
