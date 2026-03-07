@@ -101,6 +101,10 @@ public class RunningState : IPlayerState
                 horizontal = Vector3.ProjectOnPlane(horizontal, groundNormal).normalized * horizontal.magnitude;
         }
 
+        // Slope sliding: push the player downhill when standing on a slope beyond the controller's limit
+        Vector3 slopeSlide = GetSlopeSlide(model);
+        horizontal += slopeSlide;
+
         Vector3 motion = new Vector3(horizontal.x, model.Velocity.y + horizontal.y, horizontal.z);
         model.Move(motion);
 
@@ -155,6 +159,32 @@ public class RunningState : IPlayerState
         {
             _stateTransitioner?.TransitionTo(new ClimbingState(_stateTransitioner));
         }
+    }
+
+    // ── Slope slide ────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Returns a downhill slide velocity when the ground slope exceeds the CharacterController's
+    /// slopeLimit.  Uses Δ-angle so speed ramps smoothly from zero at the limit.
+    /// </summary>
+    private Vector3 GetSlopeSlide(PlayerModelRefactored model)
+    {
+        var config = model.Stats?.Config;
+        if (config == null) return Vector3.zero;
+
+        Vector3 origin = model.Transform.position + Vector3.up * 0.5f;
+        if (!Physics.Raycast(origin, Vector3.down, out RaycastHit hit, 2f, config.groundLayer))
+            return Vector3.zero;
+
+        float slopeAngle = Vector3.Angle(Vector3.up, hit.normal);
+        float excess = slopeAngle - model.Controller.slopeLimit;
+        if (excess <= 0f)
+            return Vector3.zero;
+
+        // Gravity component along the slope surface, scaled by excess angle only
+        Vector3 slideDir = Vector3.ProjectOnPlane(Vector3.down, hit.normal).normalized;
+        float slideSpeed = 9.81f * Mathf.Sin(excess * Mathf.Deg2Rad);
+        return slideDir * slideSpeed;
     }
 
     // ── Slope effects (Tobler + sprint drain) ──────────────────────────
