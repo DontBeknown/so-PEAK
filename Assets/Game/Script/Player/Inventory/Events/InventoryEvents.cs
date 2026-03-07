@@ -42,6 +42,18 @@ namespace Game.Player.Inventory.Events
         // Empty event, just signals a change occurred
     }
 
+    public class InventoryFullEvent
+    {
+        public InventoryItem Item { get; }
+        public int Quantity { get; }
+
+        public InventoryFullEvent(InventoryItem item, int quantity)
+        {
+            Item = item;
+            Quantity = quantity;
+        }
+    }
+
     // ── Grid-specific events ──
 
     public class ItemPlacedEvent

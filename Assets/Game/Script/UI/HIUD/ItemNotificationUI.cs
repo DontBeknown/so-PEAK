@@ -70,6 +70,7 @@ public class ItemNotificationUI : MonoBehaviour
             eventBus.Subscribe<Game.Player.Inventory.Events.ItemAddedEvent>(HandleItemAddedEvent);
             eventBus.Subscribe<Game.Player.Inventory.Events.ItemRemovedEvent>(HandleItemRemovedEvent);
             eventBus.Subscribe<Game.Player.Inventory.Events.ItemConsumedEvent>(HandleItemConsumedEvent);
+            eventBus.Subscribe<Game.Player.Inventory.Events.InventoryFullEvent>(HandleInventoryFullEvent);
             eventBus.Subscribe<ItemEquippedEvent>(HandleItemEquippedEvent);
             eventBus.Subscribe<ItemUnequippedEvent>(HandleItemUnequippedEvent);
             
@@ -97,6 +98,7 @@ public class ItemNotificationUI : MonoBehaviour
             eventBus.Unsubscribe<Game.Player.Inventory.Events.ItemAddedEvent>(HandleItemAddedEvent);
             eventBus.Unsubscribe<Game.Player.Inventory.Events.ItemRemovedEvent>(HandleItemRemovedEvent);
             eventBus.Unsubscribe<Game.Player.Inventory.Events.ItemConsumedEvent>(HandleItemConsumedEvent);
+            eventBus.Unsubscribe<Game.Player.Inventory.Events.InventoryFullEvent>(HandleInventoryFullEvent);
             eventBus.Unsubscribe<ItemEquippedEvent>(HandleItemEquippedEvent);
             eventBus.Unsubscribe<ItemUnequippedEvent>(HandleItemUnequippedEvent);
             
@@ -141,6 +143,12 @@ public class ItemNotificationUI : MonoBehaviour
         ShowNotification(evt.Item, 1, NotificationType.Consumed);
     }
     
+    private void HandleInventoryFullEvent(Game.Player.Inventory.Events.InventoryFullEvent evt)
+    {
+        if (evt.Item == null) return;
+        ShowNotification(evt.Item, evt.Quantity, NotificationType.InventoryFull);
+    }
+
     private void HandleItemEquippedEvent(ItemEquippedEvent evt)
     {
         //Debug.Log($"[ItemNotificationUI] ItemEquippedEvent received: {evt.Item}");
@@ -299,6 +307,7 @@ public class ItemNotificationUI : MonoBehaviour
             NotificationType.Consumed => "Consumed",
             NotificationType.Equipped => "Equipped",
             NotificationType.Unequipped => "Unequipped",
+            NotificationType.InventoryFull => "Inventory Full",
             _ => ""
         };
     }
@@ -312,6 +321,7 @@ public class ItemNotificationUI : MonoBehaviour
             NotificationType.Consumed => new Color(0.3f, 0.6f, 0.9f), // Blue
             NotificationType.Equipped => new Color(0.9f, 0.7f, 0.2f), // Gold
             NotificationType.Unequipped => new Color(0.6f, 0.6f, 0.6f), // Gray
+            NotificationType.InventoryFull => new Color(0.9f, 0.4f, 0.1f), // Orange
             _ => Color.white
         };
     }
@@ -431,5 +441,6 @@ public enum NotificationType
     Removed,
     Consumed,
     Equipped,
-    Unequipped
+    Unequipped,
+    InventoryFull
 }

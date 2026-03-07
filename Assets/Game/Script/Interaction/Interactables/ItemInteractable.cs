@@ -44,6 +44,17 @@ namespace Game.Interaction
             remainingUses = maxUses;
         }
 
+        /// <summary>
+        /// Initialise this interactable at runtime (e.g. after spawning a dropped item).
+        /// </summary>
+        public void Init(InventoryItem inventoryItem, int qty = 1)
+        {
+            item = inventoryItem;
+            quantity = qty;
+            hasBeenCollected = false;
+            remainingUses = maxUses;
+        }
+
         #region IInteractable Implementation
 
         public string InteractionPrompt 
@@ -127,10 +138,7 @@ namespace Game.Interaction
                         gameObject.SetActive(false);
                 }
             }
-            else
-            {
-                Debug.LogWarning($"[ItemInteractable] Failed to add {item.itemName} to inventory (full?)");
-            }
+            // else: InventoryFullEvent is published by InventoryService — notification handled automatically.
         }
 
         #endregion
@@ -152,15 +160,8 @@ namespace Game.Interaction
 
         private void ShowPickupNotification()
         {
-            if (item != null)
-            {
-                string message = quantity > 1 
-                    ? $"Collected {quantity}x {item.itemName}" 
-                    : $"Collected {item.itemName}";
-                
-                // TODO: Connect to notification system when available
-                //Debug.Log(message);
-            }
+            // ItemAddedEvent is published by InventoryService on successful add.
+            // ItemNotificationUI listens to that event and shows the toast automatically.
         }
 
         private void OnValidate()

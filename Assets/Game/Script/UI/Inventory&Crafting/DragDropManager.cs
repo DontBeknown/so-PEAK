@@ -14,7 +14,8 @@ public class DragDropManager : MonoBehaviour
     [Header("Drag Animation")]
     [SerializeField] private float dragScale = 1.15f;
     [SerializeField] private float dragScaleDuration = 0.12f;
-    [SerializeField] private float dropScaleDuration = 0.1f;
+    [SerializeField] private float dropScaleDuration = 0.25f;
+    [SerializeField] private float dropBounceScale = 0.15f;
 
     private RectTransform _gridContainer;
     private float _cellSize;
@@ -137,9 +138,11 @@ public class DragDropManager : MonoBehaviour
             _dragItem.transform.SetParent(_originalParent, true);
             _dragItem.transform.SetSiblingIndex(_originalSiblingIndex);
 
-            // Scale back to normal
+            // Bounce back to normal
             _dragItem.transform.DOKill();
-            _dragItem.transform.DOScale(1f, dropScaleDuration).SetEase(Ease.OutQuad);
+            _dragItem.transform.localScale = Vector3.one;
+            _dragItem.transform.DOPunchScale(Vector3.one * dropBounceScale, dropScaleDuration, vibrato: 2, elasticity: 0.5f)
+                .SetLink(_dragItem.gameObject);
         }
 
         _dragItem = null;
@@ -153,9 +156,11 @@ public class DragDropManager : MonoBehaviour
             _dragItem.transform.SetParent(_originalParent, true);
             _dragItem.transform.SetSiblingIndex(_originalSiblingIndex);
 
-            // Scale back to normal
+            // Bounce back to normal
             _dragItem.transform.DOKill();
-            _dragItem.transform.DOScale(1f, dropScaleDuration).SetEase(Ease.OutQuad);
+            _dragItem.transform.localScale = Vector3.one;
+            _dragItem.transform.DOPunchScale(Vector3.one * dropBounceScale, dropScaleDuration, vibrato: 2, elasticity: 0.5f)
+                .SetLink(_dragItem.gameObject);
         }
         _dragItem = null;
     }

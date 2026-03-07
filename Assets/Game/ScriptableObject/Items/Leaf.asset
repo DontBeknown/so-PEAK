@@ -18,6 +18,8 @@ MonoBehaviour:
   maxStackSize: 20
   itemType: 0
   category: 2
+  gridSize: {x: 1, y: 1}
+  worldPrefab: {fileID: 6825214349049489606, guid: 5d5ae4d71c5db7f47be4e05e04358a6d, type: 3}
   isConsumable: 0
   consumableEffects: []
   isCraftingMaterial: 0

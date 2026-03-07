@@ -19,6 +19,7 @@ MonoBehaviour:
   itemType: 3
   category: 0
   gridSize: {x: 2, y: 2}
+  worldPrefab: {fileID: 9088813262201544815, guid: fe3eb600b3ca34749b4bbcb04723419d, type: 3}
   isConsumable: 0
   consumableEffects: []
   isCraftingMaterial: 0

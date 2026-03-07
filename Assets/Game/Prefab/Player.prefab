@@ -14798,6 +14798,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragDropManager
   dragCanvas: {fileID: 8973721772649877896}
+  dragScale: 1.2
+  dragScaleDuration: 0.12
+  dropScaleDuration: 0.1
 --- !u!1 &8875992650338829143
 GameObject:
   m_ObjectHideFlags: 0

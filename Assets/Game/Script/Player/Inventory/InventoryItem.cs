@@ -17,6 +17,9 @@ public class InventoryItem : ScriptableObject
     [Header("Grid Size (cells)")]
     public Vector2Int gridSize = Vector2Int.one;
 
+    [Header("World Representation")]
+    public GameObject worldPrefab;
+
     [Header("Consumable Properties")]
     public bool isConsumable = false;
     public ConsumableEffect[] consumableEffects;

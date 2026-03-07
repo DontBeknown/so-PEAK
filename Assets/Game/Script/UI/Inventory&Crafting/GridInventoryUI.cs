@@ -281,7 +281,9 @@ public class GridInventoryUI : MonoBehaviour
     public void DropItem(GridItemUI itemUI)
     {
         if (itemUI == null || itemUI.Placement == null || _inventoryManager == null) return;
+        var item = itemUI.Placement.Item;
         _inventoryManager.RemoveFromGrid(itemUI.Placement);
+        WorldItemSpawner.SpawnDroppedItem(item, 1);
     }
 
     public bool RotateItem(GridItemUI itemUI)

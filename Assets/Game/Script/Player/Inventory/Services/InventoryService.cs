@@ -32,6 +32,7 @@ namespace Game.Player.Inventory.Services
             if (!CanFitItem(item, quantity))
             {
                 Debug.LogWarning($"[InventoryService] Cannot fit {quantity}x {item.itemName}");
+                _eventBus.Publish(new Game.Player.Inventory.Events.InventoryFullEvent(item, quantity));
                 return false;
             }
 
@@ -42,6 +43,10 @@ namespace Game.Player.Inventory.Services
                 //Debug.Log($"[InventoryService] Added {quantity}x {item.itemName}");
                 PublishItemAdded(item, quantity);
                 PublishInventoryChanged();
+            }
+            else
+            {
+                _eventBus.Publish(new Game.Player.Inventory.Events.InventoryFullEvent(item, quantity));
             }
 
             return success;

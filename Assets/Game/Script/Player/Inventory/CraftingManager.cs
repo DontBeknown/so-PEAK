@@ -88,16 +88,11 @@ public class CraftingManager : MonoBehaviour
         // Wait for crafting time
         yield return new WaitForSeconds(recipe.craftingTime);
 
-        // Add result to inventory
-        if (inventoryService.AddItem(recipe.resultItem, recipe.resultQuantity))
-        {
-            eventBus?.Publish(new CraftingCompletedEvent(recipe));
-        }
-        else
-        {
-            eventBus?.Publish(new CraftingFailedEvent(recipe, "Inventory full"));
-            // TODO: Return materials to player or drop them on ground
-        }
+        // Add result to inventory; if full, drop in front of player instead
+        if (!inventoryService.AddItem(recipe.resultItem, recipe.resultQuantity))
+            WorldItemSpawner.SpawnDroppedItem(recipe.resultItem, recipe.resultQuantity);
+
+        eventBus?.Publish(new CraftingCompletedEvent(recipe));
 
         isCrafting = false;
     }

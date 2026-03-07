@@ -225,6 +225,10 @@ namespace Game.Player.Inventory
                 _eventBus.Publish(new Events.ItemPlacedEvent(item, pos, item.gridSize));
                 _eventBus.Publish(new Events.InventoryChangedEvent());
             }
+            else
+            {
+                _eventBus.Publish(new Events.InventoryFullEvent(item, 1));
+            }
             return placement;
         }
 

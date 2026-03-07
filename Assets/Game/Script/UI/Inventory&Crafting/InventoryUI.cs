@@ -308,10 +308,10 @@ public class InventoryUI : MonoBehaviour
             var slotUI = slotUIs[slotIndex];
             if (!slotUI.IsEmpty)
             {
-                // Remove one item from inventory
                 var item = slotUI.InventorySlot.item;
-                inventoryService.RemoveItem(item, 1);
-                //Debug.Log($"Dropped {item.itemName}");
+                bool removed = inventoryService.RemoveItem(item, 1);
+                if (removed)
+                    WorldItemSpawner.SpawnDroppedItem(item, 1);
             }
         }
     }

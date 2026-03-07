@@ -22,15 +22,11 @@ public class GridItemUI : MonoBehaviour,
     [SerializeField] private Color equippedColor = new Color(0.3f, 0.85f, 0.3f, 1f);
     [SerializeField] private Color normalColor = Color.white;
 
-    [Header("Hover Animation")]
-    [SerializeField] private float hoverScale = 1.12f;
-    [SerializeField] private float hoverScaleDuration = 0.15f;
-    [SerializeField] private Ease hoverEaseIn = Ease.OutBack;
-    [SerializeField] private Ease hoverEaseOut = Ease.OutQuad;
-
     [Header("Equip Bounce")]
     [SerializeField] private float equipBounceScale = 1.2f;
     [SerializeField] private float equipBounceDuration = 0.25f;
+
+    [SerializeField] private GameObject highlightGameObject;
 
     private GridInventoryUI _gridUI;
     private DragDropManager _dragDrop;
@@ -205,18 +201,8 @@ public class GridItemUI : MonoBehaviour,
         if (!_dragDrop.IsDragging)
         {
             _gridUI.ShowTooltip(this);
-
-            // Scale up icon and background
-            if (iconImage != null)
-            {
-                iconImage.transform.DOKill();
-                iconImage.transform.DOScale(hoverScale, hoverScaleDuration).SetEase(hoverEaseIn).SetLink(iconImage.gameObject);
-            }
-            if (backgroundImage != null)
-            {
-                backgroundImage.transform.DOKill();
-                backgroundImage.transform.DOScale(hoverScale, hoverScaleDuration).SetEase(hoverEaseIn).SetLink(backgroundImage.gameObject);
-            }
+            if (highlightGameObject != null)
+                highlightGameObject.SetActive(true);
         }
     }
 
@@ -225,16 +211,7 @@ public class GridItemUI : MonoBehaviour,
         if (_gridUI != null)
             _gridUI.HideTooltip();
 
-        // Scale back down
-        if (iconImage != null)
-        {
-            iconImage.transform.DOKill();
-            iconImage.transform.DOScale(1f, hoverScaleDuration).SetEase(hoverEaseOut).SetLink(iconImage.gameObject);
-        }
-        if (backgroundImage != null)
-        {
-            backgroundImage.transform.DOKill();
-            backgroundImage.transform.DOScale(1f, hoverScaleDuration).SetEase(hoverEaseOut).SetLink(backgroundImage.gameObject);
-        }
+        if (highlightGameObject != null)
+            highlightGameObject.SetActive(false);
     }
 }
