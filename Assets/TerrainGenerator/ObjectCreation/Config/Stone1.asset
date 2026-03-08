@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Stone1
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
   ObjectName: Stone
-  Prefab: {fileID: 7014438214332345154, guid: 39697217dc8529043b03c28ebdf10e8e, type: 3}
+  Prefab: {fileID: 7014438214332345154, guid: 5ec3fbe467aec484fbb4a840686c9c7b, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
   BaseRadius: 3.25

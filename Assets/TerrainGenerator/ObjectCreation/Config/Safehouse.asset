@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Safehouse
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
   ObjectName: Safehouse
-  Prefab: {fileID: 177148, guid: a653d3366756c8641befacf512a2be62, type: 3}
+  Prefab: {fileID: 177148, guid: b4936c7687dd5034fa6d25e514e6f6da, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
   BaseRadius: 3.5

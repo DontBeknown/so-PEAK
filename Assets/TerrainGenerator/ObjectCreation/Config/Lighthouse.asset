@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Lighthouse
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
   ObjectName: Lighthouse
-  Prefab: {fileID: 8274077260532194656, guid: e66e47acabbcbae4693cd4edf04a45b5, type: 3}
+  Prefab: {fileID: 8274077260532194656, guid: dc9baecee7283c340b1c3654f975ca48, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
   BaseRadius: 5.75
