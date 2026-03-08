@@ -64,8 +64,18 @@ public class CraftingUI : MonoBehaviour
 
         inventoryService = ServiceContainer.Instance.Get<IInventoryService>();
         inventoryStorage = ServiceContainer.Instance.Get<IInventoryStorage>();
-            
+
         eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+
+        // OnEnable fires before Start so eventBus was null during the first subscription attempt.
+        // Subscribe here now that we have the reference.
+        if (eventBus != null)
+        {
+            eventBus.Subscribe<CraftingStartedEvent>(OnCraftingStartedEvent);
+            eventBus.Subscribe<CraftingCompletedEvent>(OnCraftingCompletedEvent);
+            eventBus.Subscribe<CraftingFailedEvent>(OnCraftingFailedEvent);
+            eventBus.Subscribe<Game.Player.Inventory.Events.InventoryChangedEvent>(OnInventoryChangedEvent);
+        }
     }
 
     private void OnEnable()
