@@ -1,26 +1,29 @@
-﻿﻿using UnityEngine;
-using System.Collections;
+﻿using UnityEngine;
 using UnityEditor;
 
-[CustomEditor (typeof (MapGenerator))]
-public class MapGeneratorEditor : Editor {
+[CustomEditor(typeof(MapGenerator))]
+public class MapGeneratorEditor : Editor
+{
 
-	public override void OnInspectorGUI() {
+    public override void OnInspectorGUI()
+    {
 
-        DrawDefaultInspector();
+        MapGenerator mapGen = (MapGenerator)target;
 
-        //Unused: will delete it later
+        // Draw the Inspector exactly ONCE. 
+        if (DrawDefaultInspector())
+        {
+            // If they tweak a slider and autoUpdate is on, use the exact seed in the box.
+            if (mapGen.autoUpdate)
+            {
+                mapGen.GenerateMap(mapGen.seed);
+            }
+        }
 
-        //MapGenerator mapGen = (MapGenerator)target;
-
-        //if (DrawDefaultInspector ()) {
-        //	if (mapGen.autoUpdate) {
-        //		mapGen.GenerateMap ();
-        //	}
-        //}
-
-        //if (GUILayout.Button ("Generate")) {
-        //	mapGen.GenerateMap ();
-        //}
+        // If they click Generate, just use the exact seed in the box. No random overrides!
+        if (GUILayout.Button("Generate"))
+        {
+            mapGen.GenerateMap(mapGen.seed);
+        }
     }
 }

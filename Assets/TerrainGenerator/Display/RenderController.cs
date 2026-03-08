@@ -1,135 +1,67 @@
 using System.Collections.Generic;
 using UnityEngine;
-using System.Threading.Tasks; // Needed for Threading
+using System.Threading.Tasks;
 using System.Collections.Concurrent;
 
 public class RenderController : MonoBehaviour
 {
-    
+    [Header("Core Links")]
+    public WorldDataManager dataManager; // LINK TO YOUR NEW SCRIPT HERE
+
     [Header("References")]
     public Transform player;
     public Material mapMaterial;
-    public NoiseTranslator worldGen;
     public PlayerSpawner spawner;
-    
+
     [Header("Camera Settings")]
-    [Tooltip("Name of the child transform on player to use as camera aim target (e.g., 'CameraTarget', 'Head'). Leave empty to use player root.")]
     public string cameraAimTargetName = "CameraTarget";
 
-    [Header("Tree Settings")]
-    public GameObject treePrefab;
-    public float treeSpacing = 2.0f;
-    public float minTreeHeight = 2.0f;
-    public float maxTreeHeight = 12.0f;
-    public int treeLimiter = 100;
-    // --- SETTINGS ---
-    // Remember to set this back to 241 after testing small chunks!
+    [Header("Chunk Settings")]
     public int chunkSize = 41;
     public int chunkVisibleDistance = 1;
-
-    // --- GLOBAL DATA ---
-    private float[,] globalHeightMap;
-    private Color[,] globalColorMap;
-    public Color fieldColor;
+    public int chunkObjectLimiter = 1000;
 
     [Header("Climbable")]
     [SerializeField] private int climbableLayer;
 
-    // --- SEEDS ---
-    private int globalWorldSeed;
-    public int seed1;
-    public int seed2;
-    public int seed3;
-
-
+    // State
     private bool playerHasSpawned = false;
-
-    // NEW: Store the mathematical data for all trees here!
-    private Dictionary<Vector2Int, List<TreeInstance>> globalTreeData;
-
-    // --- STATE ---
-    // Dictionary value is 'null' while loading
     Dictionary<Vector2Int, GameObject> terrainChunks = new Dictionary<Vector2Int, GameObject>();
     Vector2Int currentChunkCoord;
 
-    // THE QUEUE: Thread-safe bridge between Background and Main thread
+    // Queue
     ConcurrentQueue<ChunkBuildRequest> meshCreationQueue = new ConcurrentQueue<ChunkBuildRequest>();
-
-    struct ChunkBuildRequest
-    {
-        public Vector2Int coord;
-        public MeshData meshData;
-    }
+    struct ChunkBuildRequest { public Vector2Int coord; public MeshData meshData; }
 
     void Start()
     {
-        Debug.LogError("[RenderController] Start Func");
+        Debug.Log("[RenderController] Start Func");
 
-
-        //load seed logic here
-        LoadSeed();
-
-
-        if (worldGen == null) worldGen = GetComponent<NoiseTranslator>();
-
-        if (worldGen != null)
+        if (dataManager != null)
         {
-            // 1. Generate Data (Matches your old function name)
-            //passing seed here
-            worldGen.TerrainDrawing(seed1);
+            // 1. Tell the Brain to do all the math
+            dataManager.GenerateWorldData(chunkSize);
 
-            // 2. Grab References (Matches your old variable names)
-            globalHeightMap = worldGen.completeMap;
-            globalColorMap = worldGen.colorMap;
-
-            // 3. GENERATE TREE DATA (Math only, no lag!)
-            // Make sure these maps are accessible from your NoiseTranslator script
-            //  Setup the new 1100x1100 arrays
-            float[,] expandedTreeNoise = new float[worldGen.mapWidth + worldGen.bufferLength, worldGen.mapLength + worldGen.bufferLength];
-            float[,] expandedRoadMask = new float[worldGen.mapWidth + worldGen.bufferLength, worldGen.mapLength + worldGen.bufferLength];
-
-            //  Expand them!
-            // Trees fade to 0 (No trees at the edge)
-            BufferGen.GenMapWithBuffer(worldGen.treeNoiseMap, expandedTreeNoise, worldGen.bufferLength);
-
-            // Roads default to 1 (No roads at the edge)
-            BufferGen.GenRoadMaskWithBuffer(worldGen.roadRidge, expandedRoadMask, worldGen.bufferLength);
-
-
-            globalTreeData = TreePlanter.GenerateTreeData(
-                expandedTreeNoise,    
-                globalHeightMap,
-                expandedRoadMask,
-                minTreeHeight,
-                maxTreeHeight,        
-                worldGen.meshHeightMultiplier,
-                chunkSize - 1,            // CRITICAL: Pass (chunkSize - 1) so keys match RenderController!
-                treeSpacing
-            );
-
-
-            // 4. Start Loop
+            // 2. Start building the world
             UpdateVisibleChunks();
         }
         else
         {
-            Debug.LogError("RenderController: Missing NoiseTranslator script!");
+            Debug.LogError("[RenderController] Missing WorldDataManager reference! Drag it into the Inspector.");
         }
     }
 
     void Update()
     {
-        if (globalHeightMap == null) return;
-        if (player == null) return; // Player hasn't spawned yet
+        // Notice we ask the DataManager for the globalHeightMap now!
+        if (dataManager == null || dataManager.globalHeightMap == null) return;
+        if (player == null) return;
 
-        // --- 1. PROCESS QUEUE (The New Part) ---
-        // Every frame, check if a thread finished a job
         while (meshCreationQueue.TryDequeue(out ChunkBuildRequest request))
         {
             FinalizeChunk(request.coord, request.meshData);
         }
 
-        // --- 2. CHECK PLAYER POSITION ---
         int currentX = Mathf.FloorToInt(player.position.x / (chunkSize - 1));
         int currentY = Mathf.FloorToInt(player.position.z / (chunkSize - 1));
         Vector2Int playerCoord = new Vector2Int(currentX, currentY);
@@ -159,19 +91,14 @@ public class RenderController : MonoBehaviour
             }
         }
 
-        // Cleanup Logic
         List<Vector2Int> coordsToRemove = new List<Vector2Int>();
         foreach (Vector2Int coord in terrainChunks.Keys)
         {
-            if (!coordsThatShouldBeActive.Contains(coord))
-            {
-                coordsToRemove.Add(coord);
-            }
+            if (!coordsThatShouldBeActive.Contains(coord)) coordsToRemove.Add(coord);
         }
 
         foreach (Vector2Int coord in coordsToRemove)
         {
-            // Because trees are parented to the chunk, Destroying the chunk destroys the trees automatically!
             if (terrainChunks[coord] != null) Destroy(terrainChunks[coord]);
             terrainChunks.Remove(coord);
         }
@@ -179,22 +106,20 @@ public class RenderController : MonoBehaviour
 
     void CreateChunkThreaded(Vector2Int coord)
     {
-        // 1. RESERVE SPOT
         terrainChunks.Add(coord, null);
 
-        // 2. BACKGROUND WORK
         Task.Run(() =>
         {
-            MapData mapData = MapSlicer.GetChunkData(coord, chunkSize, globalHeightMap, globalColorMap, fieldColor);
+            // We ask the DataManager for the maps!
+            MapData mapData = MapSlicer.GetChunkData(coord, chunkSize, dataManager.globalHeightMap, dataManager.globalColorMap, dataManager.fieldColor);
 
             MeshData meshData = PerlinTerrainMeshGenerator.GenerateTerrainMesh(
                 mapData.heightMap,
                 mapData.colourMap,
-                worldGen.meshHeightMultiplier,
-                worldGen.levelOfDetail
+                dataManager.worldGen.meshHeightMultiplier,
+                dataManager.worldGen.levelOfDetail
             );
 
-            // 3. SEND TO MAIN THREAD
             meshCreationQueue.Enqueue(new ChunkBuildRequest { coord = coord, meshData = meshData });
         });
     }
@@ -204,15 +129,8 @@ public class RenderController : MonoBehaviour
         if (!terrainChunks.ContainsKey(coord)) return;
 
         GameObject chunkObj = new GameObject($"Chunk_{coord.x}_{coord.y}");
-
-        // THE FIX: Calculate the center offset
         float meshCenterOffset = (chunkSize - 1) / 2f;
-
-        // Shift the chunk so its bottom-left corner is the anchor, not its center
         float worldX = (coord.x * (chunkSize - 1)) + meshCenterOffset;
-
-        // NOTE: If MapSlicer is drawing Z normally now, we add the offset. 
-        // (If it was inverted, we might have to subtract, but try adding first!)
         float worldZ = (coord.y * (chunkSize - 1)) + meshCenterOffset;
 
         chunkObj.transform.position = new Vector3(worldX, 0, worldZ);
@@ -229,26 +147,26 @@ public class RenderController : MonoBehaviour
         mc.sharedMesh = finalMesh;
         mr.material = mapMaterial;
 
-        // --- NEW: SPAWN THE TREES FOR THIS CHUNK ---
-        if (treePrefab != null && globalTreeData != null && globalTreeData.ContainsKey(coord))
+        // --- NEW: SPAWN THE OBJECTS ---
+        // We just ask the DataManager: "Do you have objects for this chunk?"
+        List<PlacedObject> objectsToSpawn = dataManager.GetObjectsForChunk(coord);
+
+        if (objectsToSpawn != null)
         {
-            int treeLimit = 0; // NEW: Start a counter
-
-            foreach (var treeData in globalTreeData[coord])
+            int objectLimit = 0;
+            foreach (PlacedObject objData in objectsToSpawn)
             {
-                if (treeLimit >= treeLimiter) break; // NEW: Abort if we hit 100 trees in this chunk!
+                if (objectLimit >= chunkObjectLimiter) break;
 
-                // Instantiate at the exact world position
-                GameObject t = Instantiate(treePrefab, treeData.position, treeData.rotation);
-                t.transform.localScale = treeData.scale;
+                GameObject spawnedObj = Instantiate(objData.Prefab, objData.Position, objData.Rotation);
+                spawnedObj.transform.localScale = objData.Scale;
+                spawnedObj.transform.parent = chunkObj.transform;
 
-                // Parent the tree to the Chunk GameObject
-                t.transform.parent = chunkObj.transform;
-
-                treeLimit++; // NEW: Increase the counter
+                objectLimit++;
             }
         }
-        // -------------------------------------------
+        // ------------------------------
+
         terrainChunks[coord] = chunkObj;
 
         if (!playerHasSpawned)
@@ -260,34 +178,27 @@ public class RenderController : MonoBehaviour
 
     private System.Collections.IEnumerator SpawnPlayerSequence()
     {
-        //Debug.Log("[RenderController] Starting player spawn sequence...");
-        
         // Call PlayerSpawner's coroutine and wait for it to complete
         yield return StartCoroutine(spawner.SpawnPlayer());
-        
+
         // Get the spawned player reference
         Transform spawnedPlayer = spawner.SpawnedPlayer;
-        
+
         if (spawnedPlayer == null)
         {
             Debug.LogError("[RenderController] PlayerSpawner failed to spawn player!");
             yield break;
         }
-        
+
         // Update our player reference
         player = spawnedPlayer;
-        //Debug.Log($"[RenderController] Player reference updated to {player.name}");
-        
+
         // Update all system references to the new player
         UpdatePlayerReferences(spawnedPlayer);
-        
-        //Debug.Log("[RenderController] Player spawn sequence complete!");
     }
 
     private void UpdatePlayerReferences(Transform newPlayer)
     {
-        //Debug.Log("[RenderController] Updating player references across systems...");
-        
         // 1. Update ServiceContainer registrations via GameServiceBootstrapper
         var bootstrapper = FindFirstObjectByType<Game.Core.GameServiceBootstrapper>();
         if (bootstrapper != null)
@@ -298,7 +209,7 @@ public class RenderController : MonoBehaviour
         {
             Debug.LogWarning("[RenderController] GameServiceBootstrapper not found - player services not updated!");
         }
-        
+
         // 2. Update UIServiceProvider with new player references
         var uiServiceProvider = FindFirstObjectByType<Game.UI.UIServiceProvider>();
         if (uiServiceProvider != null)
@@ -309,7 +220,7 @@ public class RenderController : MonoBehaviour
         {
             Debug.LogWarning("[RenderController] UIServiceProvider not found - UI player references not updated!");
         }
-        
+
         // 3. Find camera aim target on player
         Transform cameraAimTarget = newPlayer; // Default to player root
         if (!string.IsNullOrEmpty(cameraAimTargetName))
@@ -318,16 +229,14 @@ public class RenderController : MonoBehaviour
             if (foundTarget != null)
             {
                 cameraAimTarget = foundTarget;
-                //Debug.Log($"[RenderController] Found camera aim target: {cameraAimTarget.name}");
             }
             else
             {
                 Debug.LogWarning($"[RenderController] Camera aim target '{cameraAimTargetName}' not found on player. Using player root instead.");
             }
         }
-        
+
         // 4. Update Cinemachine camera targets
-        // Try to use CinemachinePlayerCamera service if available
         var cameraController = FindFirstObjectByType<CinemachinePlayerCamera>();
         if (cameraController != null)
         {
@@ -335,70 +244,12 @@ public class RenderController : MonoBehaviour
         }
         else
         {
-            // Fallback: Update cameras directly
             var cinemachineCameras = FindObjectsByType<Unity.Cinemachine.CinemachineCamera>(FindObjectsSortMode.None);
             foreach (var cam in cinemachineCameras)
             {
-                cam.Follow = newPlayer;           // Follow the player root for position
-                cam.LookAt = cameraAimTarget;     // Look at the camera aim point (e.g., head level)
-                //Debug.Log($"[RenderController] Updated camera '{cam.name}' - Follow: {newPlayer.name}, LookAt: {cameraAimTarget.name}");
+                cam.Follow = newPlayer;
+                cam.LookAt = cameraAimTarget;
             }
-        }
-        
-        //Debug.Log("[RenderController] All player references updated successfully");
-    }
-
-    private void LoadSeed()
-    {
-        var saveService = SaveLoadService.Instance;
-
-        if (saveService == null)
-        {
-            Debug.LogError("[RenderController] SaveLoadService not found!");
-            return;
-        }
-
-        // Get current world save data
-        WorldSaveData currentWorld = saveService.CurrentWorldSave;
-
-        if (currentWorld == null)
-        {
-            Debug.LogError("[RenderController] No world is currently loaded!");
-            return;
-        }
-
-        // Access your friend's string seed data
-        SeedData seedData = currentWorld.seedData;
-
-        // --- THE CONVERSION HAPPENS HERE ---
-        // We immediately turn their strings into your rock-solid integers.
-        seed1 = GetDeterministicHashCode(seedData.seed1);
-        seed2 = GetDeterministicHashCode(seedData.seed2);
-        seed3 = GetDeterministicHashCode(seedData.seed3);
-
-        Debug.LogError("[RenderController] Load Complete!");
-
-    }
-
-    /////// Hash for turning string to text, we use this instead of unity built it because the resetting issue.
-    private int GetDeterministicHashCode(string str)
-    {
-        if (string.IsNullOrEmpty(str)) return 0; // Failsafe for empty seeds
-
-        unchecked
-        {
-            int hash1 = 5381;
-            int hash2 = hash1;
-
-            for (int i = 0; i < str.Length && str[i] != '\0'; i += 2)
-            {
-                hash1 = ((hash1 << 5) + hash1) ^ str[i];
-                if (i == str.Length - 1 || str[i + 1] == '\0')
-                    break;
-                hash2 = ((hash2 << 5) + hash2) ^ str[i + 1];
-            }
-
-            return hash1 + (hash2 * 1566083941);
         }
     }
 }

@@ -20,8 +20,6 @@ public class NoiseTranslator : MonoBehaviour
     public MapGenerator RoadNoise;
     public MapGenerator TreeNoise;
 
-    [Header("Visualizers")]
-    public TreePreviewer treePreviewer; // Assign this in Inspector!
 
     [Header("Map Size")]
     public int mapWidth = 1000;
@@ -68,9 +66,10 @@ public class NoiseTranslator : MonoBehaviour
     //for collect max height index and value
     private float maxHeight = 0f;
     List<List<Vector2Int>> peakPointsArray = new List<List<Vector2Int>>();
+    [HideInInspector] public Vector2Int mainPeak;
 
 
-    
+
 
     //init Spline
     public void InitMainSpline()
@@ -128,6 +127,9 @@ public class NoiseTranslator : MonoBehaviour
         ErodedMountain(seed);
         //then buffer zone
         GenerateBufferArea();
+        // Flatten the ground AND get the offset spawn coordinate
+        mainPeak = CarveLighthouseFoundation(completeMap, mainPeak, completeMap[mainPeak.x, mainPeak.y]);
+
         //then color map
         colorMap = ColorMapping();
 
@@ -152,36 +154,6 @@ public class NoiseTranslator : MonoBehaviour
                         {
                             display.DrawMesh(PerlinTerrainMeshGenerator.GenerateTerrainMesh(
                                 completeMap, colorMap, meshHeightMultiplier, levelOfDetail));
-
-                            ////////////////TREE TEST//////////
-                            // B. Plant the Debug Trees
-                            // Only happens when you explicitly ask for the Mesh view
-                            if (treePreviewer != null)
-                            {
-                                // 1. Setup the new 1100x1100 arrays
-                                float[,] expandedTreeNoise = new float[mapWidth+bufferLength, mapLength+bufferLength];
-                                float[,] expandedRoadMask = new float[mapWidth + bufferLength, mapLength + bufferLength];
-
-                                // 2. Expand them!
-                                // Trees fade to 0 (No trees at the edge)
-                                BufferGen.GenMapWithBuffer(treeNoiseMap, expandedTreeNoise, bufferLength);
-
-                                // Roads default to 1 (No roads at the edge)
-                                BufferGen.GenRoadMaskWithBuffer(roadRidge, expandedRoadMask, bufferLength);
-
-                                treePreviewer.GenerateDebugTrees(
-                                            expandedTreeNoise,
-                                            completeMap,
-                                            expandedRoadMask,
-                                            meshHeightMultiplier,
-                                            200
-                                        );
-
-
-
-                            }
-
-
 
                         }
 
@@ -212,7 +184,9 @@ public class NoiseTranslator : MonoBehaviour
         RoadNoise.GenerateMap(seed);
         roadRidge = RoadNoise.noiseMap;
 
-        RoadCarver.CarveRoad(depthMap, roadRidge, peakPointsArray, maxHeight, roadHeightCurve, seed);
+        RoadCarver.CarveRoad(depthMap, roadRidge, peakPointsArray, maxHeight, roadHeightCurve, seed,out mainPeak);
+
+
         
     }
 
@@ -221,6 +195,9 @@ public class NoiseTranslator : MonoBehaviour
         completeMap = new float[mapWidth + bufferLength, mapLength + bufferLength];
         //then send new buffer for it to filled
         BufferGen.GenMapWithBuffer(depthMap, completeMap, bufferLength);
+
+        int offset = bufferLength / 2;
+        mainPeak = new Vector2Int(mainPeak.x + offset, mainPeak.y + offset);
 
 
     }
@@ -289,6 +266,40 @@ public class NoiseTranslator : MonoBehaviour
     }
 
 
+    public static Vector2Int CarveLighthouseFoundation(float[,] completeMap, Vector2Int shiftedPeak, float peakHeight)
+    {
+        int foundationRadius = 10;
+        float offsetMagnitude = foundationRadius * 0.7f; 
+        int mapWidth = completeMap.GetLength(0);
+        int mapLength = completeMap.GetLength(1);
 
+        // Hardcoded direction: North-East (1, 1)
+        Vector2 offsetDir = new Vector2(1, 1).normalized * offsetMagnitude;
+        Vector2Int lighthouseSpawnPos = new Vector2Int(
+            shiftedPeak.x + Mathf.RoundToInt(offsetDir.x),
+            shiftedPeak.y + Mathf.RoundToInt(offsetDir.y)
+        );
+
+        for (int dz = -foundationRadius; dz <= foundationRadius; dz++)
+        {
+            for (int dx = -foundationRadius; dx <= foundationRadius; dx++)
+            {
+                int xx = shiftedPeak.x + dx;
+                int zz = shiftedPeak.y + dz;
+
+                if (xx < 0 || zz < 0 || xx >= mapWidth || zz >= mapLength) continue;
+
+                float dist = Mathf.Sqrt(dx * dx + dz * dz);
+
+                if (dist <= foundationRadius)
+                {
+                    completeMap[xx, zz] = peakHeight;
+                }
+            }
+        }
+
+        // Return the new coordinate so your main script can update 'mainPeak'
+        return lighthouseSpawnPos;
+    }
 
 }

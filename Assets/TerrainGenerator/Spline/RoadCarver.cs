@@ -51,7 +51,7 @@ public static class RoadCarver
 
 
 
-    public static void CarveRoad(float[,] depthMap, float[,] roadRidge, List<List<Vector2Int>> allMountainPeakPoints, float maxHeight, AnimationCurve roadHeightCurve, int seed)
+    public static void CarveRoad(float[,] depthMap, float[,] roadRidge, List<List<Vector2Int>> allMountainPeakPoints, float maxHeight, AnimationCurve roadHeightCurve, int seed,out Vector2Int OutPeak)
     {
         Vector2Int[] repPeaks = new Vector2Int[allMountainPeakPoints.Count];
         float[] peakHeights = new float[allMountainPeakPoints.Count];
@@ -83,6 +83,15 @@ public static class RoadCarver
         }
 
         Vector2Int mainPeak = repPeaks[tallestMountainIndex];
+
+        // --- DEBUG LOGS ---
+        Debug.Log($"<color=cyan>[RoadCarver]</color> <b>Peak Identification:</b> " +
+                  $"Tallest Mountain Index: {tallestMountainIndex} | " +
+                  $"Coordinate: {mainPeak} | " +
+                  $"Raw Height: {maxH}");
+
+        OutPeak = mainPeak;
+
         Vector2Int closestRoad = GetClosestRoadPoint(mainPeak, roadRidge);
         List<Vector2Int> line = GetLine(mainPeak, closestRoad);
         CarveRoad(line, roadRidge);

@@ -27,3 +27,16 @@ public struct TreeInstance
     public Quaternion rotation;
     public Vector3 scale;
 }
+
+public struct PlacedObject
+{
+    public GameObject Prefab;
+    public Vector3 Position;
+    public Quaternion Rotation;
+    public Vector3 Scale;
+    public float BoundingRadius;
+
+    // --- NEW: Pass the flags to the final object ---
+    public bool IsTerrainTree;
+    public int TreePrototypeIndex;
+}
