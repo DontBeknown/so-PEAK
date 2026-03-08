@@ -78,9 +78,10 @@ public interface IPlayerState
 ```
 
 **States:**
-- **WalkingState** - Ground movement, jumping, sprinting
+- **WalkingState** - Ground movement, jumping, sprinting. Now features steep slope sliding functionality.
 - **ClimbingState** - Wall climbing, stamina consumption
 - **FallingState** - Air control, landing detection
+- **DeathState/Death Screen** - State handling when Player Stats reach 0, controlled through `DeathCause`.
 
 ### 4. Player Services
 
@@ -218,6 +219,7 @@ WalkingState (Grounded):
 ├─► Jump Input → Stay in WalkingState (handle jump)
 ├─► Detect Climbable + Forward → TransitionToState(ClimbingState)
 ├─► Not Grounded + Not Jumping → TransitionToState(FallingState)
+├─► Steep Slope Detected → Auto-slide down instead of walking
 └─► Movement Input → Move player
 
 ClimbingState:

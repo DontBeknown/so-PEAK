@@ -345,7 +345,7 @@ myComponent.SetValue(data.myCustomValue);
 
 | Issue | Status | Notes |
 |---|---|---|
-| Inventory/Equipment save | ⚠️ TODO | `UpdatePlayerDataFromGame` has commented-out TODO blocks for inventory |
+| Inventory/Equipment save | ✅ Complete | Inventory and equipped items are now fully saved and loaded. |
 | Save file encryption | ❌ Not implemented | Infrastructure comment exists in `SaveWorld()` |
 | GZIP compression | ❌ Not implemented | Currently uses Base64 (adds ~33% size overhead) |
 | Background thread I/O | ❌ Not implemented | `File.WriteAllText` blocks the main thread |

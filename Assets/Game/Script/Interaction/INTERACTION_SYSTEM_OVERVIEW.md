@@ -314,7 +314,7 @@ public abstract class HoldInteractableBase : MonoBehaviour, IInteractable
 
 **File:** `Interaction/GatheringInteractable.cs`
 
-**Purpose:** Resource gathering (berry bush, ore node, tree).
+**Purpose:** Resource gathering (berry bush, ore node, tree/twig). Can combine with `ScaleDownDestroyAnimation.cs` to animate scaling out when destroyed.
 
 **Extends:** HoldInteractableBase
 

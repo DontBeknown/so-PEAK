@@ -169,22 +169,36 @@ public class InventoryUIAdapter : MonoBehaviour
 
 ### 6. Major UI Panels
 
-#### InventoryUI
-**File:** `UI/Inventory/InventoryUI.cs`
+#### GridInventoryUI
+**File:** `UI/Inventory&Crafting/GridInventoryUI.cs`
 
 **Features:**
-- Grid-based slot display
-- Drag-and-drop support
-- Item tooltips
-- Context menu integration
+- Unturned-style Grid-based slot display.
+- Drag-and-drop support with multiple grid sizes (e.g. 2x2 items).
+- Automatically converts screen coordinates to grid coordinates.
+- Item tooltips.
+- Context menu integration.
+
+**Key Components:**
+- **GridCellUI**: Cell background and drop highlight.
+- **GridItemUI**: Draggable item visual representing an item taking 1x1 to NxN cells.
+- **DragDropManager**: Screen-to-grid coordinate conversion and drag state.
 
 **Key Methods:**
 ```csharp
-public void UpdateSlot(int slotIndex)
-public void UpdateAllSlots()
-public void ClearSlot(int slotIndex)
-public InventorySlotUI GetSlotUI(int index)
+public void BuildGrid()
+public void RefreshGrid()
+public void RequestMoveItem(GridPlacement placement, Vector2Int newPos)
+public void ShowHighlight(Vector2Int topLeft, Vector2Int size, GridPlacement ignore)
 ```
+
+#### DeathScreenUI
+**File:** `UI/DeathScreen/DeathScreenUI.cs`
+
+**Features:**
+- Displays on player death.
+- Shows the relevant death cause (e.g., starvation, fall damage).
+- Handles player respawn or exiting.
 
 #### EquipmentUI
 **File:** `UI/Equipment/EquipmentUI.cs`
@@ -253,11 +267,9 @@ public void Hide()
 
 **Key Methods:**
 ```csharp
-public void ShowInventoryMenu(InventoryItem item, Vector2 position)
+public void ShowGridItemMenu(GridInventoryUI gridUI, GridItemUI itemUI)
 {
-    PopulateActions(item);
-    SetPosition(position);
-    Show();
+    // Evaluates item context to populate right-click actions (Equip, Drop, Consume)
 }
 
 private void PopulateActions(InventoryItem item)
@@ -411,17 +423,10 @@ public void HideBlur(float duration = 0.3f)
 3. EventBus.Publish(ItemAddedEvent)
    │
    ▼
-4. InventoryUIAdapter receives event
+4. GridInventoryUI receives event and triggers RefreshGrid()
    │
-   ▼
-5. InventoryUIAdapter.OnItemAdded(ItemAddedEvent e)
-   │
-   ├─► InventoryUI.UpdateSlot(e.slotIndex)
-   │   │
-   │   ├─► Get slot data from InventoryManager
-   │   ├─► Update slot icon
-   │   ├─► Update quantity text
-   │   └─► Update slot visual state
+   ├─► Destroys all old GridItemUI visuals
+   ├─► Recreates instances from _gridStorage.GetAllPlacements()
    │
    └─► (Optional) NotificationUI shows pickup notification
 ```
@@ -429,19 +434,19 @@ public void HideBlur(float duration = 0.3f)
 ### Context Menu Flow
 
 ```
-1. Player right-clicks item in inventory slot
+1. Player right-clicks item in GridInventoryUI
    │
    ▼
-2. InventorySlotUI.OnPointerClick(PointerEventData e)
+2. GridItemUI.OnPointerClick(PointerEventData e)
    │
    ├─► if (e.button == PointerEventData.InputButton.Right)
    │
    ▼
-3. ContextMenuUI.ShowInventoryMenu(item, mousePosition)
+3. ContextMenuUI.ShowGridItemMenu(GridInventoryUI gridUI, GridItemUI itemUI)
    │
    ├─► ClearPreviousActions()
    │
-   ├─► PopulateActions(item)
+   ├─► PopulateActions routing to gridUI.UseItem() / gridUI.DropItem()
    │   ├─► Check: Is IEquippable? → Add "Equip" button
    │   ├─► Check: Is consumable? → Add "Consume" button
    │   ├─► Check: Is CanteenItem? → Add "Drink [X/5]" button

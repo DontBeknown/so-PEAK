@@ -46,9 +46,9 @@ Assets/Game/Script/
 ```
 
 ### Development Status
-- ✅ Core player movement implemented
-- ✅ Inventory system functional
-- ✅ UI systems in place
+- ✅ Core player movement implemented (including steep slope sliding)
+- ✅ Inventory system functional (Grid-based with drag-and-drop support)
+- ✅ UI systems in place (including Death Screen & new Grid UI)
 - ✅ Dependency injection partially implemented
 - 🔄 Undergoing SOLID principles refactoring
 - ⚠️ Some legacy code patterns remain (static events, FindFirstObjectByType)
@@ -193,6 +193,7 @@ public class EventBus : IEventBus
 **Commands:**
 - `AddItemCommand.cs`
 - `RemoveItemCommand.cs`
+- `DropItemCommand.cs`
 - `ConsumeItemCommand.cs`
 - `EquipItemCommand.cs`
 - `UnequipItemCommand.cs`
@@ -349,7 +350,7 @@ public interface IInventoryCommand
 
 **Location:** `Assets/Game/Script/Player/Inventory/`
 
-**Purpose:** Item storage, crafting, equipment, effects
+**Purpose:** Grid-based item storage, crafting, equipment, effects, and drag-and-drop mechanics.
 
 #### Components:
 
@@ -358,60 +359,42 @@ public interface IInventoryCommand
 public class InventoryManagerRefactored : MonoBehaviour
 {
     // Separated concerns:
-    private IInventoryStorage _storage;      // Data layer
-    private IInventoryService _service;      // Business logic
+    private IInventoryStorage _gridStorage;  // Data layer (GridInventoryStorage)
+    private IInventoryStorage _storage;      // Adapter for backward compatibility
     private IConsumableEffectSystem _effectSystem;  // Effects (Strategy pattern)
     private IEventBus _eventBus;            // Event coordination
-    
-    // Facade methods delegate to appropriate services
-    public bool AddItem(InventoryItem item, int quantity) 
-        => _service.AddItem(item, quantity);
-    
-    public bool ConsumeItem(InventoryItem item) { /* Coordinates all systems */ }
 }
 ```
 
-**Improvements:**
-- ✅ Single Responsibility - each layer has one job
-- ✅ Open/Closed - Strategy pattern for effects
-- ✅ EventBus integration - no static events
-- ✅ Dependency Injection - all services injected
-- ✅ 35 components migrated to use new architecture
+**Grid Storage Components:**
+- `GridInventoryStorage.cs` - 2D grid backend tracking item placements.
+- `GridPlacement.cs` - Per-item position and size record.
+- `GridStorageAdapter.cs` - Wrapper implementing `IInventoryStorage` to support legacy code.
 
-**EquipmentManager.cs**
-- Manages equipment slots (head, chest, legs, hands, feet, weapon)
-- Stat modifier application
-- Equipment constraints
-
-**CraftingManager.cs**
-- Recipe storage
-- Crafting validation
-- Resource checking
+**CraftingManager.cs** & **EquipmentManager.cs**
+- Recipe storage and validation.
+- Equipment slots (head, chest, legs, hands, weapon).
 
 **InventoryItem.cs** (ScriptableObject)
-- Item data
-- Consumable effects
-- Equippable interface
+- Item data including `gridSize`.
+- Consumable effects and equipment interface.
 
-**Command Classes:** (✅ Well-designed)
-- `AddItemCommand`, `RemoveItemCommand`, etc.
-- Undo/redo support
+**Command Classes:**
+- Command history with Undo/Redo (`DropItemCommand`, `AddItemCommand`, etc.).
 
-**PlayerInventoryFacade.cs** (✅ Good)
-- Unified interface to inventory systems
-- Command pattern integration
+**WorldItemSpawner.cs**
+- Spawns dropped items back into the world.
+
+**PlayerInventoryFacade.cs**
+- Unified interface to inventory systems for PlayerController.
 
 **Dependencies:**
 - Player.Stat (PlayerStats)
-- UI (for events)
+- UI (for events and DragDropManager)
 
 **Improvement Plan:**
-1. Split InventoryManager into:
-   - `IInventoryStorage` - Data layer
-   - `IInventoryService` - Business logic
-   - `IConsumableEffectSystem` - Effect application
-2. Replace static events with EventBus
-3. Use Strategy pattern for consumable effects
+- Further optimize Grid cell updates.
+- Remove legacy slot-based structures completely.
 
 ---
 
@@ -442,15 +425,16 @@ public class InventoryManagerRefactored : MonoBehaviour
 - Centralized cursor control
 
 **UI Panels:**
-- `InventoryUI.cs` - Legacy inventory UI
-- `TabbedInventoryUI.cs` - New tabbed design
-- `EquipmentUI.cs` - Equipment slots
-- `CraftingUI.cs` - Crafting interface
-- `NotificationUI.cs` - Item notifications
-- `ItemNotificationUI.cs` - Toast notifications
-- `TooltipUI.cs` - Item tooltips
-- `ContextMenuUI.cs` - Right-click menu
-- `SimpleStatsHUD.cs` - Player stats display
+- `GridInventoryUI.cs` - Drag and drop grid inventory.
+- `TabbedInventoryUI.cs` - New tabbed design connecting Grid, Crafting, and Equipment.
+- `DeathScreenUI.cs` - Handles the Death Screen display and respawn options.
+- `EquipmentUI.cs` - Equipment slots.
+- `CraftingUI.cs` - Crafting interface.
+- `NotificationUI.cs` - Item notifications.
+- `ItemNotificationUI.cs` - Toast notifications for item pickups and full inventory.
+- `TooltipUI.cs` - Item tooltips.
+- `ContextMenuUI.cs` - Right-click menu for grid items.
+- `SimpleStatsHUD.cs` - Player stats display with dynamic health bar animations.
 
 **Adapters:**
 - Wrap legacy UIs to implement `IUIPanel`
@@ -543,13 +527,13 @@ public abstract class HoldInteractableBase : MonoBehaviour, IInteractable
 **Interactables:**
 
 *Hold-to-Interact (using HoldInteractableBase):*
-- `GatheringInteractable.cs` - Resource gathering (berries, ore, herbs)
+- `GatheringInteractable.cs` - Resource gathering (berries, ore, trees). Includes `ScaleDownDestroyAnimation.cs` for smooth desync.
 - `WaterSourceInteractable.cs` - Canteen refilling
 - `CraftingBenchInteractable.cs` - Example of simple hold interactable (~30 lines)
 
 *Instant Interaction:*
-- `ItemInteractable.cs` - Instant item pickup
-- `AssessmentTerminalInteractable.cs` - Terminal interaction
+- `ItemInteractable.cs` - Instant item pickup or interactions
+- `AssessmentTerminalInteractable.cs` - Terminal interaction (saves game upon use)
 - `ResourceCollectorInteractable.cs` - Resource collection
 
 **InteractionPromptUI.cs**
@@ -584,17 +568,19 @@ public abstract class HoldInteractableBase : MonoBehaviour, IInteractable
 
 ### 📊 Stats System
 
-**Location:** `Assets/Game/Script/Player/Stat/`
-
-**Purpose:** Player statistics tracking and management
+**Stats tracking location:** `Assets/Game/Script/Player/Stat/`
+**Death Handling:** `Assets/Game/Script/Player/Death/`
 
 #### Components:
 
 **PlayerStats.cs**
 - Health, Hunger, Stamina
-- Stat modification
+- Stat modification and triggers `OnPlayerDied`
 - Events for stat changes
 - Assessment system integration
+
+**DeathCause.cs**
+- Classifies reason for death (e.g. HealthDepleted, Starvation, Temperature)
 
 **StatModifier.cs**
 - Temporary/permanent modifications
@@ -607,9 +593,10 @@ public abstract class HoldInteractableBase : MonoBehaviour, IInteractable
 - Report generation
 
 **UI Integration:**
-- `SimpleStatsHUD.cs` - Real-time display
+- `SimpleStatsHUD.cs` - Real-time display with health bar animations
 - `AssessmentReportUI.cs` - Detailed reports
 - `PlayerStatsTrackerUI.cs` - Stat tracking
+- `DeathScreenUI.cs` - Death UI panel
 
 **Dependencies:**
 - Core.Events (stat change events)

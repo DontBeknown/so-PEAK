@@ -8,10 +8,10 @@
 ## What is This System?
 
 The **Inventory System** is a comprehensive item management solution with:
-- **Storage Management** - Grid-based inventory slots with stacking
+- **Grid Storage Management** - 2D grid-based inventory with varied item sizes (`gridSize`). No item stacking.
 - **Equipment System** - 5 equipment slots (Head, Body, Foot, Hand, HeldItem)
 - **Crafting System** - Recipe-based item creation
-- **Command Pattern** - Undo/redo support for all operations
+- **Command Pattern** - Undo/redo support for operations like drop and equip.
 - **Consumable Effects** - Extensible effect system
 - **Held Item Behavior** - Runtime behaviors for equipped items (Torch, Canteen)
 - **UI Integration** - Event-driven UI updates
@@ -31,25 +31,26 @@ This system follows **Domain-Driven Design** with clear separation between data,
 **Architecture Pattern:** Facade + Service Layer
 
 **Implements:**
-- `IInventoryStorage` (data access)
+- `IInventoryStorage` (via `GridStorageAdapter`)
 - `IInventoryService` (business logic)
 - `IConsumableEffectSystem` (consumable execution)
 
 **Key Methods:**
 ```csharp
-// Storage
+// Storage (Grid API)
+public bool PlaceItemAt(InventoryItem item, Vector2Int position)
+public bool MoveItem(GridPlacement placement, Vector2Int newPosition)
+public void RemoveFromGrid(GridPlacement placement)
+public List<GridPlacement> GetAllPlacements()
+
+// Standard Storage
 public bool AddItem(InventoryItem item, int quantity = 1)
 public bool RemoveItem(InventoryItem item, int quantity = 1)
 public bool HasItem(InventoryItem item)
 public int GetItemCount(InventoryItem item)
-public InventorySlot GetSlot(int index)
 
 // Consumables
 public bool ConsumeItem(InventoryItem item)
-
-// Query
-public List<InventorySlot> GetAllSlots()
-public bool IsInventoryFull()
 ```
 
 **Dependencies:**
@@ -123,26 +124,16 @@ public class RecipeIngredient
 }
 ```
 
-### 4. InventorySlot
+### 4. Grid Inventory Storage and Placements
 
-**File:** `Player/Inventory/InventorySlot.cs`
+**Location:** `Player/Inventory/Storage/`
 
-**Purpose:** Individual slot data structure.
+**Purpose:** 2D grid backend data logic.
 
-**Properties:**
-```csharp
-public class InventorySlot
-{
-    public int slotIndex;
-    public InventoryItem item;
-    public int quantity;
-    public bool isEmpty => item == null;
-    
-    public bool CanStack(InventoryItem otherItem)
-    public bool IsFull()
-    public void Clear()
-}
-```
+**Components:**
+- `GridInventoryStorage.cs`: The core 2D array logic. Tracks cells and manages insertions/removals.
+- `GridPlacement.cs`: Represents an item stored in the grid and tracks its `Position` (Vector2Int cell) and `Size`.
+- `GridStorageAdapter.cs`: Wraps the 2D grid as a standard `IInventoryStorage` to retain compatibility with other code (e.g. CraftingManager).
 
 ### 5. InventoryItem (ScriptableObject)
 
@@ -152,13 +143,17 @@ public class InventorySlot
 
 **Properties:**
 ```csharp
-public string itemName;
-public string itemId; // Unique identifier
-public Sprite icon;
-public string description;
-public int maxStackSize = 1;
-public bool isConsumable;
-public ConsumableEffectBase[] effects;
+public class InventoryItem : ScriptableObject
+{
+    public string itemName;
+    public string itemId; // Unique identifier
+    public Sprite icon;
+    public string description;
+    public int maxStackSize = 1; // Grid items do not stack natively
+    public Vector2Int gridSize = Vector2Int.one; // Dimensions in the grid
+    public bool isConsumable;
+    public ConsumableEffectBase[] effects;
+}
 ```
 
 **Item Hierarchy:**
@@ -211,7 +206,8 @@ public interface ICommand
 **Commands:**
 - **AddItemCommand** - Add item with undo (remove)
 - **RemoveItemCommand** - Remove item with undo (add back)
-- **TransferItemCommand** - Move item between slots
+- **DropItemCommand** - Spawns item in the world and removes from grid
+- **TransferItemCommand** - Move item between slots/grid
 - **EquipItemCommand** - Equip with undo (unequip)
 - **ConsumeItemCommand** - Consume with undo (add back + restore stats)
 
@@ -401,13 +397,12 @@ public void Redo()
 2. ItemPickup.Interact() called
 3. IInventoryService.AddItem(item, quantity)
    │
-   ├─► IInventoryStorage.FindEmptyOrStackableSlot()
-   ├─► IInventoryStorage.AddToSlot(index, item, quantity)
+   ├─► GridInventoryStorage.AutoPlace(item)
    └─► EventBus.Publish(ItemAddedEvent)
        │
-       ├─► InventoryUI subscribes → UpdateSlotUI()
+       ├─► GridInventoryUI subscribes → RefreshGrid()
        └─► NotificationUI subscribes → ShowPickupNotification()
-4. ItemPickup.Destroy()
+4. ItemInteractable object destroyed (or deactivated)
 ```
 
 ### Equipment Flow
@@ -438,9 +433,9 @@ public void Redo()
    └─► EventBus.Publish(ItemEquippedEvent)
        │
        ├─► EquipmentUI → UpdateSlotUI()
-       └─► InventoryUI → UpdateSlotUI()
+       └─► GridInventoryUI → RefreshGrid()
 5. If previous item existed:
-   └─► Auto-add back to inventory or drop
+   └─► Auto-add back to inventory grid or drop into world
 ```
 
 ### Crafting Flow
@@ -468,7 +463,7 @@ public void Redo()
    │       └─► IInventoryService.AddItem(resultItem, resultQty)
    │           └─► EventBus.Publish(ItemAddedEvent)
    │
-   └─► CraftingUI updates
+   └─► CraftingUI / GridInventoryUI updates
 ```
 
 ### Consumable Usage Flow
@@ -492,7 +487,7 @@ public void Redo()
    │
    └─► EventBus.Publish(ItemConsumedEvent)
        │
-       ├─► InventoryUI → UpdateSlotUI()
+       ├─► GridInventoryUI → RefreshGrid()
        └─► NotificationUI → ShowConsumedMessage()
 ```
 
@@ -527,7 +522,7 @@ TorchBehavior.UpdateBehavior()
         │
         ├─► IInventoryService.RemoveItem(torch, 1)
         │   └─► EventBus.Publish(ItemRemovedEvent)
-        │       └─► InventoryUI updates
+        │       └─► GridInventoryUI updates
         │
         └─► HeldItemStateManager.RemoveState(torchID)
 ```
@@ -553,8 +548,8 @@ TorchBehavior.UpdateBehavior()
    │   │
    │   └─► Play drink sound
    │
-   └─► InventoryUI.UpdateAllSlots()
-       └─► Show updated charge count
+   └─► GridInventoryUI.RefreshGrid()
+       └─► Show updated charge count/tooltip
 ```
 
 ---
