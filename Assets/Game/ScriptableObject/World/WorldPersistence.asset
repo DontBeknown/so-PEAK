@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8430f5c731bf91f439ec2e0ee4bac4ca, type: 3}
   m_Name: WorldPersistence
   m_EditorClassIdentifier: Assembly-CSharp::WorldPersistenceManager
-  currentWorldGuid: 0ef1d522-e5f7-4874-a84a-501c9239751b
-  currentWorldName: adaw
+  currentWorldGuid: e33edb5c-4cc2-4086-b2cc-8efd34b25d54
+  currentWorldName: Adwadad
   currentSeedData:
-    seed1: 01569803
-    seed2: 62606091
-    seed3: 83639271
+    seed1: 34983690
+    seed2: 17574360
+    seed3: 57097396
   level: 1
   isNewWorld: 0
   shouldLoadWorld: 1

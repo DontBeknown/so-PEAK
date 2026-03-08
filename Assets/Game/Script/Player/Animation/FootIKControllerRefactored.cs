@@ -72,8 +72,8 @@ public class FootIKControllerRefactored : MonoBehaviour
         // Detect landing: was airborne, now grounded
         if (_wasAirborne && !_isAirborne)
         {
-            // Reset pelvis to prevent stale Y position causing a bounce
-            _pelvisAdjuster.Reset();
+            // Seed with current body Y so the lerp doesn't start from 0 and sink the character
+            _pelvisAdjuster.Reset(animator.bodyPosition.y);
             
             // Zero out IK weights so they fade in smoothly
             _leftFootIKWeight = 0f;

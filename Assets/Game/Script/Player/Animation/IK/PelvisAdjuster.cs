@@ -49,11 +49,12 @@ namespace Game.Player.Animation
         }
 
         /// <summary>
-        /// Resets the pelvis adjuster state
+        /// Resets the pelvis adjuster state.
+        /// Pass the current body Y so the lerp doesn't start from 0 and sink the character.
         /// </summary>
-        public void Reset()
+        public void Reset(float currentBodyY = 0f)
         {
-            _lastPelvisPositionY = 0f;
+            _lastPelvisPositionY = currentBodyY;
         }
     }
 }
