@@ -97,4 +97,15 @@ namespace Game.Core.Events
             PanelName = panelName;
         }
     }
+
+    // Player Events
+    public class PlayerDeathEvent
+    {
+        public DeathCause Cause { get; }
+
+        public PlayerDeathEvent(DeathCause cause)
+        {
+            Cause = cause;
+        }
+    }
 }

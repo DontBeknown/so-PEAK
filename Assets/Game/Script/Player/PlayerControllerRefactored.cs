@@ -212,9 +212,10 @@ namespace Game.Player
 
             // ── Grounded transitions ───────────────────────────────────
 
-            // Landing from a fall — sprint-held lands into RunningState
-            if (_currentState is FallingState)
+            // Landing from a fall — apply fall damage then transition
+            if (_currentState is FallingState fallingState)
             {
+                ApplyFallDamage(fallingState.PeakFallSpeed);
                 if (isSprintHeld && isMoving)
                 {
                     TransitionTo(new RunningState(this));
@@ -245,6 +246,21 @@ namespace Game.Player
             {
                 TransitionTo(new WalkingState(this));
             }
+        }
+
+        #endregion
+
+        #region Fall Damage
+
+        private void ApplyFallDamage(float fallSpeed)
+        {
+            if (_model?.Stats == null || config == null) return;
+
+            if (fallSpeed <= config.fallDamageSafeSpeed) return;
+
+            float t = Mathf.InverseLerp(config.fallDamageSafeSpeed, config.fallDamageLethalSpeed, fallSpeed);
+            float damage = Mathf.Lerp(0f, config.fallDamageMax, t);
+            _model.Stats.TakeFallDamage(damage);
         }
 
         #endregion

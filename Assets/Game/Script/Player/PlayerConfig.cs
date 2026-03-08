@@ -78,6 +78,14 @@ public class PlayerConfig : ScriptableObject
     [Tooltip("Hunger drains this many times faster while sprinting")]
     public float hungerSprintMultiplier = 2f;
 
+    [Header("Fall Damage")]
+    [Tooltip("Fall speed (m/s) below which no damage is taken")]
+    public float fallDamageSafeSpeed = 8f;
+    [Tooltip("Fall speed (m/s) at which maximum damage is dealt")]
+    public float fallDamageLethalSpeed = 25f;
+    [Tooltip("Maximum damage at lethal fall speed")]
+    public float fallDamageMax = 100f;
+
     [Header("Thirst")]
     public float thirstDrainPerSecond = 0.35f;
     public float thirstHurtThreshold = 40f;

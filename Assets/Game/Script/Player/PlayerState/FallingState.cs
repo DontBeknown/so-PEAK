@@ -10,6 +10,9 @@ public class FallingState : IPlayerState
 {
     private IStateTransitioner _stateTransitioner;
     private Vector3 _horizontalVelocity;
+    private float _peakFallSpeed;
+
+    public float PeakFallSpeed => _peakFallSpeed;
 
     /// <summary>
     /// How much the player can steer while airborne (0 = none, 1 = full ground control).
@@ -62,6 +65,11 @@ public class FallingState : IPlayerState
             Vector3 airInput = model.GetCameraProvider().GetWorldDirection(input) * model.WalkSpeed * AirControlFactor;
             _horizontalVelocity = Vector3.Lerp(_horizontalVelocity, airInput, Time.fixedDeltaTime * 2f);
         }
+
+        // Track peak downward speed for fall damage
+        float downSpeed = -model.Velocity.y;
+        if (downSpeed > _peakFallSpeed)
+            _peakFallSpeed = downSpeed;
 
         // Combine horizontal momentum with vertical velocity (gravity)
         Vector3 motion = new Vector3(_horizontalVelocity.x, model.Velocity.y, _horizontalVelocity.z);

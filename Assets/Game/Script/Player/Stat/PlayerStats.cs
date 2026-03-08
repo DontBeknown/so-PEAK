@@ -1,5 +1,7 @@
 using UnityEngine;
 using System;
+using Game.Core.DI;
+using Game.Core.Events;
 
 public class PlayerStats : MonoBehaviour
 {
@@ -27,6 +29,10 @@ public class PlayerStats : MonoBehaviour
 
     private bool isSprinting;
 
+    private IEventBus _eventBus;
+    private DeathCause _lastDamageSource = DeathCause.Unknown;
+    public DeathCause LastDamageSource => _lastDamageSource;
+
     private void Awake()
     {
         
@@ -43,7 +49,7 @@ public class PlayerStats : MonoBehaviour
 
         health.OnChanged += (c, m) => OnHealthChanged?.Invoke(c, m);
         stamina.OnChanged += (c, m) => OnStaminaChanged?.Invoke(c, m);
-        health.OnDeath += () => OnDeath?.Invoke();
+
         
         // Subscribe to stat tracking events
         health.OnDamaged += (amount) => OnHealthDamaged?.Invoke(amount);
@@ -53,6 +59,12 @@ public class PlayerStats : MonoBehaviour
 
     private void Start()
     {
+        _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+        health.OnDeath += () =>
+        {
+            OnDeath?.Invoke();
+            _eventBus?.Publish(new PlayerDeathEvent(_lastDamageSource));
+        };
         // Auto-assign equipment manager if not set
         equipmentManager ??= GetComponent<EquipmentManager>();
         
@@ -81,12 +93,14 @@ public class PlayerStats : MonoBehaviour
 
         if (hunger.ShouldHurt)
         {
+            _lastDamageSource = DeathCause.Starvation;
             health.Damage(hunger.StarveDPS * dt);
         }
             
 
         if (thirst.ShouldHurt)
         {
+            _lastDamageSource = DeathCause.Dehydration;
             health.Damage(thirst.DehydrateDPS * dt);
         }
             
@@ -127,7 +141,17 @@ public class PlayerStats : MonoBehaviour
     }
 
     public void ConsumeStamina(float amount) => stamina.Drain(amount);
-    public void TakeDamage(float dmg) => health.Damage(dmg);
+    public void TakeDamage(float dmg)
+    {
+        _lastDamageSource = DeathCause.Damage;
+        health.Damage(dmg);
+    }
+
+    public void TakeFallDamage(float dmg)
+    {
+        _lastDamageSource = DeathCause.Falling;
+        health.Damage(dmg);
+    }
     public void Heal(float amount) => health.Heal(amount);
     public void Eat(float nutrition) => hunger.Add(nutrition);
     public void Drink(float water) => thirst.Add(water);
