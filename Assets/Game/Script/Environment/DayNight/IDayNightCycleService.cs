@@ -67,5 +67,10 @@ namespace Game.Environment.DayNight
         /// Skip time forward to the start of the next morning (increments the day counter)
         /// </summary>
         void SkipToNextMorning();
+        
+        /// <summary>
+        /// Set the current day number directly (used when loading a saved game)
+        /// </summary>
+        void SetDay(int day);
     }
 }

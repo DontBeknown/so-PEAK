@@ -187,6 +187,9 @@ namespace Game.Interaction
                 SaveLoadService.Instance?.ProgressToNextLevel();
             }
 
+            // Save the game (captures updated day, time, stats, etc.)
+            SaveLoadService.Instance?.PerformAutoSave();
+
             // Mark as used for one-time-use terminals
             if (oneTimeUse)
             {

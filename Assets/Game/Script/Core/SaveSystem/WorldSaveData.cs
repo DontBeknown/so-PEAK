@@ -53,6 +53,11 @@ public class InventoryItemSaveData
     public int quantity;
     public int slotIndex;
     
+    // Grid position
+    public int gridX;
+    public int gridY;
+    public bool isRotated;
+    
     // Held item state (for torch, canteen, etc.)
     public HeldItemStateSaveData heldItemState;
 }

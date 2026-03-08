@@ -304,11 +304,58 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
                 if (enableDebug) Debug.Log($"Updated player stats: HP={stats.Health}/{stats.MaxHealth}");
             }
             
-            // TODO: Update inventory items
-            // var inventoryManager = container.TryGet<InventoryManagerRefactored>();
+            // Update inventory items
+            var inventoryManager = container.TryGet<Game.Player.Inventory.InventoryManagerRefactored>();
+            if (inventoryManager != null)
+            {
+                var placements = inventoryManager.GetAllPlacements();
+                currentWorldSave.playerData.inventoryItems = new List<InventoryItemSaveData>();
+                foreach (var p in placements)
+                {
+                    currentWorldSave.playerData.inventoryItems.Add(new InventoryItemSaveData
+                    {
+                        itemId = p.Item.name,
+                        quantity = 1,
+                        gridX = p.Position.x,
+                        gridY = p.Position.y,
+                        isRotated = p.Rotated
+                    });
+                }
+                if (enableDebug) Debug.Log($"[SaveLoadService] Saved {placements.Count} inventory items");
+            }
+
+            // Update equipped items
+            var equipmentManager = container.TryGet<EquipmentManager>();
+            if (equipmentManager != null)
+            {
+                currentWorldSave.playerData.equippedItems = new List<EquipmentSlotSaveData>();
+                foreach (EquipmentSlotType slotType in System.Enum.GetValues(typeof(EquipmentSlotType)))
+                {
+                    var equipped = equipmentManager.GetEquippedItem(slotType);
+                    var equippedObj = equipped as UnityEngine.Object;
+                    if (equippedObj != null)
+                    {
+                        currentWorldSave.playerData.equippedItems.Add(new EquipmentSlotSaveData
+                        {
+                            slotType = slotType.ToString(),
+                            itemId = equippedObj.name
+                        });
+                    }
+                }
+                if (enableDebug) Debug.Log($"[SaveLoadService] Saved {currentWorldSave.playerData.equippedItems.Count} equipped items");
+            }
             
-            // TODO: Update equipped items
-            // var equipmentManager = container.TryGet<EquipmentManager>();
+            // Update world state: time of day and day number
+            var dayNightService = container.TryGet<Game.Environment.DayNight.IDayNightCycleService>();
+            if (dayNightService != null)
+            {
+                if (currentWorldSave.worldState == null)
+                    currentWorldSave.worldState = CreateDefaultWorldState();
+                currentWorldSave.worldState.currentTimeOfDay = dayNightService.CurrentTime;
+                currentWorldSave.worldState.dayNumber = dayNightService.CurrentDay;
+                
+                if (enableDebug) Debug.Log($"[SaveLoadService] Saved time={dayNightService.CurrentTime:F1}h, day={dayNightService.CurrentDay}");
+            }
             
             // Update play time
             currentWorldSave.totalPlayTime += Time.deltaTime;

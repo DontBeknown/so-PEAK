@@ -26,6 +26,7 @@ public class RenderController : MonoBehaviour
 
     // State
     private bool playerHasSpawned = false;
+    public bool PlayerSpawnComplete { get; private set; } = false;
     Dictionary<Vector2Int, GameObject> terrainChunks = new Dictionary<Vector2Int, GameObject>();
     Vector2Int currentChunkCoord;
 
@@ -195,6 +196,8 @@ public class RenderController : MonoBehaviour
 
         // Update all system references to the new player
         UpdatePlayerReferences(spawnedPlayer);
+        
+        PlayerSpawnComplete = true;
     }
 
     private void UpdatePlayerReferences(Transform newPlayer)

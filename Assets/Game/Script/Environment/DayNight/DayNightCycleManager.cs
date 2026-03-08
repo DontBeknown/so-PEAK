@@ -52,6 +52,15 @@ namespace Game.Environment.DayNight
             UpdateTimeOfDay();
         }
         
+        public void SetDay(int day)
+        {
+            _currentDay = Mathf.Max(1, day);
+            if (showDebugInfo)
+            {
+                Debug.Log($"[DayNightCycle] Day set to {_currentDay}");
+            }
+        }
+        
         public void SetTimeOfDay(TimeOfDay timeOfDay)
         {
             switch (timeOfDay)

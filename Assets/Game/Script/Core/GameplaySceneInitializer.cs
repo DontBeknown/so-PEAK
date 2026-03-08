@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using Game.Core.DI;
 using Game.Environment.DayNight;
@@ -52,65 +53,59 @@ public class GameplaySceneInitializer : MonoBehaviour
     
     private void InitializeWorld()
     {
+        StartCoroutine(InitializeWorldCoroutine());
+    }
+    
+    private IEnumerator InitializeWorldCoroutine()
+    {
         if (worldPersistence.isNewWorld)
         {
-            InitializeNewWorld();
+            if (enableDebug) Debug.Log($"Initializing new world: {worldPersistence.currentWorldName}");
+            InitializeDefaultWorldState();
         }
         else if (worldPersistence.shouldLoadWorld)
         {
-            InitializeLoadedWorld();
+            if (enableDebug) Debug.Log($"Loading world: {worldPersistence.currentWorldName}");
+
+            WorldSaveData saveData = saveLoadService.LoadWorld(worldPersistence.currentWorldGuid);
+            if (saveData == null)
+            {
+                Debug.LogError("Failed to load world save data!");
+                yield break;
+            }
+
+            // Restore day/night immediately — does not require the player
+            if (saveData.worldState != null)
+            {
+                var dayNightManager = FindFirstObjectByType<DayNightCycleManager>();
+                if (dayNightManager != null)
+                {
+                    dayNightManager.SetTime(saveData.worldState.currentTimeOfDay);
+                    dayNightManager.SetDay(saveData.worldState.dayNumber);
+                }
+            }
+
+            // Wait until RenderController has fully completed the player spawn sequence
+            // (terrain loaded → player instantiated → services updated)
+            var renderController = FindFirstObjectByType<RenderController>();
+            yield return new WaitUntil(() =>
+                renderController != null && renderController.PlayerSpawnComplete);
+
+            // Restore player-dependent state
+            var playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
+            if (playerStats != null && saveData.playerData != null)
+                RestorePlayerStats(playerStats, saveData.playerData);
+
+            RestoreInventory(saveData.playerData);
+            RestoreEquipment(saveData.playerData);
+            RestoreResourceNodes(saveData.worldState);
+
+            if (enableDebug) Debug.Log("World state restored successfully");
         }
         else
         {
             Debug.LogError("No world data to initialize!");
         }
-    }
-    
-    private void InitializeNewWorld()
-    {
-        if (enableDebug) Debug.Log($"Initializing new world: {worldPersistence.currentWorldName}");
-        
-        // TODO: Generate terrain with seed (not yet implemented)
-        // if (terrainGenerator != null)
-        // {
-        //     int seed = worldPersistence.GetSeedAsInt();
-        //     terrainGenerator.GenerateTerrain(seed);
-        //     Debug.Log($"Generated terrain with seed: {seed}");
-        // }
-        
-        // Spawn player at start position
-        SpawnPlayer(worldPersistence.playerStartPosition, worldPersistence.playerStartRotation);
-        
-        // Initialize default world state
-        InitializeDefaultWorldState();
-    }
-    
-    private void InitializeLoadedWorld()
-    {
-        if (enableDebug) Debug.Log($"Loading world: {worldPersistence.currentWorldName}");
-        
-        // Load save data
-        WorldSaveData saveData = saveLoadService.LoadWorld(worldPersistence.currentWorldGuid);
-        
-        if (saveData == null)
-        {
-            Debug.LogError("Failed to load world save data!");
-            return;
-        }
-        
-        // TODO: Generate terrain with saved seed (not yet implemented)
-        // if (terrainGenerator != null)
-        // {
-        //     int seed = worldPersistence.GetSeedAsInt();
-        //     terrainGenerator.GenerateTerrain(seed);
-        //     Debug.Log($"Generated terrain with saved seed: {seed}");
-        // }
-        
-        // Spawn player at saved position
-        SpawnPlayer(worldPersistence.playerStartPosition, worldPersistence.playerStartRotation);
-        
-        // Restore world state
-        RestoreWorldState(saveData);
     }
     
     private void SpawnPlayer(Vector3 position, Quaternion rotation)
@@ -124,43 +119,13 @@ public class GameplaySceneInitializer : MonoBehaviour
     
     private void InitializeDefaultWorldState()
     {
-        // Set time to morning
+        // Set time to morning, day 1
         var dayNightManager = FindFirstObjectByType<DayNightCycleManager>();
         if (dayNightManager != null)
         {
             dayNightManager.SetTime(6f); // 6 AM
+            dayNightManager.SetDay(1);
         }
-    }
-    
-    private void RestoreWorldState(WorldSaveData saveData)
-    {
-        // Restore player stats
-        var playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
-        if (playerStats != null && saveData.playerData != null)
-        {
-            RestorePlayerStats(playerStats, saveData.playerData);
-        }
-        
-        // Restore inventory
-        RestoreInventory(saveData.playerData);
-        
-        // Restore equipment
-        RestoreEquipment(saveData.playerData);
-        
-        // Restore time of day
-        if (saveData.worldState != null)
-        {
-            var dayNightManager = FindFirstObjectByType<DayNightCycleManager>();
-            if (dayNightManager != null)
-            {
-                dayNightManager.SetTime(saveData.worldState.currentTimeOfDay);
-            }
-        }
-        
-        // Restore resource nodes
-        RestoreResourceNodes(saveData.worldState);
-        
-        if (enableDebug) Debug.Log("World state restored successfully");
     }
     
     private void RestorePlayerStats(PlayerStats playerStats, PlayerSaveData playerData)
@@ -194,11 +159,18 @@ public class GameplaySceneInitializer : MonoBehaviour
         
         foreach (var itemData in playerData.inventoryItems)
         {
-            // Load item from Resources or AssetDatabase
             InventoryItem item = Resources.Load<InventoryItem>($"Items/{itemData.itemId}");
-            if (item != null)
+            if (item == null) continue;
+
+            // Restore at saved grid position; fall back to auto-place if the slot is taken
+            var placement = inventoryManager.PlaceItemAt(item, new Vector2Int(itemData.gridX, itemData.gridY));
+            if (placement == null)
             {
-                inventoryManager.AddItem(item, itemData.quantity);
+                inventoryManager.AddItem(item, 1);
+            }
+            else if (itemData.isRotated)
+            {
+                inventoryManager.RotateItem(placement);
             }
         }
     }

@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8430f5c731bf91f439ec2e0ee4bac4ca, type: 3}
   m_Name: WorldPersistence
   m_EditorClassIdentifier: Assembly-CSharp::WorldPersistenceManager
-  currentWorldGuid: e33edb5c-4cc2-4086-b2cc-8efd34b25d54
-  currentWorldName: Adwadad
+  currentWorldGuid: 20d021d3-5427-4380-be64-f6d1f187dbb4
+  currentWorldName: aehfoa
   currentSeedData:
-    seed1: 34983690
-    seed2: 17574360
-    seed3: 57097396
+    seed1: 61438230
+    seed2: 66088654
+    seed3: 57164491
   level: 1
   isNewWorld: 0
   shouldLoadWorld: 1
-  playerStartPosition: {x: 0, y: 10, z: 0}
-  playerStartRotation: {x: 0, y: 0, z: 0, w: 1}
+  playerStartPosition: {x: 808.6809, y: 197.33711, z: 838.2122}
+  playerStartRotation: {x: 0, y: 0.8786986, z: 0, w: 0.477377}
