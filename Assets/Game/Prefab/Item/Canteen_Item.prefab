@@ -235,6 +235,8 @@ GameObject:
   - component: {fileID: 5501527791646382217}
   - component: {fileID: 4524366186469075517}
   - component: {fileID: 5145454102910967596}
+  - component: {fileID: 4800428322113791429}
+  - component: {fileID: 3190611480992975336}
   m_Layer: 10
   m_Name: Canteen_Item
   m_TagString: Untagged
@@ -307,3 +309,43 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &4800428322113791429
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9088813262201544815}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ed11ef2e2c5f18479f31c4034485315, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.ItemInteractable
+  item: {fileID: 11400000, guid: cfcdb5955f6b756488026f4025cb8fd0, type: 2}
+  quantity: 1
+  customPrompt: 
+  interactionPriority: 1
+  interactionVerb: Press to
+  highlightEffect: {fileID: 0}
+  pickupSound: {fileID: 0}
+  pickupParticles: {fileID: 0}
+  destroyOnPickup: 1
+  allowMultipleUse: 0
+  maxUses: 0
+--- !u!114 &3190611480992975336
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9088813262201544815}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ca34c98dd680c94a9678ee88de1def8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.ScaleDownDestroyAnimation
+  bounceDuration: 0.12
+  bounceScale: 1.4
+  shrinkDuration: 0.25
+  bounceEase: 6
+  shrinkEase: 26

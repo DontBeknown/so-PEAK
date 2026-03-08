@@ -23,7 +23,7 @@ MonoBehaviour:
   isConsumable: 0
   consumableEffects: []
   isCraftingMaterial: 0
-  isCraftedItem: 0
+  isCraftedItem: 1
   equipmentSlot: 4
   statModifiers: []
   heldItemPrefab: {fileID: 8608300581815050142, guid: 27caf45872e39e44d8de82692c167162, type: 3}

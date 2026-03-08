@@ -133,7 +133,14 @@ namespace Game.Interaction
                     hasBeenCollected = true;
 
                     if (destroyOnPickup)
-                        Destroy(gameObject);
+                    {
+                        var scaleAnim = GetComponent<ScaleDownDestroyAnimation>();
+                        if (scaleAnim != null)
+                            scaleAnim.PlayAndDestroy();
+                        else
+                            Destroy(gameObject);
+                    }
+                        
                     else
                         gameObject.SetActive(false);
                 }

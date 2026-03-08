@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using DG.Tweening;
 using Game.Core.DI;
+using System.Threading.Tasks;
 
 namespace Game.Interaction
 {
@@ -357,8 +358,12 @@ namespace Game.Interaction
 
         private void DestroyResource()
         {
-            // For single-use resources, destroy the object
-            Destroy(gameObject, 0.5f); // Small delay for sound to play
+            // Play scale-down animation if available, otherwise fall back to plain destroy
+            var scaleAnim = GetComponent<ScaleDownDestroyAnimation>();
+            if (scaleAnim != null)
+                scaleAnim.PlayAndDestroy();
+            else
+                Destroy(gameObject, 0.5f);
         }
 
         private void UpdateDepletedVisual()

@@ -6946,6 +6946,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CraftingManager
   availableRecipes:
   - {fileID: 11400000, guid: b01bb3e53119ffc4c990e258d9596ad5, type: 2}
+  - {fileID: 11400000, guid: 5dedc8a05df4ef94aa777e7697c022d3, type: 2}
   nearCampfire: 0
   nearWorkbench: 0
 --- !u!114 &7899176700243506759
@@ -14801,6 +14802,7 @@ MonoBehaviour:
   dragScale: 1.2
   dragScaleDuration: 0.12
   dropScaleDuration: 0.1
+  dropBounceScale: 0.15
 --- !u!1 &8875992650338829143
 GameObject:
   m_ObjectHideFlags: 0
