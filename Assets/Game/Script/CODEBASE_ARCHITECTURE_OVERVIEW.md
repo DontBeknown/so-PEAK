@@ -1165,7 +1165,7 @@ grep -r "interface I[A-Z]" Assets/Game/Script/
 
 1. **Check ServiceContainer** - See what's available
 2. **Follow Initialization Order** - Register in Bootstrapper
-3. **Use Interfaces** - Enable DI and testing
+3. **Use Interfaces only when needed** - Only create an interface if you have a concrete plan to swap implementations (e.g. FMOD vs Unity Audio, mock for testing, multiple platform backends). Do NOT create an interface just because "it might be useful later" — register and reference the concrete class directly instead
 4. **Avoid Static** - Use instance-based design
 5. **Document Public APIs** - Help future developers
 6. **Add to Architecture Docs** - Keep this file updated

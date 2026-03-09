@@ -3,7 +3,6 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
-using UnityEditor;
 using UnityEngine;
 
 public class TerrainMeshGenerator : MonoBehaviour
@@ -254,8 +253,9 @@ public struct Maps
     }
 }
 
-/*[CustomEditor(typeof(TerrainMeshGenerator))]
-public class TerrainMeshGeneratorEditor : Editor
+#if UNITY_EDITOR
+/*[UnityEditor.CustomEditor(typeof(TerrainMeshGenerator))]
+public class TerrainMeshGeneratorEditor : UnityEditor.Editor
 {
     public override void OnInspectorGUI()
     {
@@ -269,3 +269,4 @@ public class TerrainMeshGeneratorEditor : Editor
         }
     }
 }*/
+#endif

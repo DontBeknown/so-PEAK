@@ -1,6 +1,8 @@
 using System.Collections;
 using UnityEngine;
 using Game.Core.DI;
+using Game.Core.Events;
+using Game.Sound.Events;
 using Game.Environment.DayNight;
 using Game.Player.Inventory;
 using Game.Interaction;
@@ -47,6 +49,8 @@ public class GameplaySceneInitializer : MonoBehaviour
             Debug.LogError("WorldPersistenceManager not assigned!");
             return;
         }
+
+        ServiceContainer.Instance.TryGet<IEventBus>()?.Publish(new PlayMusicEvent("music_gameplay"));
         
         InitializeWorld();
     }

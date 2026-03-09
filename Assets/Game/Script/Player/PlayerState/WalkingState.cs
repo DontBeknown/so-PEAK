@@ -1,5 +1,8 @@
 using UnityEngine;
 using Game.Player.Interfaces;
+using Game.Core.DI;
+using Game.Core.Events;
+using Game.Sound.Events;
 
 /// <summary>
 /// Walking state - handles ground-based movement.
@@ -8,6 +11,9 @@ using Game.Player.Interfaces;
 public class WalkingState : IPlayerState
 {
     private IStateTransitioner _stateTransitioner;
+    private IEventBus _eventBus;
+    private float _footstepTimer;
+    private const float FootstepInterval = 0.53f;
 
     public WalkingState()
     {
@@ -26,6 +32,7 @@ public class WalkingState : IPlayerState
         var animService = model.GetAnimationService();
         animService.SetWalking(true);
         animService.SetGrounded(true);
+        _footstepTimer = FootstepInterval;
         
         // Enable stamina regeneration in walking state
         model.Stats?.SetWalking(true);
@@ -116,6 +123,25 @@ public class WalkingState : IPlayerState
         // Apply minimal gravity to keep grounded on slopes
         // Gravity is handled differently in ApplyGravity when grounded
         model.ApplyGravity(-9.81f);
+
+        // Footstep sounds
+        if (moveDir.sqrMagnitude > 0.01f)
+        {
+            float dynamicInterval = Mathf.Clamp(
+                FootstepInterval * (model.WalkSpeed / Mathf.Max(horizontal.magnitude, 0.01f)),
+                FootstepInterval, FootstepInterval * 3f);
+            _footstepTimer += Time.fixedDeltaTime;
+            if (_footstepTimer >= dynamicInterval)
+            {
+                _footstepTimer = 0f;
+                (_eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>())
+                    ?.Publish(new PlayPositionalSFXEvent("footstep_walk", model.Transform.position));
+            }
+        }
+        else
+        {
+            _footstepTimer = 0f;
+        }
     }
     
     /// <summary>
@@ -220,6 +246,9 @@ public class WalkingState : IPlayerState
             if (model.Stats.Stamina < model.Stats.Config.jumpStaminaCost) return;
             model.Stats.OnJump();
         }
+
+        (_eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>())
+            ?.Publish(new PlayPositionalSFXEvent("jump", model.Transform.position));
 
         if (input.sqrMagnitude <= 0.01f)
         {

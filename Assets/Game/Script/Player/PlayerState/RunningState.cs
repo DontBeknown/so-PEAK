@@ -1,5 +1,8 @@
 using UnityEngine;
 using Game.Player.Interfaces;
+using Game.Core.DI;
+using Game.Core.Events;
+using Game.Sound.Events;
 
 /// <summary>
 /// Running/sprinting state — higher speed with increased stamina drain.
@@ -11,6 +14,9 @@ public class RunningState : IPlayerState
 {
     private IStateTransitioner _stateTransitioner;
     private float _currentSpeed;
+    private IEventBus _eventBus;
+    private float _footstepTimer;
+    private const float RunFootstepInterval = 0.41f;
 
     // ── Constructors ───────────────────────────────────────────────────
 
@@ -130,6 +136,25 @@ public class RunningState : IPlayerState
 
         // ── Gravity ────────────────────────────────────────────────────
         model.ApplyGravity(-9.81f);
+
+        // Running footstep sounds
+        if (moveDir.sqrMagnitude > 0.01f)
+        {
+            float dynamicInterval = Mathf.Clamp(
+                RunFootstepInterval * (model.RunSpeed / Mathf.Max(horizontal.magnitude, 0.01f)),
+                RunFootstepInterval, RunFootstepInterval * 3f);
+            _footstepTimer += Time.fixedDeltaTime;
+            if (_footstepTimer >= dynamicInterval)
+            {
+                _footstepTimer = 0f;
+                (_eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>())
+                    ?.Publish(new PlayPositionalSFXEvent("footstep_run", model.Transform.position));
+            }
+        }
+        else
+        {
+            _footstepTimer = 0f;
+        }
     }
 
     // ── Jump ───────────────────────────────────────────────────────────
@@ -141,6 +166,9 @@ public class RunningState : IPlayerState
             model.Stats.OnJump();
             if (model.Stats.Stamina < 0.01f) return;
         }
+
+        (_eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>())
+            ?.Publish(new PlayPositionalSFXEvent("jump", model.Transform.position));
 
         if (input.sqrMagnitude <= 0.01f)
         {

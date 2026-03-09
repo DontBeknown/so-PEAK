@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e76162a7ee483545a4175ceac120a13, type: 3}
   m_Name: FootIKConfig
   m_EditorClassIdentifier: Assembly-CSharp::Game.Player.Animation.FootIKConfig
-  ikWeight: 0.9
+  ikWeight: 0.933
   rotationWeight: 1
   groundLayer:
     serializedVersion: 2

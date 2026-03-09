@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using Game.Core.DI;
+using Game.Core.Events;
+using Game.Sound.Events;
 
 namespace Game.Menu
 {
@@ -30,6 +33,9 @@ namespace Game.Menu
 
             // Show main menu by default
             ShowMainMenu();
+
+            var eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+            eventBus?.Publish(new PlayMusicEvent("music_menu"));
         }
 
         private void OnDestroy()

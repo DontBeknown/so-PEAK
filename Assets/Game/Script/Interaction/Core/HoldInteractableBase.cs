@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections;
 using Game.Core.DI;
+using Game.Core.Events;
+using Game.Sound.Events;
 
 namespace Game.Interaction
 {
@@ -37,6 +39,7 @@ namespace Game.Interaction
         protected Game.Player.PlayerControllerRefactored currentPlayer;
         protected Coroutine holdingCoroutine;
         protected Game.Interaction.UI.InteractionPromptUI promptUI;
+        private IEventBus _eventBus;
 
         #region IInteractable Implementation
 
@@ -113,6 +116,8 @@ namespace Game.Interaction
             }
             
             // Notify derived class
+            (_eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>())
+                ?.Publish(new PlayPositionalSFXEvent("interact_start", transform.position));
             OnHoldStart();
             
             // Start holding coroutine
@@ -174,6 +179,8 @@ namespace Game.Interaction
             }
             
             // Notify derived class - THIS IS WHERE CUSTOM LOGIC GOES
+            (_eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>())
+                ?.Publish(new PlayPositionalSFXEvent("interact_complete", transform.position));
             OnHoldComplete();
             
             Cleanup();
@@ -191,6 +198,8 @@ namespace Game.Interaction
             }
             
             // Notify derived class
+            (_eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>())
+                ?.Publish(new PlayPositionalSFXEvent("interact_cancel", transform.position));
             OnHoldCancel(reason);
             
             Cleanup();

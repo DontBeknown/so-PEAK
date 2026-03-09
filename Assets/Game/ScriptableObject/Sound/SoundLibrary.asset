@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56ff70e0f3bfbd74e8109c71b41ddb1c, type: 3}
+  m_Name: SoundLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Sound.SoundLibrary
+  _entries:
+  - Id: footstep_walk
+    Clips:
+    - {fileID: 8300000, guid: 9aafcfe4300ffd348a412c25e1e8d6aa, type: 3}
+    - {fileID: 8300000, guid: ecbe3a0b824dfb94994ce1b4e71952f9, type: 3}
+    - {fileID: 8300000, guid: 0f0e29814ab1fa34a8d5b4529399da1f, type: 3}
+    - {fileID: 8300000, guid: 9730bb168dae2094690c2d2b0ae14388, type: 3}
+  - Id: footstep_climb
+    Clips:
+    - {fileID: 8300000, guid: 6b2f2bddad336d84894baf36160b5f32, type: 3}
+    - {fileID: 8300000, guid: d6267948304643642bb33c9fadeba26c, type: 3}
+    - {fileID: 8300000, guid: ab48ecb9d5341964c936595a576a847c, type: 3}
+    - {fileID: 8300000, guid: dbf7424caf50abd43bd3f1dfbbde1e38, type: 3}
+    - {fileID: 8300000, guid: 5ebd4a9485966ba4799a230a1696494e, type: 3}
+    - {fileID: 8300000, guid: 4712ff76e320ff94ab1d71ea93c96fd0, type: 3}
+  - Id: footstep_run
+    Clips:
+    - {fileID: 8300000, guid: 31c7b72cbe038824895c5551a5667766, type: 3}
+    - {fileID: 8300000, guid: beff6390dc25d9442b227196c98e7b2d, type: 3}
+    - {fileID: 8300000, guid: c977a7ac5f44d814086612405e8033d4, type: 3}
+    - {fileID: 8300000, guid: bb37dcef96b04274cb4c72e72176bb0f, type: 3}
+    - {fileID: 8300000, guid: 71af156a69900ae41a563829a7d6d862, type: 3}
+  - Id: land_impact
+    Clips:
+    - {fileID: 8300000, guid: 782744022f534fc45b24af34d17e8ca1, type: 3}
+    - {fileID: 8300000, guid: 09b80da5c01105b4e956887fcf555cb3, type: 3}
+    - {fileID: 8300000, guid: acf6bc08af849e547b5935ab4ae49c2d, type: 3}
+    - {fileID: 8300000, guid: e58ff729716310041833067a16f00b86, type: 3}
+  - Id: jump
+    Clips:
+    - {fileID: 8300000, guid: 9b96a649038611c4ca1b1b50ea8406d9, type: 3}
+    - {fileID: 8300000, guid: a032259e8b027224282b8f7ae94b604f, type: 3}
+    - {fileID: 8300000, guid: 6c50982a84e38104bb32e95e701d44b4, type: 3}
+    - {fileID: 8300000, guid: f7e0f13a5cf2f5f4b9373c572edf78d5, type: 3}
+  - Id: interact_complete
+    Clips: []
+  - Id: item_pickup
+    Clips: []
+  - Id: music_menu
+    Clips: []
+  - Id: music_gameplay
+    Clips: []

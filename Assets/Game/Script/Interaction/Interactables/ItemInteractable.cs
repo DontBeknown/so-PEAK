@@ -1,5 +1,7 @@
 using UnityEngine;
 using Game.Core.DI;
+using Game.Core.Events;
+using Game.Sound.Events;
 using Game.Player.Inventory;
 
 namespace Game.Interaction
@@ -157,7 +159,9 @@ namespace Game.Interaction
             {
                 AudioSource.PlayClipAtPoint(pickupSound, transform.position);
             }
-            
+            var eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+            eventBus?.Publish(new PlayPositionalSFXEvent("item_pickup", transform.position));
+
             // Spawn particles
             if (pickupParticles != null)
             {

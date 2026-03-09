@@ -146,9 +146,6 @@ namespace Game.Environment.DayNight
                 return;
             }
             
-            // Resolve dependencies
-            _eventBus = ServiceContainer.Instance.Get<IEventBus>();
-            
             // Initialize time
             _currentTime = config.startTime;
             _currentTimeOfDay = config.GetTimeOfDay(_currentTime);
@@ -162,6 +159,9 @@ namespace Game.Environment.DayNight
         
         private void Start()
         {
+            // Resolve dependencies
+            _eventBus = ServiceContainer.Instance.Get<IEventBus>();
+
             // Validate references
             if (directionalLight == null)
             {

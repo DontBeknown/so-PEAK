@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 using Game.Player.Interfaces;
+using Game.Core.DI;
+using Game.Core.Events;
+using Game.Sound.Events;
 
 /// <summary>
 /// Falling state - handles airborne movement and landing.
@@ -53,6 +56,11 @@ public class FallingState : IPlayerState
     public void Exit(PlayerModelRefactored model)
     {
         model.GetAnimationService().SetFalling(false);
+        if (_peakFallSpeed > 2f)
+        {
+            var eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+            eventBus?.Publish(new PlayPositionalSFXEvent("land_impact", model.Transform.position));
+        }
     }
 
     public void HandleInput(PlayerModelRefactored model, Vector2 input) { }

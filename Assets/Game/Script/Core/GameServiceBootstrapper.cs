@@ -7,6 +7,7 @@ using Game.UI;
 using Game.Player.Stat.Assessment;
 using Game.Player.Inventory;
 using Game.Environment.DayNight;
+using Game.Sound;
 
 namespace Game.Core
 {
@@ -248,6 +249,16 @@ namespace Game.Core
                 container.Register(saveLoadService);
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] SaveLoadService found and registered");
+            }
+
+            // Find and register SoundService
+            var soundService = FindFirstObjectByType<SoundService>();
+            if (soundService != null)
+            {
+                soundService.Initialize();
+                container.Register(soundService);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] SoundService found and registered");
             }
 
         }

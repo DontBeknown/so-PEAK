@@ -1,5 +1,8 @@
 using UnityEngine;
 using Game.Player.Interfaces;
+using Game.Core.DI;
+using Game.Core.Events;
+using Game.Sound.Events;
 
 /// <summary>
 /// Climbing state - handles wall climbing and mantling.
@@ -14,6 +17,9 @@ public class ClimbingState : IPlayerState
 
     private Vector3 _lastWallNormal = Vector3.forward;
     private IStateTransitioner _stateTransitioner;
+    private IEventBus _eventBus;
+    private float _climbSoundTimer;
+    private const float ClimbSoundInterval = 0.9f;
 
     public ClimbingState()
     {
@@ -66,6 +72,22 @@ public class ClimbingState : IPlayerState
             Vector3 climbLocal = new Vector3(input.x, input.y, 0f);
             Vector3 climbMotion = model.Transform.TransformDirection(climbLocal) * model.ClimbSpeed;
             model.Move(climbMotion);
+
+            // Climbing footstep sounds
+            if (input.sqrMagnitude > 0.01f)
+            {
+                _climbSoundTimer += Time.fixedDeltaTime;
+                if (_climbSoundTimer >= ClimbSoundInterval)
+                {
+                    _climbSoundTimer = 0f;
+                    (_eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>())
+                        ?.Publish(new PlayPositionalSFXEvent("footstep_climb", model.Transform.position));
+                }
+            }
+            else
+            {
+                _climbSoundTimer = 0f;
+            }
 
             model.GetAnimationService().UpdateMovement(new Vector3(input.x, 0f, input.y), model.ClimbSpeed);
             model.Velocity = Vector3.zero; // no gravity while attached
