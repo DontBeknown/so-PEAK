@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 8627280286909519956}
   - component: {fileID: 5522905144152569956}
   - component: {fileID: 2951669266835060925}
+  - component: {fileID: 5120740652333500233}
   m_Layer: 0
   m_Name: FreeLook Camera
   m_TagString: Untagged
@@ -126,7 +127,7 @@ MonoBehaviour:
   VerticalAxis:
     Value: 0
     Center: 0
-    Range: {x: -70, y: 0}
+    Range: {x: -55, y: 0}
     Wrap: 0
     Recentering:
       Enabled: 0
@@ -286,3 +287,20 @@ MonoBehaviour:
     NearLimit: 5
     FarLimit: 30
     MaxQualityBoost: 0.2
+--- !u!114 &5120740652333500233
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2586610401821327760}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68bb026fafb42b14791938953eaace77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineBasicMultiChannelPerlin
+  NoiseProfile: {fileID: 11400000, guid: 69ce8388f6785dd4c8c39915efece2f4, type: 2}
+  PivotOffset: {x: 0, y: 0, z: 0}
+  AmplitudeGain: 0
+  FrequencyGain: 1
+  m_NoiseOffsets: {x: 0, y: 0, z: 0}

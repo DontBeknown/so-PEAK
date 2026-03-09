@@ -634,15 +634,10 @@ These are the emit points. Add one line each — no other audio code needed.
 | `WalkingState.cs` | Each footstep interval | `PlayPositionalSFXEvent("footstep_walk", player.transform.position)` |
 | `ClimbingState.cs` | While climbing, interval | `PlayPositionalSFXEvent("footstep_climb", player.transform.position)` |
 | `FallingState.cs` → Walk transition | On land impact | `PlayPositionalSFXEvent("land_impact", player.transform.position)` |
-| `PlayerStats.cs` | `OnPlayerDied` | `PlayUISoundEvent("death_sting")` + `StopMusicEvent` |
 | `HoldInteractableBase.cs` | `OnHoldComplete()` | `PlayPositionalSFXEvent("interact_complete", transform.position)` |
-| `HoldInteractableBase.cs` | `OnHoldStart()` | `PlayPositionalSFXEvent("interact_start", transform.position)` |
-| `HoldInteractableBase.cs` | `OnHoldCancel(...)` | `PlayPositionalSFXEvent("interact_cancel", transform.position)` |
-| `DayNightCycleManager.cs` | `TimeOfDayChangedEvent` subscriber | Map `TimeOfDay` enum → `PlayAmbientEvent("ambient_day")` etc. |
 | `ItemInteractable.cs` | On pickup | `PlayPositionalSFXEvent("item_pickup", transform.position)` |
 | `MainMenuUI.cs` | On scene load | `PlayMusicEvent("music_menu")` |
 | `GameplaySceneInitializer.cs` | On gameplay start | `PlayMusicEvent("music_gameplay")` |
-| `NotificationUI.cs` / `ItemNotificationUI.cs` | On show | `PlayUISoundEvent("ui_notification")` |
 
 **Example — how to publish in any system:**
 

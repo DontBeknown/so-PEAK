@@ -26,6 +26,7 @@ public class PlayerStats : MonoBehaviour
     public event Action<float> OnStaminaDrained;
     public event Action<float> OnHealthDamaged;
     public event Action<float> OnFatigueChanged;
+    public event Action<float> OnFallDamaged;
 
     private bool isSprinting;
 
@@ -151,6 +152,7 @@ public class PlayerStats : MonoBehaviour
     {
         _lastDamageSource = DeathCause.Falling;
         health.Damage(dmg);
+        OnFallDamaged?.Invoke(dmg);
     }
     public void Heal(float amount) => health.Heal(amount);
     public void Eat(float nutrition) => hunger.Add(nutrition);

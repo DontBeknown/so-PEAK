@@ -23,25 +23,13 @@ public class VolumeBlurController : MonoBehaviour
     [SerializeField] private float fadeInDuration = 0.67f;
     [SerializeField] private float fadeOutDuration = 0.4f;
     
-    [Header("Depth of Field Settings")]
-    [SerializeField] private float dofFocusDistance = 10f;
-    [SerializeField] private float dofMinAperture = 5.6f;
-    [SerializeField] private float dofMaxAperture = 32f;
-    [SerializeField] private float dofFocalLength = 50f;
-    
-    [Header("Motion Blur Settings")]
-    [SerializeField] private float motionBlurMinIntensity = 0f;
-    [SerializeField] private float motionBlurMaxIntensity = 0.5f;
-    [SerializeField] private float motionBlurClamp = 0.05f;
-    
     [Header("Update Settings")]
     [SerializeField] private float updateInterval = 0.1f;
     
     [Header("Volume Settings")]
-    [Tooltip("Optional: Drag your custom VolumeProfile asset here. If empty, creates a new profile at runtime.")]
-    [SerializeField] private VolumeProfile customVolumeProfile; // Optional: Use existing profile instead of creating at runtime
+    [Tooltip("Drag your custom VolumeProfile asset here.")]
+    [SerializeField] private VolumeProfile customVolumeProfile;
     [SerializeField] private int volumePriority = 1000;
-    [SerializeField] bool useCustomVolumeProfile = false;
     
     [Header("Debug Settings")]
     [SerializeField] private bool enableDebugLogs = false;
@@ -50,8 +38,6 @@ public class VolumeBlurController : MonoBehaviour
     private GameObject volumeGameObject;
     private Volume volume;
     private VolumeProfile volumeProfile;
-    private DepthOfField depthOfField;
-    private MotionBlur motionBlur;
     
     // Dependencies
     private SurvivalStatBlurCalculator intensityCalculator;
@@ -128,11 +114,7 @@ public class VolumeBlurController : MonoBehaviour
             Destroy(volumeGameObject);
         }
         
-        // Only destroy runtime-created profile (not custom assets)
-        if (volumeProfile != null && customVolumeProfile == null)
-        {
-            Destroy(volumeProfile);
-        }
+        // volumeProfile is always a custom asset, never destroy it
     }
     
     /// <summary>
@@ -151,114 +133,17 @@ public class VolumeBlurController : MonoBehaviour
         volume.priority = volumePriority;
         volume.weight = 0f; // Start invisible
         
-        // Use custom VolumeProfile if provided, otherwise create new one at runtime
-        if (customVolumeProfile != null)
+        if (customVolumeProfile == null)
         {
-            volume.profile = customVolumeProfile;
-            volumeProfile = customVolumeProfile;
-            if (enableDebugLogs)
-                Debug.Log($"VolumeBlurController: Using custom VolumeProfile '{customVolumeProfile.name}'");
-        }
-        else
-        {
-            // Create VolumeProfile at runtime
-            volumeProfile = ScriptableObject.CreateInstance<VolumeProfile>();
-            volumeProfile.name = "SurvivalBlurProfile";
-            volume.profile = volumeProfile;
-            if (enableDebugLogs)
-                Debug.Log("VolumeBlurController: Created runtime VolumeProfile");
-        }
-        
-        // Add or get Depth of Field override
-        if (volumeProfile.TryGet(out depthOfField))
-        {
-            if (enableDebugLogs)
-                Debug.Log("VolumeBlurController: Using existing Depth of Field from profile");
-        }
-        else
-        {
-            depthOfField = volumeProfile.Add<DepthOfField>(false);
-            if (enableDebugLogs)
-                Debug.Log("VolumeBlurController: Added Depth of Field to profile");
-        }
-        
-        if(useCustomVolumeProfile)
-        {
+            Debug.LogError("VolumeBlurController: customVolumeProfile is not assigned!");
             return;
         }
         
-        ConfigureDepthOfField();
-        
-        // Add or get Motion Blur override
-        if (volumeProfile.TryGet(out motionBlur))
-        {
-            if (enableDebugLogs)
-                Debug.Log("VolumeBlurController: Using existing Motion Blur from profile");
-        }
-        else
-        {
-            motionBlur = volumeProfile.Add<MotionBlur>(false);
-            if (enableDebugLogs)
-                Debug.Log("VolumeBlurController: Added Motion Blur to profile");
-        }
-        
-        ConfigureMotionBlur();
+        volume.profile = customVolumeProfile;
+        volumeProfile = customVolumeProfile;
         
         if (enableDebugLogs)
-            Debug.Log($"VolumeBlurController: Created Global Volume '{volumeGameObject.name}' with priority {volumePriority}");
-    }
-    
-    /// <summary>
-    /// Configures Depth of Field effect parameters.
-    /// </summary>
-    private void ConfigureDepthOfField()
-    {
-        if (depthOfField == null) return;
-        
-        depthOfField.active = true;
-        
-        // Set mode to Bokeh for realistic blur
-        depthOfField.mode.Override(DepthOfFieldMode.Bokeh);
-        
-        // Focus distance (far focus = blur entire screen when active)
-        depthOfField.focusDistance.Override(dofFocusDistance);
-        
-        // Aperture controls blur amount - will be animated based on intensity
-        depthOfField.aperture.Override(dofMinAperture);
-        
-        // Focal length
-        depthOfField.focalLength.Override(dofFocalLength);
-        
-        // Blade count for bokeh shape (higher = more circular)
-        depthOfField.bladeCount.Override(5);
-        
-        // Blade curvature
-        depthOfField.bladeCurvature.Override(1f);
-        
-        // Blade rotation
-        depthOfField.bladeRotation.Override(0f);
-    }
-    
-    /// <summary>
-    /// Configures Motion Blur effect parameters.
-    /// </summary>
-    private void ConfigureMotionBlur()
-    {
-        if (motionBlur == null) return;
-        
-        motionBlur.active = true;
-        
-        // Set mode to Camera and Objects
-        motionBlur.mode.Override(MotionBlurMode.CameraAndObjects);
-        
-        // Quality (higher = better but more expensive)
-        motionBlur.quality.Override(MotionBlurQuality.Medium);
-        
-        // Intensity - will be animated based on blur intensity
-        motionBlur.intensity.Override(motionBlurMinIntensity);
-        
-        // Clamp to prevent excessive smearing
-        motionBlur.clamp.Override(motionBlurClamp);
+            Debug.Log($"VolumeBlurController: Using custom VolumeProfile '{customVolumeProfile.name}', Created Global Volume '{volumeGameObject.name}' with priority {volumePriority}");
     }
     
     /// <summary>
@@ -354,20 +239,6 @@ public class VolumeBlurController : MonoBehaviour
         if (volume != null)
         {
             volume.weight = currentWeight;
-        }
-        
-        // Update Depth of Field aperture based on intensity
-        if (depthOfField != null)
-        {
-            float aperture = Mathf.Lerp(dofMinAperture, dofMaxAperture, currentWeight);
-            depthOfField.aperture.Override(aperture);
-        }
-        
-        // Update Motion Blur intensity
-        if (motionBlur != null)
-        {
-            float mbIntensity = Mathf.Lerp(motionBlurMinIntensity, motionBlurMaxIntensity, currentWeight);
-            motionBlur.intensity.Override(mbIntensity);
         }
     }
     
