@@ -9003,6 +9003,8 @@ GameObject:
   - component: {fileID: 5546374463585999974}
   - component: {fileID: 2880690713724498753}
   - component: {fileID: 3176580084506522995}
+  - component: {fileID: 4498232511853366706}
+  - component: {fileID: 4975982146014327151}
   m_Layer: 0
   m_Name: PlayerFeedback
   m_TagString: Untagged
@@ -9069,6 +9071,49 @@ MonoBehaviour:
   volumePriority: 1100
   volumeHoldDuration: 0.1
   volumeFadeOutDuration: 1
+  enableDebugLogs: 0
+--- !u!114 &4498232511853366706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5346914514374473130}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 890888aa0f5746e4f9cfd14c028269fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LowStaminaBreathingFeedback
+  breathThreshold: 0.4
+  maxBreathInterval: 2.2
+  minBreathInterval: 1.2
+  breathSoundId: breathe
+  minVolumeScale: 0.4
+  maxVolumeScale: 1
+  enableDebugLogs: 0
+--- !u!114 &4975982146014327151
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5346914514374473130}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be199ab886bfbfd4bbeddfe4b0def4fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LowHealthHeartbeatFeedback
+  heartbeatThreshold: 0.4
+  recoveryThreshold: 0.45
+  maxBeatInterval: 1.2
+  minBeatInterval: 0.5
+  heartbeatSoundId: heartbeat
+  minVolumeScale: 0.4
+  maxVolumeScale: 1
+  lowHealthVolumeProfile: {fileID: 11400000, guid: b71d665ff60ca914cae4c5112a4c9db4, type: 2}
+  volumePriority: 1050
+  volumeFadeInDuration: 1
+  volumeFadeOutDuration: 1.5
   enableDebugLogs: 0
 --- !u!1 &5443583505192748323
 GameObject:

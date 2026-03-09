@@ -1,9 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using Game.Core.DI;
-using Game.Core.Events;
-using Game.Sound.Events;
+using Game.Sound;
 
 namespace Game.Menu
 {
@@ -24,6 +22,10 @@ namespace Game.Menu
         [Header("Debug")]
         [SerializeField] private bool enableDebug = false;
 
+        [Header("Audio")]
+        [SerializeField] private SoundService soundService;
+        [SerializeField] private string menuMusicId = "music_menu";
+
         private void Start()
         {
             // Setup button listeners
@@ -34,8 +36,9 @@ namespace Game.Menu
             // Show main menu by default
             ShowMainMenu();
 
-            var eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
-            eventBus?.Publish(new PlayMusicEvent("music_menu"));
+            if (soundService == null)
+                soundService = FindFirstObjectByType<SoundService>();
+            soundService?.PlayMusic(menuMusicId);
         }
 
         private void OnDestroy()

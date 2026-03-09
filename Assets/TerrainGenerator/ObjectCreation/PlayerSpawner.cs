@@ -3,6 +3,8 @@ using System.Collections;
 using UnityEngine;
 using Game.UI;
 using Game.Core.DI;
+using Game.Core.Events;
+using Game.Sound.Events;
 using Game.Player;
 
 public class PlayerSpawner : MonoBehaviour
@@ -134,6 +136,8 @@ public class PlayerSpawner : MonoBehaviour
         {
             loadingScreen.SetActive(false);
         }
+
+        ServiceContainer.Instance.TryGet<IEventBus>()?.Publish(new PlayMusicEvent("music_gameplay"));
 
         //Debug.Log("[PlayerSpawner] Spawn sequence complete!");
     }

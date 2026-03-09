@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using Unity.Cinemachine;
 using Game.Core.DI;
+using Game.Core.Events;
+using Game.Sound.Events;
 using DG.Tweening;
 
 /// <summary>
@@ -35,9 +37,12 @@ public class FallImpactFeedback : MonoBehaviour
     private Tween shakeTween;
     private Tween volumeTween;
 
+    private IEventBus _eventBus;
+
     private void Start()
     {
         playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
+        _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
         if (playerStats == null)
         {
             Debug.LogError("FallImpactFeedback: PlayerStats not found in ServiceContainer!");
@@ -106,6 +111,10 @@ public class FallImpactFeedback : MonoBehaviour
 
         if (enableDebugLogs)
             Debug.Log($"FallImpactFeedback: Fall damage {damage:F1} → intensity {t:F2}");
+
+
+        _eventBus.Publish(new PlayPositionalSFXEvent("break_bone", gameObject.transform.parent.position, 0.5f));
+        _eventBus.Publish(new PlayPositionalSFXEvent("hurt", gameObject.transform.parent.position, 0.3f));
 
         TriggerShake(Mathf.Lerp(0f, maxShakeAmplitude, t));
         TriggerVolumeFlash(1);

@@ -57,7 +57,18 @@ namespace Game.Sound
             SetVolume(SoundCategory.SFX,     config.DefaultSFXVolume);
             SetVolume(SoundCategory.Ambient, config.DefaultAmbientVolume);
             SetVolume(SoundCategory.UI,      config.DefaultUIVolume);
+
+            var eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+            eventBus?.Subscribe<PlayerDeathEvent>(OnPlayerDeath);
         }
+
+        private void OnDestroy()
+        {
+            var eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+            eventBus?.Unsubscribe<PlayerDeathEvent>(OnPlayerDeath);
+        }
+
+        private void OnPlayerDeath(PlayerDeathEvent _) => StopAllSFX();
 
         // ───────────────────────────── Public API ─────────────────────────────
 
@@ -110,6 +121,12 @@ namespace Game.Sound
         }
 
         public void StopMusic() => StartCoroutine(FadeOut(_musicSource, config.MusicCrossfadeDuration));
+
+        public void StopAllSFX()
+        {
+            for (int i = _active.Count - 1; i >= 0; i--)
+                ReturnSource(_active[i]);
+        }
 
         public void PlayAmbient(string clipId)
         {
