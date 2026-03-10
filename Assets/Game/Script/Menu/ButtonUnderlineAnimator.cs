@@ -10,7 +10,7 @@ namespace Game.Menu
     /// Fades in/out and optionally scales the underline
     /// </summary>
     [RequireComponent(typeof(Button))]
-    public class ButtonUnderlineAnimator : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    public class ButtonUnderlineAnimator : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler
     {
         [Header("References")]
         [SerializeField] private CanvasGroup underlineCanvasGroup;
@@ -83,6 +83,16 @@ namespace Game.Menu
             if (enableDebug)
             {
                 Debug.Log($"[ButtonUnderlineAnimator] Pointer Exit: {gameObject.name}");
+            }
+
+            HideUnderline();
+        }
+
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            if (enableDebug)
+            {
+                Debug.Log($"[ButtonUnderlineAnimator] Pointer Down: {gameObject.name}");
             }
 
             HideUnderline();

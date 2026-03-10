@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Game.Sound;
+using Game.UI;
 
 namespace Game.Menu
 {
@@ -26,6 +27,9 @@ namespace Game.Menu
         [SerializeField] private SoundService soundService;
         [SerializeField] private string menuMusicId = "music_menu";
 
+        [Header("Settings")]
+        [SerializeField] private SoundSettingsPanel soundSettingsPanel;
+
         private void Start()
         {
             // Setup button listeners
@@ -39,6 +43,9 @@ namespace Game.Menu
             if (soundService == null)
                 soundService = FindFirstObjectByType<SoundService>();
             soundService?.PlayMusic(menuMusicId);
+
+            if (soundSettingsPanel == null)
+                soundSettingsPanel = FindFirstObjectByType<SoundSettingsPanel>();
         }
 
         private void OnDestroy()
@@ -57,8 +64,7 @@ namespace Game.Menu
 
         private void OnSettingsClicked()
         {
-            if (enableDebug) Debug.Log("Settings button clicked - TODO: Implement settings menu");
-            // TODO: Open settings menu
+            soundSettingsPanel?.Toggle();
         }
 
         private void OnQuitClicked()
