@@ -82,3 +82,15 @@ MonoBehaviour:
     - {fileID: 8300000, guid: 09bc7ec081af6f84ca33f1cbf782e2f2, type: 3}
     - {fileID: 8300000, guid: 158c331e3faa1a147abbd1782db89244, type: 3}
     - {fileID: 8300000, guid: 273c22f30a30ab34bb42bb525a7ae05f, type: 3}
+  - Id: ambient_morning
+    Clips:
+    - {fileID: 8300000, guid: 6e2458bda521d254f88f27ee44b21426, type: 3}
+  - Id: ambient_day
+    Clips:
+    - {fileID: 8300000, guid: 6e2458bda521d254f88f27ee44b21426, type: 3}
+  - Id: ambient_evening
+    Clips:
+    - {fileID: 8300000, guid: d8bd218b447b27d4497265d4ebb0b2b8, type: 3}
+  - Id: ambient_night
+    Clips:
+    - {fileID: 8300000, guid: f4bb3b4531900f147a6452b6bdfdac32, type: 3}

@@ -5,6 +5,7 @@ using Game.UI;
 using Game.Core.DI;
 using Game.Core.Events;
 using Game.Sound.Events;
+using Game.Environment.DayNight;
 using Game.Player;
 
 public class PlayerSpawner : MonoBehaviour
@@ -138,6 +139,7 @@ public class PlayerSpawner : MonoBehaviour
         }
 
         ServiceContainer.Instance.TryGet<IEventBus>()?.Publish(new PlayMusicEvent("music_gameplay"));
+        FindFirstObjectByType<DayNightCycleManager>()?.PlayAmbientForCurrentTime();
 
         //Debug.Log("[PlayerSpawner] Spawn sequence complete!");
     }

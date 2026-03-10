@@ -33,6 +33,10 @@ namespace Game.Sound
         private AudioSource _ambientSourceB;
         private AudioSource _uiSource;
 
+        // Tracked coroutines — stopped individually so music ≠ ambient
+        private Coroutine _musicCoroutine;
+        private Coroutine _ambientCoroutine;
+
         // SFX object pool
         private readonly Queue<AudioSource> _pool   = new();
         private readonly List<AudioSource>  _active = new();
@@ -53,13 +57,22 @@ namespace Game.Sound
         // Called by GameServiceBootstrapper after Awake
         public void Initialize()
         {
+            // AudioMixer resets exposed parameters from its default snapshot at the end of
+            // the first frame, so any SetFloat calls made during Awake/Initialize are silently
+            // overwritten. Defer by one frame to guarantee our values win.
+            StartCoroutine(ApplyDefaultVolumesNextFrame());
+
+            var eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+            eventBus?.Subscribe<PlayerDeathEvent>(OnPlayerDeath);
+        }
+
+        private IEnumerator ApplyDefaultVolumesNextFrame()
+        {
+            yield return null;
             SetVolume(SoundCategory.Music,   config.DefaultMusicVolume);
             SetVolume(SoundCategory.SFX,     config.DefaultSFXVolume);
             SetVolume(SoundCategory.Ambient, config.DefaultAmbientVolume);
             SetVolume(SoundCategory.UI,      config.DefaultUIVolume);
-
-            var eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
-            eventBus?.Subscribe<PlayerDeathEvent>(OnPlayerDeath);
         }
 
         private void OnDestroy()
@@ -116,11 +129,15 @@ namespace Game.Sound
             var clip = library.Get(clipId);
             if (clip == null) { Debug.LogWarning($"[SoundService] Clip not found: {clipId}"); return; }
 
-            StopAllCoroutines();
-            StartCoroutine(CrossfadeMusic(clip, loop));
+            if (_musicCoroutine != null) StopCoroutine(_musicCoroutine);
+            _musicCoroutine = StartCoroutine(CrossfadeMusic(clip, loop));
         }
 
-        public void StopMusic() => StartCoroutine(FadeOut(_musicSource, config.MusicCrossfadeDuration));
+        public void StopMusic()
+        {
+            if (_musicCoroutine != null) StopCoroutine(_musicCoroutine);
+            _musicCoroutine = StartCoroutine(FadeOut(_musicSource, config.MusicCrossfadeDuration));
+        }
 
         public void StopAllSFX()
         {
@@ -133,14 +150,25 @@ namespace Game.Sound
             var clip = library.Get(clipId);
             if (clip == null) { Debug.LogWarning($"[SoundService] Clip not found: {clipId}"); return; }
 
-            StartCoroutine(CrossfadeAmbient(clip));
+            if (_ambientCoroutine != null) StopCoroutine(_ambientCoroutine);
+            _ambientCoroutine = StartCoroutine(CrossfadeAmbient(clip));
         }
 
-        public void StopAmbient() => StartCoroutine(FadeOut(_ambientSource, config.AmbientCrossfadeDuration));
+        public void StopAmbient()
+        {
+            if (_ambientCoroutine != null) StopCoroutine(_ambientCoroutine);
+            _ambientCoroutine = StartCoroutine(FadeOut(_ambientSource, config.AmbientCrossfadeDuration));
+        }
 
         // normalizedVolume: 0–1, converted to decibels
         public void SetVolume(SoundCategory category, float normalizedVolume)
         {
+            if (audioMixer == null)
+            {
+                Debug.LogError("[SoundService] AudioMixer is not assigned!");
+                return;
+            }
+
             normalizedVolume = Mathf.Clamp01(normalizedVolume);
             float dB = normalizedVolume > 0.0001f ? 20f * Mathf.Log10(normalizedVolume) : -80f;
 
@@ -153,8 +181,12 @@ namespace Game.Sound
                 _                     => null
             };
 
-            if (param != null)
-                audioMixer.SetFloat(param, dB);
+            if (param == null) return;
+
+            if (!audioMixer.SetFloat(param, dB))
+                Debug.LogError($"[SoundService] AudioMixer parameter \"{param}\" not found. Make sure it is exposed in the AudioMixer asset.");
+            /*audioMixer.GetFloat(param, out float currentDB);
+            Debug.Log($"[SoundService] Set {category} volume: {normalizedVolume:P0} ({dB:F1} dB), current dB: {currentDB:F1}");*/
         }
 
         // ───────────────────────────── Pool ─────────────────────────────

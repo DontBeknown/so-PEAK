@@ -28,6 +28,9 @@ public class PlayerStats : MonoBehaviour
     public event Action<float> OnFatigueChanged;
     public event Action<float> OnFallDamaged;
 
+    [SerializeField] private float spawnImmunityDuration = 2.5f;
+    private bool isImmune;
+
     private bool isSprinting;
 
     private IEventBus _eventBus;
@@ -81,6 +84,15 @@ public class PlayerStats : MonoBehaviour
         thirst.ResetToFull();
         health.ResetToFull();
         stamina.ResetToFull();
+
+        StartCoroutine(SpawnImmunityRoutine());
+    }
+
+    private System.Collections.IEnumerator SpawnImmunityRoutine()
+    {
+        isImmune = true;
+        yield return new WaitForSeconds(spawnImmunityDuration);
+        isImmune = false;
     }
 
     private void Update()
@@ -92,14 +104,14 @@ public class PlayerStats : MonoBehaviour
         stamina.Tick(dt);
         fatigue.Tick(dt);
 
-        if (hunger.ShouldHurt)
+        if (!isImmune && hunger.ShouldHurt)
         {
             _lastDamageSource = DeathCause.Starvation;
             health.Damage(hunger.StarveDPS * dt);
         }
             
 
-        if (thirst.ShouldHurt)
+        if (!isImmune && thirst.ShouldHurt)
         {
             _lastDamageSource = DeathCause.Dehydration;
             health.Damage(thirst.DehydrateDPS * dt);
@@ -144,12 +156,14 @@ public class PlayerStats : MonoBehaviour
     public void ConsumeStamina(float amount) => stamina.Drain(amount);
     public void TakeDamage(float dmg)
     {
+        if (isImmune) return;
         _lastDamageSource = DeathCause.Damage;
         health.Damage(dmg);
     }
 
     public void TakeFallDamage(float dmg)
     {
+        if (isImmune) return;
         _lastDamageSource = DeathCause.Falling;
         health.Damage(dmg);
         OnFallDamaged?.Invoke(dmg);

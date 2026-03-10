@@ -2,6 +2,7 @@ using UnityEngine;
 using DG.Tweening;
 using Game.Core.DI;
 using Game.Core.Events;
+using Game.Sound;
 
 namespace Game.Environment.DayNight
 {
@@ -37,6 +38,7 @@ namespace Game.Environment.DayNight
         
         // Services
         private IEventBus _eventBus;
+        private SoundService _soundService;
         
         #region IDayNightCycleService Implementation
         
@@ -161,6 +163,8 @@ namespace Game.Environment.DayNight
         {
             // Resolve dependencies
             _eventBus = ServiceContainer.Instance.Get<IEventBus>();
+            // Note: SoundService is NOT resolved here — GameServiceBootstrapper may not have
+            // registered it yet. It is lazily resolved in PlayAmbientForCurrentTime().
 
             // Validate references
             if (directionalLight == null)
@@ -233,6 +237,9 @@ namespace Game.Environment.DayNight
                 // Start skybox + lighting DOTween transition
                 StartSkyboxTransition();
                 StartLightingTransition();
+
+                // Crossfade to the new ambient loop
+                PlayAmbientForCurrentTime();
                 
                 // Publish event
                 if (_eventBus != null)
@@ -254,6 +261,24 @@ namespace Game.Environment.DayNight
         
         #endregion
         
+        #region Ambient Sound
+
+        public void PlayAmbientForCurrentTime()
+        {
+            // Lazy-resolve: SoundService may not be registered in ServiceContainer
+            // until after DayNightCycleManager.Start() runs.
+            if (_soundService == null)
+                _soundService = ServiceContainer.Instance.TryGet<SoundService>();
+
+            if (_soundService == null) return;
+
+            string clipId = config.GetAmbientClipId(_currentTimeOfDay);
+            if (!string.IsNullOrEmpty(clipId))
+                _soundService.PlayAmbient(clipId);
+        }
+
+        #endregion
+
         #region Lighting
         
         /// <summary>

@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: SoundConfig
   m_EditorClassIdentifier: Assembly-CSharp::Game.Sound.SoundConfig
   PoolSize: 10
-  DefaultSFXVolume: 0.8
+  DefaultSFXVolume: 1
   DefaultUIVolume: 0.7
   DefaultMusicVolume: 0.6
-  DefaultAmbientVolume: 0.5
+  DefaultAmbientVolume: 0.4
   MusicCrossfadeDuration: 1.5
   AmbientCrossfadeDuration: 2
   SpatialBlend: 1

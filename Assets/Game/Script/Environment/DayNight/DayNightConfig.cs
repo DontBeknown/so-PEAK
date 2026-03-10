@@ -155,6 +155,34 @@ namespace Game.Environment.DayNight
         [Tooltip("Fog density during night")]
         [Range(0f, 0.1f)]
         public float nightFogDensity = 0.02f;
+
+        [Header("Ambient Sounds")]
+        [Tooltip("SoundLibrary clip ID to play as ambient loop during morning (e.g. \"ambient_morning\")")]
+        public string morningAmbientClipId = "ambient_morning";
+
+        [Tooltip("SoundLibrary clip ID to play as ambient loop during day (e.g. \"ambient_day\")")]
+        public string dayAmbientClipId = "ambient_day";
+
+        [Tooltip("SoundLibrary clip ID to play as ambient loop during evening (e.g. \"ambient_evening\")")]
+        public string eveningAmbientClipId = "ambient_evening";
+
+        [Tooltip("SoundLibrary clip ID to play as ambient loop during night (e.g. \"ambient_night\")")]
+        public string nightAmbientClipId = "ambient_night";
+
+        /// <summary>
+        /// Returns the ambient clip ID for the given time of day.
+        /// </summary>
+        public string GetAmbientClipId(TimeOfDay timeOfDay)
+        {
+            return timeOfDay switch
+            {
+                TimeOfDay.Morning => morningAmbientClipId,
+                TimeOfDay.Day     => dayAmbientClipId,
+                TimeOfDay.Evening => eveningAmbientClipId,
+                TimeOfDay.Night   => nightAmbientClipId,
+                _                 => dayAmbientClipId
+            };
+        }
         
         /// <summary>
         /// Get the time of day period for a given hour
