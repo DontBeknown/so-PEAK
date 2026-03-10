@@ -167,5 +167,10 @@ namespace Game.Menu
                 underlineTransform.localScale = new Vector3(visible ? 1f : 0f, 1f, 1f);
             }
         }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+           HideUnderline();
+        }
     }
 }
