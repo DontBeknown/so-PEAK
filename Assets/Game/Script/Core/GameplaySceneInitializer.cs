@@ -50,7 +50,7 @@ public class GameplaySceneInitializer : MonoBehaviour
             return;
         }
 
-        ServiceContainer.Instance.TryGet<IEventBus>()?.Publish(new PlayMusicEvent("music_gameplay"));
+        
         
         InitializeWorld();
     }

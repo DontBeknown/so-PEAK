@@ -94,3 +94,9 @@ MonoBehaviour:
   - Id: ambient_night
     Clips:
     - {fileID: 8300000, guid: f4bb3b4531900f147a6452b6bdfdac32, type: 3}
+  - Id: ui_hover
+    Clips:
+    - {fileID: 8300000, guid: 545746db461ae9b42aec38749fb019cb, type: 3}
+  - Id: ui_click
+    Clips:
+    - {fileID: 8300000, guid: 0c415077232cbe041a59ad4363845a89, type: 3}

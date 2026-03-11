@@ -115,7 +115,7 @@ namespace Game.Player
             }
             
             // Resolve services from ServiceContainer
-            var inventoryService = ServiceContainer.Instance.Get<IInventoryService>();
+            var inventoryService = GetComponent<IInventoryService>();
             craftingManager ??= GetComponent<CraftingManager>();
             
             // Use ServiceContainer for cross-scene references (may not be available immediately after spawn)

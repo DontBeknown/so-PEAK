@@ -26,12 +26,21 @@ namespace Game.Sound
         [SerializeField] private string musicVolumeParam   = "MusicVolume";
         [SerializeField] private string ambientVolumeParam = "AmbientVolume";
 
+        [Header("UI Rapid Trigger Pitch")]
+        [SerializeField] private float rapidTriggerWindow = 0.5f;
+        [SerializeField] private float pitchIncrement     = 0.1f;
+        [SerializeField] private float maxPitchScale      = 2.0f;
+
         // Dedicated, non-pooled sources for continuous streams
         private AudioSource _musicSource;
         private AudioSource _musicSourceB;      // For crossfade double-buffering
         private AudioSource _ambientSource;
         private AudioSource _ambientSourceB;
         private AudioSource _uiSource;
+
+        // Rapid-trigger pitch state
+        private float _rapidUIPitch    = 1f;
+        private float _lastUISoundTime = -999f;
 
         // Tracked coroutines — stopped individually so music ≠ ambient
         private Coroutine _musicCoroutine;
@@ -113,7 +122,7 @@ namespace Game.Sound
         public void PlayUISound(AudioClip clip, float volumeScale = 1f)
         {
             if (clip == null) return;
-            _uiSource.PlayOneShot(clip, config.DefaultUIVolume * volumeScale);
+            PlayUISoundInternal(clip, volumeScale);
         }
 
         public void PlayUISound(string clipId, float volumeScale = 1f)
@@ -121,6 +130,23 @@ namespace Game.Sound
             var clip = library.Get(clipId);
             if (clip == null) { Debug.LogWarning($"[SoundService] Clip not found: {clipId}"); return; }
 
+            PlayUISoundInternal(clip, volumeScale);
+        }
+
+        private void PlayUISoundInternal(AudioClip clip, float volumeScale)
+        {
+            float now = Time.unscaledTime;
+            if (now - _lastUISoundTime > rapidTriggerWindow)
+                _rapidUIPitch = 1f;
+            else
+            {
+                _rapidUIPitch += pitchIncrement;
+                if (_rapidUIPitch > maxPitchScale)
+                    _rapidUIPitch = 1f;
+            }
+
+            _lastUISoundTime  = now;
+            _uiSource.pitch   = _rapidUIPitch;
             _uiSource.PlayOneShot(clip, config.DefaultUIVolume * volumeScale);
         }
 

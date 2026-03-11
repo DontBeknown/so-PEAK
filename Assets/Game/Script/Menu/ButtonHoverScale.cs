@@ -2,12 +2,18 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using DG.Tweening;
+using Game.Sound;
 
 namespace Game.Menu
 {
     [RequireComponent(typeof(Button))]
     public class ButtonHoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
     {
+
+        [Header("References")]
+
+        [SerializeField] private SoundService soundService;
+
         [Header("Scale Settings")]
         [SerializeField] private float hoverScale = 1.1f;
         [SerializeField] private float pressedScale = 0.95f;
@@ -22,6 +28,10 @@ namespace Game.Menu
 
         private void Awake()
         {
+            if(soundService == null)
+            {
+                soundService = FindFirstObjectByType<SoundService>();
+            }
             button = GetComponent<Button>();
             originalScale = transform.localScale;
         }
@@ -35,6 +45,7 @@ namespace Game.Menu
         {
             if (!button.interactable) return;
             ScaleTo(originalScale * hoverScale, hoverDuration, hoverEase);
+            soundService.PlayUISound("ui_hover", volumeScale: 0.3f);
         }
 
         public void OnPointerExit(PointerEventData eventData)
@@ -46,6 +57,7 @@ namespace Game.Menu
         {
             if (!button.interactable) return;
             ScaleTo(originalScale * pressedScale, pressDuration, pressEase);
+            soundService.PlayUISound("ui_click", volumeScale: 0.3f);
         }
 
         public void OnPointerUp(PointerEventData eventData)

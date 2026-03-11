@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using DG.Tweening;
+using Game.Sound;
 
 namespace Game.Menu
 {
@@ -15,6 +16,11 @@ namespace Game.Menu
         [Header("References")]
         [SerializeField] private CanvasGroup underlineCanvasGroup;
         [SerializeField] private RectTransform underlineTransform;
+        [SerializeField] private SoundService soundService;
+
+        [Header("Sound ID")]
+        [SerializeField] private string hoverSoundId = "ui_hover";
+        [SerializeField] private string clickSoundId = "ui_click";
 
         [Header("Animation Settings")]
         [SerializeField] private float fadeDuration = 0.25f;
@@ -32,6 +38,11 @@ namespace Game.Menu
 
         private void Awake()
         {
+            if(soundService == null)
+            {
+                soundService = FindFirstObjectByType<SoundService>();
+            }
+
             button = GetComponent<Button>();
 
             // Auto-find underline if not assigned
@@ -76,6 +87,8 @@ namespace Game.Menu
             }
 
             ShowUnderline();
+
+            soundService.PlayUISound(hoverSoundId, volumeScale: 0.3f);
         }
 
         public void OnPointerExit(PointerEventData eventData)
@@ -96,6 +109,7 @@ namespace Game.Menu
             }
 
             HideUnderline();
+            soundService.PlayUISound(clickSoundId, volumeScale: 0.3f);
         }
 
         /// <summary>
@@ -180,7 +194,8 @@ namespace Game.Menu
 
         public void OnPointerClick(PointerEventData eventData)
         {
-           HideUnderline();
+            HideUnderline();
+            
         }
     }
 }

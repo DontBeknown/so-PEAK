@@ -3,6 +3,8 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
 using System;
+using DG.Tweening;
+using Game.Sound;
 
 namespace Game.Menu
 {
@@ -26,20 +28,29 @@ namespace Game.Menu
         [SerializeField] private Color selectedColor = new Color(0.4f, 0.7f, 1f, 1f);
         [SerializeField] private Color selectedHoverColor = new Color(0.5f, 0.8f, 1f, 1f);
         
+        [Header("Hover Scale")]
+        [SerializeField] private float hoverScale    = 1.05f;
+        [SerializeField] private float hoverDuration = 0.25f;
+        [SerializeField] private Ease  hoverEase     = Ease.OutBack;
+
         [Header("Debug")]
         [SerializeField] private bool enableDebug = false;
 
+        private Vector3 _originalScale;
+        private Tweener _scaleTween;
         private SaveMetadata worldMetadata;
         private Action<SaveMetadata> onWorldSelected;
         private bool isSelected = false;
+        private SoundService soundService;
 
         public bool IsSelected => isSelected;
         public SaveMetadata WorldMetadata => worldMetadata;
 
-        public void Initialize(SaveMetadata metadata, Action<SaveMetadata> onSelect)
+        public void Initialize(SaveMetadata metadata, Action<SaveMetadata> onSelect,SoundService sound)
         {
             worldMetadata = metadata;
             onWorldSelected = onSelect;
+            soundService = sound;
 
             UpdateUI();
 
@@ -50,8 +61,14 @@ namespace Game.Menu
             }
         }
 
+        private void Awake()
+        {
+            _originalScale = transform.localScale;
+        }
+
         private void OnDestroy()
         {
+            _scaleTween?.Kill();
             // Clean up listeners
             if (selectButton != null)
             {
@@ -145,6 +162,7 @@ namespace Game.Menu
         private void OnSelectClicked()
         {
             if (enableDebug) Debug.Log($"World slot clicked: {worldMetadata.worldName}");
+            soundService.PlayUISound("ui_click", volumeScale: 0.3f);
             onWorldSelected?.Invoke(worldMetadata);
         }
 
@@ -155,6 +173,13 @@ namespace Game.Menu
             {
                 backgroundImage.color = isSelected ? selectedHoverColor : hoverColor;
             }
+
+            _scaleTween?.Kill();
+            _scaleTween = transform.DOScale(_originalScale * hoverScale, hoverDuration)
+                .SetEase(hoverEase)
+                .SetLink(gameObject);
+
+            soundService.PlayUISound("ui_hover", volumeScale: 0.3f);
         }
 
         // Mouse hover effects - implements IPointerExitHandler
@@ -164,6 +189,11 @@ namespace Game.Menu
             {
                 backgroundImage.color = isSelected ? selectedColor : normalColor;
             }
+
+            _scaleTween?.Kill();
+            _scaleTween = transform.DOScale(_originalScale, hoverDuration)
+                .SetEase(hoverEase)
+                .SetLink(gameObject);
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine.SceneManagement;
 using System.Linq;
+using Game.Sound;
 
 namespace Game.Menu
 {
@@ -13,6 +14,9 @@ namespace Game.Menu
     /// </summary>
     public class WorldSelectionUI : MonoBehaviour
     {
+        [Header("References")]
+        [SerializeField] private SoundService soundService;
+
         [Header("UI Panels")]
         [SerializeField] private GameObject worldSelectionPanel;
         [SerializeField] private WorldCreateUI worldCreateUI;
@@ -58,7 +62,12 @@ namespace Game.Menu
                     Debug.LogError("[WorldSelectionUI] SaveLoadService not available!");
                 }
             }
-            
+
+            if (soundService == null)
+            {
+                soundService = FindFirstObjectByType<SoundService>();
+            }
+
             if (loadingPanel == null)
             {
                 Debug.LogWarning("[WorldSelectionUI] LoadingPanelUI not assigned in Inspector!");
@@ -141,7 +150,7 @@ namespace Game.Menu
             
             if (slot != null)
             {
-                slot.Initialize(metadata, OnWorldSlotSelected);
+                slot.Initialize(metadata, OnWorldSlotSelected, soundService);
                 worldSlots.Add(slot);
             }
         }
