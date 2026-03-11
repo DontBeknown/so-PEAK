@@ -1,5 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.Rendering.STP;
+
+
+
 
 [System.Serializable]
 public struct NoiseSource
@@ -8,159 +12,128 @@ public struct NoiseSource
     public MapGenerator Generator;      // The GameObject doing the math
 }
 
+[System.Serializable]
+public class WorldLevelProfile
+{
+    public string levelName;
+    public NoiseTranslator generator;
+    public Color fieldColor;
+
+
+    [Header("Stage Specific Spawning")]
+    public List<SpawnConfig> spawnConfigs;
+    public SpawnConfig lighthouseConfig;
+    public List<NoiseSource> resourceNoises;
+}
+
 public class WorldDataManager : MonoBehaviour
 {
-    [Header("Noise Generators")]
-    public NoiseTranslator worldGen;
-
-    // This replaces your old individual MapGenerators!
-    public List<NoiseSource> resourceNoiseGenerators = new List<NoiseSource>();
-
-    [Header("Unique Landmarks")]
-    public SpawnConfig lighthouseConfig;
-
-
-    [Header("Universal Spawning")]
-    public List<SpawnConfig> worldSpawnConfigs = new List<SpawnConfig>();
+    [Header("Level Setup")]
+    public WorldLevel currentLevel = WorldLevel.Forest;
+    public List<WorldLevelProfile> levelProfiles = new List<WorldLevelProfile>();
 
     [Header("Global Data Outputs")]
+    [HideInInspector] public NoiseTranslator activeGen;
     public float[,] globalHeightMap;
     public Color[,] globalColorMap;
     public Color fieldColor;
 
-    // Seeds
-    [HideInInspector] public int seed1, seed2, seed3;
+    // REMOVED: Global resourceNoiseGenerators, lighthouseConfig, and worldSpawnConfigs
+    // These now live inside the WorldLevelProfile above!
 
-    // The Master Memory Grid
+    [HideInInspector] public int activeLevelSeed, seed1, seed2, seed3;
+    public enum WorldLevel { Forest, Desert, Tundra }
     public Dictionary<Vector2Int, List<PlacedObject>> masterSpawnGrid;
 
-    // RenderController will call this function to kick everything off
     public void GenerateWorldData(int chunkSize)
     {
-        Debug.Log("[WorldDataManager] Generating World Data...");
+        Debug.Log($"[WorldDataManager] Generating {currentLevel} Data...");
 
+        // 1. Find the profile (Case-Insensitive for safety)
+        WorldLevelProfile profile = levelProfiles.Find(p =>
+            p.levelName.Equals(currentLevel.ToString(), System.StringComparison.OrdinalIgnoreCase));
+
+        if (profile == null || profile.generator == null)
+        {
+            Debug.LogError($"[WorldDataManager] Missing Profile or Generator for {currentLevel}!");
+            return;
+        }
+
+        // 2. Set ACTIVE references
+        activeGen = profile.generator;
+        this.fieldColor = profile.fieldColor;
         LoadSeed();
 
-        if (worldGen != null)
+        activeLevelSeed = currentLevel switch
         {
-            // 1. Generate Base Terrain Math
-            worldGen.TerrainDrawing(seed1);
-            globalHeightMap = worldGen.completeMap;
-            globalColorMap = worldGen.colorMap;
-
-            // Base Road Mask
-            float[,] expandedRoadMask = new float[worldGen.mapWidth + worldGen.bufferLength, worldGen.mapLength + worldGen.bufferLength];
-            BufferGen.GenRoadMaskWithBuffer(worldGen.roadRidge, expandedRoadMask, worldGen.bufferLength);
-
-            // --- NEW: GENERATE ALL NOISE MAPS FROM THE LIST ---
-            Dictionary<NoiseType, float[,]> availableNoiseMaps = new Dictionary<NoiseType, float[,]>();
-
-            // 1. Create a counter to keep track of which map we are generating
-            int noiseIndex = 0;
-
-            foreach (NoiseSource source in resourceNoiseGenerators)
-            {
-                if (source.Generator != null)
-                {
-        
-                    // (Optional but recommended) Force the noise map size to match the world size!
-                    source.Generator.mapWidth = worldGen.mapWidth;
-                    source.Generator.mapHeight = worldGen.mapLength;
-
-                    // 2. Use seed2, and add the index so every single map is unique!
-                    source.Generator.GenerateMap(seed1 + 10 + noiseIndex);
-
-                    float[,] expandedMap = new float[worldGen.mapWidth + worldGen.bufferLength, worldGen.mapLength + worldGen.bufferLength];
-                    BufferGen.GenMapWithBuffer(source.Generator.noiseMap, expandedMap, worldGen.bufferLength);
-                    availableNoiseMaps.Add(source.RequiredNoiseType, expandedMap);
-
-                    // 3. Increase the counter so the next map gets a different seed!
-                    noiseIndex++;
-                }
-            }
-
-            // --- INITIALIZE THE MASTER GRID ---
-            masterSpawnGrid = new Dictionary<Vector2Int, List<PlacedObject>>();
-
-            // --- NEW: Priority Placement ---
-            SpawnUniqueLighthouse(chunkSize - 1);
-
-            // --- THE NEW, ULTRA-CLEAN CARD DEALER LOOP ---
-            for (int i = 0; i < worldSpawnConfigs.Count; i++)
-            {
-                SpawnConfig config = worldSpawnConfigs[i];
-                float[,] mapToHandOver = null;
-
-                // If the config asks for a map, and we generated it in the step above, grab it!
-                if (config.RequiredNoiseMap != NoiseType.None && availableNoiseMaps.ContainsKey(config.RequiredNoiseMap))
-                {
-                    mapToHandOver = availableNoiseMaps[config.RequiredNoiseMap];
-                }
-
-                UniversalSpawner.GenerateObjectData(
-                    config,
-                    globalHeightMap,
-                    expandedRoadMask,
-                    mapToHandOver, // Will automatically pass the correct map, or null!
-                    worldGen.meshHeightMultiplier,
-                    chunkSize - 1,
-                    seed1 + i,
-                    ref masterSpawnGrid
-                );
-            }
-
-            Debug.Log("[WorldDataManager] World Data Generation Complete!");
-        }
-        else
-        {
-            Debug.LogError("[WorldDataManager] Missing NoiseTranslator script!");
-        }
-    }
-
-    private void SpawnUniqueLighthouse(int chunkSize)
-    {
-        if (lighthouseConfig == null) return;
-
-        // 1. Use the shifted/offset peak from NoiseTranslator
-        Vector2Int peakCoord = worldGen.mainPeak;
-
-        // 2. Sample the height from the final buffered map
-        float height = globalHeightMap[peakCoord.x, peakCoord.y] * worldGen.meshHeightMultiplier;
-
-        // 3. Apply the XYZ and Vertical Offsets from the Config
-        Quaternion rotation = Quaternion.Euler(lighthouseConfig.BaseRotation);
-        Vector3 scale = Vector3.one * lighthouseConfig.MaxScale;
-        Vector3 scaledOffset = Vector3.Scale(lighthouseConfig.PositionOffset, scale);
-
-        Vector3 finalPos = new Vector3(peakCoord.x, height, peakCoord.y) + (rotation * scaledOffset);
-
-        // 4. Calculate which chunk this belongs to
-        Vector2Int chunkCoord = new Vector2Int(
-            Mathf.FloorToInt((float)peakCoord.x / (chunkSize)),
-            Mathf.FloorToInt((float)peakCoord.y / (chunkSize))
-        );
-
-        // --- DEBUG LOG BLOCK ---
-        Debug.Log($"<color=cyan>[Lighthouse Debug]</color>\n" +
-                  $"<b>Map Index:</b> ({peakCoord.x}, {peakCoord.y})\n" +
-                  $"<b>World Pos:</b> {finalPos}\n" +
-                  $"<b>Assigned Chunk:</b> {chunkCoord}\n" +
-                  $"<b>Config Offset Applied:</b> {scaledOffset}");
-
-        // 5. Manual Injection into the Master Grid
-        PlacedObject lighthouse = new PlacedObject
-        {
-            Prefab = lighthouseConfig.Prefab,
-            Position = finalPos,
-            Rotation = rotation,
-            Scale = scale,
-            BoundingRadius = lighthouseConfig.BaseRadius * scale.x
+            WorldLevel.Forest => seed1,
+            WorldLevel.Desert => seed2,
+            WorldLevel.Tundra => seed3,
+            _ => seed1
         };
 
-        if (!masterSpawnGrid.ContainsKey(chunkCoord))
-            masterSpawnGrid.Add(chunkCoord, new List<PlacedObject>());
+        // 3. Generate Terrain
+        activeGen.TerrainDrawing(activeLevelSeed);
+        globalHeightMap = activeGen.completeMap;
+        globalColorMap = activeGen.colorMap;
 
-        masterSpawnGrid[chunkCoord].Add(lighthouse);
+        float[,] expandedRoadMask = new float[activeGen.mapWidth + activeGen.bufferLength, activeGen.mapLength + activeGen.bufferLength];
+        BufferGen.GenRoadMaskWithBuffer(activeGen.roadRidge, expandedRoadMask, activeGen.bufferLength);
+
+        // 4. Generate Resource Noise Maps (Using PROFILE specific list)
+        Dictionary<NoiseType, float[,]> availableNoiseMaps = new Dictionary<NoiseType, float[,]>();
+        int noiseIndex = 0;
+
+        foreach (NoiseSource source in profile.resourceNoises)
+        {
+            if (source.Generator != null)
+            {
+                source.Generator.mapWidth = activeGen.mapWidth;
+                source.Generator.mapHeight = activeGen.mapLength;
+                source.Generator.GenerateMap(activeLevelSeed + 10 + noiseIndex);
+
+                float[,] expandedMap = new float[activeGen.mapWidth + activeGen.bufferLength, activeGen.mapLength + activeGen.bufferLength];
+                BufferGen.GenMapWithBuffer(source.Generator.noiseMap, expandedMap, activeGen.bufferLength);
+                availableNoiseMaps.Add(source.RequiredNoiseType, expandedMap);
+                noiseIndex++;
+            }
+        }
+
+        // 5. Spawn Objects
+        masterSpawnGrid = new Dictionary<Vector2Int, List<PlacedObject>>();
+
+        if (profile.lighthouseConfig != null)
+            SpawnUniqueLighthouse(chunkSize - 1, profile);
+
+        for (int i = 0; i < profile.spawnConfigs.Count; i++)
+        {
+            SpawnConfig config = profile.spawnConfigs[i];
+            float[,] mapToHandOver = (config.RequiredNoiseMap != NoiseType.None && availableNoiseMaps.ContainsKey(config.RequiredNoiseMap))
+                ? availableNoiseMaps[config.RequiredNoiseMap] : null;
+
+            UniversalSpawner.GenerateObjectData(
+                config, globalHeightMap, expandedRoadMask, mapToHandOver,
+                activeGen.meshHeightMultiplier, chunkSize - 1, activeLevelSeed + i, ref masterSpawnGrid
+            );
+        }
+        Debug.Log("[WorldDataManager] Generation Complete!");
+    }
+
+    private void SpawnUniqueLighthouse(int chunkSize, WorldLevelProfile profile)
+    {
+        Vector2Int peakCoord = profile.generator.mainPeak;
+        float height = globalHeightMap[peakCoord.x, peakCoord.y] * profile.generator.meshHeightMultiplier;
+
+        Quaternion rotation = Quaternion.Euler(profile.lighthouseConfig.BaseRotation);
+        Vector3 scale = Vector3.one * profile.lighthouseConfig.MaxScale;
+        Vector3 finalPos = new Vector3(peakCoord.x, height, peakCoord.y) + (rotation * Vector3.Scale(profile.lighthouseConfig.PositionOffset, scale));
+
+        Vector2Int chunkCoord = new Vector2Int(Mathf.FloorToInt((float)peakCoord.x / chunkSize), Mathf.FloorToInt((float)peakCoord.y / chunkSize));
+
+        PlacedObject landmark = new PlacedObject { Prefab = profile.lighthouseConfig.Prefab, Position = finalPos, Rotation = rotation, Scale = scale };
+
+        if (!masterSpawnGrid.ContainsKey(chunkCoord)) masterSpawnGrid.Add(chunkCoord, new List<PlacedObject>());
+        masterSpawnGrid[chunkCoord].Add(landmark);
     }
 
     // RenderController calls this to ask "What should I spawn in this chunk?"
@@ -172,6 +145,7 @@ public class WorldDataManager : MonoBehaviour
         }
         return null;
     }
+
 
     private void LoadSeed()
     {

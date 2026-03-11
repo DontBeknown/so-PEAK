@@ -109,16 +109,28 @@ public class RenderController : MonoBehaviour
     {
         terrainChunks.Add(coord, null);
 
+        if (dataManager.activeGen == null)
+        {
+            Debug.LogError("[RenderController] activeGen is null! Is the WorldDataManager initialized?");
+            return;
+        }
+
+        float heightMult = dataManager.activeGen.meshHeightMultiplier;
+        int lod = dataManager.activeGen.levelOfDetail;
+        float[,] hMap = dataManager.globalHeightMap;
+        Color[,] cMap = dataManager.globalColorMap;
+        Color fCol = dataManager.fieldColor;
+
         Task.Run(() =>
         {
-            // We ask the DataManager for the maps!
-            MapData mapData = MapSlicer.GetChunkData(coord, chunkSize, dataManager.globalHeightMap, dataManager.globalColorMap, dataManager.fieldColor);
+            // Use the captured map data
+            MapData mapData = MapSlicer.GetChunkData(coord, chunkSize, hMap, cMap, fCol);
 
             MeshData meshData = PerlinTerrainMeshGenerator.GenerateTerrainMesh(
                 mapData.heightMap,
                 mapData.colourMap,
-                dataManager.worldGen.meshHeightMultiplier,
-                dataManager.worldGen.levelOfDetail
+                heightMult,
+                lod
             );
 
             meshCreationQueue.Enqueue(new ChunkBuildRequest { coord = coord, meshData = meshData });
@@ -196,8 +208,6 @@ public class RenderController : MonoBehaviour
 
         // Update all system references to the new player
         UpdatePlayerReferences(spawnedPlayer);
-        
-        PlayerSpawnComplete = true;
     }
 
     private void UpdatePlayerReferences(Transform newPlayer)
