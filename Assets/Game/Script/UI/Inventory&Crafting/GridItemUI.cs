@@ -5,6 +5,7 @@ using Game.Player.Inventory.Storage;
 using Game.Core.DI;
 using Game.Core.Events;
 using DG.Tweening;
+using Game.Sound.Events;
 
 /// <summary>
 /// Visual representation of one placed item on the grid.
@@ -28,6 +29,16 @@ public class GridItemUI : MonoBehaviour,
 
     [SerializeField] private GameObject highlightGameObject;
 
+    [Header("Sound")]
+    [SerializeField] private string clickSoundId = "UI_ItemClick";
+    [SerializeField] private float clickVolumeScale = 1f;
+    [SerializeField] private string hoverSoundId = "UI_ItemHover";
+    [SerializeField] private float hoverVolumeScale = 1f;
+    [SerializeField] private string beginDragSoundId = "UI_ItemBeginDrag";
+    [SerializeField] private float beginDragVolumeScale = 1f;
+    [SerializeField] private string endDragSoundId = "UI_ItemEndDrag";
+    [SerializeField] private float endDragVolumeScale = 1f;
+
     private GridInventoryUI _gridUI;
     private DragDropManager _dragDrop;
     private GridPlacement _placement;
@@ -35,6 +46,7 @@ public class GridItemUI : MonoBehaviour,
 
     private IEventBus _eventBus;
     private EquipmentManager _equipmentManager;
+    private bool _suppressNextEnter;
 
     public GridPlacement Placement => _placement;
 
@@ -148,6 +160,7 @@ public class GridItemUI : MonoBehaviour,
         }
 
         _dragDrop.BeginDrag(this, eventData.position);
+        _eventBus.Publish(new PlayUISoundEvent(beginDragSoundId, volumeScale: beginDragVolumeScale));
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -181,6 +194,9 @@ public class GridItemUI : MonoBehaviour,
         // Always snap to current data position (handles both success and failure)
         SnapToGridPosition();
         _gridUI.ClearHighlight();
+
+        _suppressNextEnter = true;
+        _eventBus.Publish(new PlayUISoundEvent(endDragSoundId, volumeScale: endDragVolumeScale));
     }
 
     // ── Click Handlers ──
@@ -190,7 +206,9 @@ public class GridItemUI : MonoBehaviour,
         if (eventData.button == PointerEventData.InputButton.Right)
         {
             _gridUI.ShowContextMenu(this, eventData.position);
+            _eventBus.Publish(new PlayUISoundEvent(clickSoundId, volumeScale: clickVolumeScale));
         }
+        
     }
 
     // ── Hover Handlers ──
@@ -203,6 +221,11 @@ public class GridItemUI : MonoBehaviour,
             _gridUI.ShowTooltip(this);
             if (highlightGameObject != null)
                 highlightGameObject.SetActive(true);
+
+            if (!_suppressNextEnter)
+                _eventBus?.Publish(new PlayUISoundEvent(hoverSoundId, volumeScale: hoverVolumeScale));
+
+            _suppressNextEnter = false;
         }
     }
 

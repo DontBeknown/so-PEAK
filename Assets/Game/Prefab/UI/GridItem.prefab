@@ -60,6 +60,14 @@ MonoBehaviour:
   equipBounceScale: 1.2
   equipBounceDuration: 0.25
   highlightGameObject: {fileID: 6272880192051145749}
+  clickSoundId: UI_ItemClick
+  clickVolumeScale: 0.3
+  hoverSoundId: UI_ItemHover
+  hoverVolumeScale: 0.15
+  beginDragSoundId: UI_ItemBeginDrag
+  beginDragVolumeScale: 0.3
+  endDragSoundId: UI_ItemEndDrag
+  endDragVolumeScale: 0.3
 --- !u!225 &4487015033256251491
 CanvasGroup:
   m_ObjectHideFlags: 0

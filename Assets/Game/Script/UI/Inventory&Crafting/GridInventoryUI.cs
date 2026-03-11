@@ -6,6 +6,7 @@ using Game.Core.DI;
 using Game.Player.Inventory;
 using Game.Player.Inventory.Storage;
 using Game.Player.Inventory.Events;
+using Game.Sound.Events;
 
 /// <summary>
 /// Main UI panel for the 2D grid inventory.
@@ -284,11 +285,13 @@ public class GridInventoryUI : MonoBehaviour
         var item = itemUI.Placement.Item;
         _inventoryManager.RemoveFromGrid(itemUI.Placement);
         WorldItemSpawner.SpawnDroppedItem(item, 1);
+        _eventBus.Publish(new PlayUISoundEvent("UI_ItemEndDrag", volumeScale: 0.3f));
     }
 
     public bool RotateItem(GridItemUI itemUI)
     {
         if (itemUI == null || itemUI.Placement == null || _inventoryManager == null) return false;
+        _eventBus.Publish(new PlayUISoundEvent("UI_ItemEndDrag", volumeScale: 0.3f));
         return _inventoryManager.RotateItem(itemUI.Placement);
     }
 

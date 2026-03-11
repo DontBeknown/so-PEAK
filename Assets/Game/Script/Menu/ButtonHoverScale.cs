@@ -22,6 +22,12 @@ namespace Game.Menu
         [SerializeField] private Ease hoverEase = Ease.OutBack;
         [SerializeField] private Ease pressEase = Ease.OutQuad;
 
+        [Header("Sound Settings")]
+        [SerializeField] private string hoverSoundId = "ui_hover";
+        [SerializeField] private float hoverVolumeScale = 0.3f;
+        [SerializeField] private string clickSoundId = "ui_click";
+        [SerializeField] private float clickVolumeScale = 0.3f;
+
         private Button button;
         private Vector3 originalScale;
         private Tweener scaleTween;
@@ -45,7 +51,8 @@ namespace Game.Menu
         {
             if (!button.interactable) return;
             ScaleTo(originalScale * hoverScale, hoverDuration, hoverEase);
-            soundService.PlayUISound("ui_hover", volumeScale: 0.3f);
+            if(hoverSoundId != null && hoverSoundId != "")
+                soundService.PlayUISound(hoverSoundId, volumeScale: hoverVolumeScale);
         }
 
         public void OnPointerExit(PointerEventData eventData)
@@ -57,7 +64,8 @@ namespace Game.Menu
         {
             if (!button.interactable) return;
             ScaleTo(originalScale * pressedScale, pressDuration, pressEase);
-            soundService.PlayUISound("ui_click", volumeScale: 0.3f);
+            if(clickSoundId != null && clickSoundId != "")
+                soundService.PlayUISound(clickSoundId, volumeScale: clickVolumeScale);
         }
 
         public void OnPointerUp(PointerEventData eventData)

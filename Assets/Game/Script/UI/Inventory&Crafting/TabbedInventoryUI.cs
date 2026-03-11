@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Game.Sound.Events;
+using Game.Core.DI;
+using Game.Core.Events;
 
 public class TabbedInventoryUI : MonoBehaviour
 {
@@ -24,8 +27,14 @@ public class TabbedInventoryUI : MonoBehaviour
     //[SerializeField] private bool pauseGameWhenOpen = true;
     [SerializeField] private TabType defaultTab = TabType.Inventory;
 
+    [Header("Sound IDs")]
+    [SerializeField] private string soundInventoryOpen  = "UI_InventoryOpen";
+    [SerializeField] private string soundInventoryClose = "UI_InventoryClose";
+    [SerializeField] private string soundCraftingOpen   = "UI_CraftingOpen";
+
     private TabType currentTab = TabType.Inventory;
     private bool isOpen = false;
+    private IEventBus _eventBus;
 
     public enum TabType
     {
@@ -73,6 +82,8 @@ public class TabbedInventoryUI : MonoBehaviour
     {
         // Set default tab
         currentTab = defaultTab;
+
+        _eventBus = ServiceContainer.Instance?.Get<IEventBus>();
     }
 
 
@@ -125,6 +136,8 @@ public class TabbedInventoryUI : MonoBehaviour
         {
             craftingUI.HideCraftingPanel();
         }
+
+        _eventBus?.Publish(new PlayUISoundEvent(soundInventoryClose, volumeScale: 0.3f));
     }
 
     public void SwitchTab(TabType tab)
@@ -158,6 +171,8 @@ public class TabbedInventoryUI : MonoBehaviour
         {
             craftingUI.HideCraftingPanel();
         }
+
+        _eventBus?.Publish(new PlayUISoundEvent(soundInventoryOpen, volumeScale: 0.1f));
     }
 
     private void ShowCraftingTab()
@@ -173,6 +188,8 @@ public class TabbedInventoryUI : MonoBehaviour
         {
             craftingUI.ShowCraftingPanel();
         }
+
+        _eventBus?.Publish(new PlayUISoundEvent(soundCraftingOpen,volumeScale: 0.1f));
     }
 
     private void UpdateTabVisuals()

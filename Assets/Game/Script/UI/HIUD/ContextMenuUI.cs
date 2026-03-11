@@ -3,6 +3,9 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 using System;
+using Game.Core.DI;
+using Game.Core.Events;
+using Game.Sound.Events;
 
 /// <summary>
 /// Displays a context menu near the mouse cursor with available actions for the selected item/equipment.
@@ -17,7 +20,13 @@ public class ContextMenuUI : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private Vector2 offset = new Vector2(5f, -5f);
     //[SerializeField] private float padding = 10f;
-
+    [Header("Sound Setting")]
+    [SerializeField] private string dropSoundId = "UI_ItemEndDrag";
+    [SerializeField] private float dropVolumeScale = 0.3f;
+    [SerializeField] private string rotateSoundId = "UI_ItemEndDrag";
+    [SerializeField] private float rotateVolumeScale = 0.3f;
+    [SerializeField] private string equipSoundId = "UI_ItemEquip";
+    [SerializeField] private float equipVolumeScale = 0.3f;
     private RectTransform menuRect;
     private Canvas canvas;
     private RectTransform canvasRect;
@@ -34,6 +43,8 @@ public class ContextMenuUI : MonoBehaviour
     // For grid item menu
     private GridInventoryUI currentGridUI;
     private GridItemUI currentGridItemUI;
+
+    private IEventBus _eventBus;
 
     public bool IsVisible => contextMenuPanel.activeSelf;
 
@@ -54,6 +65,11 @@ public class ContextMenuUI : MonoBehaviour
         }
 
         HideMenu();
+    }
+
+    private void Start()
+    {
+        _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
     }
 
     private void Update()
@@ -224,6 +240,7 @@ public class ContextMenuUI : MonoBehaviour
         AddButton("Unequip", () => {
             slotUI.UnequipItem();
             HideMenu();
+            _eventBus.Publish(new PlayUISoundEvent(equipSoundId, equipVolumeScale));
         });
 
         ShowMenu();
@@ -281,6 +298,7 @@ public class ContextMenuUI : MonoBehaviour
                 AddButton("Unequip", () => {
                     eqManager?.Unequip(equipItem.EquipmentSlot);
                     HideMenu();
+                    _eventBus?.Publish(new PlayUISoundEvent(equipSoundId, equipVolumeScale));
                 });
             }
             else
@@ -288,6 +306,7 @@ public class ContextMenuUI : MonoBehaviour
                 AddButton("Equip", () => {
                     gridUI.UseItem(itemUI);
                     HideMenu();
+                    _eventBus?.Publish(new PlayUISoundEvent(equipSoundId, equipVolumeScale));
                 });
             }
         }
@@ -305,12 +324,14 @@ public class ContextMenuUI : MonoBehaviour
             AddButton("Rotate", () => {
                 gridUI.RotateItem(itemUI);
                 HideMenu();
+                _eventBus.Publish(new PlayUISoundEvent(rotateSoundId, rotateVolumeScale));
             });
         }
 
         // All items can be dropped
         AddButton("Drop", () => {
             gridUI.DropItem(itemUI);
+            _eventBus.Publish(new PlayUISoundEvent(dropSoundId, dropVolumeScale));
             HideMenu();
         });
 
@@ -434,6 +455,7 @@ public class ContextMenuUI : MonoBehaviour
                     currentEquipmentManager?.Unequip(equipItem.EquipmentSlot);
                     currentInventoryUI?.UpdateAllSlots();
                     HideMenu();
+                    _eventBus?.Publish(new PlayUISoundEvent(equipSoundId, equipVolumeScale));
                 });
             }
             else
@@ -442,6 +464,7 @@ public class ContextMenuUI : MonoBehaviour
                     currentEquipmentManager?.Equip(equipItem);
                     currentInventoryUI?.UpdateAllSlots();
                     HideMenu();
+                    _eventBus?.Publish(new PlayUISoundEvent(equipSoundId, equipVolumeScale));
                 });
             }
         }
