@@ -3,6 +3,8 @@ using System.Collections;
 using DG.Tweening;
 using Game.Core.DI;
 using System.Threading.Tasks;
+using Game.Core.Events;
+using Game.Sound.Events;
 
 namespace Game.Interaction
 {
@@ -42,6 +44,10 @@ namespace Game.Interaction
         [SerializeField] private AudioClip gatherLoopSound;
         [SerializeField] private AudioClip gatherCompleteSound;
         [SerializeField] private AudioClip gatherCancelSound;
+        [SerializeField] private string itemPickupSFXId = "item_pickup";
+        [SerializeField] private float itemPickupSFXVolume = 0.45f;
+        [SerializeField] private string startGatherSoundId = "gather_start";
+        [SerializeField] private float startGatherSoundVolume = 0.5f;
         
         // State
         private bool isHighlighted = false;
@@ -55,6 +61,7 @@ namespace Game.Interaction
         private Coroutine gatheringCoroutine;
         private Game.Interaction.UI.InteractionPromptUI promptUI;
         private AudioSource loopingAudioSource;
+        private IEventBus eventBus;
 
         #region IInteractable Implementation
 
@@ -149,6 +156,12 @@ namespace Game.Interaction
             {
                 AudioSource.PlayClipAtPoint(gatherStartSound, transform.position);
             }
+
+            if(eventBus == null)
+            {
+                eventBus = ServiceContainer.Instance?.Get<IEventBus>();
+            }
+            eventBus?.Publish(new PlayPositionalSFXEvent(startGatherSoundId, transform.position,startGatherSoundVolume));
             
             // Start loop sound
             if (gatherLoopSound != null)
@@ -249,6 +262,11 @@ namespace Game.Interaction
             {
                 AudioSource.PlayClipAtPoint(gatherCompleteSound, transform.position);
             }
+            if(eventBus == null)
+            {
+                eventBus = ServiceContainer.Instance?.Get<IEventBus>();
+            }
+            eventBus?.Publish(new PlayPositionalSFXEvent(itemPickupSFXId, transform.position, itemPickupSFXVolume));
             
             // Deplete resource
             if (!isMultiUse)

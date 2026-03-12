@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Game.Core.DI;
 using Game.Core.Events;
 using Game.Player.Inventory;
+using Game.Sound.Events;
 
 public class CraftingUI : MonoBehaviour
 {
@@ -29,6 +30,12 @@ public class CraftingUI : MonoBehaviour
     [Header("References")]
     [SerializeField] private CraftingManager craftingManager;
     // REFACTORED: Removed InventoryManager field, now uses IInventoryService
+
+    [Header("Sound Settings")]
+    [SerializeField] private string craftButtonSFXId = "craft_button_click";
+    [SerializeField] private float craftButtonSFXVolume = 0.5f;
+    [SerializeField] private string itemPickupSFXId = "item_pickup";
+    [SerializeField] private float itemPickupSFXVolume = 0.45f;
 
     private IEventBus eventBus;
     private IInventoryService inventoryService;
@@ -316,6 +323,8 @@ public class CraftingUI : MonoBehaviour
         if (currentRecipe != null && !isCrafting)
         {
             CraftRecipe(currentRecipe);
+
+            eventBus?.Publish(new PlayUISoundEvent(craftButtonSFXId, craftButtonSFXVolume));
         }
     }
 
@@ -382,6 +391,7 @@ public class CraftingUI : MonoBehaviour
         RefreshRecipeList();
         UpdateSelectedRecipeDisplay();
 
+        eventBus?.Publish(new PlayUISoundEvent("item_pickup", 0.45f));
         //Debug.Log($"Successfully crafted {recipe.recipeName}!");
     }
 

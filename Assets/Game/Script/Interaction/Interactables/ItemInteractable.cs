@@ -33,6 +33,9 @@ namespace Game.Interaction
         [SerializeField] private GameObject pickupParticles;
         [SerializeField] private bool destroyOnPickup = true;
 
+        [SerializeField] private string itemPickupSFXId = "item_pickup";
+        [SerializeField] private float itemPickupSFXVolume = 0.45f;
+
         [Header("Multiple Use")]
         [SerializeField] private bool allowMultipleUse = false;
         [SerializeField] private int maxUses = 0; // 0 = unlimited; > 0 = limited number of uses
@@ -160,7 +163,7 @@ namespace Game.Interaction
                 AudioSource.PlayClipAtPoint(pickupSound, transform.position);
             }
             var eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
-            eventBus?.Publish(new PlayPositionalSFXEvent("item_pickup", transform.position));
+            eventBus?.Publish(new PlayPositionalSFXEvent(itemPickupSFXId, transform.position, itemPickupSFXVolume));
 
             // Spawn particles
             if (pickupParticles != null)

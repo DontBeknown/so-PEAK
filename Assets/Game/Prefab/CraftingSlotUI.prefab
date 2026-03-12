@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 58420462673546939}
   - component: {fileID: 1977351585394155952}
   - component: {fileID: 2855995213692086874}
+  - component: {fileID: 4220107476532293233}
   m_Layer: 5
   m_Name: CraftingSlotUI
   m_TagString: Untagged
@@ -140,6 +141,29 @@ MonoBehaviour:
   selectedBorder: {fileID: 8939458605026626796}
   canCraftColor: {r: 1, g: 1, b: 1, a: 1}
   cannotCraftColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+--- !u!114 &4220107476532293233
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1855936785990356188}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df1f3bc958427014ebcacc80324bb6f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Menu.ButtonHoverScale
+  soundService: {fileID: 0}
+  hoverScale: 1.1
+  pressedScale: 0.95
+  hoverDuration: 0.2
+  pressDuration: 0.1
+  hoverEase: 27
+  pressEase: 6
+  hoverSoundId: ui_hover
+  hoverVolumeScale: 0.3
+  clickSoundId: ui_click
+  clickVolumeScale: 0.3
 --- !u!1 &5653580214850781727
 GameObject:
   m_ObjectHideFlags: 0

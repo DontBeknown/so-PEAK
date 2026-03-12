@@ -5996,6 +5996,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 4688469898614290232, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: eatingSoundId
+      value: Player_Eat
+      objectReference: {fileID: 0}
     - target: {fileID: 4962120396931287550, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
       propertyPath: playerCamera
       value: 

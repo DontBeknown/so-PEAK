@@ -124,3 +124,20 @@ MonoBehaviour:
   - Id: UI_ItemEquip
     Clips:
     - {fileID: 8300000, guid: 9cda0ef7877571d409b38e3b5053ffb1, type: 3}
+  - Id: Player_Eat
+    Clips:
+    - {fileID: 8300000, guid: 56145a83019f13e45bc4ce800694a5fb, type: 3}
+    - {fileID: 8300000, guid: 14d98ef217ea2884b8571f1bbb09764e, type: 3}
+    - {fileID: 8300000, guid: b0e73df5acb61ff4bb5121825d06300b, type: 3}
+    - {fileID: 8300000, guid: 622216b092569294d97f45c20664ebc8, type: 3}
+  - Id: Player_Drink
+    Clips:
+    - {fileID: 8300000, guid: 1d75aa2721bfc4243b380b57242d5976, type: 3}
+  - Id: item_pickup
+    Clips:
+    - {fileID: 8300000, guid: 4dacf606de8eb9542ab41ac796d26a0f, type: 3}
+    - {fileID: 8300000, guid: 196b67efdd7988e478079dd13e73a4e5, type: 3}
+    - {fileID: 8300000, guid: b3174ef6243b4a24a9cefb216eb0415e, type: 3}
+  - Id: craft_button_click
+    Clips:
+    - {fileID: 8300000, guid: 5a781db18eda8a44fb9d2973e84d0c2f, type: 3}

@@ -27,6 +27,10 @@ public class ContextMenuUI : MonoBehaviour
     [SerializeField] private float rotateVolumeScale = 0.3f;
     [SerializeField] private string equipSoundId = "UI_ItemEquip";
     [SerializeField] private float equipVolumeScale = 0.3f;
+    [SerializeField] private string drinkSoundId = "Player_Drink";
+    [SerializeField] private float drinkVolumeScale = 0.5f;
+    [SerializeField] private string eatingSoundId = "Player_Eat";
+    [SerializeField] private float eatingVolumeScale = 0.5f;
     private RectTransform menuRect;
     private Canvas canvas;
     private RectTransform canvasRect;
@@ -280,6 +284,7 @@ public class ContextMenuUI : MonoBehaviour
                         var playerStats = Game.Core.DI.ServiceContainer.Instance.TryGet<PlayerStats>();
                         canteenItem.Drink(playerStats);
                         HideMenu();
+                        _eventBus.Publish(new PlayUISoundEvent(drinkSoundId, drinkVolumeScale));
                     });
                 }
                 else
@@ -315,6 +320,7 @@ public class ContextMenuUI : MonoBehaviour
             AddButton("Consume", () => {
                 gridUI.UseItem(itemUI);
                 HideMenu();
+                _eventBus.Publish(new PlayUISoundEvent(eatingSoundId, eatingVolumeScale));
             });
         }
 
