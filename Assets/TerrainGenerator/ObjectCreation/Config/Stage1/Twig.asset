@@ -13,13 +13,13 @@ MonoBehaviour:
   m_Name: Twig
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
   ObjectName: Twig
-  Prefab: {fileID: 160606, guid: 05620b9b676e30b408d02031b741efbb, type: 3}
+  Prefab: {fileID: 171234, guid: 4cbc06a006c59764f9022ef12c5464bd, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
   BaseRadius: 0.5
   BaseHeight: 3.82
-  MinScale: 0.5
-  MaxScale: 0.7
+  MinScale: 0.2
+  MaxScale: 0.5
   BaseRotation: {x: 0, y: 0, z: 0}
   PositionOffset: {x: 0, y: 0, z: 0}
   RoadRule: 1

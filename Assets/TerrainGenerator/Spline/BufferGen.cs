@@ -36,27 +36,31 @@ public static class BufferGen
     {
         int newWidth = newMask.GetLength(0);
         int newLength = newMask.GetLength(1);
-        int halfBuffer = bufferSize / 2;
         int oldWidth = oldMask.GetLength(0);
         int oldLength = oldMask.GetLength(1);
+
+        // Use the actual bufferSize passed from DataManager as the offset
+        // Usually, WorldDataManager creates newMask as (oldWidth + bufferSize)
+        // So the offset should be bufferSize / 2 OR simply the difference divided by 2
+        int offsetX = (newWidth - oldWidth) / 2;
+        int offsetZ = (newLength - oldLength) / 2;
 
         Parallel.For(0, newLength, z =>
         {
             for (int x = 0; x < newWidth; x++)
             {
-                // Check if we are inside the ORIGINAL 1000x1000 area
-                bool isInsideOriginal =
-                    (x >= halfBuffer && x < newWidth - halfBuffer) &&
-                    (z >= halfBuffer && z < newLength - halfBuffer);
+                // Calculate the coordinate relative to the old mask
+                int oldX = x - offsetX;
+                int oldZ = z - offsetZ;
 
-                if (isInsideOriginal)
+                // Check if this coordinate exists in the old mask
+                if (oldX >= 0 && oldX < oldWidth && oldZ >= 0 && oldZ < oldLength)
                 {
-                    // Copy the exact road data
-                    newMask[x, z] = oldMask[x - halfBuffer, z - halfBuffer];
+                    newMask[x, z] = oldMask[oldX, oldZ];
                 }
                 else
                 {
-                    // WE ARE IN THE BUFFER. 1.0f means "NO ROAD HERE"
+                    // In the buffer: 1.0f means "NO ROAD HERE"
                     newMask[x, z] = 1.0f;
                 }
             }

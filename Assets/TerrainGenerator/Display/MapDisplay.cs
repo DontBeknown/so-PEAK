@@ -10,6 +10,8 @@ public class MapDisplay : MonoBehaviour
 
     public void DrawNoiseMap(float[,] noiseMap, bool isZeroOneRange)
     {
+        if (textureRender == null) return;
+
         int width = noiseMap.GetLength(0);
         int height = noiseMap.GetLength(1);
 
@@ -44,6 +46,8 @@ public class MapDisplay : MonoBehaviour
 
     public void DrawMesh(MeshData meshData)
     {
+        if (meshFilter == null) return;
+
         // Create the mesh and store it in a variable
         Mesh mesh = meshData.CreateMesh();
 

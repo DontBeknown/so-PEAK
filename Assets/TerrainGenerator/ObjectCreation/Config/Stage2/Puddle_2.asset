@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 52be4a303351f644a9d263590dc37957, type: 3}
-  m_Name: Puddle
+  m_Name: Puddle_2
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
   ObjectName: Puddle
-  Prefab: {fileID: 5071296285362736313, guid: 593e0e180426ce14fa1e7f97fe769bc0, type: 3}
+  Prefab: {fileID: 5042400394875902110, guid: ff824698f8656064480f2b1bddf0c8ef, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
-  BaseRadius: 10
-  BaseHeight: 1
-  MinScale: 1
-  MaxScale: 1
+  BaseRadius: 0.5
+  BaseHeight: 0.05
+  MinScale: 30
+  MaxScale: 50
   BaseRotation: {x: 0, y: 0, z: 0}
-  PositionOffset: {x: 0, y: 0, z: 0}
-  RoadRule: 1
-  MinSpacing: 20
-  Density: 0.7
-  MaxSlopeDiff: 1
+  PositionOffset: {x: 0, y: 0.5, z: 0}
+  RoadRule: 0
+  MinSpacing: 200
+  Density: 0.5
+  MaxSlopeDiff: 0.3
   RequiredNoiseMap: 0
   NoiseThreshold: 0.5

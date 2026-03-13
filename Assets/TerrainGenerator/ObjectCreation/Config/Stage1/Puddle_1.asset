@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52be4a303351f644a9d263590dc37957, type: 3}
+  m_Name: Puddle_1
+  m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
+  ObjectName: Puddle_1
+  Prefab: {fileID: 5042400394875902110, guid: 539cc1f4f0a69ff4ea937e2e630b78cc, type: 3}
+  IsTerrainTree: 0
+  TreePrototypeIndex: 0
+  BaseRadius: 0.5
+  BaseHeight: 0.05
+  MinScale: 10
+  MaxScale: 20
+  BaseRotation: {x: 0, y: 0, z: 0}
+  PositionOffset: {x: 0, y: 0.5, z: 0}
+  RoadRule: 0
+  MinSpacing: 80
+  Density: 0.2
+  MaxSlopeDiff: 0.3
+  RequiredNoiseMap: 0
+  NoiseThreshold: 0.5

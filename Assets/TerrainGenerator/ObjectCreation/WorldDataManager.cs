@@ -25,6 +25,12 @@ public class WorldLevelProfile
     public SpawnConfig lighthouseConfig;
     public List<NoiseSource> resourceNoises;
 }
+public enum WorldLevel
+{
+    Forest = 1,  // Match friend's default level 1
+    Desert = 2,  // Match level 2
+    Tundra = 3   // Match level 3
+}
 
 public class WorldDataManager : MonoBehaviour
 {
@@ -42,13 +48,13 @@ public class WorldDataManager : MonoBehaviour
     // These now live inside the WorldLevelProfile above!
 
     [HideInInspector] public int activeLevelSeed, seed1, seed2, seed3;
-    public enum WorldLevel { Forest, Desert, Tundra }
     public Dictionary<Vector2Int, List<PlacedObject>> masterSpawnGrid;
 
     public void GenerateWorldData(int chunkSize)
     {
         Debug.Log($"[WorldDataManager] Generating {currentLevel} Data...");
 
+        LoadSeed();
         // 1. Find the profile (Case-Insensitive for safety)
         WorldLevelProfile profile = levelProfiles.Find(p =>
             p.levelName.Equals(currentLevel.ToString(), System.StringComparison.OrdinalIgnoreCase));
@@ -62,7 +68,7 @@ public class WorldDataManager : MonoBehaviour
         // 2. Set ACTIVE references
         activeGen = profile.generator;
         this.fieldColor = profile.fieldColor;
-        LoadSeed();
+        
 
         activeLevelSeed = currentLevel switch
         {
@@ -108,9 +114,19 @@ public class WorldDataManager : MonoBehaviour
         for (int i = 0; i < profile.spawnConfigs.Count; i++)
         {
             SpawnConfig config = profile.spawnConfigs[i];
-            float[,] mapToHandOver = (config.RequiredNoiseMap != NoiseType.None && availableNoiseMaps.ContainsKey(config.RequiredNoiseMap))
-                ? availableNoiseMaps[config.RequiredNoiseMap] : null;
 
+            if (config == null) continue;
+
+            float[,] mapToHandOver = null;
+
+            // 2. Check if we actually have noise maps to look through
+            if (availableNoiseMaps != null && config.RequiredNoiseMap != NoiseType.None)
+            {
+                if (availableNoiseMaps.ContainsKey(config.RequiredNoiseMap))
+                {
+                    mapToHandOver = availableNoiseMaps[config.RequiredNoiseMap];
+                }
+            }
             UniversalSpawner.GenerateObjectData(
                 config, globalHeightMap, expandedRoadMask, mapToHandOver,
                 activeGen.meshHeightMultiplier, chunkSize - 1, activeLevelSeed + i, ref masterSpawnGrid
@@ -156,11 +172,18 @@ public class WorldDataManager : MonoBehaviour
             return;
         }
 
+        ////////////////Load level would uncomment if test completed
+        //int savedLevelInt = saveService.GetCurrentLevel();
+        //currentLevel = (WorldLevel)savedLevelInt;
+
+
         SeedData seedData = saveService.CurrentWorldSave.seedData;
         seed1 = GetDeterministicHashCode(seedData.seed1);
         seed2 = GetDeterministicHashCode(seedData.seed2);
         seed3 = GetDeterministicHashCode(seedData.seed3);
     }
+
+
 
     private int GetDeterministicHashCode(string str)
     {
