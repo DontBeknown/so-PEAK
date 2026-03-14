@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 52be4a303351f644a9d263590dc37957, type: 3}
-  m_Name: Twig
+  m_Name: grass_4
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
-  ObjectName: Twig
-  Prefab: {fileID: 171234, guid: 4cbc06a006c59764f9022ef12c5464bd, type: 3}
+  ObjectName: grass_4
+  Prefab: {fileID: 4018487060249918723, guid: 32592dafe3095b64595ee644f3c58388, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
-  BaseRadius: 0.5
-  BaseHeight: 3.82
-  MinScale: 0.2
-  MaxScale: 0.5
+  BaseRadius: 1
+  BaseHeight: 0.41
+  MinScale: 1
+  MaxScale: 3
   BaseRotation: {x: 0, y: 0, z: 0}
   PositionOffset: {x: 0, y: 0, z: 0}
   RoadRule: 1
-  MinSpacing: 40
-  Density: 0.7
-  MaxSlopeDiff: 0.5
+  MinSpacing: 10
+  Density: 0.1
+  MaxSlopeDiff: 0.7
   RequiredNoiseMap: 0
   NoiseThreshold: 0.5
