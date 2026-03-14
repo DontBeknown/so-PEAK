@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea3096b336b613b41956ebde60ce7616, type: 3}
+  m_Name: Apple
+  m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
+  itemName: Apple
+  description: 
+  icon: {fileID: 21300000, guid: 9ea00ca880ed1cb45af88f07df34b924, type: 3}
+  maxStackSize: 1
+  itemType: 1
+  category: 4
+  gridSize: {x: 1, y: 1}
+  worldPrefab: {fileID: 78035215225619657, guid: 1d05b482df4f5454cb2cda76219d8d08, type: 3}
+  isConsumable: 1
+  consumableEffects:
+  - statType: 1
+    value: 15
+    isPercentage: 0
+  isCraftingMaterial: 0
+  isCraftedItem: 0

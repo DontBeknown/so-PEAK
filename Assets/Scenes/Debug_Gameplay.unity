@@ -334,6 +334,8 @@ MonoBehaviour:
   pickupSound: {fileID: 0}
   pickupParticles: {fileID: 0}
   destroyOnPickup: 1
+  itemPickupSFXId: item_pickup
+  itemPickupSFXVolume: 0.45
   allowMultipleUse: 0
   maxUses: 0
 --- !u!4 &98522577 stripped
@@ -1430,6 +1432,8 @@ MonoBehaviour:
   pickupSound: {fileID: 0}
   pickupParticles: {fileID: 0}
   destroyOnPickup: 1
+  itemPickupSFXId: item_pickup
+  itemPickupSFXVolume: 0.45
   allowMultipleUse: 0
   maxUses: 0
 --- !u!1 &466029976
@@ -1637,6 +1641,8 @@ MonoBehaviour:
   pickupSound: {fileID: 0}
   pickupParticles: {fileID: 0}
   destroyOnPickup: 1
+  itemPickupSFXId: item_pickup
+  itemPickupSFXVolume: 0.45
   allowMultipleUse: 0
   maxUses: 0
 --- !u!1001 &570134502
@@ -2483,6 +2489,8 @@ MonoBehaviour:
   pickupSound: {fileID: 0}
   pickupParticles: {fileID: 0}
   destroyOnPickup: 1
+  itemPickupSFXId: item_pickup
+  itemPickupSFXVolume: 0.45
   allowMultipleUse: 0
   maxUses: 0
 --- !u!1 &807969760 stripped
@@ -2511,6 +2519,8 @@ MonoBehaviour:
   pickupSound: {fileID: 0}
   pickupParticles: {fileID: 0}
   destroyOnPickup: 1
+  itemPickupSFXId: item_pickup
+  itemPickupSFXVolume: 0.45
   allowMultipleUse: 0
   maxUses: 0
 --- !u!4 &807969764 stripped
@@ -3260,6 +3270,8 @@ MonoBehaviour:
   pickupSound: {fileID: 0}
   pickupParticles: {fileID: 0}
   destroyOnPickup: 1
+  itemPickupSFXId: item_pickup
+  itemPickupSFXVolume: 0.45
   allowMultipleUse: 0
   maxUses: 0
 --- !u!1 &1095724761 stripped
@@ -3288,6 +3300,8 @@ MonoBehaviour:
   pickupSound: {fileID: 0}
   pickupParticles: {fileID: 0}
   destroyOnPickup: 1
+  itemPickupSFXId: item_pickup
+  itemPickupSFXVolume: 0.45
   allowMultipleUse: 0
   maxUses: 0
 --- !u!4 &1095724765 stripped
@@ -3637,6 +3651,10 @@ MonoBehaviour:
   gatherLoopSound: {fileID: 0}
   gatherCompleteSound: {fileID: 0}
   gatherCancelSound: {fileID: 0}
+  itemPickupSFXId: item_pickup
+  itemPickupSFXVolume: 0.45
+  startGatherSoundId: gather_start
+  startGatherSoundVolume: 0.5
 --- !u!1001 &1313060666
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4001,6 +4019,8 @@ MonoBehaviour:
   pickupSound: {fileID: 0}
   pickupParticles: {fileID: 0}
   destroyOnPickup: 1
+  itemPickupSFXId: item_pickup
+  itemPickupSFXVolume: 0.45
   allowMultipleUse: 0
   maxUses: 0
 --- !u!1001 &1483862918
@@ -4330,6 +4350,8 @@ MonoBehaviour:
   pickupSound: {fileID: 0}
   pickupParticles: {fileID: 0}
   destroyOnPickup: 1
+  itemPickupSFXId: item_pickup
+  itemPickupSFXVolume: 0.45
   allowMultipleUse: 0
   maxUses: 0
 --- !u!1001 &1565720763
@@ -4585,6 +4607,8 @@ MonoBehaviour:
   pickupSound: {fileID: 0}
   pickupParticles: {fileID: 0}
   destroyOnPickup: 1
+  itemPickupSFXId: item_pickup
+  itemPickupSFXVolume: 0.45
   allowMultipleUse: 0
   maxUses: 0
 --- !u!1 &1628832813
@@ -5136,6 +5160,8 @@ MonoBehaviour:
   pickupSound: {fileID: 0}
   pickupParticles: {fileID: 0}
   destroyOnPickup: 1
+  itemPickupSFXId: item_pickup
+  itemPickupSFXVolume: 0.45
   allowMultipleUse: 0
   maxUses: 0
 --- !u!1 &1890921219
@@ -5389,6 +5415,8 @@ MonoBehaviour:
   pickupSound: {fileID: 0}
   pickupParticles: {fileID: 0}
   destroyOnPickup: 1
+  itemPickupSFXId: item_pickup
+  itemPickupSFXVolume: 0.45
   allowMultipleUse: 0
   maxUses: 0
 --- !u!4 &1945667822 stripped
@@ -6478,6 +6506,63 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5d5ae4d71c5db7f47be4e05e04358a6d, type: 3}
+--- !u!1001 &8941321196935218693
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 78035215225619657, guid: 1d05b482df4f5454cb2cda76219d8d08, type: 3}
+      propertyPath: m_Name
+      value: Apple
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502326183679600035, guid: 1d05b482df4f5454cb2cda76219d8d08, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 8.688999
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502326183679600035, guid: 1d05b482df4f5454cb2cda76219d8d08, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.61
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502326183679600035, guid: 1d05b482df4f5454cb2cda76219d8d08, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -5.06
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502326183679600035, guid: 1d05b482df4f5454cb2cda76219d8d08, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502326183679600035, guid: 1d05b482df4f5454cb2cda76219d8d08, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502326183679600035, guid: 1d05b482df4f5454cb2cda76219d8d08, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502326183679600035, guid: 1d05b482df4f5454cb2cda76219d8d08, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502326183679600035, guid: 1d05b482df4f5454cb2cda76219d8d08, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502326183679600035, guid: 1d05b482df4f5454cb2cda76219d8d08, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502326183679600035, guid: 1d05b482df4f5454cb2cda76219d8d08, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 1d05b482df4f5454cb2cda76219d8d08, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -6488,6 +6573,7 @@ SceneRoots:
   - {fileID: 860183532}
   - {fileID: 697459392}
   - {fileID: 828218413}
+  - {fileID: 8941321196935218693}
   - {fileID: 411811135}
   - {fileID: 339761206}
   - {fileID: 1628832814}
