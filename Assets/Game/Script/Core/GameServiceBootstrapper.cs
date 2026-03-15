@@ -8,6 +8,8 @@ using Game.Player.Stat.Assessment;
 using Game.Player.Inventory;
 using Game.Environment.DayNight;
 using Game.Sound;
+using Game.Collectable;
+using Game.Dialog;
 
 namespace Game.Core
 {
@@ -31,6 +33,8 @@ namespace Game.Core
         [SerializeField] private TabbedInventoryUI inventoryUI;
         [SerializeField] private InventoryUI legacyInventoryUI;
         [SerializeField] private CinemachinePlayerCamera playerCamera;
+        [SerializeField] private CollectableManager collectableManager;
+        [SerializeField] private DialogManager dialogManager;
 
         
         [Header("Debug")]
@@ -251,6 +255,26 @@ namespace Game.Core
                     Debug.Log("[GameServiceBootstrapper] SaveLoadService found and registered");
             }
 
+            // Find and register collectable manager
+            var cm = collectableManager ?? FindFirstObjectByType<CollectableManager>();
+            if (cm != null)
+            {
+                container.Register<ICollectableManager>(cm);
+                container.Register(cm);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] CollectableManager found and registered");
+            }
+
+            // Find and register dialog manager
+            var dm = dialogManager ?? FindFirstObjectByType<DialogManager>();
+            if (dm != null)
+            {
+                container.Register<IDialogManager>(dm);
+                container.Register(dm);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] DialogManager found and registered");
+            }
+
             // Find and register SoundService
             var soundService = FindFirstObjectByType<SoundService>();
             if (soundService != null)
@@ -314,6 +338,22 @@ namespace Game.Core
                 container.Register(legacyInventoryUI);
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] InventoryUI manually registered");
+            }
+
+            if (collectableManager != null)
+            {
+                container.Register<ICollectableManager>(collectableManager);
+                container.Register(collectableManager);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] CollectableManager manually registered");
+            }
+
+            if (dialogManager != null)
+            {
+                container.Register<IDialogManager>(dialogManager);
+                container.Register(dialogManager);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] DialogManager manually registered");
             }
         }
         

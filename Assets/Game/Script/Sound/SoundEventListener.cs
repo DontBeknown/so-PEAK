@@ -12,8 +12,12 @@ namespace Game.Sound
 
         private void Start()
         {
-            _eventBus = ServiceContainer.Instance.Get<IEventBus>();
-            _sound    = ServiceContainer.Instance.Get<SoundService>();
+            _eventBus = ServiceContainer.Instance?.Get<IEventBus>();
+            if(_eventBus == null)
+            {
+                _eventBus = new EventBus();
+            }
+            _sound    = ServiceContainer.Instance?.Get<SoundService>();
 
             _eventBus.Subscribe<PlayPositionalSFXEvent>(OnPlayPositionalSFX);
             _eventBus.Subscribe<PlayUISoundEvent>(OnPlayUISound);

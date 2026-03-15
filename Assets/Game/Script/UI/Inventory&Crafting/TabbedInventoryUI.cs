@@ -4,6 +4,7 @@ using TMPro;
 using Game.Sound.Events;
 using Game.Core.DI;
 using Game.Core.Events;
+using Game.UI.Collectable;
 
 public class TabbedInventoryUI : MonoBehaviour
 {
@@ -14,10 +15,12 @@ public class TabbedInventoryUI : MonoBehaviour
     [Header("Tab Buttons")]
     [SerializeField] private Button inventoryTabButton;
     [SerializeField] private Button craftingTabButton;
+    [SerializeField] private Button collectablesTabButton;
 
     [Header("Tab Panels")]
     [SerializeField] private GridInventoryUI inventoryUI;
     [SerializeField] private CraftingUI craftingUI;
+    [SerializeField] private CollectablesHubUI collectablesHubUI;
 
     [Header("Tab Visual Feedback")]
     [SerializeField] private Color activeTabColor = new Color(1f, 1f, 1f, 1f);
@@ -31,6 +34,7 @@ public class TabbedInventoryUI : MonoBehaviour
     [SerializeField] private string soundInventoryOpen  = "UI_InventoryOpen";
     [SerializeField] private string soundInventoryClose = "UI_InventoryClose";
     [SerializeField] private string soundCraftingOpen   = "UI_CraftingOpen";
+    [SerializeField] private string soundCollectablesOpen = "UI_InventoryOpen";
 
     private TabType currentTab = TabType.Inventory;
     private bool isOpen = false;
@@ -39,7 +43,8 @@ public class TabbedInventoryUI : MonoBehaviour
     public enum TabType
     {
         Inventory,
-        Crafting
+        Crafting,
+        Collectables
     }
 
     public bool IsOpen => isOpen;
@@ -60,6 +65,12 @@ public class TabbedInventoryUI : MonoBehaviour
             craftingTabButton.onClick.AddListener(() => SwitchTab(TabType.Crafting));
         }
 
+        if (collectablesTabButton != null)
+        {
+            collectablesTabButton.onClick.RemoveAllListeners();
+            collectablesTabButton.onClick.AddListener(() => SwitchTab(TabType.Collectables));
+        }
+
         // Setup close button
         if (closeButton != null)
         {
@@ -73,6 +84,9 @@ public class TabbedInventoryUI : MonoBehaviour
 
         if (craftingUI == null)
             craftingUI = GetComponentInChildren<CraftingUI>(true);
+
+        if (collectablesHubUI == null)
+            collectablesHubUI = GetComponentInChildren<CollectablesHubUI>(true);
 
         // Start closed
         CloseUI();
@@ -137,6 +151,11 @@ public class TabbedInventoryUI : MonoBehaviour
             craftingUI.HideCraftingPanel();
         }
 
+        if (collectablesHubUI != null)
+        {
+            collectablesHubUI.HideHubPanel();
+        }
+
         _eventBus?.Publish(new PlayUISoundEvent(soundInventoryClose, volumeScale: 0.3f));
     }
 
@@ -152,6 +171,10 @@ public class TabbedInventoryUI : MonoBehaviour
 
             case TabType.Crafting:
                 ShowCraftingTab();
+                break;
+
+            case TabType.Collectables:
+                ShowCollectablesTab();
                 break;
         }
 
@@ -172,6 +195,12 @@ public class TabbedInventoryUI : MonoBehaviour
             craftingUI.HideCraftingPanel();
         }
 
+        // Hide collectables panel
+        if (collectablesHubUI != null)
+        {
+            collectablesHubUI.HideHubPanel();
+        }
+
         _eventBus?.Publish(new PlayUISoundEvent(soundInventoryOpen, volumeScale: 0.1f));
     }
 
@@ -189,7 +218,33 @@ public class TabbedInventoryUI : MonoBehaviour
             craftingUI.ShowCraftingPanel();
         }
 
+        // Hide collectables panel
+        if (collectablesHubUI != null)
+        {
+            collectablesHubUI.HideHubPanel();
+        }
+
         _eventBus?.Publish(new PlayUISoundEvent(soundCraftingOpen,volumeScale: 0.1f));
+    }
+
+    private void ShowCollectablesTab()
+    {
+        if (inventoryUI != null)
+        {
+            inventoryUI.HideInventoryPanel();
+        }
+
+        if (craftingUI != null)
+        {
+            craftingUI.HideCraftingPanel();
+        }
+
+        if (collectablesHubUI != null)
+        {
+            collectablesHubUI.ShowHubPanel();
+        }
+
+        _eventBus?.Publish(new PlayUISoundEvent(soundCollectablesOpen, volumeScale: 0.1f));
     }
 
     private void UpdateTabVisuals()
@@ -204,6 +259,11 @@ public class TabbedInventoryUI : MonoBehaviour
         if (craftingTabButton != null)
         {
             UpdateButtonVisual(craftingTabButton, currentTab == TabType.Crafting);
+        }
+
+        if (collectablesTabButton != null)
+        {
+            UpdateButtonVisual(collectablesTabButton, currentTab == TabType.Collectables);
         }
     }
 
@@ -233,7 +293,13 @@ public class TabbedInventoryUI : MonoBehaviour
 
     public void ToggleTab()
     {
-        TabType nextTab = currentTab == TabType.Inventory ? TabType.Crafting : TabType.Inventory;
+        TabType nextTab = currentTab switch
+        {
+            TabType.Inventory => TabType.Crafting,
+            TabType.Crafting => TabType.Collectables,
+            _ => TabType.Inventory
+        };
+
         SwitchTab(nextTab);
     }
 
@@ -257,5 +323,10 @@ public class TabbedInventoryUI : MonoBehaviour
     public void OpenCraftingTab()
     {
         OpenUI(TabType.Crafting);
+    }
+
+    public void OpenCollectablesTab()
+    {
+        OpenUI(TabType.Collectables);
     }
 }

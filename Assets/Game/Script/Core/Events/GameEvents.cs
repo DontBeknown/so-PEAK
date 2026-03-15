@@ -1,4 +1,6 @@
 using System;
+using Game.Collectable;
+using Game.Dialog;
 
 namespace Game.Core.Events
 {
@@ -106,6 +108,85 @@ namespace Game.Core.Events
         public PlayerDeathEvent(DeathCause cause)
         {
             Cause = cause;
+        }
+    }
+
+    // Collectable/Dialog Events
+    public class CollectableUnlockedEvent
+    {
+        public CollectableItem Collectable { get; }
+
+        public CollectableUnlockedEvent(CollectableItem collectable)
+        {
+            Collectable = collectable;
+        }
+    }
+
+    public class CollectableOpenRequestedEvent
+    {
+        public CollectableItem Collectable { get; }
+        public bool ReplayDialog { get; }
+
+        public CollectableOpenRequestedEvent(CollectableItem collectable, bool replayDialog = false)
+        {
+            Collectable = collectable;
+            ReplayDialog = replayDialog;
+        }
+    }
+
+    public class CollectableHubFocusRequestedEvent
+    {
+        public string CollectableId { get; }
+
+        public CollectableHubFocusRequestedEvent(string collectableId)
+        {
+            CollectableId = collectableId;
+        }
+    }
+
+    public class DialogStartedEvent
+    {
+        public DialogData Dialog { get; }
+        public bool IsReplay { get; }
+
+        public DialogStartedEvent(DialogData dialog, bool isReplay)
+        {
+            Dialog = dialog;
+            IsReplay = isReplay;
+        }
+    }
+
+    public class DialogLineChangedEvent
+    {
+        public DialogData Dialog { get; }
+        public int LineIndex { get; }
+        public DialogLine Line { get; }
+
+        public DialogLineChangedEvent(DialogData dialog, int lineIndex, DialogLine line)
+        {
+            Dialog = dialog;
+            LineIndex = lineIndex;
+            Line = line;
+        }
+    }
+
+    public class DialogPausedEvent
+    {
+        public bool IsPaused { get; }
+
+        public DialogPausedEvent(bool isPaused)
+        {
+            IsPaused = isPaused;
+        }
+    }
+
+    public class DialogEndedEvent
+    {
+        public string DialogId { get; }
+
+        public DialogEndedEvent(string dialogId)
+        {
+            DialogId = dialogId;
         }
     }
 }

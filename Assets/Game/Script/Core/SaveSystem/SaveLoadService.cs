@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using Game.Core.DI;
+using Game.Collectable;
+using Game.Dialog;
 
 public class SaveLoadService : MonoBehaviour, ISaveLoadService
 {
@@ -175,6 +177,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             }
             
             currentWorldSave = saveData;
+            HydrateWorldServices(saveData);
             OnWorldLoaded?.Invoke(saveData);
             
             if (enableDebug) Debug.Log($"Loaded world: {saveData.worldName}");
@@ -355,6 +358,22 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
                 currentWorldSave.worldState.dayNumber = dayNightService.CurrentDay;
                 
                 if (enableDebug) Debug.Log($"[SaveLoadService] Saved time={dayNightService.CurrentTime:F1}h, day={dayNightService.CurrentDay}");
+            }
+
+            // Update collectable and dialog progress
+            if (currentWorldSave.worldState == null)
+                currentWorldSave.worldState = CreateDefaultWorldState();
+
+            var collectableManager = container.TryGet<ICollectableManager>();
+            if (collectableManager != null)
+            {
+                currentWorldSave.worldState.unlockedCollectables = collectableManager.GetUnlockedIds().ToList();
+            }
+
+            var dialogManager = container.TryGet<IDialogManager>();
+            if (dialogManager != null)
+            {
+                currentWorldSave.worldState.triggeredDialogs = dialogManager.GetTriggeredIds();
             }
             
             // Update play time
@@ -691,8 +710,24 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             temperature = 20f,
             level = level,
             interactableStates = new List<InteractableStateSaveData>(),
-            resourceNodes = new List<ResourceNodeSaveData>()
+            resourceNodes = new List<ResourceNodeSaveData>(),
+            unlockedCollectables = new List<string>(),
+            triggeredDialogs = new List<string>()
         };
+    }
+
+    private void HydrateWorldServices(WorldSaveData saveData)
+    {
+        if (saveData?.worldState == null)
+            return;
+
+        var container = ServiceContainer.Instance;
+
+        var collectableManager = container.TryGet<ICollectableManager>();
+        collectableManager?.LoadState(saveData.worldState.unlockedCollectables ?? new List<string>());
+
+        var dialogManager = container.TryGet<IDialogManager>();
+        dialogManager?.LoadState(saveData.worldState.triggeredDialogs ?? new List<string>());
     }
     
     // Compression helpers (simple base64 for now)

@@ -95,6 +95,10 @@ public class WorldStateSaveData
     
     // Resources (gathered berry bushes, ore nodes, etc.)
     public List<ResourceNodeSaveData> resourceNodes;
+
+    // Collectables/Dialog
+    public List<string> unlockedCollectables = new List<string>();
+    public List<string> triggeredDialogs = new List<string>();
 }
 
 [Serializable]
