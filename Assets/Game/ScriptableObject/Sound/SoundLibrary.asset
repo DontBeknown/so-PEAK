@@ -141,3 +141,6 @@ MonoBehaviour:
   - Id: craft_button_click
     Clips:
     - {fileID: 8300000, guid: 5a781db18eda8a44fb9d2973e84d0c2f, type: 3}
+  - Id: gather_start
+    Clips:
+    - {fileID: 8300000, guid: 2749924dac07bab4f9d5e44648f0a228, type: 3}

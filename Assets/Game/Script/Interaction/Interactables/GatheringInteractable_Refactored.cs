@@ -73,9 +73,10 @@ namespace Game.Interaction
                 {
                     foreach (var drop in resourceDrops)
                     {
-                        if (drop.item != null && drop.amount > 0)
+                        int dropAmount = drop?.RollAmount() ?? 0;
+                        if (drop.item != null && dropAmount > 0)
                         {
-                            inventoryService.AddItem(drop.item, drop.amount);
+                            inventoryService.AddItem(drop.item, dropAmount);
                         }
                     }
                     ShowCompletionNotification();
@@ -137,8 +138,12 @@ namespace Game.Interaction
             if (resourceDrops.Length == 1 && resourceDrops[0].item != null)
             {
                 var drop = resourceDrops[0];
-                message = drop.amount > 1
-                    ? $"Collected {drop.amount}x {drop.item.itemName}"
+                int minAmount = Mathf.Max(0, drop.guaranteedAmount);
+                int maxAmount = minAmount + ((drop.bonusAmount > 0 && drop.bonusDropChance > 0f) ? drop.bonusAmount : 0);
+                message = maxAmount > minAmount
+                    ? $"Collected {minAmount}-{maxAmount}x {drop.item.itemName}"
+                    : minAmount > 1
+                    ? $"Collected {minAmount}x {drop.item.itemName}"
                     : $"Collected {drop.item.itemName}";
             }
             else

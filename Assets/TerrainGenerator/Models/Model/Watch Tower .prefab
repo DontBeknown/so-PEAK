@@ -1468,7 +1468,9 @@ GameObject:
   - component: {fileID: 6530094610864383715}
   - component: {fileID: -4670199182501631663}
   - component: {fileID: 6159244622078305229}
-  m_Layer: 0
+  - component: {fileID: 2711291806117546920}
+  - component: {fileID: 7453063599047344723}
+  m_Layer: 11
   m_Name: 'Watch Tower '
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1483,7 +1485,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8274077260532194656}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1583,3 +1585,50 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WatchTower
   nightlight: {fileID: 3307165905141297031}
+--- !u!65 &2711291806117546920
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8274077260532194656}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 11.356992, y: 21.284912, z: 8}
+  m_Center: {x: -1.6784959, y: 10.642456, z: 0}
+--- !u!114 &7453063599047344723
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8274077260532194656}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d5cfb5168eca70458715d3d8d6c1216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.AssessmentTerminalInteractable
+  customPrompt: Progress to next level
+  interactionVerb: Press F to
+  interactionPriority: 0.8
+  lockPlayerInputDuringUI: 1
+  pauseGameDuringUI: 0
+  highlightEffect: {fileID: 0}
+  interactSound: {fileID: 0}
+  highlightColor: {r: 0, g: 1, b: 1, a: 1}
+  useCooldown: 0
+  cooldownTime: 2
+  oneTimeUse: 1
+  skipDayOnUse: 1
+  resetFatigueOnUse: 1
+  progressNextLevelOnUse: 1

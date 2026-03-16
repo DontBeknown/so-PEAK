@@ -128,7 +128,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.GatheringInteractable
   resourceDrops:
   - item: {fileID: 11400000, guid: da4382b47225e4e479aca0c167ead00e, type: 2}
-    amount: 4
+    guaranteedAmount: 3
+    bonusDropChance: 0.5
+    bonusAmount: 1
   customPrompt: Twig
   gatherDuration: 2.5
   isMultiUse: 0
@@ -141,6 +143,10 @@ MonoBehaviour:
   gatherLoopSound: {fileID: 0}
   gatherCompleteSound: {fileID: 0}
   gatherCancelSound: {fileID: 0}
+  itemPickupSFXId: item_pickup
+  itemPickupSFXVolume: 0.45
+  startGatherSoundId: gather_start
+  startGatherSoundVolume: 0.5
 --- !u!114 &8839378686022897736
 MonoBehaviour:
   m_ObjectHideFlags: 0

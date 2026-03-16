@@ -52,7 +52,11 @@ namespace Game.Interaction
 
         private void Awake()
         {
-            // Get UIServiceProvider from ServiceContainer
+           
+        }
+        private void Start()
+        {
+             // Get UIServiceProvider from ServiceContainer
             uiServiceProvider = ServiceContainer.Instance.TryGet<UIServiceProvider>();
             _dayNightService = ServiceContainer.Instance.TryGet<IDayNightCycleService>();
             _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();

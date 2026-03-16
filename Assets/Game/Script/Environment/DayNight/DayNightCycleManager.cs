@@ -127,6 +127,8 @@ namespace Game.Environment.DayNight
                     currentTime = _currentTime
                 });
             }
+
+            PlayAmbientForCurrentTime();
             
             if (showDebugInfo)
             {
