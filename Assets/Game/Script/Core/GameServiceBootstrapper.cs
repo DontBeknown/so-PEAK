@@ -227,6 +227,15 @@ namespace Game.Core
                     Debug.Log("[GameServiceBootstrapper] AssessmentReportUI found and registered");
             }
             
+            // Register EndingScreenUI
+            var endingScreenUI = FindFirstObjectByType<Game.UI.EndingScreen.EndingScreenUI>();
+            if (endingScreenUI != null)
+            {
+                container.Register(endingScreenUI);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] EndingScreenUI found and registered");
+            }
+            
             // Register LearningAssessmentService
             var learningAssessmentService = FindFirstObjectByType<LearningAssessmentService>();
             if (learningAssessmentService != null)

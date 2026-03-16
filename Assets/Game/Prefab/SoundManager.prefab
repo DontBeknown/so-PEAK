@@ -68,3 +68,6 @@ MonoBehaviour:
   uiVolumeParam: UIVolume
   musicVolumeParam: MusicVolume
   ambientVolumeParam: AmbientVolume
+  rapidTriggerWindow: 0.5
+  pitchIncrement: 0.1
+  maxPitchScale: 1.5

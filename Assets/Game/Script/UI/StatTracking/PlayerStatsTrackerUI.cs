@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Game.Player;
 using Game.Player.Services;
 using Game.Core.DI;
+using Game.Core.Events;
 using Game.UI;
 
 /// <summary>
@@ -29,6 +30,7 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
     [SerializeField] private GameObject assessmentTab;
     [SerializeField] private Button statTrackingTabButton;
     [SerializeField] private Button assessmentTabButton;
+    [SerializeField] private Button nextLevelButton;
     
     [Header("Text Displays")]
     [SerializeField] private TextMeshProUGUI sessionTimeText;
@@ -56,6 +58,8 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
     
     private StatMetricType currentGraphMetric = StatMetricType.Distance;
     private float timeSinceLastRefresh;
+    private bool _progressNextLevelMode = false;
+    private IEventBus _eventBus;
     
     // IUIPanel implementation
     public bool IsActive => panel != null && panel.activeSelf;
@@ -90,6 +94,8 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
             simpleStatsHUD = ServiceContainer.Instance.TryGet<SimpleStatsHUD>();
         }
         
+        _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+        
         SetupButtons();
         
         if (panel != null)
@@ -98,10 +104,23 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
         }
     }
     
+    private void OnEnable()
+    {
+        _eventBus?.Subscribe<AssessmentUIOpenedEvent>(OnAssessmentUIOpened);
+    }
+    
+    private void OnDisable()
+    {
+        _eventBus?.Unsubscribe<AssessmentUIOpenedEvent>(OnAssessmentUIOpened);
+    }
+    
     private void SetupButtons()
     {
         if (closeButton != null)
             closeButton.onClick.AddListener(OnCloseButtonPress);
+        
+        if (nextLevelButton != null)
+            nextLevelButton.onClick.AddListener(OnNextLevelButtonPressed);
         
         if (statTrackingTabButton != null)
             statTrackingTabButton.onClick.AddListener(() => SwitchToTab(true));
@@ -155,6 +174,7 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
         {
             panel.SetActive(true);
             SwitchToTab(true); // Default to stat tracking tab
+            ApplyButtonMode();
             RefreshDisplay();
         }
     }
@@ -194,6 +214,9 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
         {
             trackerService.StartTracking();
         }
+        
+        // Reset progression mode flag when hiding
+        _progressNextLevelMode = false;
         
         if (panel != null)
         {
@@ -381,6 +404,59 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
         {
             //Debug.Log("[PlayerStatsTrackerUI] Closing panel via UIServiceProvider");
             uiService.ClosePanel(PanelName);
+        }
+    }
+    
+    private void OnAssessmentUIOpened(AssessmentUIOpenedEvent evt)
+    {
+        if (evt.PanelName != PanelName) return;
+        
+        // Store the progression mode for this terminal
+        _progressNextLevelMode = evt.ProgressNextLevelOnUse;
+        ApplyButtonMode();
+    }
+    
+    private void ApplyButtonMode()
+    {
+        // Show/hide buttons based on progression mode
+        if (nextLevelButton != null)
+            nextLevelButton.gameObject.SetActive(_progressNextLevelMode);
+        
+        if (closeButton != null)
+            closeButton.gameObject.SetActive(!_progressNextLevelMode);
+    }
+    
+    private void OnNextLevelButtonPressed()
+    {
+        var saveService = SaveLoadService.Instance;
+        if (saveService == null)
+        {
+            Debug.LogWarning("[PlayerStatsTrackerUI] SaveLoadService not found");
+            return;
+        }
+        
+        int currentLevel = saveService.GetCurrentLevel();
+        
+        if (currentLevel == 3)
+        {
+            // Level 3 reached: show ending screen instead of progressing
+            var uiService = ServiceContainer.Instance.TryGet<UIServiceProvider>();
+            if (uiService != null)
+            {
+                uiService.OpenPanel("EndingScreen");
+            }
+        }
+        else
+        {
+            // Progression: increment level and close panel
+            saveService.ProgressToNextLevel();
+            saveService.PerformAutoSave();
+            
+            var uiService = ServiceContainer.Instance.TryGet<UIServiceProvider>();
+            if (uiService != null)
+            {
+                uiService.ClosePanel(PanelName);
+            }
         }
     }
 }

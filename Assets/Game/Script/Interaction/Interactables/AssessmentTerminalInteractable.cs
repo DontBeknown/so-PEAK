@@ -153,6 +153,12 @@ namespace Game.Interaction
             
             // Open PlayerStatsTracker panel via UIServiceProvider (SOLID: Facade pattern)
             uiServiceProvider.OpenPanel("PlayerStatsTracker");
+            
+            // Publish event to communicate context to UI (progression mode enabled/disabled)
+            if (_eventBus != null)
+            {
+                _eventBus.Publish(new AssessmentUIOpenedEvent("PlayerStatsTracker", progressNextLevelOnUse));
+            }
             //Debug.Log("[AssessmentTerminalInteractable] Stats tracker opened via UIServiceProvider");
         }
 
@@ -183,12 +189,6 @@ namespace Game.Interaction
             {
                 var playerStats = currentPlayer.GetComponent<PlayerStats>();
                 playerStats?.FullRest();
-            }
-            
-            // Progress to next level if configured
-            if (progressNextLevelOnUse)
-            {
-                SaveLoadService.Instance?.ProgressToNextLevel();
             }
 
             // Save the game (captures updated day, time, stats, etc.)

@@ -100,6 +100,19 @@ namespace Game.Core.Events
         }
     }
 
+    // Assessment UI Event
+    public class AssessmentUIOpenedEvent
+    {
+        public string PanelName { get; }
+        public bool ProgressNextLevelOnUse { get; }
+        
+        public AssessmentUIOpenedEvent(string panelName, bool progressNextLevelOnUse)
+        {
+            PanelName = panelName;
+            ProgressNextLevelOnUse = progressNextLevelOnUse;
+        }
+    }
+
     // Player Events
     public class PlayerDeathEvent
     {
