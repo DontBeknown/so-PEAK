@@ -97,7 +97,8 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             gameVersion = Application.version,
             saveVersion = CURRENT_SAVE_VERSION,
             playerData = CreateDefaultPlayerData(),
-            worldState = CreateDefaultWorldState(level)
+            worldState = CreateDefaultWorldState(level),
+            tutorial = new TutorialSaveData()
         };
         
         currentWorldSave = newWorld;
@@ -718,7 +719,12 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
 
     private void HydrateWorldServices(WorldSaveData saveData)
     {
-        if (saveData?.worldState == null)
+        if (saveData == null)
+            return;
+
+        saveData.tutorial ??= new TutorialSaveData();
+
+        if (saveData.worldState == null)
             return;
 
         var container = ServiceContainer.Instance;

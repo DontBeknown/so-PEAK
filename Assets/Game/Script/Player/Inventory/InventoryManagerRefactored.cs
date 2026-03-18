@@ -17,7 +17,6 @@ namespace Game.Player.Inventory
     public class InventoryManagerRefactored : MonoBehaviour
     {
         [Header("Configuration")]
-        [SerializeField] private int initialInventorySize = 20;
         [SerializeField] private PlayerStats playerStats;
 
         [Header("Grid Inventory")]

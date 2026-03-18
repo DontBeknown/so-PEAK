@@ -135,6 +135,8 @@ public class ContextMenuUI : MonoBehaviour
     {
         if (slotUI == null || slotUI.IsEmpty) return;
 
+        _eventBus?.Publish(new ContextMenuOpenedEvent());
+
         // Store context for dynamic updates
         currentSlotUI = slotUI;
         currentInventoryUI = inventoryUI;
@@ -256,6 +258,8 @@ public class ContextMenuUI : MonoBehaviour
     public void ShowGridItemMenu(GridInventoryUI gridUI, GridItemUI itemUI)
     {
         if (gridUI == null || itemUI == null || itemUI.Placement == null) return;
+
+        _eventBus?.Publish(new ContextMenuOpenedEvent());
 
         // Clear slot-based context
         currentSlotUI = null;

@@ -1,6 +1,8 @@
 using System;
 using Game.Collectable;
 using Game.Dialog;
+using Game.Tutorial;
+using UnityEngine;
 
 namespace Game.Core.Events
 {
@@ -201,5 +203,94 @@ namespace Game.Core.Events
         {
             DialogId = dialogId;
         }
+    }
+
+    // Tutorial Events
+    public class TutorialStartedEvent
+    {
+        public string TutorialId { get; }
+
+        public TutorialStartedEvent(string tutorialId)
+        {
+            TutorialId = tutorialId;
+        }
+    }
+
+    public class TutorialStepChangedEvent
+    {
+        public string TutorialId { get; }
+        public int StepIndex { get; }
+        public TutorialStepData StepData { get; }
+        public bool IsWaitingForGate { get; }
+
+        public TutorialStepChangedEvent(string tutorialId, int stepIndex, TutorialStepData stepData, bool isWaitingForGate)
+        {
+            TutorialId = tutorialId;
+            StepIndex = stepIndex;
+            StepData = stepData;
+            IsWaitingForGate = isWaitingForGate;
+        }
+    }
+
+    public class TutorialStepCompletedEvent
+    {
+        public string TutorialId { get; }
+        public int StepIndex { get; }
+
+        public TutorialStepCompletedEvent(string tutorialId, int stepIndex)
+        {
+            TutorialId = tutorialId;
+            StepIndex = stepIndex;
+        }
+    }
+
+    public class TutorialCompletedEvent
+    {
+        public string TutorialId { get; }
+
+        public TutorialCompletedEvent(string tutorialId)
+        {
+            TutorialId = tutorialId;
+        }
+    }
+
+    public class TutorialSkippedEvent
+    {
+        public string TutorialId { get; }
+
+        public TutorialSkippedEvent(string tutorialId)
+        {
+            TutorialId = tutorialId;
+        }
+    }
+
+    // Interaction Events
+    public class HoldInteractStartedEvent
+    {
+        public GameObject Source { get; }
+
+        public HoldInteractStartedEvent(GameObject source)
+        {
+            Source = source;
+        }
+    }
+
+    public class HoldInteractCompletedEvent
+    {
+        public GameObject Source { get; }
+
+        public HoldInteractCompletedEvent(GameObject source)
+        {
+            Source = source;
+        }
+    }
+
+    public class JumpExecutedEvent
+    {
+    }
+
+    // UI Events
+    public class ContextMenuOpenedEvent
+    {
     }
 }

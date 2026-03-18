@@ -391,7 +391,7 @@ public class CraftingUI : MonoBehaviour
         RefreshRecipeList();
         UpdateSelectedRecipeDisplay();
 
-        eventBus?.Publish(new PlayUISoundEvent("item_pickup", 0.45f));
+        eventBus?.Publish(new PlayUISoundEvent(itemPickupSFXId, itemPickupSFXVolume));
         //Debug.Log($"Successfully crafted {recipe.recipeName}!");
     }
 

@@ -6,6 +6,7 @@ using Game.Sound.Events;
 using Game.Environment.DayNight;
 using Game.Player.Inventory;
 using Game.Interaction;
+using Game.Tutorial;
 public class GameplaySceneInitializer : MonoBehaviour
 {
     [Header("References")]
@@ -62,10 +63,19 @@ public class GameplaySceneInitializer : MonoBehaviour
     
     private IEnumerator InitializeWorldCoroutine()
     {
+        WorldSaveData resolvedSaveData = null;
+
         if (worldPersistence.isNewWorld)
         {
             if (enableDebug) Debug.Log($"Initializing new world: {worldPersistence.currentWorldName}");
             InitializeDefaultWorldState();
+            resolvedSaveData = saveLoadService.CurrentWorldSave;
+
+            var renderController = FindFirstObjectByType<RenderController>();
+            if (renderController != null)
+            {
+                yield return new WaitUntil(() => renderController.PlayerSpawnComplete);
+            }
         }
         else if (worldPersistence.shouldLoadWorld)
         {
@@ -77,6 +87,8 @@ public class GameplaySceneInitializer : MonoBehaviour
                 Debug.LogError("Failed to load world save data!");
                 yield break;
             }
+
+            resolvedSaveData = saveData;
 
             // Restore day/night immediately — does not require the player
             if (saveData.worldState != null)
@@ -110,6 +122,31 @@ public class GameplaySceneInitializer : MonoBehaviour
         {
             Debug.LogError("No world data to initialize!");
         }
+
+        TryStartTutorial(resolvedSaveData);
+    }
+
+    private void TryStartTutorial(WorldSaveData saveData)
+    {
+        if (saveData == null)
+        {
+            saveData = saveLoadService.CurrentWorldSave;
+        }
+
+        if (saveData == null)
+        {
+            return;
+        }
+
+        saveData.tutorial ??= new TutorialSaveData();
+
+        if (saveData.tutorial.isCompleted)
+        {
+            return;
+        }
+
+        var tutorialManager = ServiceContainer.Instance.TryGet<ITutorialManager>();
+        tutorialManager?.StartTutorial();
     }
     
     private void SpawnPlayer(Vector3 position, Quaternion rotation)

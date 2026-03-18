@@ -10,6 +10,7 @@ using Game.Environment.DayNight;
 using Game.Sound;
 using Game.Collectable;
 using Game.Dialog;
+using Game.Tutorial;
 
 namespace Game.Core
 {
@@ -35,6 +36,7 @@ namespace Game.Core
         [SerializeField] private CinemachinePlayerCamera playerCamera;
         [SerializeField] private CollectableManager collectableManager;
         [SerializeField] private DialogManager dialogManager;
+        [SerializeField] private TutorialManager tutorialManager;
 
         
         [Header("Debug")]
@@ -294,6 +296,16 @@ namespace Game.Core
                     Debug.Log("[GameServiceBootstrapper] SoundService found and registered");
             }
 
+            // Find and register TutorialManager
+            var tm = tutorialManager ?? FindFirstObjectByType<TutorialManager>();
+            if (tm != null)
+            {
+                container.Register<ITutorialManager>(tm);
+                container.Register(tm);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] TutorialManager found and registered");
+            }
+
         }
         
         private void RegisterManualServices()
@@ -363,6 +375,14 @@ namespace Game.Core
                 container.Register(dialogManager);
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] DialogManager manually registered");
+            }
+
+            if (tutorialManager != null)
+            {
+                container.Register<ITutorialManager>(tutorialManager);
+                container.Register(tutorialManager);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] TutorialManager manually registered");
             }
         }
         

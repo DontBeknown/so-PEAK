@@ -113,6 +113,10 @@ namespace Game.Interaction
             
             if (added)
             {
+                // Publish interaction succeeded event for tutorial
+                var eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+                eventBus?.Publish(new Game.Core.Events.HoldInteractCompletedEvent(gameObject));
+
                 // Play pickup feedback
                 PlayPickupFeedback();
                 

@@ -19,10 +19,20 @@ public class WorldSaveData
     
     // World State
     public WorldStateSaveData worldState;
+
+    // Tutorial State
+    public TutorialSaveData tutorial;
     
     // Meta Information
     public string gameVersion;
     public int saveVersion;
+}
+
+[Serializable]
+public class TutorialSaveData
+{
+    public bool isCompleted;
+    public int lastCompletedStep;
 }
 
 [Serializable]

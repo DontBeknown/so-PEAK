@@ -118,6 +118,7 @@ namespace Game.Interaction
             // Notify derived class
             (_eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>())
                 ?.Publish(new PlayPositionalSFXEvent("interact_start", transform.position));
+            _eventBus?.Publish(new HoldInteractStartedEvent(gameObject));
             OnHoldStart();
             
             // Start holding coroutine
@@ -181,6 +182,7 @@ namespace Game.Interaction
             // Notify derived class - THIS IS WHERE CUSTOM LOGIC GOES
             (_eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>())
                 ?.Publish(new PlayPositionalSFXEvent("interact_complete", transform.position));
+            _eventBus?.Publish(new HoldInteractCompletedEvent(gameObject));
             OnHoldComplete();
             
             Cleanup();

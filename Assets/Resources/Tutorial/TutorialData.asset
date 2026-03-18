@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 530aafe963fa6104a9f789f745c6c69c, type: 3}
+  m_Name: TutorialData
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Tutorial.TutorialData
+  tutorialId: main_onboarding
+  steps:
+  - {fileID: 11400000, guid: 3d4c18831dc14c44c845985f0a6c2eb6, type: 2}
+  - {fileID: 11400000, guid: 94416d5a3e1594240b0378a22145de67, type: 2}
+  - {fileID: 11400000, guid: 34dea5d58bc90ca4b80ae17f18b3cbfe, type: 2}
+  - {fileID: 11400000, guid: 04adcf12c248722498b5f4c77a5d351e, type: 2}
+  - {fileID: 11400000, guid: c4ddcbe9854de7d4dbd16b7b6ff404d8, type: 2}
+  - {fileID: 11400000, guid: 1ae0c486078f11f4387f2ca7e05d716e, type: 2}
+  - {fileID: 11400000, guid: 8d46e5e4affa06f44a73b9f63e03399b, type: 2}
+  - {fileID: 11400000, guid: 7229365e58502fe46833f88576f6b6c8, type: 2}
+  - {fileID: 11400000, guid: ffc649abe5daf6340afb3b2a0271b71a, type: 2}

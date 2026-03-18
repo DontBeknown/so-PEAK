@@ -266,7 +266,7 @@ namespace Game.Interaction
                         int dropAmount = drop?.RollAmount() ?? 0;
                         if (drop.item != null && dropAmount > 0)
                         {
-                            Debug.Log($"[GatheringInteractable] Adding {dropAmount}x {drop.item.itemName} to inventory");
+                            //Debug.Log($"[GatheringInteractable] Adding {dropAmount}x {drop.item.itemName} to inventory");
                             inventoryService.AddItem(drop.item, dropAmount);
                         }
                     }
@@ -284,6 +284,8 @@ namespace Game.Interaction
                 eventBus = ServiceContainer.Instance?.Get<IEventBus>();
             }
             eventBus?.Publish(new PlayPositionalSFXEvent(itemPickupSFXId, transform.position, itemPickupSFXVolume));
+
+            eventBus?.Publish(new HoldInteractCompletedEvent(gameObject));
             
             // Deplete resource
             if (!isMultiUse)

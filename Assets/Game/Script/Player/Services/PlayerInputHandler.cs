@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Game.Core.DI;
+using Game.Core.Events;
 using Game.Player.Interfaces;
 
 namespace Game.Player.Services
@@ -111,7 +113,10 @@ namespace Game.Player.Services
             _inputActions.Player.Jump.performed += _ => 
             {
                 if (!IsInputBlocked())
+                {
+                    ServiceContainer.Instance.TryGet<IEventBus>()?.Publish(new JumpExecutedEvent());
                     HandleJumpInput();
+                }
             };
             _inputActions.Player.Climb.performed += _ => 
             {

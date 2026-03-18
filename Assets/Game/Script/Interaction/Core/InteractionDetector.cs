@@ -4,6 +4,7 @@ using System;
 using Game.Interaction.UI;
 using Game.UI;
 using Game.Core.DI;
+using Game.Core.Events;
 
 namespace Game.Interaction
 {
@@ -47,6 +48,7 @@ namespace Game.Interaction
         private Dictionary<IInteractable, InteractableUIMarker> markerMap = new Dictionary<IInteractable, InteractableUIMarker>();
         private CharacterController characterController;
         private UIServiceProvider uiServiceProvider;
+        private IEventBus eventBus;
         private float stillTimer = 0f; // Tracks how long player has been standing still
         private bool isEnabled = true; // Can be disabled during certain actions (like gathering)
 
@@ -63,6 +65,7 @@ namespace Game.Interaction
             // Get player reference
             characterController = GetComponent<CharacterController>();
             uiServiceProvider = UIServiceProvider.Instance;
+            eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
             
             // Auto-find canvas for markers
             if (enableUIMarkers && markerCanvas == null)
@@ -186,6 +189,7 @@ namespace Game.Interaction
                 // Trigger events
                 OnNearestInteractableChanged?.Invoke(nearestInteractable);
                 OnInteractableInRange?.Invoke(nearestInteractable != null);
+                eventBus?.Publish(new ItemInRangeChangedEvent(nearestInteractable != null));
             }
         }
 
@@ -271,6 +275,7 @@ namespace Game.Interaction
                 nearestInteractable = null;
                 OnNearestInteractableChanged?.Invoke(null);
                 OnInteractableInRange?.Invoke(false);
+                eventBus?.Publish(new ItemInRangeChangedEvent(false));
             }
         }
         

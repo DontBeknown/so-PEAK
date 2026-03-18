@@ -1,4 +1,6 @@
 using UnityEngine;
+using System.Collections;
+using UnityEngine.Serialization;
 using Game.Core.DI;
 using Game.Core.Events;
 using Game.Environment.DayNight;
@@ -10,19 +12,21 @@ namespace Game.Interaction
     /// Interactable that opens the Assessment Report UI when the player presses E.
     /// Can be attached to terminal objects, signs, or any 3D object in the world.
     /// </summary>
-    public class AssessmentTerminalInteractable : MonoBehaviour, IInteractable
+    public class AssessmentTerminalInteractable : HoldInteractableBase
     {
         [Header("Interaction Settings")]
         [SerializeField] private string customPrompt = "Check Assessment Report";
-        [SerializeField] private string interactionVerb = "Press F to";
-        [SerializeField] private float interactionPriority = 0.8f; // Slightly lower than items
+        [SerializeField] private string interactionVerb = "Hold F to";
+        [FormerlySerializedAs("interactionPriority")]
+        [SerializeField] private float terminalInteractionPriority = 0.8f; // Slightly lower than items
         
         [Header("Player Control")]
         [SerializeField] private bool lockPlayerInputDuringUI = true;
         [SerializeField] private bool pauseGameDuringUI = false;
         
         [Header("Visual Feedback")]
-        [SerializeField] private GameObject highlightEffect;
+        [FormerlySerializedAs("highlightEffect")]
+        [SerializeField] private GameObject terminalHighlightEffect;
         [SerializeField] private AudioClip interactSound;
         [SerializeField] private Color highlightColor = Color.cyan;
         
@@ -39,14 +43,13 @@ namespace Game.Interaction
         [SerializeField] private bool resetFatigueOnUse = true;
         [SerializeField] private bool progressNextLevelOnUse = false; 
         
-        private bool isHighlighted = false;
         private float lastInteractionTime = -999f;
         private bool _hasBeenUsed = false;
-        private Game.Player.PlayerControllerRefactored currentPlayer;
         private UIServiceProvider uiServiceProvider;
         private IDayNightCycleService _dayNightService;
         private IEventBus _eventBus;
         private bool _isWaitingForPanelClose = false;
+        private bool _playerLockManagedByTerminal = false;
 
         #region IInteractable Implementation
 
@@ -62,15 +65,18 @@ namespace Game.Interaction
             _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
         }
 
-        public string InteractionPrompt => customPrompt;
+        public override string InteractionPrompt => customPrompt;
 
-        public string InteractionVerb => interactionVerb;
+        public override string InteractionVerb => interactionVerb;
 
-        public bool CanInteract
+        public override bool CanInteract
         {
             get
             {
                 if (uiServiceProvider == null)
+                    return false;
+
+                if (isCurrentlyHolding || _isWaitingForPanelClose)
                     return false;
                 
                 // One-time-use terminals are permanently disabled after first use
@@ -85,58 +91,55 @@ namespace Game.Interaction
             }
         }
 
-        public float InteractionPriority => interactionPriority;
+        public override float InteractionPriority => terminalInteractionPriority;
 
-        public Transform GetTransform() => transform;
-
-        public void OnHighlighted(bool highlighted)
+        public override void OnHighlighted(bool highlighted)
         {
             isHighlighted = highlighted;
             
             // Toggle highlight effect
-            if (highlightEffect != null)
+            if (terminalHighlightEffect != null)
             {
-                highlightEffect.SetActive(highlighted);
+                terminalHighlightEffect.SetActive(highlighted);
             }
             
             // Optional: Change material color or emission
             // You can add more sophisticated highlighting here
         }
 
-        public void Interact(Game.Player.PlayerControllerRefactored player)
-        {
-            if (!CanInteract)
-                return;
+        #endregion
 
-            currentPlayer = player;
+        #region Hold Interaction Overrides
+
+        protected override void OnHoldComplete()
+        {
             lastInteractionTime = Time.time;
-            
-            // Play interaction sound
+
+            // Play interaction sound when hold finishes.
             if (interactSound != null)
             {
                 AudioSource.PlayClipAtPoint(interactSound, transform.position);
             }
-            
-            // Lock player input if configured
-            if (lockPlayerInputDuringUI && player != null)
-            {
-                player.SetInputBlocked(true);
-            }
-            
-            // Pause game if configured
+
             if (pauseGameDuringUI)
             {
                 Time.timeScale = 0f;
             }
-            
-            // Open assessment UI
+
             OpenAssessmentUI();
-            
-            // Subscribe to panel close to trigger skip to next morning
+
+            // Subscribe to panel close to trigger skip to next morning and cleanup.
             if (_eventBus != null && !_isWaitingForPanelClose)
             {
                 _isWaitingForPanelClose = true;
                 _eventBus.Subscribe<PanelClosedEvent>(OnPanelClosed);
+            }
+
+            // Hold base cleanup unlocks the player; re-apply lock for terminal UI usage.
+            if (lockPlayerInputDuringUI && currentPlayer != null)
+            {
+                _playerLockManagedByTerminal = true;
+                StartCoroutine(ReapplyPlayerLockNextFrame(currentPlayer));
             }
         }
 
@@ -169,6 +172,16 @@ namespace Game.Interaction
         {
             UnlockPlayer();
         }
+
+        private IEnumerator ReapplyPlayerLockNextFrame(Game.Player.PlayerControllerRefactored player)
+        {
+            yield return null;
+
+            if (_isWaitingForPanelClose && _playerLockManagedByTerminal && player != null)
+            {
+                player.SetInputBlocked(true);
+            }
+        }
         
         private void OnPanelClosed(PanelClosedEvent evt)
         {
@@ -199,8 +212,8 @@ namespace Game.Interaction
             {
                 _hasBeenUsed = true;
                 // Hide highlight so it no longer appears interactive
-                if (highlightEffect != null)
-                    highlightEffect.SetActive(false);
+                if (terminalHighlightEffect != null)
+                    terminalHighlightEffect.SetActive(false);
             }
             
             UnlockPlayer();
@@ -209,16 +222,30 @@ namespace Game.Interaction
         private void UnlockPlayer()
         {
             // Unlock player input
-            if (lockPlayerInputDuringUI && currentPlayer != null)
+            if (_playerLockManagedByTerminal && currentPlayer != null)
             {
                 currentPlayer.SetInputBlocked(false);
             }
+            _playerLockManagedByTerminal = false;
             
             // Unpause game
             if (pauseGameDuringUI)
             {
                 Time.timeScale = 1f;
             }
+        }
+
+        protected override void OnDestroy()
+        {
+            // Defensive cleanup if object is destroyed while waiting for panel close.
+            if (_eventBus != null && _isWaitingForPanelClose)
+            {
+                _eventBus.Unsubscribe<PanelClosedEvent>(OnPanelClosed);
+            }
+
+            _isWaitingForPanelClose = false;
+            UnlockPlayer();
+            base.OnDestroy();
         }
 
         #region Editor Helpers

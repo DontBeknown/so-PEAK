@@ -169,6 +169,12 @@ namespace Game.Interaction.UI
         private void HandlePanelClosed(PanelClosedEvent evt)
         {
             //Debug.Log($"[InteractionPromptUI] Panel closed: {evt.PanelName}");
+
+            // Never re-show in-range prompt while hold-progress UI is active.
+            if (isShowingProgress)
+            {
+                return;
+            }
             
             // Check if we should show prompt again when panel closes
             if (currentInteractable != null && interactionDetector != null)
@@ -224,6 +230,12 @@ namespace Game.Interaction.UI
         private void ShowPrompt()
         {
             //Debug.Log($"[InteractionPromptUI] ShowPrompt called, isVisible={isVisible}");
+
+            // Suppress in-range prompt while hold-progress UI is active.
+            if (isShowingProgress)
+            {
+                return;
+            }
             
             if (isVisible)
             {
@@ -335,6 +347,13 @@ namespace Game.Interaction.UI
             if (progressBarContainer != null)
             {
                 isShowingProgress = true;
+
+                // Ensure interactable-in-range prompt does not overlap with progress UI.
+                if (isVisible)
+                {
+                    HidePrompt();
+                }
+
                 progressBarContainer.SetActive(true);
                 
                 // Reset progress
