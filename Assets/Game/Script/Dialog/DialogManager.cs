@@ -19,9 +19,10 @@ namespace Game.Dialog
         public DialogData CurrentDialog => _currentDialog;
         public int CurrentLineIndex => _currentLineIndex;
 
-        private void Awake()
+        /// <summary>Called by GameServiceBootstrapper after registration.</summary>
+        public void Initialize(IEventBus eventBus)
         {
-            _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+            _eventBus = eventBus;
         }
 
         public bool HasTriggered(string dialogId)
@@ -36,8 +37,6 @@ namespace Game.Dialog
 
             if (!isReplay && HasTriggered(data.dialogId))
                 return;
-
-            _eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>();
 
             _currentDialog = data;
             _currentLineIndex = 0;

@@ -26,6 +26,9 @@ public class TabbedInventoryUI : MonoBehaviour
     [SerializeField] private Color activeTabColor = new Color(1f, 1f, 1f, 1f);
     [SerializeField] private Color inactiveTabColor = new Color(0.7f, 0.7f, 0.7f, 1f);
 
+    [SerializeField] private Color textActiveTabColor = new Color(1f, 1f, 1f, 1f);
+    [SerializeField] private Color textInactiveTabColor = new Color(0.7f, 0.7f, 0.7f, 1f);
+
     [Header("Settings")]
     //[SerializeField] private bool pauseGameWhenOpen = true;
     [SerializeField] private TabType defaultTab = TabType.Inventory;
@@ -280,7 +283,7 @@ public class TabbedInventoryUI : MonoBehaviour
         TextMeshProUGUI text = button.GetComponentInChildren<TextMeshProUGUI>();
         if (text != null)
         {
-            text.color = isActive ? activeTabColor : inactiveTabColor;
+            text.color = isActive ? textActiveTabColor : textInactiveTabColor;
         }
 
         // Update image color if present

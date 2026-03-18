@@ -23,7 +23,6 @@ namespace Game.Tutorial
 
         private TutorialData _tutorialData;
         private TutorialSaveData _runtimeTutorialSaveData;
-        private bool _warnedMissingSaveLoadService;
         private bool _hasSeenInteractableInRange;
         private bool _hasObtainedFirstItem;
         private bool _isWaitingForGate;
@@ -41,23 +40,26 @@ namespace Game.Tutorial
         public bool IsCompleted { get; private set; }
         public int CurrentStepIndex { get; private set; } = -1;
 
-        private void Start()
+        /// <summary>Called by GameServiceBootstrapper after registration.</summary>
+        public void Initialize(IEventBus eventBus, SaveLoadService saveLoadService,
+            PlayerControllerRefactored player, CinemachinePlayerCamera playerCamera)
         {
-            _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
-            ResolveSaveLoadService();
-            _player = ServiceContainer.Instance.TryGet<PlayerControllerRefactored>();
-            _playerCamera = ServiceContainer.Instance.TryGet<CinemachinePlayerCamera>();
-            _tutorialData = Resources.Load<TutorialData>(tutorialResourcePath);
+            _eventBus        = eventBus;
+            _saveLoadService = saveLoadService;
+            _player          = player;
+            _playerCamera    = playerCamera;
 
+            _tutorialData = Resources.Load<TutorialData>(tutorialResourcePath);
             if (_tutorialData == null)
             {
                 _tutorialData = BuildFallbackTutorialData();
                 if (debugLogs)
-                {
                     Debug.LogWarning("[TutorialManager] TutorialData resource was not found. Using fallback in-code steps.");
-                }
             }
+        }
 
+        private void Start()
+        {
             SubscribeToEvents();
             StartTutorial();
         }
@@ -179,28 +181,12 @@ namespace Game.Tutorial
 
         private void EnsureReferences()
         {
-            _eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>();
-            ResolveSaveLoadService();
-            _player ??= ServiceContainer.Instance.TryGet<PlayerControllerRefactored>();
-            _playerCamera ??= ServiceContainer.Instance.TryGet<CinemachinePlayerCamera>();
-        }
-
-        private void ResolveSaveLoadService()
-        {
-            if (_saveLoadService != null)
-            {
-                return;
-            }
-
-            _saveLoadService = ServiceContainer.Instance.TryGet<SaveLoadService>()
-                ?? SaveLoadService.Instance
-                ?? FindFirstObjectByType<SaveLoadService>();
-
-            if (_saveLoadService == null && debugLogs && !_warnedMissingSaveLoadService)
-            {
-                _warnedMissingSaveLoadService = true;
-                Debug.LogWarning("[TutorialManager] SaveLoadService not found. Tutorial will run with session-only progress.");
-            }
+            // Dependencies are injected via Initialize(); these are no-op guards
+            // in case Initialize() was not called (e.g. in tests or legacy scenes).
+            _eventBus        ??= ServiceContainer.Instance.TryGet<IEventBus>();
+            _saveLoadService ??= SaveLoadService.Instance ?? FindFirstObjectByType<SaveLoadService>();
+            _player          ??= ServiceContainer.Instance.TryGet<PlayerControllerRefactored>();
+            _playerCamera    ??= ServiceContainer.Instance.TryGet<CinemachinePlayerCamera>();
         }
 
         private void EnsureSaveData()

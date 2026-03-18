@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Apple
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
   itemName: Apple
-  description: 
+  description: Uhmmm Tasty!!!
   icon: {fileID: 21300000, guid: 9ea00ca880ed1cb45af88f07df34b924, type: 3}
   maxStackSize: 1
   itemType: 1

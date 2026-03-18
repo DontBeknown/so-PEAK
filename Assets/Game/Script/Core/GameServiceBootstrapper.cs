@@ -75,6 +75,7 @@ namespace Game.Core
         private void FindAndRegisterServices()
         {
             var container = ServiceContainer.Instance;
+            var eventBus  = container.Get<IEventBus>(); // Already registered above
             
             // Find and register player controller
             var player = FindFirstObjectByType<PlayerControllerRefactored>();
@@ -94,8 +95,6 @@ namespace Game.Core
                     Debug.Log("[GameServiceBootstrapper] PlayerStats found and registered");
             }
             
-            // REFACTORED: InventoryManager services now registered by InventoryManagerRefactored.RegisterServices()
-            // Find and ensure InventoryManagerRefactored initializes
             var inventoryRefactored = FindFirstObjectByType<InventoryManagerRefactored>();
             if (inventoryRefactored != null && enableDebugLogs)
             {
@@ -207,6 +206,10 @@ namespace Game.Core
             {
                 container.Register<IDayNightCycleService>(dayNightManager);
                 container.Register<DayNightCycleManager>(dayNightManager);
+                // SoundService registered below; pass null here and let lazy-guard in
+                // PlayAmbientForCurrentTime() handle the case it wasn't found yet.
+                // We'll re-wire after SoundService is registered.
+                dayNightManager.Initialize(eventBus, null);
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] DayNightCycleManager found and registered");
             }
@@ -262,6 +265,7 @@ namespace Game.Core
             {
                 container.Register<ISaveLoadService>(saveLoadService);
                 container.Register(saveLoadService);
+                saveLoadService.Initialize();
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] SaveLoadService found and registered");
             }
@@ -272,6 +276,7 @@ namespace Game.Core
             {
                 container.Register<ICollectableManager>(cm);
                 container.Register(cm);
+                cm.Initialize(eventBus);
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] CollectableManager found and registered");
             }
@@ -282,11 +287,12 @@ namespace Game.Core
             {
                 container.Register<IDialogManager>(dm);
                 container.Register(dm);
+                dm.Initialize(eventBus);
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] DialogManager found and registered");
             }
 
-            // Find and register SoundService
+            // Find and register SoundService first — DayNightCycleManager needs a reference to it
             var soundService = FindFirstObjectByType<SoundService>();
             if (soundService != null)
             {
@@ -296,22 +302,35 @@ namespace Game.Core
                     Debug.Log("[GameServiceBootstrapper] SoundService found and registered");
             }
 
+            // Re-init DayNightCycleManager now that SoundService is available
+            if (dayNightManager != null)
+            {
+                dayNightManager.Initialize(eventBus, soundService);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] DayNightCycleManager re-initialized with SoundService");
+            }
+
             // Find and register TutorialManager
             var tm = tutorialManager ?? FindFirstObjectByType<TutorialManager>();
             if (tm != null)
             {
                 container.Register<ITutorialManager>(tm);
                 container.Register(tm);
+
+                var playerController = container.TryGet<PlayerControllerRefactored>();
+                var playerCamera = container.TryGet<CinemachinePlayerCamera>();
+                tm.Initialize(eventBus, saveLoadService, playerController, playerCamera);
+
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] TutorialManager found and registered");
             }
-
         }
         
         private void RegisterManualServices()
         {
             var container = ServiceContainer.Instance;
-            
+            var eventBus  = container.Get<IEventBus>();
+
             if (playerController != null)
             {
                 container.Register(playerController);
@@ -365,6 +384,7 @@ namespace Game.Core
             {
                 container.Register<ICollectableManager>(collectableManager);
                 container.Register(collectableManager);
+                collectableManager.Initialize(eventBus);
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] CollectableManager manually registered");
             }
@@ -373,6 +393,7 @@ namespace Game.Core
             {
                 container.Register<IDialogManager>(dialogManager);
                 container.Register(dialogManager);
+                dialogManager.Initialize(eventBus);
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] DialogManager manually registered");
             }
@@ -381,6 +402,12 @@ namespace Game.Core
             {
                 container.Register<ITutorialManager>(tutorialManager);
                 container.Register(tutorialManager);
+
+                var player = container.TryGet<PlayerControllerRefactored>();
+                var camera = container.TryGet<CinemachinePlayerCamera>();
+                var svc    = container.TryGet<SaveLoadService>();
+                tutorialManager.Initialize(eventBus, svc, player, camera);
+
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] TutorialManager manually registered");
             }

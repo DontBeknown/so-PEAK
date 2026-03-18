@@ -191,7 +191,7 @@ public class TooltipUI : MonoBehaviour
         EquipmentItem equipItem = item as EquipmentItem;
         if (equipItem != null)
         {
-            return $"<color=#FFD700>Equipment ({equipItem.EquipmentSlot})</color>";
+            return $"<color=#9A5900>Equipment ({equipItem.EquipmentSlot})</color>";
         }
 
         return item.isConsumable ? "<color=#4CAF50>Consumable</color>" : "<color=#888888>Item</color>";

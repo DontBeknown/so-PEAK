@@ -161,13 +161,15 @@ namespace Game.Environment.DayNight
             }
         }
         
+        /// <summary>Called by GameServiceBootstrapper after registration.</summary>
+        public void Initialize(IEventBus eventBus, SoundService soundService)
+        {
+            _eventBus     = eventBus;
+            _soundService = soundService;
+        }
+
         private void Start()
         {
-            // Resolve dependencies
-            _eventBus = ServiceContainer.Instance.Get<IEventBus>();
-            // Note: SoundService is NOT resolved here — GameServiceBootstrapper may not have
-            // registered it yet. It is lazily resolved in PlayAmbientForCurrentTime().
-
             // Validate references
             if (directionalLight == null)
             {
@@ -267,11 +269,6 @@ namespace Game.Environment.DayNight
 
         public void PlayAmbientForCurrentTime()
         {
-            // Lazy-resolve: SoundService may not be registered in ServiceContainer
-            // until after DayNightCycleManager.Start() runs.
-            if (_soundService == null)
-                _soundService = ServiceContainer.Instance.TryGet<SoundService>();
-
             if (_soundService == null) return;
 
             string clipId = config.GetAmbientClipId(_currentTimeOfDay);

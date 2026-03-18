@@ -68,6 +68,12 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         
         EnsureDirectoriesExist();
     }
+
+    /// <summary>Called by GameServiceBootstrapper after registration.</summary>
+    public void Initialize()
+    {
+        // Hook for future dependency injection (e.g. event bus for save notifications)
+    }
     
     private void Update()
     {

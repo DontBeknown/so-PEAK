@@ -10,9 +10,10 @@ namespace Game.Collectable
         private readonly HashSet<string> _unlocked = new HashSet<string>();
         private IEventBus _eventBus;
 
-        private void Awake()
+        /// <summary>Called by GameServiceBootstrapper after registration.</summary>
+        public void Initialize(IEventBus eventBus)
         {
-            _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+            _eventBus = eventBus;
         }
 
         public bool IsUnlocked(string collectableId)
@@ -28,7 +29,6 @@ namespace Game.Collectable
             if (!_unlocked.Add(collectable.id))
                 return;
 
-            _eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>();
             _eventBus?.Publish(new CollectableUnlockedEvent(collectable));
         }
 
