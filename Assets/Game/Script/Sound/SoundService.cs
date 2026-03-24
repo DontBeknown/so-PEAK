@@ -55,6 +55,8 @@ namespace Game.Sound
         private AudioMixerGroup _uiGroup;
         private AudioMixerGroup _musicGroup;
         private AudioMixerGroup _ambientGroup;
+        
+        private IEventBus _eventBus;
 
         private void Awake()
         {
@@ -71,8 +73,8 @@ namespace Game.Sound
             // overwritten. Defer by one frame to guarantee our values win.
             StartCoroutine(ApplyDefaultVolumesNextFrame());
 
-            var eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
-            eventBus?.Subscribe<PlayerDeathEvent>(OnPlayerDeath);
+            _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+            _eventBus?.Subscribe<PlayerDeathEvent>(OnPlayerDeath);
         }
 
         private IEnumerator ApplyDefaultVolumesNextFrame()
@@ -86,8 +88,7 @@ namespace Game.Sound
 
         private void OnDestroy()
         {
-            var eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
-            eventBus?.Unsubscribe<PlayerDeathEvent>(OnPlayerDeath);
+            _eventBus?.Unsubscribe<PlayerDeathEvent>(OnPlayerDeath);
         }
 
         private void OnPlayerDeath(PlayerDeathEvent _) => StopAllSFX();

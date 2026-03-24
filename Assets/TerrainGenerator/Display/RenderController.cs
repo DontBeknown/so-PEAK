@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using Game.Interaction;
 
 public class RenderController : MonoBehaviour
 {
@@ -170,10 +171,32 @@ public class RenderController : MonoBehaviour
             foreach (PlacedObject objData in objectsToSpawn)
             {
                 if (objectLimit >= chunkObjectLimiter) break;
+                if (SpawnedObjectStateRegistry.IsDestroyed(objData.SpawnId)) continue;
 
                 GameObject spawnedObj = Instantiate(objData.Prefab, objData.Position, objData.Rotation);
                 spawnedObj.transform.localScale = objData.Scale;
                 spawnedObj.transform.parent = chunkObj.transform;
+
+                if (!string.IsNullOrEmpty(objData.SpawnId))
+                {
+                    var behaviours = spawnedObj.GetComponentsInChildren<MonoBehaviour>(true);
+                    for (int i = 0; i < behaviours.Length; i++)
+                    {
+                        var behaviour = behaviours[i];
+                        if (behaviour is not IInteractable)
+                        {
+                            continue;
+                        }
+
+                        var spawnedState = behaviour.GetComponent<SpawnedObjectState>();
+                        if (spawnedState == null)
+                        {
+                            spawnedState = behaviour.gameObject.AddComponent<SpawnedObjectState>();
+                        }
+
+                        spawnedState.Initialize(objData.SpawnId);
+                    }
+                }
 
                 objectLimit++;
             }

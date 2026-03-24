@@ -106,6 +106,9 @@ public class WorldStateSaveData
     // Resources (gathered berry bushes, ore nodes, etc.)
     public List<ResourceNodeSaveData> resourceNodes;
 
+    // Runtime-generated spawned objects
+    public List<SpawnedObjectStateSaveData> spawnedObjectStates;
+
     // Collectables/Dialog
     public List<string> unlockedCollectables = new List<string>();
     public List<string> triggeredDialogs = new List<string>();
@@ -126,6 +129,13 @@ public class ResourceNodeSaveData
     public bool isDepleted;
     public float regrowthTimer;
     public int remainingResources;
+}
+
+[Serializable]
+public class SpawnedObjectStateSaveData
+{
+    public string spawnId;
+    public bool isDestroyed;
 }
 
 [Serializable]

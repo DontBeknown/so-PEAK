@@ -55,6 +55,8 @@ public class WorldDataManager : MonoBehaviour
         Debug.Log($"[WorldDataManager] Generating {currentLevel} Data...");
 
         LoadSeed();
+
+        string worldGuid = SaveLoadService.Instance?.CurrentWorldSave?.worldGuid;
         // 1. Find the profile (Case-Insensitive for safety)
         WorldLevelProfile profile = levelProfiles.Find(p =>
             p.levelName.Equals(currentLevel.ToString(), System.StringComparison.OrdinalIgnoreCase));
@@ -109,7 +111,7 @@ public class WorldDataManager : MonoBehaviour
         masterSpawnGrid = new Dictionary<Vector2Int, List<PlacedObject>>();
 
         if (profile.lighthouseConfig != null)
-            SpawnUniqueLighthouse(chunkSize - 1, profile);
+            SpawnUniqueLighthouse(chunkSize - 1, profile, worldGuid);
 
         for (int i = 0; i < profile.spawnConfigs.Count; i++)
         {
@@ -129,13 +131,15 @@ public class WorldDataManager : MonoBehaviour
             }
             UniversalSpawner.GenerateObjectData(
                 config, globalHeightMap, expandedRoadMask, mapToHandOver,
-                activeGen.meshHeightMultiplier, chunkSize - 1, activeLevelSeed + i, ref masterSpawnGrid
+                activeGen.meshHeightMultiplier, chunkSize - 1, activeLevelSeed + i,
+                worldGuid, (int)currentLevel, i,
+                ref masterSpawnGrid
             );
         }
         Debug.Log("[WorldDataManager] Generation Complete!");
     }
 
-    private void SpawnUniqueLighthouse(int chunkSize, WorldLevelProfile profile)
+    private void SpawnUniqueLighthouse(int chunkSize, WorldLevelProfile profile, string worldGuid)
     {
         Vector2Int peakCoord = profile.generator.mainPeak;
         float height = globalHeightMap[peakCoord.x, peakCoord.y] * profile.generator.meshHeightMultiplier;
@@ -145,8 +149,17 @@ public class WorldDataManager : MonoBehaviour
         Vector3 finalPos = new Vector3(peakCoord.x, height, peakCoord.y) + (rotation * Vector3.Scale(profile.lighthouseConfig.PositionOffset, scale));
 
         Vector2Int chunkCoord = new Vector2Int(Mathf.FloorToInt((float)peakCoord.x / chunkSize), Mathf.FloorToInt((float)peakCoord.y / chunkSize));
+        string safeWorldGuid = string.IsNullOrEmpty(worldGuid) ? "unknown-world" : worldGuid;
+        string lighthouseSpawnId = $"{safeWorldGuid}|L{(int)currentLevel}|Lighthouse|X:{peakCoord.x}|Z:{peakCoord.y}";
 
-        PlacedObject landmark = new PlacedObject { Prefab = profile.lighthouseConfig.Prefab, Position = finalPos, Rotation = rotation, Scale = scale };
+        PlacedObject landmark = new PlacedObject
+        {
+            Prefab = profile.lighthouseConfig.Prefab,
+            Position = finalPos,
+            Rotation = rotation,
+            Scale = scale,
+            SpawnId = lighthouseSpawnId
+        };
 
         if (!masterSpawnGrid.ContainsKey(chunkCoord)) masterSpawnGrid.Add(chunkCoord, new List<PlacedObject>());
         masterSpawnGrid[chunkCoord].Add(landmark);

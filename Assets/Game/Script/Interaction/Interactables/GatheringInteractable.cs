@@ -293,10 +293,12 @@ namespace Game.Interaction
                 isDepleted = true;
                 if (destroyOnUse)
                 {
+                    PersistSpawnDestroyedState();
                     DestroyResource();
                 }
                 else
                 {
+                    PersistSpawnDestroyedState();
                     UpdateDepletedVisual();
                 }
             }
@@ -401,6 +403,12 @@ namespace Game.Interaction
                 scaleAnim.PlayAndDestroy();
             else
                 Destroy(gameObject, 0.5f);
+        }
+
+        private void PersistSpawnDestroyedState()
+        {
+            var spawnedState = GetComponent<SpawnedObjectState>();
+            spawnedState?.MarkDestroyed();
         }
 
         private void UpdateDepletedVisual()

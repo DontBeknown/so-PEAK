@@ -18148,7 +18148,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Tutorial.TutorialManager
   tutorialResourcePath: Tutorial/TutorialData
-  debugLogs: 1
+  debugLogs: 0
 --- !u!1 &8490189945947343682
 GameObject:
   m_ObjectHideFlags: 0

@@ -140,6 +140,7 @@ namespace Game.Interaction
                 if (usesExhausted)
                 {
                     hasBeenCollected = true;
+                    PersistSpawnDestroyedState();
 
                     if (destroyOnPickup)
                     {
@@ -180,6 +181,12 @@ namespace Game.Interaction
         {
             // ItemAddedEvent is published by InventoryService on successful add.
             // ItemNotificationUI listens to that event and shows the toast automatically.
+        }
+
+        private void PersistSpawnDestroyedState()
+        {
+            var spawnedState = GetComponent<SpawnedObjectState>();
+            spawnedState?.MarkDestroyed();
         }
 
         private void OnValidate()

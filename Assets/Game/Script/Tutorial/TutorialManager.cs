@@ -523,11 +523,11 @@ namespace Game.Tutorial
                 return;
             }
 
-            Debug.Log($"[TutorialManager] Hold interact completed event received for {evt.Source.name}");
+            //Debug.Log($"[TutorialManager] Hold interact completed event received for {evt.Source.name}");
             var step = GetCurrentStep();
             if (step != null && (step.completionType == TutorialStepType.PressInteract || step.completionType == TutorialStepType.HoldInteract))
             {
-                Debug.Log($"[TutorialManager] Hold interact completed event received and Step is valid for completion. Completing step {CurrentStepIndex}.");
+                //Debug.Log($"[TutorialManager] Hold interact completed event received and Step is valid for completion. Completing step {CurrentStepIndex}.");
                 CompleteCurrentStep();
             }
         }

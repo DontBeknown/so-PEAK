@@ -11,6 +11,9 @@ public static class UniversalSpawner
         float terrainHeightMultiplier,
         int chunkSize,
         int seed,
+        string worldGuid,
+        int levelId,
+        int configIndex,
         ref Dictionary<Vector2Int, List<PlacedObject>> spatialGrid)
     {
         // Set the seed so we get the exact same random results every time
@@ -124,6 +127,7 @@ public static class UniversalSpawner
                 );
 
                 Vector3 finalPlacedPos = testPos + (rot * scaledOffset);
+                string spawnId = BuildSpawnId(worldGuid, levelId, configIndex, config, x, z, finalPlacedPos.x, finalPlacedPos.z);
 
                 PlacedObject newObj = new PlacedObject
                 {
@@ -132,6 +136,7 @@ public static class UniversalSpawner
                     Rotation = rot,
                     Scale = finalScale,
                     BoundingRadius = scaledRadius,
+                    SpawnId = spawnId,
                     IsTerrainTree = config.IsTerrainTree,
                     TreePrototypeIndex = config.TreePrototypeIndex
                 };
@@ -235,5 +240,23 @@ public static class UniversalSpawner
         float h1 = Mathf.Lerp(h01, h11, tx);
 
         return Mathf.Lerp(h0, h1, tz);
+    }
+
+    private static string BuildSpawnId(
+        string worldGuid,
+        int levelId,
+        int configIndex,
+        SpawnConfig config,
+        int sampleX,
+        int sampleZ,
+        float finalX,
+        float finalZ)
+    {
+        string safeWorldGuid = string.IsNullOrEmpty(worldGuid) ? "unknown-world" : worldGuid;
+        string prefabName = config.Prefab != null ? config.Prefab.name : "missing-prefab";
+        int quantizedX = Mathf.RoundToInt(finalX * 100f);
+        int quantizedZ = Mathf.RoundToInt(finalZ * 100f);
+
+        return $"{safeWorldGuid}|L{levelId}|C{configIndex}|P:{prefabName}|SX:{sampleX}|SZ:{sampleZ}|QX:{quantizedX}|QZ:{quantizedZ}";
     }
 }

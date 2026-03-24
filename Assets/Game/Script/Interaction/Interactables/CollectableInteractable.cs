@@ -72,8 +72,15 @@ namespace Game.Interaction
 
             if (destroyOnInteract)
             {
+                PersistSpawnDestroyedState();
                 Destroy(gameObject);
             }
+        }
+
+        private void PersistSpawnDestroyedState()
+        {
+            var spawnedState = GetComponent<SpawnedObjectState>();
+            spawnedState?.MarkDestroyed();
         }
     }
 }

@@ -108,6 +108,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         };
         
         currentWorldSave = newWorld;
+        SpawnedObjectStateRegistry.RefreshFromCurrentSave();
         SaveWorld(newWorld);
         UpdateMetadata(newWorld);
         
@@ -121,6 +122,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         try
         {
             saveData.lastPlayedDate = DateTime.Now;
+            SpawnedObjectStateRegistry.ExportToSave(saveData);
             
             string filePath = GetSaveFilePath(saveData.worldGuid);
             string json = JsonUtility.ToJson(saveData, true);
@@ -184,7 +186,8 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             }
             
             currentWorldSave = saveData;
-            HydrateWorldServices(saveData);
+            SpawnedObjectStateRegistry.ImportFromSave(saveData);
+            //HydrateWorldServices(saveData);
             OnWorldLoaded?.Invoke(saveData);
             
             if (enableDebug) Debug.Log($"Loaded world: {saveData.worldName}");
@@ -474,6 +477,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             currentWorldSave.worldState = CreateDefaultWorldState();
 
         currentWorldSave.worldState.level++;
+        SpawnedObjectStateRegistry.ClearAllDestroyed();
         SaveWorld(currentWorldSave);
 
         if (enableDebug) Debug.Log($"[SaveLoadService] Progressed to level {currentWorldSave.worldState.level}");
@@ -718,6 +722,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             level = level,
             interactableStates = new List<InteractableStateSaveData>(),
             resourceNodes = new List<ResourceNodeSaveData>(),
+            spawnedObjectStates = new List<SpawnedObjectStateSaveData>(),
             unlockedCollectables = new List<string>(),
             triggeredDialogs = new List<string>()
         };
@@ -732,6 +737,8 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
 
         if (saveData.worldState == null)
             return;
+
+        saveData.worldState.spawnedObjectStates ??= new List<SpawnedObjectStateSaveData>();
 
         var container = ServiceContainer.Instance;
 

@@ -4,6 +4,8 @@ using UnityEditor;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System;
+using System.Text;
 using Game.Menu;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
@@ -24,6 +26,10 @@ public class SaveSystemEditorWindow : EditorWindow
     private string seed2 = "";
     private string seed3 = "";
     private bool showCreateWorld = false;
+
+    // Destroyed spawned-object debug cache (worldGuid -> destroyed count)
+    private readonly Dictionary<string, int> destroyedSpawnedCountByWorld = new Dictionary<string, int>();
+    private const int SpawnIdPreviewLimit = 20;
     
     [MenuItem("Tools/Save System Manager")]
     public static void ShowWindow()
@@ -51,10 +57,10 @@ public class SaveSystemEditorWindow : EditorWindow
         {
             seedConfig = AssetDatabase.LoadAssetAtPath<SeedConfig>(
                 "Assets/Game/ScriptableObject/World/SeedConfig.asset");
-        }
+       }
         catch (System.Exception e)
         {
-            // Debug.LogWarning($"Failed to load SeedConfig: {e.Message}");
+            Debug.LogWarning($"Failed to load SeedConfig: {e.Message}");
         }
         
         RefreshWorldList();
@@ -272,6 +278,11 @@ public class SaveSystemEditorWindow : EditorWindow
                 DeleteWorld(world.worldGuid);
             }
         }
+
+        if (GUILayout.Button("Debug Destroyed", GUILayout.Width(120)))
+        {
+            ShowDestroyedSpawnedDebug(world);
+        }
         
         EditorGUILayout.EndHorizontal();
         
@@ -280,6 +291,13 @@ public class SaveSystemEditorWindow : EditorWindow
         EditorGUILayout.LabelField($"Last Played: {world.lastPlayedDate:yyyy-MM-dd HH:mm}", EditorStyles.miniLabel);
         EditorGUILayout.LabelField($"Play Time: {FormatPlayTime(world.totalPlayTime)}", EditorStyles.miniLabel);
         EditorGUILayout.LabelField($"Health: {world.playerHealth:F0}", EditorStyles.miniLabel);
+
+        int destroyedCount = 0;
+        if (!string.IsNullOrEmpty(world.worldGuid))
+        {
+            destroyedSpawnedCountByWorld.TryGetValue(world.worldGuid, out destroyedCount);
+        }
+        EditorGUILayout.LabelField($"Destroyed Spawned: {destroyedCount}", EditorStyles.miniLabel);
         
         EditorGUILayout.EndVertical();
         EditorGUILayout.Space(5);
@@ -308,6 +326,188 @@ public class SaveSystemEditorWindow : EditorWindow
                 allWorlds = new List<SaveMetadata>();
             }
         }
+
+        RefreshDestroyedSpawnedCounts();
+    }
+
+    private void RefreshDestroyedSpawnedCounts()
+    {
+        destroyedSpawnedCountByWorld.Clear();
+
+        if (allWorlds == null || allWorlds.Count == 0)
+        {
+            return;
+        }
+
+        foreach (SaveMetadata world in allWorlds)
+        {
+            if (world == null || string.IsNullOrEmpty(world.worldGuid))
+            {
+                continue;
+            }
+
+            if (TryLoadDestroyedSpawnIds(world.worldGuid, out List<string> spawnIds, out _))
+            {
+                destroyedSpawnedCountByWorld[world.worldGuid] = spawnIds.Count;
+            }
+            else
+            {
+                destroyedSpawnedCountByWorld[world.worldGuid] = 0;
+            }
+        }
+    }
+
+    private void ShowDestroyedSpawnedDebug(SaveMetadata world)
+    {
+        if (world == null || string.IsNullOrEmpty(world.worldGuid))
+        {
+            EditorUtility.DisplayDialog("Debug Destroyed", "World data is invalid or missing world GUID.", "OK");
+            return;
+        }
+
+        if (!TryLoadDestroyedSpawnIds(world.worldGuid, out List<string> spawnIds, out string error))
+        {
+            EditorUtility.DisplayDialog(
+                "Debug Destroyed",
+                $"Failed to read destroyed spawned-object data for '{world.worldName}'.\n\nReason: {error}",
+                "OK");
+            return;
+        }
+
+        var preview = spawnIds.Take(SpawnIdPreviewLimit).ToList();
+        string previewText = preview.Count > 0 ? string.Join("\n", preview) : "(none)";
+        string truncatedText = spawnIds.Count > SpawnIdPreviewLimit
+            ? $"\n\n...and {spawnIds.Count - SpawnIdPreviewLimit} more. Check Console for full list."
+            : string.Empty;
+
+        EditorUtility.DisplayDialog(
+            "Debug Destroyed",
+            $"World: {world.worldName}\nGUID: {world.worldGuid}\nDestroyed Count: {spawnIds.Count}\n\nPreview:\n{previewText}{truncatedText}",
+            "OK");
+
+        var logBuilder = new StringBuilder();
+        logBuilder.AppendLine($"[SaveSystemEditor] Destroyed SpawnIds for world '{world.worldName}' ({world.worldGuid})");
+
+        if (spawnIds.Count == 0)
+        {
+            logBuilder.AppendLine("(none)");
+        }
+        else
+        {
+            for (int i = 0; i < spawnIds.Count; i++)
+            {
+                logBuilder.Append(i + 1);
+                logBuilder.Append(". ");
+                logBuilder.AppendLine(spawnIds[i]);
+            }
+        }
+
+        Debug.Log(logBuilder.ToString());
+    }
+
+    private bool TryLoadDestroyedSpawnIds(string worldGuid, out List<string> destroyedSpawnIds, out string error)
+    {
+        destroyedSpawnIds = new List<string>();
+        error = string.Empty;
+
+        if (string.IsNullOrEmpty(worldGuid))
+        {
+            error = "World GUID is empty.";
+            return false;
+        }
+
+        string filePath = GetSaveFilePath(worldGuid);
+        if (!File.Exists(filePath))
+        {
+            error = $"Save file not found at: {filePath}";
+            return false;
+        }
+
+        string rawText;
+        try
+        {
+            rawText = File.ReadAllText(filePath);
+        }
+        catch (Exception e)
+        {
+            error = $"Failed to read save file: {e.Message}";
+            return false;
+        }
+
+        if (TryParseWorldSaveData(rawText, out WorldSaveData saveData))
+        {
+            destroyedSpawnIds = ExtractDestroyedSpawnIds(saveData);
+            return true;
+        }
+
+        if (TryDecodeBase64ToJson(rawText, out string decodedJson) && TryParseWorldSaveData(decodedJson, out saveData))
+        {
+            destroyedSpawnIds = ExtractDestroyedSpawnIds(saveData);
+            return true;
+        }
+
+        error = "Save data could not be parsed as raw JSON or Base64-encoded JSON.";
+        return false;
+    }
+
+    private string GetSaveFilePath(string worldGuid)
+    {
+        return Path.Combine(Application.persistentDataPath, "Saves", $"{worldGuid}.sav");
+    }
+
+    private bool TryParseWorldSaveData(string json, out WorldSaveData saveData)
+    {
+        saveData = null;
+
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return false;
+        }
+
+        try
+        {
+            saveData = JsonUtility.FromJson<WorldSaveData>(json);
+            return saveData != null;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private bool TryDecodeBase64ToJson(string encodedText, out string decodedJson)
+    {
+        decodedJson = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(encodedText))
+        {
+            return false;
+        }
+
+        try
+        {
+            byte[] bytes = Convert.FromBase64String(encodedText);
+            decodedJson = Encoding.UTF8.GetString(bytes);
+            return !string.IsNullOrWhiteSpace(decodedJson);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private List<string> ExtractDestroyedSpawnIds(WorldSaveData saveData)
+    {
+        if (saveData?.worldState?.spawnedObjectStates == null)
+        {
+            return new List<string>();
+        }
+
+        return saveData.worldState.spawnedObjectStates
+            .Where(state => state != null && state.isDestroyed && !string.IsNullOrEmpty(state.spawnId))
+            .Select(state => state.spawnId)
+            .Distinct()
+            .ToList();
     }
 
     private void RefreshWorldSelectionUI()

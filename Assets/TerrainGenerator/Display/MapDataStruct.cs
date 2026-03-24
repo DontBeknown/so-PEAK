@@ -35,6 +35,7 @@ public struct PlacedObject
     public Quaternion Rotation;
     public Vector3 Scale;
     public float BoundingRadius;
+    public string SpawnId;
 
     // --- NEW: Pass the flags to the final object ---
     public bool IsTerrainTree;
