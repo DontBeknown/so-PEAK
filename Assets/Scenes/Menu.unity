@@ -583,6 +583,10 @@ MonoBehaviour:
   pressDuration: 0.1
   hoverEase: 27
   pressEase: 6
+  hoverSoundId: ui_hover
+  hoverVolumeScale: 0.3
+  clickSoundId: ui_click
+  clickVolumeScale: 0.3
 --- !u!114 &36355736
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1517,6 +1521,10 @@ MonoBehaviour:
   pressDuration: 0.1
   hoverEase: 27
   pressEase: 6
+  hoverSoundId: ui_hover
+  hoverVolumeScale: 0.3
+  clickSoundId: ui_click
+  clickVolumeScale: 0.3
 --- !u!1 &160234074
 GameObject:
   m_ObjectHideFlags: 0
@@ -1659,6 +1667,10 @@ MonoBehaviour:
   pressDuration: 0.1
   hoverEase: 27
   pressEase: 6
+  hoverSoundId: ui_hover
+  hoverVolumeScale: 0.3
+  clickSoundId: ui_click
+  clickVolumeScale: 0.3
 --- !u!1 &173342797
 GameObject:
   m_ObjectHideFlags: 0
@@ -2426,6 +2438,10 @@ MonoBehaviour:
   pressDuration: 0.1
   hoverEase: 27
   pressEase: 6
+  hoverSoundId: ui_hover
+  hoverVolumeScale: 0.3
+  clickSoundId: ui_click
+  clickVolumeScale: 0.3
 --- !u!114 &332829929
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6122,6 +6138,10 @@ MonoBehaviour:
   pressDuration: 0.1
   hoverEase: 27
   pressEase: 6
+  hoverSoundId: ui_hover
+  hoverVolumeScale: 0.3
+  clickSoundId: ui_click
+  clickVolumeScale: 0.3
 --- !u!114 &868821097
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6313,6 +6333,10 @@ MonoBehaviour:
   pressDuration: 0.1
   hoverEase: 27
   pressEase: 6
+  hoverSoundId: ui_hover
+  hoverVolumeScale: 0.3
+  clickSoundId: ui_click
+  clickVolumeScale: 0.3
 --- !u!114 &922417254
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6453,6 +6477,10 @@ MonoBehaviour:
   pressDuration: 0.1
   hoverEase: 27
   pressEase: 6
+  hoverSoundId: ui_hover
+  hoverVolumeScale: 0.3
+  clickSoundId: ui_click
+  clickVolumeScale: 0.3
 --- !u!114 &945042722
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7518,6 +7546,10 @@ MonoBehaviour:
   pressDuration: 0.1
   hoverEase: 27
   pressEase: 6
+  hoverSoundId: ui_hover
+  hoverVolumeScale: 0.3
+  clickSoundId: ui_click
+  clickVolumeScale: 0.3
 --- !u!1 &1145590801
 GameObject:
   m_ObjectHideFlags: 0

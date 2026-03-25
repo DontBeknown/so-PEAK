@@ -324,6 +324,16 @@ namespace Game.Core
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] TutorialManager found and registered");
             }
+
+            // Find and register UIServiceProvider
+            var uiServiceProvider = FindFirstObjectByType<UIServiceProvider>();
+            if (uiServiceProvider != null)
+            {
+                container.Register(uiServiceProvider);
+                uiServiceProvider.EnsureInitialized();
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] UIServiceProvider found and registered");
+            }
         }
         
         private void RegisterManualServices()

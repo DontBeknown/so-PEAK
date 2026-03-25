@@ -42,7 +42,8 @@ namespace Game.UI.Dialog
         {
             _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
             _dialogManager = ServiceContainer.Instance.TryGet<IDialogManager>();
-            _uiServiceProvider = ServiceContainer.Instance.TryGet<UIServiceProvider>();
+            
+            _uiServiceProvider = FindFirstObjectByType<UIServiceProvider>();
 
             _eventBus?.Subscribe<DialogStartedEvent>(OnDialogStarted);
             _eventBus?.Subscribe<DialogLineChangedEvent>(OnDialogLineChanged);

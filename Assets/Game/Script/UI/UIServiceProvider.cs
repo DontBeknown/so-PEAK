@@ -37,9 +37,6 @@ namespace Game.UI
                 return;
             }
             _instance = this;
-
-            // Register self in service container
-            ServiceContainer.Instance.Register(this);
             
             // Get player from service container
             if (playerController == null)

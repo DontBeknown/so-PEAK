@@ -231,6 +231,9 @@ public class RenderController : MonoBehaviour
 
         // Update all system references to the new player
         UpdatePlayerReferences(spawnedPlayer);
+
+        // Signal that player spawn sequence is complete
+        PlayerSpawnComplete = true;
     }
 
     private void UpdatePlayerReferences(Transform newPlayer)

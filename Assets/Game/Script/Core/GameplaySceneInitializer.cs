@@ -123,18 +123,22 @@ public class GameplaySceneInitializer : MonoBehaviour
             Debug.LogError("No world data to initialize!");
         }
 
+        if (enableDebug) Debug.Log("Starting tutorial if needed...");
         TryStartTutorial(resolvedSaveData);
     }
 
     private void TryStartTutorial(WorldSaveData saveData)
     {
+        Debug.Log($"[GameplaySceneInitializer] Checking tutorial status to determine if tutorial should start...");
         if (saveData == null)
         {
+            Debug.LogWarning("No save data available to check tutorial status. Skipping tutorial start.");
             saveData = saveLoadService.CurrentWorldSave;
         }
 
         if (saveData == null)
         {
+            Debug.LogError("Still no save data available to check tutorial status. Cannot start tutorial.");
             return;
         }
 
@@ -142,6 +146,7 @@ public class GameplaySceneInitializer : MonoBehaviour
 
         if (saveData.tutorial.isCompleted)
         {
+            Debug.Log("Tutorial already completed according to save data. Skipping tutorial start.");
             return;
         }
 
@@ -233,19 +238,6 @@ public class GameplaySceneInitializer : MonoBehaviour
     
     private void RestoreResourceNodes(WorldStateSaveData worldState)
     {
-        // TODO: Implement resource node restoration (requires GetGuid() and RestoreState() methods)
-        // if (worldState?.resourceNodes == null) return;
-        // 
-        // // Find all resource nodes in scene and restore their state
-        // var resourceNodes = FindObjectsByType<ResourceCollectorInteractable>(FindObjectsSortMode.None);
-        // 
-        // foreach (var node in resourceNodes)
-        // {
-        //     var savedNode = worldState.resourceNodes.Find(n => n.nodeGuid == node.GetGuid());
-        //     if (savedNode != null)
-        //     {
-        //         node.RestoreState(savedNode.isDepleted, savedNode.remainingResources);
-        //     }
-        // }
+
     }
 }

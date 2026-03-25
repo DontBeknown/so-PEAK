@@ -2882,7 +2882,7 @@ MonoBehaviour:
   worldPersistence: {fileID: 11400000, guid: 85be4fbf52e94dd419bde035e2a662f1, type: 2}
   playerPrefab: {fileID: 0}
   saveLoadService: {fileID: 875518560}
-  enableDebug: 0
+  enableDebug: 1
 --- !u!1 &1573715697
 GameObject:
   m_ObjectHideFlags: 0

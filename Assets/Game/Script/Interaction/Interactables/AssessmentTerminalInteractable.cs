@@ -59,8 +59,6 @@ namespace Game.Interaction
         }
         private void Start()
         {
-             // Get UIServiceProvider from ServiceContainer
-            uiServiceProvider = ServiceContainer.Instance.TryGet<UIServiceProvider>();
             _dayNightService = ServiceContainer.Instance.TryGet<IDayNightCycleService>();
             _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
         }
@@ -149,9 +147,13 @@ namespace Game.Interaction
         {
             if (uiServiceProvider == null)
             {
-                Debug.LogError("[AssessmentTerminalInteractable] UIServiceProvider not found!");
-                UnlockPlayer();
-                return;
+                uiServiceProvider = ServiceContainer.Instance.TryGet<UIServiceProvider>();
+                if (uiServiceProvider == null)
+                {
+                     Debug.LogError("[AssessmentTerminalInteractable] UIServiceProvider not found!");
+                    UnlockPlayer();
+                    return;
+                }
             }
             
             // Open PlayerStatsTracker panel via UIServiceProvider (SOLID: Facade pattern)

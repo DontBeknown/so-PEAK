@@ -54,12 +54,13 @@ namespace Game.Interaction
 
             if(collectableItem.type == CollectableType.TextDocument)
             {
-                // Open inventory and switch to collectables tab so player sees the newly unlocked entry.
+                // Open through panel controller so input/cursor state is updated.
                 var uiService = ServiceContainer.Instance.TryGet<UIServiceProvider>();
                 uiService?.OpenPanel("Inventory");
 
+                // Switch silently to avoid playing a second tab sound.
                 var tabbedInventory = ServiceContainer.Instance.TryGet<TabbedInventoryUI>();
-                tabbedInventory?.SwitchTab(TabbedInventoryUI.TabType.Collectables);
+                tabbedInventory?.SwitchTab(TabbedInventoryUI.TabType.Collectables, playSound: false);
 
                 var eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
                 eventBus?.Publish(new CollectableHubFocusRequestedEvent(collectableItem.id));

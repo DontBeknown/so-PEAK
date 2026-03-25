@@ -187,7 +187,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             
             currentWorldSave = saveData;
             SpawnedObjectStateRegistry.ImportFromSave(saveData);
-            //HydrateWorldServices(saveData);
+            HydrateWorldServices(saveData);
             OnWorldLoaded?.Invoke(saveData);
             
             if (enableDebug) Debug.Log($"Loaded world: {saveData.worldName}");
@@ -740,12 +740,12 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
 
         saveData.worldState.spawnedObjectStates ??= new List<SpawnedObjectStateSaveData>();
 
-        var container = ServiceContainer.Instance;
+        //var container = ServiceContainer.Instance;
 
-        var collectableManager = container.TryGet<ICollectableManager>();
+        var collectableManager = FindFirstObjectByType<CollectableManager>();
         collectableManager?.LoadState(saveData.worldState.unlockedCollectables ?? new List<string>());
 
-        var dialogManager = container.TryGet<IDialogManager>();
+        var dialogManager = FindFirstObjectByType<DialogManager>();
         dialogManager?.LoadState(saveData.worldState.triggeredDialogs ?? new List<string>());
     }
     

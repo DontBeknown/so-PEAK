@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using System;
 using Game.Core.DI;
 using Game.Core.Events;
 using Game.Collectable;
@@ -14,6 +15,7 @@ namespace Game.UI.Collectable
         [SerializeField] private TMP_Text headerText;
         [SerializeField] private TMP_Text contentText;
         [SerializeField] private Image iconImage;
+        [SerializeField] private Button backToMenuButton;
         [SerializeField] private float slideDuration = 0.35f;
         [SerializeField] private float fadeDuration = 0.25f;
         [SerializeField] private float slideDistance = 700f;
@@ -24,8 +26,14 @@ namespace Game.UI.Collectable
         private CanvasGroup _canvasGroup;
         private Vector2 _shownAnchoredPosition;
         private Tween _panelTween;
+        private bool _isVisibleNotified;
+
+        public event Action<bool> VisibilityChanged;
 
         public bool IsVisible => panelRoot != null && panelRoot.activeSelf;
+        public RectTransform PanelRect => _panelRect;
+        public CanvasGroup PanelCanvasGroup => _canvasGroup;
+        public Vector2 ShownAnchoredPosition => _shownAnchoredPosition;
 
         private void Awake()
         {
@@ -38,6 +46,13 @@ namespace Game.UI.Collectable
                 _canvasGroup = panelRoot.GetComponent<CanvasGroup>();
                 if (_canvasGroup == null)
                     _canvasGroup = panelRoot.AddComponent<CanvasGroup>();
+
+            }
+
+            if (backToMenuButton != null)
+            {
+                backToMenuButton.onClick.RemoveListener(Hide);
+                backToMenuButton.onClick.AddListener(Hide);
             }
 
             HideImmediate();
@@ -57,8 +72,16 @@ namespace Game.UI.Collectable
 
         public void Show(CollectableItem collectable)
         {
-            if (collectable == null)
+            if (!SetContent(collectable))
                 return;
+
+            PlayShowAnimation();
+        }
+
+        public bool SetContent(CollectableItem collectable)
+        {
+            if (collectable == null)
+                return false;
 
             if (headerText != null)
                 headerText.text = collectable.headerName;
@@ -72,7 +95,33 @@ namespace Game.UI.Collectable
                 iconImage.sprite = collectable.icon;
             }
 
-            PlayShowAnimation();
+            return true;
+        }
+
+        public void ShowImmediate(CollectableItem collectable)
+        {
+            if (!SetContent(collectable) || panelRoot == null)
+                return;
+
+            _panelTween?.Kill();
+            panelRoot.SetActive(true);
+
+            if (_panelRect != null)
+                _panelRect.anchoredPosition = _shownAnchoredPosition;
+
+            if (_canvasGroup != null)
+            {
+                _canvasGroup.alpha = 1f;
+                _canvasGroup.interactable = true;
+                _canvasGroup.blocksRaycasts = true;
+            }
+
+            NotifyVisibility(true);
+        }
+
+        public void HideImmediately()
+        {
+            HideImmediate();
         }
 
         public void Hide()
@@ -127,6 +176,7 @@ namespace Game.UI.Collectable
                 _canvasGroup.interactable = true;
                 _canvasGroup.blocksRaycasts = true;
                 _panelTween = null;
+                NotifyVisibility(true);
             });
 
             _panelTween = sequence;
@@ -155,8 +205,6 @@ namespace Game.UI.Collectable
 
             var targetPosition = _shownAnchoredPosition + Vector2.right * slideDistance;
             var sequence = DOTween.Sequence().SetUpdate(true);
-            sequence.Join(_panelRect.DOAnchorPos(targetPosition, slideDuration)
-                .SetEase(Ease.InQuad));
             sequence.Join(_canvasGroup.DOFade(0f, fadeDuration)
                 .SetEase(Ease.InQuad));
             sequence.OnComplete(HideImmediate);
@@ -166,6 +214,8 @@ namespace Game.UI.Collectable
 
         private void HideImmediate()
         {
+            var wasVisible = panelRoot != null && panelRoot.activeSelf;
+
             _panelTween?.Kill();
             _panelTween = null;
 
@@ -181,6 +231,19 @@ namespace Game.UI.Collectable
 
             if (panelRoot != null)
                 panelRoot.SetActive(false);
+
+            if (wasVisible)
+                NotifyVisibility(false);
         }
+
+        private void NotifyVisibility(bool isVisible)
+        {
+            if (_isVisibleNotified == isVisible)
+                return;
+
+            _isVisibleNotified = isVisible;
+            VisibilityChanged?.Invoke(isVisible);
+        }
+
     }
 }

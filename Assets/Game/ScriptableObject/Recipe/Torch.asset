@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d9669199bd3ec04191f40bd7b61cd2a, type: 3}
   m_Name: Torch
   m_EditorClassIdentifier: Assembly-CSharp::CraftingRecipe
-  recipeName: 
-  description: 
+  recipeName: Torch
+  description: Oooo ah aha FIRE!!! oo ohaha
   icon: {fileID: 21300000, guid: ba72e8c4a7b428b439f98fcdb892bf71, type: 3}
   requirements:
   - item: {fileID: 11400000, guid: da4382b47225e4e479aca0c167ead00e, type: 2}

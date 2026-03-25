@@ -162,29 +162,29 @@ public class TabbedInventoryUI : MonoBehaviour
         _eventBus?.Publish(new PlayUISoundEvent(soundInventoryClose, volumeScale: 0.3f));
     }
 
-    public void SwitchTab(TabType tab)
+    public void SwitchTab(TabType tab, bool playSound = true)
     {
         currentTab = tab;
 
         switch (tab)
         {
             case TabType.Inventory:
-                ShowInventoryTab();
+                ShowInventoryTab(playSound);
                 break;
 
             case TabType.Crafting:
-                ShowCraftingTab();
+                ShowCraftingTab(playSound);
                 break;
 
             case TabType.Collectables:
-                ShowCollectablesTab();
+                ShowCollectablesTab(playSound);
                 break;
         }
 
         UpdateTabVisuals();
     }
 
-    private void ShowInventoryTab()
+    private void ShowInventoryTab(bool playSound)
     {
         // Show inventory panel
         if (inventoryUI != null)
@@ -204,10 +204,13 @@ public class TabbedInventoryUI : MonoBehaviour
             collectablesHubUI.HideHubPanel();
         }
 
-        _eventBus?.Publish(new PlayUISoundEvent(soundInventoryOpen, volumeScale: 0.1f));
+        if (playSound)
+        {
+            _eventBus?.Publish(new PlayUISoundEvent(soundInventoryOpen, volumeScale: 0.1f));
+        }
     }
 
-    private void ShowCraftingTab()
+    private void ShowCraftingTab(bool playSound)
     {
         // Hide inventory panel
         if (inventoryUI != null)
@@ -227,10 +230,13 @@ public class TabbedInventoryUI : MonoBehaviour
             collectablesHubUI.HideHubPanel();
         }
 
-        _eventBus?.Publish(new PlayUISoundEvent(soundCraftingOpen,volumeScale: 0.1f));
+        if (playSound)
+        {
+            _eventBus?.Publish(new PlayUISoundEvent(soundCraftingOpen,volumeScale: 0.1f));
+        }
     }
 
-    private void ShowCollectablesTab()
+    private void ShowCollectablesTab(bool playSound)
     {
         if (inventoryUI != null)
         {
@@ -247,7 +253,10 @@ public class TabbedInventoryUI : MonoBehaviour
             collectablesHubUI.ShowHubPanel();
         }
 
-        _eventBus?.Publish(new PlayUISoundEvent(soundCollectablesOpen, volumeScale: 0.1f));
+        if (playSound)
+        {
+            _eventBus?.Publish(new PlayUISoundEvent(soundCollectablesOpen, volumeScale: 0.1f));
+        }
     }
 
     private void UpdateTabVisuals()

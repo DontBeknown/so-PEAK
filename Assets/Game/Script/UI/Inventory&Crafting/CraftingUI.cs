@@ -22,6 +22,8 @@ public class CraftingUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI selectedRecipeDescription;
     [SerializeField] private Transform selectedRequirementsContainer;
     [SerializeField] private GameObject requirementDisplayPrefab;
+    [SerializeField] private Color hasEnoughTextColor = Color.white;
+    [SerializeField] private Color needsMoreTextColor = Color.red;
     [SerializeField] private Button craftButton;
     [SerializeField] private TextMeshProUGUI craftTimeText;
     [SerializeField] private GameObject craftingProgressBar;
@@ -254,9 +256,15 @@ public class CraftingUI : MonoBehaviour
             GameObject displayObj = Instantiate(requirementDisplayPrefab, selectedRequirementsContainer);
             requirementDisplays.Add(displayObj);
 
-            // Setup display
-            Image icon = displayObj.GetComponentInChildren<Image>();
-            TextMeshProUGUI text = displayObj.GetComponentInChildren<TextMeshProUGUI>();
+            CraftingRequirementDisplayUI displayUI = displayObj.GetComponent<CraftingRequirementDisplayUI>();
+            if (displayUI == null)
+            {
+                Debug.LogWarning("Requirement display prefab is missing CraftingRequirementDisplayUI component.");
+                continue;
+            }
+
+            Image icon = displayUI.Icon;
+            TextMeshProUGUI text = displayUI.RequirementText;
 
             if (icon != null && requirement.item != null && requirement.item.icon != null)
             {
@@ -271,7 +279,7 @@ public class CraftingUI : MonoBehaviour
                 bool hasEnough = hasAmount >= needAmount;
 
                 text.text = $"{requirement.item.itemName}: {hasAmount}/{needAmount}";
-                text.color = hasEnough ? Color.white : Color.red;
+                text.color = hasEnough ? hasEnoughTextColor : needsMoreTextColor;
             }
         }
     }
