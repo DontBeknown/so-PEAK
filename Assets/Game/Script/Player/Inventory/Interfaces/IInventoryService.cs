@@ -8,8 +8,8 @@ namespace Game.Player.Inventory
     public interface IInventoryService
     {
         // Business operations
-        bool AddItem(InventoryItem item, int quantity = 1);
-        bool RemoveItem(InventoryItem item, int quantity = 1);
+        bool AddItem(InventoryItem item, int quantity = 1, bool suppressNotification = false);
+        bool RemoveItem(InventoryItem item, int quantity = 1, bool suppressNotification = false);
         bool HasItem(InventoryItem item, int quantity = 1);
         
         // Advanced operations

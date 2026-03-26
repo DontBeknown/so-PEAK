@@ -260,7 +260,7 @@ public class InventoryUI : MonoBehaviour
         // Check if item is equipment
         if (item.itemType == ItemType.Equipment)
         {
-            EquipItem(item);
+            EquipItem(slotIndex, item);
             return;
         }
         
@@ -277,7 +277,7 @@ public class InventoryUI : MonoBehaviour
         }
     }
     
-    private void EquipItem(InventoryItem item)
+    private void EquipItem(int slotIndex, InventoryItem item)
     {
         if (equipmentManager == null)
         {
@@ -291,13 +291,37 @@ public class InventoryUI : MonoBehaviour
             Debug.LogWarning($"Item {item.itemName} is marked as Equipment but is not an EquipmentItem!");
             return;
         }
+
+        var inventoryManager = ServiceContainer.Instance.Get<InventoryManagerRefactored>();
+        if (inventoryManager == null)
+        {
+            Debug.LogWarning("InventoryManagerRefactored not found! Cannot remove specific equipped item from inventory.");
+            return;
+        }
+
+        var placements = inventoryManager.GetAllPlacements();
+        if (slotIndex < 0 || slotIndex >= placements.Count)
+        {
+            Debug.LogWarning("Invalid slot index for equip operation.");
+            return;
+        }
+
+        var sourcePlacement = placements[slotIndex];
+        if (sourcePlacement == null || sourcePlacement.Item != item)
+        {
+            Debug.LogWarning("Clicked inventory slot no longer matches placement. Equip aborted to avoid removing wrong item.");
+            return;
+        }
+
+        // Remove the exact clicked inventory entry, without triggering add/remove toast notifications.
+        inventoryManager.RemoveFromGrid(sourcePlacement, suppressNotification: true);
         
-        // Equip the item (keep it in inventory)
-        IEquippable previousItem = equipmentManager.Equip(equipItem);
+        // Equip without inventory sync because source item was already removed explicitly above.
+        IEquippable previousItem = equipmentManager.Equip(equipItem, syncInventory: false);
         
         //Debug.Log($"Equipped {equipItem.itemName} to {equipItem.EquipmentSlot} slot");
         
-        // Update UI to show equipped status
+        // Update UI after equip / potential swap-back handling.
         UpdateAllSlots();
     }
 

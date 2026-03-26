@@ -21,7 +21,7 @@ namespace Game.Player.Inventory.Services
 
         #region Business Operations
 
-        public bool AddItem(InventoryItem item, int quantity = 1)
+        public bool AddItem(InventoryItem item, int quantity = 1, bool suppressNotification = false)
         {
             if (item == null || quantity <= 0)
             {
@@ -41,7 +41,10 @@ namespace Game.Player.Inventory.Services
             if (success)
             {
                 //Debug.Log($"[InventoryService] Added {quantity}x {item.itemName}");
-                PublishItemAdded(item, quantity);
+                if (!suppressNotification)
+                {
+                    PublishItemAdded(item, quantity);
+                }
                 PublishInventoryChanged();
             }
             else
@@ -52,7 +55,7 @@ namespace Game.Player.Inventory.Services
             return success;
         }
 
-        public bool RemoveItem(InventoryItem item, int quantity = 1)
+        public bool RemoveItem(InventoryItem item, int quantity = 1, bool suppressNotification = false)
         {
             if (item == null || quantity <= 0)
             {
@@ -71,7 +74,10 @@ namespace Game.Player.Inventory.Services
             if (success)
             {
                 //Debug.Log($"[InventoryService] Removed {quantity}x {item.itemName}");
-                PublishItemRemoved(item, quantity);
+                if (!suppressNotification)
+                {
+                    PublishItemRemoved(item, quantity);
+                }
                 PublishInventoryChanged();
             }
 

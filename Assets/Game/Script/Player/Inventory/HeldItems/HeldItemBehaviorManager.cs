@@ -153,7 +153,7 @@ public class HeldItemBehaviorManager : MonoBehaviour
     private void FindHandBones()
     {
         // Common hand bone names across different character rigs
-        string[] rightHandNames = { "Right Hand Middle 1" };
+        string[] rightHandNames = { "RightHandEquip" };
         string[] leftHandNames = { "Left Hand Middle 1" };
         
         Transform[] allTransforms = GetComponentsInChildren<Transform>();

@@ -188,26 +188,12 @@ public class ContextMenuUI : MonoBehaviour
                 }
             }
             
-            // Check if already equipped
-            bool isEquipped = equipmentManager != null && 
-                             (UnityEngine.Object)equipmentManager.GetEquippedItem(equipItem.EquipmentSlot) == equipItem;
-
-            if (isEquipped)
-            {
-                AddButton("Unequip", () => {
-                    equipmentManager?.Unequip(equipItem.EquipmentSlot);
-                    inventoryUI?.UpdateAllSlots();
-                    HideMenu();
-                });
-            }
-            else
-            {
-                AddButton("Equip", () => {
-                    equipmentManager?.Equip(equipItem);
-                    inventoryUI?.UpdateAllSlots();
-                    HideMenu();
-                });
-            }
+            // Inventory items should always Equip (swap behavior).
+            AddButton("Equip", () => {
+                inventoryUI?.UseItem(slotUI.SlotIndex);
+                inventoryUI?.UpdateAllSlots();
+                HideMenu();
+            });
         }
         else if (item.isConsumable)
         {
@@ -297,27 +283,12 @@ public class ContextMenuUI : MonoBehaviour
                 }
             }
 
-            // Equip / Unequip
-            var eqManager = Game.Core.DI.ServiceContainer.Instance.TryGet<EquipmentManager>();
-            bool isEquipped = eqManager != null &&
-                (UnityEngine.Object)eqManager.GetEquippedItem(equipItem.EquipmentSlot) == equipItem;
-
-            if (isEquipped)
-            {
-                AddButton("Unequip", () => {
-                    eqManager?.Unequip(equipItem.EquipmentSlot);
-                    HideMenu();
-                    _eventBus?.Publish(new PlayUISoundEvent(equipSoundId, equipVolumeScale));
-                });
-            }
-            else
-            {
-                AddButton("Equip", () => {
-                    gridUI.UseItem(itemUI);
-                    HideMenu();
-                    _eventBus?.Publish(new PlayUISoundEvent(equipSoundId, equipVolumeScale));
-                });
-            }
+            // Grid inventory items should always Equip (swap behavior).
+            AddButton("Equip", () => {
+                gridUI.UseItem(itemUI);
+                HideMenu();
+                _eventBus?.Publish(new PlayUISoundEvent(equipSoundId, equipVolumeScale));
+            });
         }
         else if (item.isConsumable)
         {
@@ -455,28 +426,13 @@ public class ContextMenuUI : MonoBehaviour
                 }
             }
             
-            // Check if already equipped
-            bool isEquipped = currentEquipmentManager != null && 
-                             (UnityEngine.Object)currentEquipmentManager.GetEquippedItem(equipItem.EquipmentSlot) == equipItem;
-
-            if (isEquipped)
-            {
-                AddButton("Unequip", () => {
-                    currentEquipmentManager?.Unequip(equipItem.EquipmentSlot);
-                    currentInventoryUI?.UpdateAllSlots();
-                    HideMenu();
-                    _eventBus?.Publish(new PlayUISoundEvent(equipSoundId, equipVolumeScale));
-                });
-            }
-            else
-            {
-                AddButton("Equip", () => {
-                    currentEquipmentManager?.Equip(equipItem);
-                    currentInventoryUI?.UpdateAllSlots();
-                    HideMenu();
-                    _eventBus?.Publish(new PlayUISoundEvent(equipSoundId, equipVolumeScale));
-                });
-            }
+            // Inventory items should always Equip (swap behavior).
+            AddButton("Equip", () => {
+                currentInventoryUI?.UseItem(currentSlotUI.SlotIndex);
+                currentInventoryUI?.UpdateAllSlots();
+                HideMenu();
+                _eventBus?.Publish(new PlayUISoundEvent(equipSoundId, equipVolumeScale));
+            });
         }
         else if (item.isConsumable)
         {

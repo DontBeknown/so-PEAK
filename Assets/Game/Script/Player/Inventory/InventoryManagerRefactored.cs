@@ -243,14 +243,17 @@ namespace Game.Player.Inventory
             return success;
         }
 
-        public void RemoveFromGrid(Storage.GridPlacement placement)
+        public void RemoveFromGrid(Storage.GridPlacement placement, bool suppressNotification = false)
         {
             if (placement == null) return;
             var item = placement.Item;
             var pos = placement.Position;
             _gridStorage.RemoveItem(placement);
             _eventBus.Publish(new Events.ItemRemovedFromGridEvent(item, pos));
-            _eventBus.Publish(new Events.ItemRemovedEvent(item, 1));
+            if (!suppressNotification)
+            {
+                _eventBus.Publish(new Events.ItemRemovedEvent(item, 1));
+            }
             _eventBus.Publish(new Events.InventoryChangedEvent());
         }
 

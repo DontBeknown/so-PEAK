@@ -255,7 +255,13 @@ public class GridInventoryUI : MonoBehaviour
         // Equipment → equip
         if (item is EquipmentItem equipItem && _equipmentManager != null)
         {
-            _equipmentManager.Equip(equipItem);
+            // Remove the exact clicked placement first (same behavior style as drop),
+            // then equip without generic inventory-type removal.
+            if (_inventoryManager != null)
+            {
+                _inventoryManager.RemoveFromGrid(itemUI.Placement, suppressNotification: true);
+            }
+            _equipmentManager.Equip(equipItem, syncInventory: false);
             RefreshGrid();
             return;
         }

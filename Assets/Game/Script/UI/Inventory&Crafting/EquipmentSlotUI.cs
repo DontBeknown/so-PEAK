@@ -20,7 +20,6 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
     [Header("Visual Settings")]
     [SerializeField] private Color normalColor = new Color(0.2f, 0.2f, 0.2f, 1f);
     [SerializeField] private Color highlightColor = new Color(0.4f, 0.4f, 0.4f, 1f);
-    [SerializeField] private Color equippedColor = new Color(0.3f, 0.5f, 0.3f, 1f);
 
     private EquipmentSlotType slotType;
     private EquipmentManager equipmentManager;
@@ -103,16 +102,6 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
                 }
             }
 
-            if (backgroundImage != null)
-            {
-                backgroundImage.color = equippedColor;
-            }
-
-            // Hide slot icon when equipped
-            if (slotIcon != null)
-            {
-                slotIcon.enabled = false; // Disable Image component
-            }
         }
     }
 

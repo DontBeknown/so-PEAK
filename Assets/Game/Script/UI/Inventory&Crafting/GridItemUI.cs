@@ -4,7 +4,6 @@ using UnityEngine.EventSystems;
 using Game.Player.Inventory.Storage;
 using Game.Core.DI;
 using Game.Core.Events;
-using DG.Tweening;
 using Game.Sound.Events;
 
 /// <summary>
@@ -18,14 +17,6 @@ public class GridItemUI : MonoBehaviour,
     [SerializeField] private Image iconImage;
     [SerializeField] private Image backgroundImage;
     [SerializeField] private CanvasGroup canvasGroup;
-
-    [Header("Equip Visual")]
-    [SerializeField] private Color equippedColor = new Color(0.3f, 0.85f, 0.3f, 1f);
-    [SerializeField] private Color normalColor = Color.white;
-
-    [Header("Equip Bounce")]
-    [SerializeField] private float equipBounceScale = 1.2f;
-    [SerializeField] private float equipBounceDuration = 0.25f;
 
     [SerializeField] private GameObject highlightGameObject;
 
@@ -45,7 +36,6 @@ public class GridItemUI : MonoBehaviour,
     private float _cellSize;
 
     private IEventBus _eventBus;
-    private EquipmentManager _equipmentManager;
     private bool _suppressNextEnter;
 
     public GridPlacement Placement => _placement;
@@ -72,72 +62,11 @@ public class GridItemUI : MonoBehaviour,
             iconImage.preserveAspect = true;
         }
 
-        // Subscribe to equipment events
         _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
-        _equipmentManager = ServiceContainer.Instance.TryGet<EquipmentManager>();
-
-        if (_eventBus != null)
-        {
-            _eventBus.Subscribe<ItemEquippedEvent>(OnItemEquipped);
-            _eventBus.Subscribe<ItemUnequippedEvent>(OnItemUnequipped);
-        }
-
-        // Reflect current equip state immediately
-        RefreshEquippedVisual();
     }
 
     private void OnDestroy()
     {
-        if (_eventBus != null)
-        {
-            _eventBus.Unsubscribe<ItemEquippedEvent>(OnItemEquipped);
-            _eventBus.Unsubscribe<ItemUnequippedEvent>(OnItemUnequipped);
-        }
-    }
-
-    private void OnItemEquipped(ItemEquippedEvent evt)
-    {
-        if (_placement?.Item != null && ReferenceEquals(_placement.Item, evt.Item))
-            SetEquippedVisual(true);
-    }
-
-    private void OnItemUnequipped(ItemUnequippedEvent evt)
-    {
-        if (_placement?.Item != null && ReferenceEquals(_placement.Item, evt.Item))
-            SetEquippedVisual(false);
-    }
-
-    private void RefreshEquippedVisual()
-    {
-        if (_placement?.Item is EquipmentItem equipItem && _equipmentManager != null)
-        {
-            var equipped = _equipmentManager.GetEquippedItem(equipItem.EquipmentSlot);
-            SetEquippedVisual(ReferenceEquals(equipped, equipItem));
-        }
-        else
-        {
-            SetEquippedVisual(false);
-        }
-    }
-
-    private void SetEquippedVisual(bool equipped)
-    {
-        if (backgroundImage != null)
-            backgroundImage.color = equipped ? equippedColor : normalColor;
-
-        // Bounce the icon and background to give feedback
-        var targets = new Transform[] {
-            iconImage != null ? iconImage.transform : null,
-            backgroundImage != null ? backgroundImage.transform : null
-        };
-        foreach (var t in targets)
-        {
-            if (t == null) continue;
-            t.DOKill();
-            t.localScale = Vector3.one;
-            t.DOPunchScale(Vector3.one * (equipBounceScale - 1f), equipBounceDuration, vibrato: 2, elasticity: 0.5f)
-             .SetLink(t.gameObject);
-        }
     }
 
     public void SnapToGridPosition()
