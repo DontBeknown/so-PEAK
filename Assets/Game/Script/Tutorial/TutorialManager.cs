@@ -61,7 +61,7 @@ namespace Game.Tutorial
         private void Start()
         {
             SubscribeToEvents();
-            StartTutorial();
+            //StartTutorial();
         }
 
         private void OnEnable()
@@ -153,6 +153,8 @@ namespace Game.Tutorial
                 return;
             }
 
+            int startStepIndex = GetStartStepIndexFromSave(tutorialSave);
+
             IsActive = true;
             IsCompleted = false;
             CurrentStepIndex = -1;
@@ -160,11 +162,11 @@ namespace Game.Tutorial
             _waitingStepIndex = -1;
 
             _eventBus?.Publish(new TutorialStartedEvent(_tutorialData.tutorialId));
-            ActivateStepOrWait(0);
+            ActivateStepOrWait(startStepIndex);
 
             if (debugLogs)
             {
-                Debug.Log("[TutorialManager] Tutorial started.");
+                Debug.Log($"[TutorialManager] Tutorial started from step {startStepIndex}.");
             }
         }
 
@@ -177,6 +179,41 @@ namespace Game.Tutorial
 
             MarkCompleted(true);
             _eventBus?.Publish(new TutorialSkippedEvent(_tutorialData.tutorialId));
+        }
+
+        public void SyncToSaveData(TutorialSaveData tutorialSaveData)
+        {
+            if (tutorialSaveData == null)
+            {
+                return;
+            }
+
+            EnsureReferences();
+
+            var runtimeSave = GetOrCreateTutorialSaveData();
+            int highestCompletedStep = Mathf.Max(tutorialSaveData.lastCompletedStep, CurrentStepIndex);
+            if (runtimeSave != null)
+            {
+                highestCompletedStep = Mathf.Max(highestCompletedStep, runtimeSave.lastCompletedStep);
+            }
+
+            tutorialSaveData.lastCompletedStep = highestCompletedStep;
+            tutorialSaveData.isCompleted = tutorialSaveData.isCompleted || IsCompleted || (runtimeSave?.isCompleted ?? false);
+        }
+
+        private int GetStartStepIndexFromSave(TutorialSaveData tutorialSave)
+        {
+            if (_tutorialData == null || _tutorialData.steps == null || _tutorialData.steps.Count == 0)
+            {
+                return 0;
+            }
+
+            if (tutorialSave == null)
+            {
+                return 0;
+            }
+
+            return Mathf.Clamp(tutorialSave.lastCompletedStep, 0, _tutorialData.steps.Count - 1);
         }
 
         private void EnsureReferences()

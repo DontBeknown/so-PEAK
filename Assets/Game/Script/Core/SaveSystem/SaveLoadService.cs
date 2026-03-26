@@ -6,6 +6,7 @@ using UnityEngine;
 using Game.Core.DI;
 using Game.Collectable;
 using Game.Dialog;
+using Game.Tutorial;
 
 public class SaveLoadService : MonoBehaviour, ISaveLoadService
 {
@@ -122,6 +123,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         try
         {
             saveData.lastPlayedDate = DateTime.Now;
+            UpdateTutorialDataFromGame(saveData);
             SpawnedObjectStateRegistry.ExportToSave(saveData);
             
             string filePath = GetSaveFilePath(saveData.worldGuid);
@@ -394,6 +396,26 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         catch (Exception e)
         {
             Debug.LogWarning($"[SaveLoadService] Could not update player data: {e.Message}");
+        }
+    }
+
+    private void UpdateTutorialDataFromGame(WorldSaveData saveData)
+    {
+        if (saveData == null)
+        {
+            return;
+        }
+
+        saveData.tutorial ??= new TutorialSaveData();
+
+        try
+        {
+            var tutorialManager = ServiceContainer.Instance.TryGet<ITutorialManager>();
+            tutorialManager?.SyncToSaveData(saveData.tutorial);
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[SaveLoadService] Could not update tutorial data: {e.Message}");
         }
     }
     
