@@ -29,7 +29,7 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 384
-  coyoteTimeDuration: 0.5
+  coyoteTimeDuration: 0
   jumpStaminaCost: 20
   sprintStaminaDrainPerSecond: 25
   climbStaminaDrainPerSecond: 5
@@ -52,6 +52,9 @@ MonoBehaviour:
   hungerHurtThreshold: 10
   starvationDPS: 1
   hungerSprintMultiplier: 2
+  fallDamageSafeSpeed: 8
+  fallDamageLethalSpeed: 25
+  fallDamageMax: 100
   thirstDrainPerSecond: 0.17
   thirstHurtThreshold: 10
   dehydrationDPS: 2
