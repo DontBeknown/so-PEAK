@@ -9990,6 +9990,12 @@ MonoBehaviour:
   progressText: {fileID: 0}
   waitingText: {fileID: 0}
   skipButton: {fileID: 0}
+  showDuration: 0.5
+  hideDuration: 0.5
+  hiddenScale: 0.9
+  stepChangeDuration: 0.5
+  stepChangeStartScale: 0.97
+  stepChangeStartAlpha: 0.8
 --- !u!1 &5062257870930134078
 GameObject:
   m_ObjectHideFlags: 0

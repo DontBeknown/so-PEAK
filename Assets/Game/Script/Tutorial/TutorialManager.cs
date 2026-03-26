@@ -61,7 +61,7 @@ namespace Game.Tutorial
         private void Start()
         {
             SubscribeToEvents();
-            //StartTutorial();
+            StartTutorial();
         }
 
         private void OnEnable()
