@@ -153,7 +153,7 @@ namespace Game.Environment.DayNight
         public Color nightFogColor = Color.black;
         
         [Tooltip("Fog density during night")]
-        [Range(0f, 0.1f)]
+        [Range(0f, 0.5f)]
         public float nightFogDensity = 0.02f;
 
         [Header("Ambient Sounds")]

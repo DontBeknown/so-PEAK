@@ -38,9 +38,9 @@ MonoBehaviour:
   eveningAmbientColor: {r: 0.5, g: 0.4, b: 0.5, a: 1}
   eveningAmbientIntensity: 0.8
   eveningSunRotation: {x: 10, y: 0, z: 0}
-  nightLightColor: {r: 0.5, g: 0.6, b: 0.8, a: 1}
+  nightLightColor: {r: 0.04705883, g: 0.12941177, b: 0.29411766, a: 1}
   nightLightIntensity: 0.3
-  nightAmbientColor: {r: 0.2, g: 0.2, b: 0.3, a: 1}
+  nightAmbientColor: {r: 0.03529412, g: 0.20392159, b: 0.4156863, a: 1}
   nightAmbientIntensity: 0.4
   nightMoonRotation: {x: -30, y: 180, z: 0}
   useFog: 1
@@ -50,8 +50,8 @@ MonoBehaviour:
   dayFogDensity: 0.005
   eveningFogColor: {r: 0.6, g: 0.5, b: 0.6, a: 1}
   eveningFogDensity: 0.015
-  nightFogColor: {r: 0, g: 0, b: 0, a: 1}
-  nightFogDensity: 0.02
+  nightFogColor: {r: 0.027450982, g: 0.22352943, b: 0.42352945, a: 1}
+  nightFogDensity: 0.2
   morningAmbientClipId: ambient_morning
   dayAmbientClipId: ambient_day
   eveningAmbientClipId: ambient_evening

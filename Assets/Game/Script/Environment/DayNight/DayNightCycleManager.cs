@@ -2,6 +2,8 @@ using UnityEngine;
 using DG.Tweening;
 using Game.Core.DI;
 using Game.Core.Events;
+using Game.Player.Inventory;
+using Game.Player.Inventory.HeldItems;
 using Game.Sound;
 
 namespace Game.Environment.DayNight
@@ -35,10 +37,16 @@ namespace Game.Environment.DayNight
         
         // DOTween lighting transition
         private Sequence _lightingSequence;
+        private Tween _torchFogTween;
         
         // Services
         private IEventBus _eventBus;
         private SoundService _soundService;
+        private EquipmentManager _equipmentManager;
+
+        // Torch fog override state
+        private bool _isTorchEquipped;
+        private TorchItem _equippedTorchItem;
         
         #region IDayNightCycleService Implementation
         
@@ -182,11 +190,18 @@ namespace Game.Environment.DayNight
             ApplyLightingSettingsImmediate();
             RenderSettings.skybox = config.GetSkyboxForTime(_currentTimeOfDay);
             DynamicGI.UpdateEnvironment();
+
+            _equipmentManager = ServiceContainer.Instance.TryGet<EquipmentManager>();
+            SubscribeToEvents();
+            RefreshTorchEquippedState();
+            EvaluateTorchNightFogOverride();
         }
         
         private void OnDestroy()
         {
+            UnsubscribeFromEvents();
             _lightingSequence?.Kill();
+            _torchFogTween?.Kill();
         }
         
         private void Update()
@@ -241,6 +256,9 @@ namespace Game.Environment.DayNight
                 // Start skybox + lighting DOTween transition
                 StartSkyboxTransition();
                 StartLightingTransition();
+
+                // Re-evaluate override after base transition starts.
+                EvaluateTorchNightFogOverride();
 
                 // Crossfade to the new ambient loop
                 PlayAmbientForCurrentTime();
@@ -350,6 +368,99 @@ namespace Game.Environment.DayNight
             {
                 Debug.Log($"[DayNightCycle] Lighting DOTween transition started ({duration}s)");
             }
+        }
+
+        private void SubscribeToEvents()
+        {
+            if (_eventBus == null) return;
+
+            _eventBus.Subscribe<ItemEquippedEvent>(OnItemEquipped);
+            _eventBus.Subscribe<ItemUnequippedEvent>(OnItemUnequipped);
+            _eventBus.Subscribe<TimeOfDayChangedEvent>(OnTimeOfDayChanged);
+        }
+
+        private void UnsubscribeFromEvents()
+        {
+            if (_eventBus == null) return;
+
+            _eventBus.Unsubscribe<ItemEquippedEvent>(OnItemEquipped);
+            _eventBus.Unsubscribe<ItemUnequippedEvent>(OnItemUnequipped);
+            _eventBus.Unsubscribe<TimeOfDayChangedEvent>(OnTimeOfDayChanged);
+        }
+
+        private void OnItemEquipped(ItemEquippedEvent evt)
+        {
+            if (evt?.Item is TorchItem)
+            {
+                _equippedTorchItem = evt.Item as TorchItem;
+                _isTorchEquipped = true;
+                EvaluateTorchNightFogOverride();
+            }
+        }
+
+        private void OnItemUnequipped(ItemUnequippedEvent evt)
+        {
+            if (evt?.Item is TorchItem)
+            {
+                _equippedTorchItem = null;
+                _isTorchEquipped = false;
+                EvaluateTorchNightFogOverride();
+            }
+        }
+
+        private void OnTimeOfDayChanged(TimeOfDayChangedEvent evt)
+        {
+            EvaluateTorchNightFogOverride();
+        }
+
+        private void RefreshTorchEquippedState()
+        {
+            if (_equipmentManager == null)
+            {
+                _isTorchEquipped = false;
+                _equippedTorchItem = null;
+                return;
+            }
+
+            _equippedTorchItem = _equipmentManager.GetEquippedItem(EquipmentSlotType.HeldItem) as TorchItem;
+            _isTorchEquipped = _equippedTorchItem != null;
+        }
+
+        private void EvaluateTorchNightFogOverride()
+        {
+            if (!config.useFog)
+                return;
+
+            TorchItem activeTorch = _isTorchEquipped ? _equippedTorchItem : null;
+            bool torchCanOverrideFog = activeTorch != null && activeTorch.UseNightFogOverride;
+
+            bool shouldUseTorchFog = _currentTimeOfDay == TimeOfDay.Night && torchCanOverrideFog;
+            float targetDensity = shouldUseTorchFog ? activeTorch.NightFogOverrideDensity : config.nightFogDensity;
+
+            // Outside of night, let regular day/night lighting transition own fog values.
+            if (_currentTimeOfDay != TimeOfDay.Night)
+                return;
+
+            float fadeDuration = shouldUseTorchFog ? activeTorch.NightFogFadeDuration : 0.5f;
+            FadeFogDensityQuick(targetDensity, fadeDuration);
+
+            if (showDebugInfo)
+            {
+                Debug.Log(shouldUseTorchFog
+                    ? $"[DayNightCycle] Torch fog override ON -> {targetDensity:F3}"
+                    : $"[DayNightCycle] Torch fog override OFF -> {targetDensity:F3}");
+            }
+        }
+
+        private void FadeFogDensityQuick(float targetDensity, float fadeDuration)
+        {
+            _torchFogTween?.Kill();
+            _torchFogTween = DOTween.To(() => RenderSettings.fogDensity,
+                x => RenderSettings.fogDensity = x,
+                targetDensity,
+            fadeDuration)
+                .SetEase(Ease.OutQuad)
+                .SetLink(gameObject);
         }
         
         private (Color lightColor, float intensity, Vector3 rotation, Color ambientColor, float ambientIntensity, Color fogColor, float fogDensity) GetLightingSettingsForTime()

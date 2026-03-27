@@ -24,6 +24,11 @@ public class TorchItem : HeldEquipmentItem
     [SerializeField] private AudioClip igniteSound;
     [SerializeField] private AudioClip cracklingSoundLoop;
 
+    [Header("Night Fog Override")]
+    [SerializeField] private bool useNightFogOverride = true;
+    [SerializeField, Range(0f, 1f)] private float nightFogOverrideDensity = 0.8f;
+    [SerializeField, Range(0.05f, 5f)] private float nightFogFadeDuration = 0.5f;
+
     public float MaxDurabilitySeconds => maxDurabilitySeconds;
     public float DurabilityDrainRate => durabilityDrainRate;
     public float WarmthBonus => warmthBonus;
@@ -33,6 +38,9 @@ public class TorchItem : HeldEquipmentItem
     public float LowDurabilityThreshold => lowDurabilityThreshold;
     public AudioClip IgniteSound => igniteSound;
     public AudioClip CracklingSoundLoop => cracklingSoundLoop;
+    public bool UseNightFogOverride => useNightFogOverride;
+    public float NightFogOverrideDensity => nightFogOverrideDensity;
+    public float NightFogFadeDuration => nightFogFadeDuration;
 
     public override IHeldItemBehavior CreateBehavior(GameObject playerObject)
     {

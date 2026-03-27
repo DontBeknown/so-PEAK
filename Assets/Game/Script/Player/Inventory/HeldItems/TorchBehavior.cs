@@ -108,10 +108,11 @@ public class TorchBehavior : MonoBehaviour, IHeldItemBehavior
     }
 
     private void CreateLight()
+    
     {
         var lightObject = new GameObject("TorchLight");
         lightObject.transform.SetParent(transform);
-        lightObject.transform.localPosition = Vector3.forward * 0.5f + Vector3.up * 1.5f; // In front and above player
+        lightObject.transform.localPosition = new Vector3(1.21f, 2.385f, 1.325f);
 
         torchLight = lightObject.AddComponent<Light>();
         torchLight.type = LightType.Point;

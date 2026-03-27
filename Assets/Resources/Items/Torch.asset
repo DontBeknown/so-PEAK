@@ -31,8 +31,11 @@ MonoBehaviour:
   durabilityDrainRate: 1
   warmthBonus: 10
   lightRadius: 10
-  lightIntensity: 2
+  lightIntensity: 25
   lightColor: {r: 1, g: 0.6, b: 0.2, a: 1}
   lowDurabilityThreshold: 0.2
   igniteSound: {fileID: 0}
   cracklingSoundLoop: {fileID: 0}
+  useNightFogOverride: 1
+  nightFogOverrideDensity: 0.08
+  nightFogFadeDuration: 0.5
