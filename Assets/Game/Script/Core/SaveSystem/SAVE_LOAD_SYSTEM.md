@@ -84,6 +84,23 @@ When SaveLoadService.LoadWorld(worldGuid) is called:
 Important:
 - Save currently calls ImportFromSave directly and does not run HydrateWorldServices (that call is commented). If you rely on collectable/dialog hydration from SaveLoadService, restore that call or hydrate from another bootstrap path.
 
+### 3.1 End-to-end existing save load order (Menu -> Gameplay)
+
+When player loads an existing world from menu:
+
+1. `WorldSelectionUI` load action calls `SaveLoadService.LoadWorld(worldGuid)` in menu scene.
+2. Save is deserialized and assigned to in-memory `CurrentWorldSave`.
+3. Menu flow loads gameplay scene (`TerrainGenDemo`).
+4. `RenderController.Start()` reads save context and starts terrain/world setup.
+5. Terrain-ready pass triggers player spawn sequence.
+6. `PlayerSpawner.SpawnPlayer()` instantiates player at saved/default position.
+7. `GameServiceBootstrapper.UpdatePlayerServices(newPlayer)` rebinds player-related service references post-spawn.
+8. `GameplaySceneInitializer` waits for player spawn completion, then applies player/world restore (stats, inventory, equipment, world state).
+
+Clarifications:
+- Save loading happens before scene transition (menu scene), not after entering gameplay scene.
+- `GameServiceBootstrapper` is a global service bootstrapper; it is not only for player initialization.
+
 ---
 
 ## 4) Save schema map

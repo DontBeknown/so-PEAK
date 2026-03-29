@@ -4,7 +4,7 @@
 
 **Target Audience:** AI agents, developers, and architects analyzing the codebase for improvements, understanding dependencies, or planning refactoring efforts.
 
-**Last Updated:** February 11, 2026
+**Last Updated:** March 30, 2026
 
 ---
 
@@ -959,6 +959,26 @@ GameServiceBootstrapper (Entry Point)
    - Enter WalkingState
    - Player ready
 ```
+
+### Load Existing Save Sequence (Menu -> Terrain Scene)
+
+This is the canonical order when loading an existing world from the menu.
+
+1. Player is in menu scene.
+2. Player selects a save slot and clicks load in `WorldSelectionUI`.
+3. `SaveLoadService.LoadWorld(worldGuid)` deserializes save data in menu scene and stores it in memory (`CurrentWorldSave`).
+4. Menu flow transitions to gameplay scene (`TerrainGenDemo`).
+5. `RenderController.Start()` initializes world data and terrain generation using loaded seed/player context.
+6. First terrain-ready pass triggers `SpawnPlayerSequence()`.
+7. `PlayerSpawner.SpawnPlayer()` instantiates the player using saved/default spawn data.
+8. `GameServiceBootstrapper.UpdatePlayerServices(newPlayer)` refreshes player-related registrations after spawn.
+9. `GameplaySceneInitializer` waits for `RenderController.PlayerSpawnComplete`.
+10. `GameplaySceneInitializer` restores player/world state (stats, inventory, equipment, world state).
+
+#### Common Misconceptions (Corrected)
+
+- Save data is not first loaded in gameplay scene. It is loaded in menu scene before `SceneManager.LoadScene(...)`.
+- `GameServiceBootstrapper` is not player-init-only. It is a broad service bootstrapper; only `UpdatePlayerServices(...)` is post-spawn player-specific.
 
 ### Critical Initialization Order
 
