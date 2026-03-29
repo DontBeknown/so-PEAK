@@ -123,7 +123,7 @@ public static class SpawnedObjectStateRegistry
             existing.isDestroyed = true;
         }
 
-        Debug.Log($"[SpawnedObjectStateRegistry] MarkDestroyed world='{save.worldGuid}' spawnId='{spawnId}' addedToSet={addedToSet} listCount={list.Count} hashCount={destroyedSpawnIds.Count}");
+        //Debug.Log($"[SpawnedObjectStateRegistry] MarkDestroyed world='{save.worldGuid}' spawnId='{spawnId}' addedToSet={addedToSet} listCount={list.Count} hashCount={destroyedSpawnIds.Count}");
     }
 
     private static void EnsureCurrentWorldCache()

@@ -43,6 +43,7 @@ namespace Game.Environment.DayNight
         private IEventBus _eventBus;
         private SoundService _soundService;
         private EquipmentManager _equipmentManager;
+        private bool _eventsSubscribed;
 
         // Torch fog override state
         private bool _isTorchEquipped;
@@ -172,9 +173,22 @@ namespace Game.Environment.DayNight
         /// <summary>Called by GameServiceBootstrapper after registration.</summary>
         public void Initialize(IEventBus eventBus, SoundService soundService, EquipmentManager equipmentManager)
         {
-            _eventBus     = eventBus;
+            // Initialize can be called multiple times; avoid duplicate subscriptions.
+            if (_eventBus != eventBus)
+            {
+                if (_eventsSubscribed && _eventBus != null)
+                {
+                    UnsubscribeFromEventBus(_eventBus);
+                    _eventsSubscribed = false;
+                }
+
+                _eventBus = eventBus;
+            }
+
             _soundService = soundService;
-            _equipmentManager = equipmentManager;   
+            _equipmentManager = equipmentManager;
+
+            EnsureSubscribedToEvents();
         }
 
         private void Start()
@@ -193,7 +207,7 @@ namespace Game.Environment.DayNight
             DynamicGI.UpdateEnvironment();
 
             _equipmentManager = ServiceContainer.Instance.TryGet<EquipmentManager>();
-            SubscribeToEvents();
+            EnsureSubscribedToEvents();
             RefreshTorchEquippedState();
             EvaluateTorchNightFogOverride();
         }
@@ -371,22 +385,38 @@ namespace Game.Environment.DayNight
             }
         }
 
-        private void SubscribeToEvents()
+        private void EnsureSubscribedToEvents()
         {
-            if (_eventBus == null) return;
+            if (_eventsSubscribed || _eventBus == null) return;
 
-            _eventBus.Subscribe<ItemEquippedEvent>(OnItemEquipped);
-            _eventBus.Subscribe<ItemUnequippedEvent>(OnItemUnequipped);
-            _eventBus.Subscribe<TimeOfDayChangedEvent>(OnTimeOfDayChanged);
+            SubscribeToEventBus(_eventBus);
+            _eventsSubscribed = true;
+        }
+
+        private void SubscribeToEventBus(IEventBus eventBus)
+        {
+            if (eventBus == null) return;
+
+            eventBus.Subscribe<ItemEquippedEvent>(OnItemEquipped);
+            eventBus.Subscribe<ItemUnequippedEvent>(OnItemUnequipped);
+            eventBus.Subscribe<TimeOfDayChangedEvent>(OnTimeOfDayChanged);
         }
 
         private void UnsubscribeFromEvents()
         {
-            if (_eventBus == null) return;
+            if (!_eventsSubscribed || _eventBus == null) return;
 
-            _eventBus.Unsubscribe<ItemEquippedEvent>(OnItemEquipped);
-            _eventBus.Unsubscribe<ItemUnequippedEvent>(OnItemUnequipped);
-            _eventBus.Unsubscribe<TimeOfDayChangedEvent>(OnTimeOfDayChanged);
+            UnsubscribeFromEventBus(_eventBus);
+            _eventsSubscribed = false;
+        }
+
+        private void UnsubscribeFromEventBus(IEventBus eventBus)
+        {
+            if (eventBus == null) return;
+
+            eventBus.Unsubscribe<ItemEquippedEvent>(OnItemEquipped);
+            eventBus.Unsubscribe<ItemUnequippedEvent>(OnItemUnequipped);
+            eventBus.Unsubscribe<TimeOfDayChangedEvent>(OnTimeOfDayChanged);
         }
 
         private void OnItemEquipped(ItemEquippedEvent evt)

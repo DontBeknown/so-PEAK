@@ -123,13 +123,11 @@ public class GameplaySceneInitializer : MonoBehaviour
             Debug.LogError("No world data to initialize!");
         }
 
-        if (enableDebug) Debug.Log("Starting tutorial if needed...");
         TryStartTutorial(resolvedSaveData);
     }
 
     private void TryStartTutorial(WorldSaveData saveData)
     {
-        Debug.Log($"[GameplaySceneInitializer] Checking tutorial status to determine if tutorial should start...");
         if (saveData == null)
         {
             Debug.LogWarning("No save data available to check tutorial status. Skipping tutorial start.");
@@ -146,7 +144,6 @@ public class GameplaySceneInitializer : MonoBehaviour
 
         if (saveData.tutorial.isCompleted)
         {
-            Debug.Log("Tutorial already completed according to save data. Skipping tutorial start.");
             return;
         }
 
