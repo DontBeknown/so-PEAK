@@ -209,7 +209,7 @@ namespace Game.Core
                 // SoundService registered below; pass null here and let lazy-guard in
                 // PlayAmbientForCurrentTime() handle the case it wasn't found yet.
                 // We'll re-wire after SoundService is registered.
-                dayNightManager.Initialize(eventBus, null);
+                dayNightManager.Initialize(eventBus, null, equipment);
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] DayNightCycleManager found and registered");
             }
@@ -305,7 +305,7 @@ namespace Game.Core
             // Re-init DayNightCycleManager now that SoundService is available
             if (dayNightManager != null)
             {
-                dayNightManager.Initialize(eventBus, soundService);
+                dayNightManager.Initialize(eventBus, soundService, equipment);
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] DayNightCycleManager re-initialized with SoundService");
             }

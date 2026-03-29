@@ -170,10 +170,11 @@ namespace Game.Environment.DayNight
         }
         
         /// <summary>Called by GameServiceBootstrapper after registration.</summary>
-        public void Initialize(IEventBus eventBus, SoundService soundService)
+        public void Initialize(IEventBus eventBus, SoundService soundService, EquipmentManager equipmentManager)
         {
             _eventBus     = eventBus;
             _soundService = soundService;
+            _equipmentManager = equipmentManager;   
         }
 
         private void Start()

@@ -64,6 +64,14 @@ namespace Game.Core.Events
                 
                 foreach (var handler in handlersCopy)
                 {
+                    // Unity objects can be destroyed while delegates remain subscribed.
+                    // Skip and prune dead targets to prevent MissingReferenceException spam.
+                    if (handler.Target is UnityEngine.Object unityTarget && unityTarget == null)
+                    {
+                        handlers.Remove(handler);
+                        continue;
+                    }
+
                     try
                     {
                         (handler as Action<TEvent>)?.Invoke(eventData);
