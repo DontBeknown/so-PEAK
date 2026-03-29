@@ -18,24 +18,24 @@ MonoBehaviour:
   dayStartHour: 12
   eveningStartHour: 18
   nightStartHour: 21
-  morningSkybox: {fileID: 2100000, guid: 12ccb828343c3405fb94289774b51aad, type: 2}
-  daySkybox: {fileID: 2100000, guid: fa95802f80bd745cfb5e9c89f7e22341, type: 2}
-  eveningSkybox: {fileID: 2100000, guid: 33ab377b49aa14f6fae6e5bac230a5d4, type: 2}
-  nightSkybox: {fileID: 2100000, guid: 8202c457dff32486ba5ae1f2f548d983, type: 2}
-  skyboxTransitionDuration: 30
-  morningLightColor: {r: 1, g: 0.9, b: 0.7, a: 1}
+  morningSkybox: {fileID: 2100000, guid: 5f2931665ca992f43b57b1b5f2a14eb2, type: 2}
+  daySkybox: {fileID: 2100000, guid: 9213190600a26be41ade517605fe819a, type: 2}
+  eveningSkybox: {fileID: 2100000, guid: 8177f18fe89e8344f859cdf7a31b4142, type: 2}
+  nightSkybox: {fileID: 2100000, guid: 1eac11504ff8feb4189bb31f405a138f, type: 2}
+  skyboxTransitionDuration: 10
+  morningLightColor: {r: 1, g: 0.6565855, b: 0.08962262, a: 1}
   morningLightIntensity: 0.8
-  morningAmbientColor: {r: 0.5, g: 0.5, b: 0.6, a: 1}
+  morningAmbientColor: {r: 0.8962264, g: 0.86150473, b: 0.5707102, a: 1}
   morningAmbientIntensity: 1
   morningSunRotation: {x: 30, y: 0, z: 0}
   dayLightColor: {r: 1, g: 0.95, b: 0.9, a: 1}
-  dayLightIntensity: 1.2
-  dayAmbientColor: {r: 0.7, g: 0.7, b: 0.8, a: 1}
+  dayLightIntensity: 0.001
+  dayAmbientColor: {r: 0.49411768, g: 0.7568628, b: 0.8117648, a: 1}
   dayAmbientIntensity: 1.2
   daySunRotation: {x: 90, y: 0, z: 0}
   eveningLightColor: {r: 1, g: 0.6, b: 0.4, a: 1}
   eveningLightIntensity: 0.7
-  eveningAmbientColor: {r: 0.5, g: 0.4, b: 0.5, a: 1}
+  eveningAmbientColor: {r: 0.78823537, g: 0.9725491, b: 0.9960785, a: 1}
   eveningAmbientIntensity: 0.8
   eveningSunRotation: {x: 10, y: 0, z: 0}
   nightLightColor: {r: 0.04705883, g: 0.12941177, b: 0.29411766, a: 1}
@@ -44,12 +44,12 @@ MonoBehaviour:
   nightAmbientIntensity: 0.4
   nightMoonRotation: {x: -30, y: 180, z: 0}
   useFog: 1
-  morningFogColor: {r: 0.8, g: 0.85, b: 0.9, a: 1}
+  morningFogColor: {r: 0.81960785, g: 0.56078434, b: 0.34509805, a: 1}
   morningFogDensity: 0.01
-  dayFogColor: {r: 0.9, g: 0.95, b: 1, a: 1}
-  dayFogDensity: 0.005
-  eveningFogColor: {r: 0.6, g: 0.5, b: 0.6, a: 1}
-  eveningFogDensity: 0.015
+  dayFogColor: {r: 0.69411767, g: 0.9960785, b: 0.9960785, a: 1}
+  dayFogDensity: 0.002
+  eveningFogColor: {r: 0.42352942, g: 0.16078432, b: 0.1254902, a: 1}
+  eveningFogDensity: 0.004
   nightFogColor: {r: 0.027450982, g: 0.22352943, b: 0.42352945, a: 1}
   nightFogDensity: 0.2
   morningAmbientClipId: ambient_morning
