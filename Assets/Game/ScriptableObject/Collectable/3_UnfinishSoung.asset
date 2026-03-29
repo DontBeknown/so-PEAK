@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 953c7de367e9d274988902a49d189cc6, type: 3}
+  m_Name: 3_UnfinishSoung
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Collectable.CollectableItem
+  id: 3_UnfinishSoung
+  headerName: 'THE UNFINISHED SONG '
+  content: "(A journal entry on a nightstand)\r\n\r\nJune 14th.\r\nThe radio is nothing
+    but static now, so I\u2019ve been practicing the banjo more. But the acoustics
+    feel... different lately. I was playing on the porch and I stopped to tune the
+    G-string, and I swear I heard the echo carry on for a full ten seconds. It didn\u2019t
+    sound like my note, though. It sounded like the trees vibrating.\r\n\r\nSarah
+    says it\u2019s just the wind through the Tall Pines, but the wind doesn't keep
+    a melody. It\u2019s probably just the altitude playing tricks on my ears. Still,
+    the hawks didn't come out today. They\u2019re staying low in the branches."
+  type: 0
+  icon: {fileID: 0}
+  dialogData: {fileID: 0}

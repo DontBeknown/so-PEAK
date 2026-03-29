@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 953c7de367e9d274988902a49d189cc6, type: 3}
+  m_Name: 4_BirdWatch
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Collectable.CollectableItem
+  id: 4_BirdWatch
+  headerName: BIRD WATCHING
+  content: "(A frantic scribble on the back of a grocery list)\r\n\r\nThe birds aren't
+    flying. I walked up the ridge to check on the nest, and the three of them are
+    just... sitting in the dirt. They didn't even flinch when I got close. They\u2019re
+    staring into the treeline.\r\n\r\nActually, they aren't staring. Their heads
+    are tilted, like they\u2019re listening to the roots. I tried to make a noise
+    to scare them off\u2014a clap, a shout\u2014but my voice felt heavy. Like the
+    air is getting thicker, like it\u2019s turning into sap. It\u2019s still a beautiful
+    day. The sun is gold. So why am I shivering?"
+  type: 0
+  icon: {fileID: 0}
+  dialogData: {fileID: 0}

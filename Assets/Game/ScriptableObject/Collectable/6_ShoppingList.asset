@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 953c7de367e9d274988902a49d189cc6, type: 3}
+  m_Name: 6_ShoppingList
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Collectable.CollectableItem
+  id: 6_ShoppingList
+  headerName: A SHOPPING LIST FOR THE END
+  content: "(Fragmented thoughts on a torn calendar page)\r\n\r\n    ~~Matches~~\r\n\r\n   
+    ~~Water~~\r\n\r\n    Salt (for the windowsills? Sarah said it helps. Helps what?)\r\n\r\n   
+    Curtains (heavy ones. Don't look at the treeline.)\r\n\r\nThe humming is a song
+    now. I recognized the tune today. It\u2019s the one I wrote last week, but it\u2019s
+    being played by the rubbing of bark against bark. It\u2019s so beautiful it makes
+    my nose bleed. I saw Sarah walking toward the Tall Pines this morning. I called
+    out to her, and she turned around, but she didn't have a face. No, that's wrong.
+    She had her face, but it looked like wood grain. She said the forest is finally
+    ready to reach out."
+  type: 0
+  icon: {fileID: 0}
+  dialogData: {fileID: 0}

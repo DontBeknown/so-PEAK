@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 953c7de367e9d274988902a49d189cc6, type: 3}
+  m_Name: 7_ToSomeOne
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Collectable.CollectableItem
+  id: 7_ToSomeOne
+  headerName: TO WHOM IT MAY CONCERN
+  content: "(A clean sheet of paper left on a stump at the mountain's highest point)\r\n\r\nThe
+    sun is out. It is a perfect day.\r\nThe hawks are gone because they decided to
+    become branches.\r\n\r\nIf you are reading this, you are probably tired from
+    the climb. Rest your legs. Don't look at the horizon\u2014look at your own hands.
+    Do you see the green under the skin? It\u2019s not a bruise. It\u2019s a leaf.\r\n\r\nI\u2019m
+    going into the grove now. Sarah says the sap is sweet. The air doesn't smell
+    like pine anymore; it smells like breath. The Tall Pines aren't trees, they\u2019re
+    fingers, and the mountain is finally closing its hand. It\u2019s a warm embrace.
+    Please, walk into the shade. It\u2019s so much quieter when you stop being a
+    person and start being a forest."
+  type: 0
+  icon: {fileID: 0}
+  dialogData: {fileID: 0}

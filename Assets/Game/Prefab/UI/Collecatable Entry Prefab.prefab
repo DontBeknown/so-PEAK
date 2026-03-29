@@ -327,11 +327,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 5589261754965554737}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 1}
-  m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -82.2}
-  m_SizeDelta: {x: 153.2812, y: 33.3178}
-  m_Pivot: {x: 0.5, y: 1}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: -0.000030517578, y: -7.74}
+  m_SizeDelta: {x: 124.35071, y: 37.5}
+  m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &1756249273560074707
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -360,7 +360,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Header
+  m_text: TRAIL MARKERS
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2f514087d26fb4743b4a83f724e5930c, type: 2}
   m_sharedMaterial: {fileID: 3324513821055252714, guid: 2f514087d26fb4743b4a83f724e5930c, type: 2}
@@ -406,7 +406,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
+  m_overflowMode: 1
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0

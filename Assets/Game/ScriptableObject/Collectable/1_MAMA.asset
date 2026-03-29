@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 953c7de367e9d274988902a49d189cc6, type: 3}
+  m_Name: 1_MAMA
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Collectable.CollectableItem
+  id: 1_MAMA
+  headerName: "THE VIEW FROM MAMA\u2019S PORCH"
+  content: "(A handwritten note tucked into a weathered recipe book)\n\n\nElias,
+    if you\u2019re looking for the flour, I moved it to the tin under the sink. The
+    humidity is getting to the paper bags. I spent the morning watching the hawks
+    circle the Peak. There\u2019s three of them this year\u2014the parents and a
+    little one. They look so small against the blue, but they own the whole world
+    up here. Come by for tea when you\u2019re done with the traps. The mountain is
+    so quiet today, it\u2019s like it\u2019s holding its breath just to hear us laugh.\n\n"
+  type: 0
+  icon: {fileID: 0}
+  dialogData: {fileID: 0}

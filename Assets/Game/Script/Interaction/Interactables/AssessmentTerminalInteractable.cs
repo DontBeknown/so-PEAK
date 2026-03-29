@@ -71,8 +71,15 @@ namespace Game.Interaction
         {
             get
             {
-                if (uiServiceProvider == null)
-                    return false;
+                if (uiServiceProvider == null){
+                    uiServiceProvider = ServiceContainer.Instance.TryGet<UIServiceProvider>();
+                    if (uiServiceProvider == null)
+                    {
+                        Debug.LogError("[AssessmentTerminalInteractable] UIServiceProvider not found in ServiceContainer!");
+                        return false;
+                    }
+                }
+
 
                 if (isCurrentlyHolding || _isWaitingForPanelClose)
                     return false;
@@ -147,13 +154,9 @@ namespace Game.Interaction
         {
             if (uiServiceProvider == null)
             {
-                uiServiceProvider = ServiceContainer.Instance.TryGet<UIServiceProvider>();
-                if (uiServiceProvider == null)
-                {
-                     Debug.LogError("[AssessmentTerminalInteractable] UIServiceProvider not found!");
-                    UnlockPlayer();
-                    return;
-                }
+                Debug.LogError("[AssessmentTerminalInteractable] UIServiceProvider not found!");
+                UnlockPlayer();
+                return;
             }
             
             // Open PlayerStatsTracker panel via UIServiceProvider (SOLID: Facade pattern)

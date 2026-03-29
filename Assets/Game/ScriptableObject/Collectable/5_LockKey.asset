@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 953c7de367e9d274988902a49d189cc6, type: 3}
+  m_Name: 5_LockKey
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Collectable.CollectableItem
+  id: 5_LockKey
+  headerName: THE LOCKER KEY
+  content: "(A note taped to a heavy cellar door)\r\n\r\nElias, if you beat me back,
+    I\u2019m in the basement with the canned peaches. I\u2019ve brought the blankets
+    down. It\u2019s not that it\u2019s cold, it\u2019s just... I don\u2019t like
+    the way the trees are looking. Have you noticed the Tall Pines? I counted them
+    yesterday. There were twelve. Today, there are thirteen, and they\u2019ve moved
+    fifty yards closer to the porch.\r\n\r\nI\u2019m not scared, I\u2019m just tired.
+    My bones feel like they\u2019re humming. Don\u2019t worry about the noise upstairs;
+    it\u2019s just the wind. Or the house trying to stretch. We have enough food
+    for a month. We\u2019ll just stay cozy. Love you."
+  type: 0
+  icon: {fileID: 0}
+  dialogData: {fileID: 0}

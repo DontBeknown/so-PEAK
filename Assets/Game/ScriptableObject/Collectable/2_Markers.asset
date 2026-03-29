@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 953c7de367e9d274988902a49d189cc6, type: 3}
+  m_Name: 2_Markers
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Collectable.CollectableItem
+  id: 2_Markers
+  headerName: TRAIL MARKERS
+  content: "(A scrap of paper pinned to a wooden post)\n\nTo the Saturday Hikers:\r\nSarah
+    and I cleared the brush on the East Path. The wild berries are coming in early!
+    Please leave some for the bears, but definitely grab a handful near the Tall
+    Pines. The shade there is the best on the mountain\u2014perfect for a midpoint
+    rest.\r\n\r\nP.S. Isn\u2019t the air sweet today? Like pine and honey. We are
+    so lucky to call this place home.\n\n"
+  type: 0
+  icon: {fileID: 0}
+  dialogData: {fileID: 0}
