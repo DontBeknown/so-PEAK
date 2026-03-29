@@ -23,6 +23,17 @@ public class PlayerConfig : ScriptableObject
     
     [Header("Movement - Physics")]
     public float climbDetectionRange = 1f;
+    [Tooltip("Multiplier of CharacterController radius used for climb detection sphere cast")]
+    public float climbDetectionRadiusMultiplier = 0.9f;
+    [Tooltip("Minimum wall angle from up vector required to be climbable (90 = perfectly vertical wall)")]
+    [Range(0f, 180f)]
+    public float minClimbableWallAngle = 70f;
+    [Tooltip("Maximum wall angle from up vector allowed to be climbable")]
+    [Range(0f, 180f)]
+    public float maxClimbableWallAngle = 110f;
+    [Tooltip("Maximum angle between player forward and wall inward direction to allow climbing")]
+    [Range(0f, 180f)]
+    public float maxClimbApproachAngle = 60f;
     public LayerMask climbableLayer;
     public float gravity = -9.81f;
     public float groundCheckDistance = 0.3f;

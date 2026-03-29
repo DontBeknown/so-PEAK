@@ -51,16 +51,31 @@ namespace Game.Player.Services
 
         public bool TryDetectClimbable(out RaycastHit hit)
         {
-            Vector3 origin = _transform.position + Vector3.up * 0.5f;
-            return Physics.SphereCast(
+            Vector3 origin = _transform.TransformPoint(_controller.center);
+            float castRadius = Mathf.Max(0.05f, _controller.radius * _config.climbDetectionRadiusMultiplier);
+
+            bool hasHit = Physics.SphereCast(
                 origin,
-                0.3f,
+                castRadius,
                 _transform.forward,
                 out hit,
                 _config.climbDetectionRange,
                 _config.climbableLayer,
                 QueryTriggerInteraction.Ignore
             );
+
+            if (!hasHit)
+                return false;
+
+            float wallAngle = Vector3.Angle(hit.normal, Vector3.up);
+            if (wallAngle < _config.minClimbableWallAngle || wallAngle > _config.maxClimbableWallAngle)
+                return false;
+
+            float approachAngle = Vector3.Angle(_transform.forward, -hit.normal);
+            if (approachAngle > _config.maxClimbApproachAngle)
+                return false;
+
+            return true;
         }
 
         public bool CanMantle(Vector3 contactPoint, Vector3 wallNormal, out Vector3 topPoint)

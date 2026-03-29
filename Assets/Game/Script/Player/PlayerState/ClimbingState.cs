@@ -133,6 +133,8 @@ public class ClimbingState : IPlayerState
     {
         if (_stateTransitioner != null)
         {
+            model.GetAnimationService().SetClimbing(false);
+            model.Stats?.SetClimbing(false);
             _stateTransitioner.TransitionTo(new WalkingState(_stateTransitioner));
         }
         else

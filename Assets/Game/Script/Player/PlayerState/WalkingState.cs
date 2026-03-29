@@ -30,11 +30,15 @@ public class WalkingState : IPlayerState
     public void Enter(PlayerModelRefactored model)
     {
         var animService = model.GetAnimationService();
+        // Ensure stale climb/fall flags are cleared when entering walking from other states.
+        animService.SetClimbing(false);
+        animService.SetFalling(false);
         animService.SetWalking(true);
         animService.SetGrounded(true);
         _footstepTimer = FootstepInterval;
         
         // Enable stamina regeneration in walking state
+        model.Stats?.SetClimbing(false);
         model.Stats?.SetWalking(true);
         
         // Clear downward velocity when entering walking state (landing from a fall/jump)

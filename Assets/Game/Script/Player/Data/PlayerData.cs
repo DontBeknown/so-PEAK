@@ -18,6 +18,10 @@ namespace Game.Player.Data
 
         [Header("Detection Settings")]
         public float ClimbDetectionRange = 1f;
+        public float ClimbDetectionRadiusMultiplier = 0.9f;
+        public float MinClimbableWallAngle = 70f;
+        public float MaxClimbableWallAngle = 110f;
+        public float MaxClimbApproachAngle = 60f;
         public float GroundCheckDistance = 0.3f;
         public LayerMask ClimbableLayer;
         public LayerMask GroundLayer;
@@ -50,6 +54,10 @@ namespace Game.Player.Data
                 RotationSmoothness = config.rotationSmoothness,
                 Gravity = config.gravity,
                 ClimbDetectionRange = config.climbDetectionRange,
+                ClimbDetectionRadiusMultiplier = config.climbDetectionRadiusMultiplier,
+                MinClimbableWallAngle = config.minClimbableWallAngle,
+                MaxClimbableWallAngle = config.maxClimbableWallAngle,
+                MaxClimbApproachAngle = config.maxClimbApproachAngle,
                 GroundCheckDistance = config.groundCheckDistance,
                 ClimbableLayer = config.climbableLayer,
                 GroundLayer = config.groundLayer,
