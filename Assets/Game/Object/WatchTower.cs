@@ -1,7 +1,7 @@
 using UnityEngine;
 using Game.Core.DI;
 using Game.Core.Events;
-
+using Game.Environment.DayNight;
 public class WatchTower : MonoBehaviour
 {
     [SerializeField] private GameObject nightlight;
