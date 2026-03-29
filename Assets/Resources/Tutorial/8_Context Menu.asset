@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.Tutorial.TutorialStepData
   stepId: context_menu
   title: Context Menu
-  instructionText: Hover the mouse to that item and right click to open the  context
-    menu.
+  instructionText: HOVER the mouse to that item and press RIGHT CLICK to open the 
+    context menu.
   inputHintText: Right-click
   completionType: 8
   completionThreshold: 1

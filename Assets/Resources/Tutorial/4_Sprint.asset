@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.Tutorial.TutorialStepData
   stepId: sprint
   title: Sprint
-  instructionText: Hold sprint while moving.
+  instructionText: Hold SHIFT while moving to Sprint.
   inputHintText: Sprint
   completionType: 4
   completionThreshold: 1.5

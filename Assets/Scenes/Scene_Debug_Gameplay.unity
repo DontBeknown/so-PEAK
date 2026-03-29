@@ -6715,6 +6715,14 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -18
       objectReference: {fileID: 0}
+    - target: {fileID: 981263882377947087, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: availableRecipes.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 981263882377947087, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: 'availableRecipes.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 5dedc8a05df4ef94aa777e7697c022d3, type: 2}
     - target: {fileID: 1261091401963922590, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0

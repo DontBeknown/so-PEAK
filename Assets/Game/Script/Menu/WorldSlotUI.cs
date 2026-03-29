@@ -22,6 +22,7 @@ namespace Game.Menu
         [SerializeField] private Button selectButton;
 
         [Header("Visual States")]
+        [SerializeField] private GameObject highlightBorder;
         [SerializeField] private Image backgroundImage;
         [SerializeField] private Color normalColor = new Color(0.8f, 0.8f, 0.8f, 1f);
         [SerializeField] private Color hoverColor = new Color(1f, 1f, 1f, 1f);
@@ -146,6 +147,7 @@ namespace Game.Menu
 
         private void UpdateBackgroundColor()
         {
+            highlightBorder.SetActive(isSelected);
             if (backgroundImage == null)
                 return;
 

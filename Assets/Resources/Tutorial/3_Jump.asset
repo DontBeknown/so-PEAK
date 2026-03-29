@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.Tutorial.TutorialStepData
   stepId: jump
   title: Jump
-  instructionText: Press Space to Jump.
+  instructionText: Press SPACE to Jump.
   inputHintText: Jump
   completionType: 3
   completionThreshold: 1
