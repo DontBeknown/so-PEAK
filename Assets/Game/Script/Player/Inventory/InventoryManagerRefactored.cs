@@ -152,7 +152,7 @@ namespace Game.Player.Inventory
             }
 
             // Remove the consumed item
-            _service.RemoveItem(item, 1);
+            _service.RemoveItem(item, 1, suppressNotification: true);
 
             // Publish consumption event
             _eventBus.Publish(new Game.Player.Inventory.Events.ItemConsumedEvent(item));

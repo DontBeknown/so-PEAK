@@ -1,5 +1,7 @@
 using UnityEngine;
 using Game.Player.Inventory.HeldItems;
+using Game.Core.DI;
+using Game.Core.Events;
 
 /// <summary>
 /// Canteen item - refillable water container with multiple charges.
@@ -24,8 +26,7 @@ public class CanteenItem : HeldEquipmentItem
     public float ThirstRestorationPerSip => thirstRestorationPerSip;
     public float UseCooldownSeconds => useCooldownSeconds;
     public float RefillDurationSeconds => refillDurationSeconds;
-    public AudioClip DrinkSound => drinkSound;
-    public AudioClip RefillSound => refillSound;
+
 
     public override IHeldItemBehavior CreateBehavior(GameObject playerObject)
     {
@@ -85,12 +86,9 @@ public class CanteenItem : HeldEquipmentItem
             //Debug.Log($"[CanteenItem] Drank from canteen - restored {thirstRestorationPerSip} thirst. Charges: {state.currentCharges}/{state.maxCharges}");
         }
 
-        // Play drink sound
-        if (drinkSound != null)
-        {
-            // TODO: Play at player position
-            AudioSource.PlayClipAtPoint(drinkSound, Camera.main.transform.position);
-        }
+        ServiceContainer.Instance
+            .TryGet<IEventBus>()
+            ?.Publish(new Game.Player.Inventory.Events.ItemConsumedEvent(this));
 
         return true;
     }

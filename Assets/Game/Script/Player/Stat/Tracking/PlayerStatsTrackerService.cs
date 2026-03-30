@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Game.Core.DI;
 using Game.Core.Events;
+using InventoryItemConsumedEvent = Game.Player.Inventory.Events.ItemConsumedEvent;
 
 /// <summary>
 /// Main service that coordinates all stat tracking.
@@ -93,7 +94,7 @@ public class PlayerStatsTrackerService : MonoBehaviour
         
         if (eventBus != null)
         {
-            eventBus.Subscribe<Game.Player.Inventory.Events.ItemConsumedEvent>(HandleItemConsumedEvent);
+            eventBus.Subscribe<InventoryItemConsumedEvent>(HandleItemConsumedEvent);
         }
     }
     
@@ -108,7 +109,7 @@ public class PlayerStatsTrackerService : MonoBehaviour
         
         if (eventBus != null)
         {
-            eventBus.Unsubscribe<Game.Player.Inventory.Events.ItemConsumedEvent>(HandleItemConsumedEvent);
+            eventBus.Unsubscribe<InventoryItemConsumedEvent>(HandleItemConsumedEvent);
         }
     }
     
@@ -213,7 +214,7 @@ public class PlayerStatsTrackerService : MonoBehaviour
     }
     
     // EventBus handler for item consumption
-    private void HandleItemConsumedEvent(Game.Player.Inventory.Events.ItemConsumedEvent evt)
+    private void HandleItemConsumedEvent(InventoryItemConsumedEvent evt)
     {
         if (evt.Item != null)
         {

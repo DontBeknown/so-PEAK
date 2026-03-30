@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using DG.Tweening;
 using Game.Player;
 using Game.Player.Services;
 using Game.Core.DI;
@@ -55,11 +56,36 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
     
     [Header("Settings")]
     [SerializeField] private float refreshRate = 0.5f; // Update UI every 0.5 seconds
+
+    [Header("Animations")]
+    [SerializeField] private float panelFadeDuration = 0.32f;
+    [SerializeField] private float tabTransitionDuration = 0.32f;
+    [SerializeField] private float tabSlideOffset = 120f;
+    [SerializeField] private Ease panelFadeEase = Ease.OutQuad;
+    [SerializeField] private Ease tabTransitionEase = Ease.OutCubic;
+
+    [Header("Tab Button Visuals")]
+    [SerializeField] private Color activeTabButtonColor = Color.white;
+    [SerializeField] private Color inactiveTabButtonColor = new Color(0.75f, 0.75f, 0.75f, 1f);
+    [SerializeField] private Color activeTabTextColor = Color.black;
+    [SerializeField] private Color inactiveTabTextColor = Color.white;
     
     private StatMetricType currentGraphMetric = StatMetricType.Distance;
     private float timeSinceLastRefresh;
     private bool _progressNextLevelMode = false;
     private IEventBus _eventBus;
+    private CanvasGroup _panelCanvasGroup;
+    private CanvasGroup _statTabCanvasGroup;
+    private CanvasGroup _assessmentTabCanvasGroup;
+    private RectTransform _statTabRect;
+    private RectTransform _assessmentTabRect;
+    private Vector2 _statTabBasePosition;
+    private Vector2 _assessmentTabBasePosition;
+    private bool _tabBasePositionsInitialized;
+    private bool _isShowingStatTrackingTab = true;
+    private bool _tabStateInitialized;
+    private Sequence _panelShowTween;
+    private Sequence _tabTransitionTween;
     
     // IUIPanel implementation
     public bool IsActive => panel != null && panel.activeSelf;
@@ -95,6 +121,8 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
         }
         
         _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+
+        InitializeAnimationReferences();
         
         SetupButtons();
         
@@ -112,6 +140,7 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
     private void OnDisable()
     {
         _eventBus?.Unsubscribe<AssessmentUIOpenedEvent>(OnAssessmentUIOpened);
+        KillActiveTweens();
     }
     
     private void SetupButtons()
@@ -123,10 +152,10 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
             nextLevelButton.onClick.AddListener(OnNextLevelButtonPressed);
         
         if (statTrackingTabButton != null)
-            statTrackingTabButton.onClick.AddListener(() => SwitchToTab(true));
+            statTrackingTabButton.onClick.AddListener(() => SwitchToTab(true, true));
         
         if (assessmentTabButton != null)
-            assessmentTabButton.onClick.AddListener(() => SwitchToTab(false));
+            assessmentTabButton.onClick.AddListener(() => SwitchToTab(false, true));
         
         if (distanceButton != null)
             distanceButton.onClick.AddListener(() => SwitchGraphMetric(StatMetricType.Distance));
@@ -173,9 +202,33 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
         if (panel != null)
         {
             panel.SetActive(true);
-            SwitchToTab(true); // Default to stat tracking tab
+
+            InitializeAnimationReferences();
+            KillPanelShowTween();
+
+            if (_panelCanvasGroup != null)
+            {
+                _panelCanvasGroup.alpha = 0f;
+                _panelCanvasGroup.interactable = false;
+                _panelCanvasGroup.blocksRaycasts = false;
+            }
+
+            SwitchToTab(true, false); // Default to stat tracking tab
             ApplyButtonMode();
             RefreshDisplay();
+
+            if (_panelCanvasGroup != null)
+            {
+                _panelShowTween = DOTween.Sequence();
+                _panelShowTween.Append(_panelCanvasGroup.DOFade(1f, panelFadeDuration).SetEase(panelFadeEase));
+                _panelShowTween.OnComplete(() =>
+                {
+                    _panelCanvasGroup.interactable = true;
+                    _panelCanvasGroup.blocksRaycasts = true;
+                    _panelShowTween = null;
+                });
+                _panelShowTween.SetLink(panel);
+            }
         }
     }
     
@@ -183,13 +236,18 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
     /// Switches between stat tracking and assessment tabs
     /// </summary>
     /// <param name="showStatTracking">True for stat tracking, false for assessment</param>
-    public void SwitchToTab(bool showStatTracking)
+    public void SwitchToTab(bool showStatTracking, bool animate = false)
     {
-        if (statTrackingTab != null)
-            statTrackingTab.SetActive(showStatTracking);
-        
-        if (assessmentTab != null)
-            assessmentTab.SetActive(!showStatTracking);
+        InitializeAnimationReferences();
+
+        if (!animate || !CanAnimateTabs())
+        {
+            SetTabImmediate(showStatTracking);
+        }
+        else
+        {
+            AnimateTabTransition(showStatTracking);
+        }
         
         if (showStatTracking)
         {
@@ -217,6 +275,9 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
         
         // Reset progression mode flag when hiding
         _progressNextLevelMode = false;
+
+        KillActiveTweens();
+        ResetAnimationState();
         
         if (panel != null)
         {
@@ -347,8 +408,25 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
     /// </summary>
     public void SwitchGraphMetric(StatMetricType metricType)
     {
+        if (currentGraphMetric == metricType)
+        {
+            return;
+        }
+
         currentGraphMetric = metricType;
-        UpdateGraph();
+
+        if (graphRenderer == null || trackerService == null)
+        {
+            return;
+        }
+
+        List<TimeSeriesDataPoint> data = trackerService.GetTimeSeriesData(currentGraphMetric);
+        graphRenderer.RenderGraphAnimated(data, currentGraphMetric);
+
+        if (currentMetricText != null)
+        {
+            currentMetricText.text = GetMetricName(currentGraphMetric);
+        }
     }
     
     /// <summary>
@@ -458,5 +536,255 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
                 uiService.ClosePanel(PanelName);
             }
         }
+    }
+
+    private void InitializeAnimationReferences()
+    {
+        if (panel != null && _panelCanvasGroup == null)
+        {
+            _panelCanvasGroup = GetOrAddCanvasGroup(panel);
+        }
+
+        if (statTrackingTab != null)
+        {
+            _statTabCanvasGroup = GetOrAddCanvasGroup(statTrackingTab);
+            _statTabRect = statTrackingTab.GetComponent<RectTransform>();
+        }
+
+        if (assessmentTab != null)
+        {
+            _assessmentTabCanvasGroup = GetOrAddCanvasGroup(assessmentTab);
+            _assessmentTabRect = assessmentTab.GetComponent<RectTransform>();
+        }
+
+        if (!_tabBasePositionsInitialized)
+        {
+            if (_statTabRect != null)
+            {
+                _statTabBasePosition = _statTabRect.anchoredPosition;
+            }
+
+            if (_assessmentTabRect != null)
+            {
+                _assessmentTabBasePosition = _assessmentTabRect.anchoredPosition;
+            }
+
+            _tabBasePositionsInitialized = true;
+        }
+    }
+
+    private CanvasGroup GetOrAddCanvasGroup(GameObject target)
+    {
+        var canvasGroup = target.GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+        {
+            canvasGroup = target.AddComponent<CanvasGroup>();
+        }
+
+        return canvasGroup;
+    }
+
+    private bool CanAnimateTabs()
+    {
+        return _statTabRect != null && _assessmentTabRect != null && _statTabCanvasGroup != null && _assessmentTabCanvasGroup != null;
+    }
+
+    private void SetTabImmediate(bool showStatTracking)
+    {
+        KillTabTransitionTween();
+
+        if (statTrackingTab != null)
+            statTrackingTab.SetActive(showStatTracking);
+
+        if (assessmentTab != null)
+            assessmentTab.SetActive(!showStatTracking);
+
+        if (_statTabRect != null)
+            _statTabRect.anchoredPosition = _statTabBasePosition;
+
+        if (_assessmentTabRect != null)
+            _assessmentTabRect.anchoredPosition = _assessmentTabBasePosition;
+
+        if (_statTabCanvasGroup != null)
+        {
+            _statTabCanvasGroup.alpha = showStatTracking ? 1f : 0f;
+            _statTabCanvasGroup.interactable = showStatTracking;
+            _statTabCanvasGroup.blocksRaycasts = showStatTracking;
+        }
+
+        if (_assessmentTabCanvasGroup != null)
+        {
+            _assessmentTabCanvasGroup.alpha = showStatTracking ? 0f : 1f;
+            _assessmentTabCanvasGroup.interactable = !showStatTracking;
+            _assessmentTabCanvasGroup.blocksRaycasts = !showStatTracking;
+        }
+
+        _isShowingStatTrackingTab = showStatTracking;
+        _tabStateInitialized = true;
+        UpdateTabButtonVisuals(showStatTracking);
+    }
+
+    private void AnimateTabTransition(bool showStatTracking)
+    {
+        if (_tabStateInitialized && _isShowingStatTrackingTab == showStatTracking)
+        {
+            return;
+        }
+
+        KillTabTransitionTween();
+        UpdateTabButtonVisuals(showStatTracking);
+
+        RectTransform incomingRect = showStatTracking ? _statTabRect : _assessmentTabRect;
+        RectTransform outgoingRect = showStatTracking ? _assessmentTabRect : _statTabRect;
+        CanvasGroup incomingCanvasGroup = showStatTracking ? _statTabCanvasGroup : _assessmentTabCanvasGroup;
+        CanvasGroup outgoingCanvasGroup = showStatTracking ? _assessmentTabCanvasGroup : _statTabCanvasGroup;
+        GameObject incomingTab = showStatTracking ? statTrackingTab : assessmentTab;
+        GameObject outgoingTab = showStatTracking ? assessmentTab : statTrackingTab;
+        Vector2 incomingBase = showStatTracking ? _statTabBasePosition : _assessmentTabBasePosition;
+        Vector2 outgoingBase = showStatTracking ? _assessmentTabBasePosition : _statTabBasePosition;
+
+        if (incomingTab != null)
+            incomingTab.SetActive(true);
+
+        if (outgoingTab != null)
+            outgoingTab.SetActive(true);
+
+        float outgoingDirection = showStatTracking ? 1f : -1f;
+        float incomingDirection = showStatTracking ? -1f : 1f;
+
+        if (incomingRect != null)
+            incomingRect.anchoredPosition = incomingBase + new Vector2(incomingDirection * tabSlideOffset, 0f);
+
+        if (outgoingRect != null)
+            outgoingRect.anchoredPosition = outgoingBase;
+
+        if (incomingCanvasGroup != null)
+        {
+            incomingCanvasGroup.alpha = 0f;
+            incomingCanvasGroup.interactable = false;
+            incomingCanvasGroup.blocksRaycasts = false;
+        }
+
+        if (outgoingCanvasGroup != null)
+        {
+            outgoingCanvasGroup.alpha = 1f;
+            outgoingCanvasGroup.interactable = false;
+            outgoingCanvasGroup.blocksRaycasts = false;
+        }
+
+        _tabTransitionTween = DOTween.Sequence();
+
+        if (outgoingRect != null)
+        {
+            _tabTransitionTween.Join(outgoingRect.DOAnchorPos(outgoingBase + new Vector2(outgoingDirection * tabSlideOffset, 0f), tabTransitionDuration).SetEase(tabTransitionEase));
+        }
+
+        if (outgoingCanvasGroup != null)
+        {
+            _tabTransitionTween.Join(outgoingCanvasGroup.DOFade(0f, tabTransitionDuration * 0.9f).SetEase(Ease.OutQuad));
+        }
+
+        if (incomingRect != null)
+        {
+            _tabTransitionTween.Join(incomingRect.DOAnchorPos(incomingBase, tabTransitionDuration).SetEase(tabTransitionEase));
+        }
+
+        if (incomingCanvasGroup != null)
+        {
+            _tabTransitionTween.Join(incomingCanvasGroup.DOFade(1f, tabTransitionDuration * 0.9f).SetEase(Ease.OutQuad));
+        }
+
+        _tabTransitionTween.OnComplete(() =>
+        {
+            if (outgoingRect != null)
+                outgoingRect.anchoredPosition = outgoingBase;
+
+            if (incomingRect != null)
+                incomingRect.anchoredPosition = incomingBase;
+
+            if (outgoingTab != null)
+                outgoingTab.SetActive(false);
+
+            if (incomingTab != null)
+                incomingTab.SetActive(true);
+
+            if (incomingCanvasGroup != null)
+            {
+                incomingCanvasGroup.alpha = 1f;
+                incomingCanvasGroup.interactable = true;
+                incomingCanvasGroup.blocksRaycasts = true;
+            }
+
+            if (outgoingCanvasGroup != null)
+            {
+                outgoingCanvasGroup.alpha = 0f;
+                outgoingCanvasGroup.interactable = false;
+                outgoingCanvasGroup.blocksRaycasts = false;
+            }
+
+            _isShowingStatTrackingTab = showStatTracking;
+            _tabStateInitialized = true;
+            _tabTransitionTween = null;
+        });
+
+        _tabTransitionTween.SetLink(gameObject);
+    }
+
+    private void UpdateTabButtonVisuals(bool showStatTracking)
+    {
+        if (statTrackingTabButton != null && statTrackingTabButton.targetGraphic != null && statTrackingTabButton.GetComponentInChildren<TextMeshProUGUI>() != null)
+        {
+            statTrackingTabButton.targetGraphic.color = showStatTracking ? activeTabButtonColor : inactiveTabButtonColor;
+            statTrackingTabButton.GetComponentInChildren<TextMeshProUGUI>().color = showStatTracking ? activeTabTextColor : inactiveTabTextColor;
+        }
+
+        if (assessmentTabButton != null && assessmentTabButton.targetGraphic != null && assessmentTabButton.GetComponentInChildren<TextMeshProUGUI>() != null)
+        {
+            assessmentTabButton.targetGraphic.color = showStatTracking ? inactiveTabButtonColor : activeTabButtonColor;
+            assessmentTabButton.GetComponentInChildren<TextMeshProUGUI>().color = showStatTracking ? inactiveTabTextColor : activeTabTextColor;
+        }
+    }
+
+    private void KillActiveTweens()
+    {
+        KillPanelShowTween();
+        KillTabTransitionTween();
+    }
+
+    private void KillPanelShowTween()
+    {
+        if (_panelShowTween != null && _panelShowTween.IsActive())
+        {
+            _panelShowTween.Kill();
+            _panelShowTween = null;
+        }
+    }
+
+    private void KillTabTransitionTween()
+    {
+        if (_tabTransitionTween != null && _tabTransitionTween.IsActive())
+        {
+            _tabTransitionTween.Kill();
+            _tabTransitionTween = null;
+        }
+    }
+
+    private void ResetAnimationState()
+    {
+        if (_panelCanvasGroup != null)
+        {
+            _panelCanvasGroup.alpha = 1f;
+            _panelCanvasGroup.interactable = true;
+            _panelCanvasGroup.blocksRaycasts = true;
+        }
+
+        if (_statTabRect != null)
+            _statTabRect.anchoredPosition = _statTabBasePosition;
+
+        if (_assessmentTabRect != null)
+            _assessmentTabRect.anchoredPosition = _assessmentTabBasePosition;
+
+        _tabStateInitialized = false;
+        _isShowingStatTrackingTab = true;
     }
 }

@@ -279,8 +279,10 @@ public class GridInventoryUI : MonoBehaviour
                 }
             }
 
+            _eventBus.Publish(new Game.Player.Inventory.Events.ItemConsumedEvent(item));
+
             // Remove the exact placement the user clicked on
-            _inventoryManager.RemoveFromGrid(itemUI.Placement);
+            _inventoryManager.RemoveFromGrid(itemUI.Placement, suppressNotification: true);
             UpdateStatsDisplay();
         }
     }

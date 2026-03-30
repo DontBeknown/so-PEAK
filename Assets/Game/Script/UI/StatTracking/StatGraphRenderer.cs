@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using DG.Tweening;
 
 /// <summary>
 /// Renders statistical time-series data as a line graph.
@@ -19,10 +20,16 @@ public class StatGraphRenderer : MonoBehaviour
     [SerializeField] private Color gridColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
     [SerializeField] private int gridLinesX = 5;
     [SerializeField] private int gridLinesY = 5;
+
+    [Header("Animation")]
+    [SerializeField] private float metricTransitionDuration = 0.32f;
+    [SerializeField] private float lineStaggerDelay = 0.005f;
+    [SerializeField] private Ease lineTransitionEase = Ease.OutCubic;
     
     private RawImage backgroundImage;
     private List<GameObject> graphPoints;
     private List<GameObject> gridLines;
+    private Sequence _activeRenderTween;
     
     private void Awake()
     {
@@ -102,6 +109,20 @@ public class StatGraphRenderer : MonoBehaviour
     /// </summary>
     public void RenderGraph(List<TimeSeriesDataPoint> data, StatMetricType metricType)
     {
+        RenderGraphInternal(data, metricType, false);
+    }
+
+    /// <summary>
+    /// Renders a graph and animates line segments for metric transitions.
+    /// </summary>
+    public void RenderGraphAnimated(List<TimeSeriesDataPoint> data, StatMetricType metricType)
+    {
+        RenderGraphInternal(data, metricType, true);
+    }
+
+    private void RenderGraphInternal(List<TimeSeriesDataPoint> data, StatMetricType metricType, bool animate)
+    {
+        KillActiveRenderTween();
         ClearGraph();
         
         if (data == null || data.Count < 2)
@@ -135,10 +156,15 @@ public class StatGraphRenderer : MonoBehaviour
         valueRange = maxValue - minValue;
         
         // Draw line graph
-        DrawLineGraph(visibleData, minValue, maxValue, valueRange);
+        DrawLineGraph(visibleData, minValue, maxValue, valueRange, animate);
+
+        if (animate)
+        {
+            AnimateLineSegments();
+        }
     }
     
-    private void DrawLineGraph(List<TimeSeriesDataPoint> data, float minValue, float maxValue, float valueRange)
+    private void DrawLineGraph(List<TimeSeriesDataPoint> data, float minValue, float maxValue, float valueRange, bool animate)
     {
         if (graphContainer == null) return;
         
@@ -164,9 +190,70 @@ public class StatGraphRenderer : MonoBehaviour
                 lineColor,
                 lineWidth
             );
+
+            if (animate)
+            {
+                RectTransform lineRect = lineSegment.GetComponent<RectTransform>();
+                Image lineImage = lineSegment.GetComponent<Image>();
+
+                if (lineRect != null)
+                {
+                    lineRect.localScale = new Vector3(0f, 1f, 1f);
+                }
+
+                if (lineImage != null)
+                {
+                    Color animatedColor = lineImage.color;
+                    animatedColor.a = 0f;
+                    lineImage.color = animatedColor;
+                }
+            }
             
             graphPoints.Add(lineSegment);
         }
+    }
+
+    private void AnimateLineSegments()
+    {
+        if (graphPoints.Count == 0)
+        {
+            return;
+        }
+
+        _activeRenderTween = DOTween.Sequence();
+
+        float scaleDuration = metricTransitionDuration * 0.8f;
+        float fadeDuration = metricTransitionDuration * 0.65f;
+
+        for (int i = 0; i < graphPoints.Count; i++)
+        {
+            GameObject linePoint = graphPoints[i];
+            if (linePoint == null)
+            {
+                continue;
+            }
+
+            RectTransform lineRect = linePoint.GetComponent<RectTransform>();
+            Image lineImage = linePoint.GetComponent<Image>();
+            float delay = i * lineStaggerDelay;
+
+            if (lineRect != null)
+            {
+                _activeRenderTween.Insert(delay, lineRect.DOScaleX(1f, scaleDuration).SetEase(lineTransitionEase));
+            }
+
+            if (lineImage != null)
+            {
+                _activeRenderTween.Insert(delay, lineImage.DOFade(lineColor.a, fadeDuration).SetEase(Ease.OutQuad));
+            }
+        }
+
+        _activeRenderTween.OnComplete(() =>
+        {
+            _activeRenderTween = null;
+        });
+
+        _activeRenderTween.SetLink(gameObject);
     }
     
     private GameObject CreateLineSegment(Vector2 start, Vector2 end, Color color, float width)
@@ -220,6 +307,15 @@ public class StatGraphRenderer : MonoBehaviour
         }
         graphPoints.Clear();
     }
+
+    private void KillActiveRenderTween()
+    {
+        if (_activeRenderTween != null && _activeRenderTween.IsActive())
+        {
+            _activeRenderTween.Kill();
+            _activeRenderTween = null;
+        }
+    }
     
     private void SetColorForMetric(StatMetricType metricType)
     {
@@ -236,6 +332,7 @@ public class StatGraphRenderer : MonoBehaviour
     
     private void OnDestroy()
     {
+        KillActiveRenderTween();
         ClearGraph();
     }
 }
