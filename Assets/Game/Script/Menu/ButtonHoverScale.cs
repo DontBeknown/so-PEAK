@@ -51,8 +51,8 @@ namespace Game.Menu
         {
             if (!button.interactable) return;
             ScaleTo(originalScale * hoverScale, hoverDuration, hoverEase);
-            if(hoverSoundId != null && hoverSoundId != "")
-                soundService.PlayUISound(hoverSoundId, volumeScale: hoverVolumeScale);
+            if (!string.IsNullOrEmpty(hoverSoundId))
+                soundService?.PlayUISound(hoverSoundId, volumeScale: hoverVolumeScale);
         }
 
         public void OnPointerExit(PointerEventData eventData)
@@ -64,8 +64,8 @@ namespace Game.Menu
         {
             if (!button.interactable) return;
             ScaleTo(originalScale * pressedScale, pressDuration, pressEase);
-            if(clickSoundId != null && clickSoundId != "")
-                soundService.PlayUISound(clickSoundId, volumeScale: clickVolumeScale);
+            if (!string.IsNullOrEmpty(clickSoundId))
+                soundService?.PlayUISound(clickSoundId, volumeScale: clickVolumeScale);
         }
 
         public void OnPointerUp(PointerEventData eventData)
@@ -79,6 +79,7 @@ namespace Game.Menu
             scaleTween?.Kill();
             scaleTween = transform.DOScale(target, duration)
                 .SetEase(ease)
+                .SetUpdate(true)
                 .SetLink(gameObject);
         }
     }

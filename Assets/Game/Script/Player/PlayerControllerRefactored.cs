@@ -14,6 +14,9 @@ namespace Game.Player
     /// </summary>
     public class PlayerControllerRefactored : MonoBehaviour, IStateTransitioner
     {
+        private const string PausePanelName = "PauseMenu";
+        private const string SoundSettingsPanelName = "SoundSettings";
+
         [Header("Configuration")]
         [SerializeField] private PlayerConfig config;
         
@@ -100,6 +103,7 @@ namespace Game.Player
             _inputHandler.OnInteractRequested += HandleInteractInput;
             _inputHandler.OnInventoryToggleRequested += HandleInventoryToggle;
             _inputHandler.OnQuickUseRequested += HandleQuickUse;
+            _inputHandler.OnPauseToggleRequested += HandlePauseToggle;
         }
 
         /// <summary>
@@ -312,6 +316,27 @@ namespace Game.Player
         private void HandleQuickUse()
         {
             _inventoryFacade?.QuickUseConsumable();
+        }
+
+        private void HandlePauseToggle()
+        {
+            uiServiceProvider ??= FindFirstObjectByType<UIServiceProvider>();
+            if (uiServiceProvider == null)
+            {
+                Debug.LogWarning("[PlayerControllerRefactored] UIServiceProvider not found. Cannot toggle pause menu.");
+                return;
+            }
+
+            uiServiceProvider.EnsureInitialized();
+
+            IUIPanel settingsPanel = uiServiceProvider.GetPanel(SoundSettingsPanelName);
+            if (settingsPanel != null && settingsPanel.IsActive)
+            {
+                uiServiceProvider.ClosePanel(SoundSettingsPanelName);
+                return;
+            }
+
+            uiServiceProvider.TogglePanel(PausePanelName);
         }
 
         #endregion

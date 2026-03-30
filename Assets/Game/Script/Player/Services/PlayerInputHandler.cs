@@ -26,6 +26,7 @@ namespace Game.Player.Services
         public System.Action OnInteractRequested;
         public System.Action OnInventoryToggleRequested;
         public System.Action OnQuickUseRequested;
+        public System.Action OnPauseToggleRequested;
 
         public Vector2 MoveInput => _moveInput;
 
@@ -131,6 +132,7 @@ namespace Game.Player.Services
                     OnInteractRequested?.Invoke();
             };
             _inputActions.Player.OpenInventory.performed += _ => OnInventoryToggleRequested?.Invoke();
+            _inputActions.Player.Pause.performed += _ => OnPauseToggleRequested?.Invoke();
             
             // Uncomment when sprint is added to input actions
             // _inputActions.Player.QuickUse.performed += _ => 
@@ -187,6 +189,8 @@ namespace Game.Player.Services
             _inputActions.Player.Climb.performed -= _ => HandleClimbInput();
             _inputActions.Player.Pickup.performed -= _ => OnInteractRequested?.Invoke();
             _inputActions.Player.OpenInventory.performed -= _ => OnInventoryToggleRequested?.Invoke();
+            _inputActions.Player.Pause.performed -= _ => OnPauseToggleRequested?.Invoke();
+            _inputActions?.Dispose();
         }
     }
 }

@@ -4,19 +4,32 @@ using UnityEngine.SceneManagement;
 
 public class SaveExitButton : MonoBehaviour
 {
-    [SerializeField] private string menuSceneName = "Menu";
+    [SerializeField] private string menuSceneName = "Scenes_Menu";
+    private Button _button;
+
     private void Start()
     {
         // Auto-bind to button on this GameObject
-        Button button = GetComponent<Button>();
-        if (button != null)
+        _button = GetComponent<Button>();
+        if (_button != null)
         {
-            button.onClick.AddListener(SaveAndExitToMenu);
+            _button.onClick.AddListener(SaveAndExitToMenu);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (_button != null)
+        {
+            _button.onClick.RemoveListener(SaveAndExitToMenu);
         }
     }
     
-    private void SaveAndExitToMenu()
+    public void SaveAndExitToMenu()
     {
+        // Ensure gameplay is resumed before scene transition.
+        Time.timeScale = 1f;
+
         var saveService = SaveLoadService.Instance;
         if (saveService != null)
         {

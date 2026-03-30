@@ -71,38 +71,38 @@ namespace Game.Player.Services
 
             // Draw sphere cast visualization
             Vector3 castEnd = origin + _transform.forward * _config.climbDetectionRange;
-            Debug.DrawLine(origin, castEnd, Color.cyan, 0);
-            DebugDrawWireSphere(origin, castRadius, Color.cyan, 0);
+            //Debug.DrawLine(origin, castEnd, Color.cyan, 0);
+            //DebugDrawWireSphere(origin, castRadius, Color.cyan, 0);
             if (hasHit)
-                DebugDrawWireSphere(hit.point, castRadius, Color.green, 0);
+                //DebugDrawWireSphere(hit.point, castRadius, Color.green, 0);
 
             if (!hasHit)
             {
-                Debug.Log($"[TryDetectClimbable] No climbable surface hit. Cast from {origin} forward {_config.climbDetectionRange}m with radius {castRadius}");
+                //Debug.Log($"[TryDetectClimbable] No climbable surface hit. Cast from {origin} forward {_config.climbDetectionRange}m with radius {castRadius}");
                 return false;
             }
 
             // Wall angle: 0° = ceiling (normal points up), 90° = vertical wall (normal points horizontal), 180° = floor
             // Config range 70-110° means we accept surfaces that are nearly vertical (± 20° from perfectly vertical)
             float wallAngle = Vector3.Angle(hit.normal, Vector3.up);
-            Debug.DrawRay(hit.point, hit.normal * 0.5f, Color.red, 0);
+            //Debug.DrawRay(hit.point, hit.normal * 0.5f, Color.red, 0);
             
             if (wallAngle < _config.minClimbableWallAngle || wallAngle > _config.maxClimbableWallAngle)
             {
-                Debug.Log($"[TryDetectClimbable] Wall angle REJECTED: {wallAngle:F1}° (valid range: {_config.minClimbableWallAngle}-{_config.maxClimbableWallAngle}°)");
+                //Debug.Log($"[TryDetectClimbable] Wall angle REJECTED: {wallAngle:F1}° (valid range: {_config.minClimbableWallAngle}-{_config.maxClimbableWallAngle}°)");
                 return false;
             }
 
             float approachAngle = Vector3.Angle(_transform.forward, -hit.normal);
-            Debug.DrawRay(hit.point, -hit.normal * 0.5f, Color.magenta, 0);
+            //Debug.DrawRay(hit.point, -hit.normal * 0.5f, Color.magenta, 0);
             
             if (approachAngle > _config.maxClimbApproachAngle)
             {
-                Debug.Log($"[TryDetectClimbable] Approach angle REJECTED: {approachAngle:F1}° (max allowed: {_config.maxClimbApproachAngle}°)");
+                //Debug.Log($"[TryDetectClimbable] Approach angle REJECTED: {approachAngle:F1}° (max allowed: {_config.maxClimbApproachAngle}°)");
                 return false;
             }
 
-            Debug.Log($"[TryDetectClimbable] SUCCESS - Wall angle: {wallAngle:F1}°, Approach angle: {approachAngle:F1}°");
+            //Debug.Log($"[TryDetectClimbable] SUCCESS - Wall angle: {wallAngle:F1}°, Approach angle: {approachAngle:F1}°");
             return true;
         }
 
