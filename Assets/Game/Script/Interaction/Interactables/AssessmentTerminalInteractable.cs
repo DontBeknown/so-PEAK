@@ -41,6 +41,10 @@ namespace Game.Interaction
         [SerializeField] private bool skipDayOnUse = true;
         [Tooltip("If true, closing the assessment UI will fully reset the player's fatigue stat.")]
         [SerializeField] private bool resetFatigueOnUse = true;
+        [Tooltip("If true, closing the assessment UI will heal the player by the configured amount.")]
+        [SerializeField] private bool healOnUse = false;
+        [Min(0f)]
+        [SerializeField] private float healAmountOnUse = 25f;
         [SerializeField] private bool progressNextLevelOnUse = false; 
         
         private float lastInteractionTime = -999f;
@@ -201,12 +205,23 @@ namespace Game.Interaction
             {
                 _dayNightService?.SkipToNextMorning();
             }
+
+            PlayerStats playerStats = null;
+            if (currentPlayer != null)
+            {
+                playerStats = currentPlayer.GetComponent<PlayerStats>();
+            }
             
             // Reset fatigue (rest) only if configured
-            if (resetFatigueOnUse && currentPlayer != null)
+            if (resetFatigueOnUse)
             {
-                var playerStats = currentPlayer.GetComponent<PlayerStats>();
                 playerStats?.FullRest();
+            }
+
+            // Heal player only if configured
+            if (healOnUse && healAmountOnUse > 0f)
+            {
+                playerStats?.Heal(healAmountOnUse);
             }
 
             // Save the game (captures updated day, time, stats, etc.)

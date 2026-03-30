@@ -176,7 +176,7 @@ public class PlayerStats : MonoBehaviour
     {
         // Add temperature stat if you haven't already, or modify existing temperature system
         // temperature.Add(amount);
-        Debug.Log($"Temperature modified by {amount}");
+        //Debug.Log($"Temperature modified by {amount}");
     }
 
     public void RestoreStamina(float amount)

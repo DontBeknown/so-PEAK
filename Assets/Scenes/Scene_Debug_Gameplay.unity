@@ -2258,6 +2258,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7453063599047344723, guid: dc9baecee7283c340b1c3654f975ca48, type: 3}
+      propertyPath: healAmountOnUse
+      value: 100
+      objectReference: {fileID: 0}
     - target: {fileID: 8274077260532194656, guid: dc9baecee7283c340b1c3654f975ca48, type: 3}
       propertyPath: m_Name
       value: 'Watch Tower '
@@ -2442,6 +2446,8 @@ MonoBehaviour:
   oneTimeUse: 0
   skipDayOnUse: 1
   resetFatigueOnUse: 1
+  healOnUse: 0
+  healAmountOnUse: 25
   progressNextLevelOnUse: 0
 --- !u!65 &727518819
 BoxCollider:
