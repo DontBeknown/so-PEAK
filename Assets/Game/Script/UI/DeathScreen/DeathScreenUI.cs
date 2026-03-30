@@ -112,7 +112,7 @@ public class DeathScreenUI : MonoBehaviour, IUIPanel
     public void ShowDeath(DeathCause cause)
     {
         if (titleText != null)
-            titleText.text = "You Dead";
+            titleText.text = "YOU DEAD";
 
         if (detailText != null)
             detailText.text = GetDetailMessage(cause);

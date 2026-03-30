@@ -154,7 +154,7 @@ public class HeldItemBehaviorManager : MonoBehaviour
     {
         // Common hand bone names across different character rigs
         string[] rightHandNames = { "RightHandEquip" };
-        string[] leftHandNames = { "Left Hand Middle 1" };
+        string[] leftHandNames = { "LeftHandEquip" };
         
         Transform[] allTransforms = GetComponentsInChildren<Transform>();
         
