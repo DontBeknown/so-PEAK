@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Game.Core.DI;
 using Game.Collectable;
 using Game.Dialog;
@@ -500,7 +501,15 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
 
         currentWorldSave.worldState.level++;
         SpawnedObjectStateRegistry.ClearAllDestroyed();
-        SaveWorld(currentWorldSave);
+        bool saved = SaveWorld(currentWorldSave);
+
+        if (!saved)
+        {
+            Debug.LogWarning("[SaveLoadService] Progressed level but failed to save; scene reload cancelled.");
+            return;
+        }
+
+        ReloadActiveScene();
 
         if (enableDebug) Debug.Log($"[SaveLoadService] Progressed to level {currentWorldSave.worldState.level}");
     }
@@ -769,6 +778,25 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
 
         var dialogManager = FindFirstObjectByType<DialogManager>();
         dialogManager?.LoadState(saveData.worldState.triggeredDialogs ?? new List<string>());
+    }
+
+    private void ReloadActiveScene()
+    {
+        Scene activeScene = SceneManager.GetActiveScene();
+
+        if (activeScene.buildIndex >= 0)
+        {
+            SceneManager.LoadScene(activeScene.buildIndex);
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(activeScene.name))
+        {
+            SceneManager.LoadScene(activeScene.name);
+            return;
+        }
+
+        Debug.LogWarning("[SaveLoadService] Could not reload scene after level progression.");
     }
     
     // Compression helpers (simple base64 for now)

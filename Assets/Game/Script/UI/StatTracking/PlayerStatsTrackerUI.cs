@@ -526,15 +526,8 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
         }
         else
         {
-            // Progression: increment level and close panel
+            // Progression: increment level, save, and reload current scene
             saveService.ProgressToNextLevel();
-            saveService.PerformAutoSave();
-            
-            var uiService = ServiceContainer.Instance.TryGet<UIServiceProvider>();
-            if (uiService != null)
-            {
-                uiService.ClosePanel(PanelName);
-            }
         }
     }
 
