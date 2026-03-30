@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 52be4a303351f644a9d263590dc37957, type: 3}
-  m_Name: Tree2
+  m_Name: Cactus 2
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
-  ObjectName: Tree2
-  Prefab: {fileID: 100718, guid: 9a61c17de674a9a4395a6c9d2d0d1b41, type: 3}
+  ObjectName: Cactus 2
+  Prefab: {fileID: 2621632262640215399, guid: 9f73e4362e41c744b9d9bbdfe204ff26, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
   BaseRadius: 0.5
-  BaseHeight: 2
-  MinScale: 2
-  MaxScale: 6
+  BaseHeight: 0.5
+  MinScale: 1
+  MaxScale: 2
   BaseRotation: {x: 0, y: 0, z: 0}
   PositionOffset: {x: 0, y: 0, z: 0}
-  RoadRule: 0
-  MinSpacing: 50
-  Density: 0.2
+  RoadRule: 1
+  MinSpacing: 20
+  Density: 0.1
   MaxSlopeDiff: 0.5
   RequiredNoiseMap: 0
   NoiseThreshold: 0.5

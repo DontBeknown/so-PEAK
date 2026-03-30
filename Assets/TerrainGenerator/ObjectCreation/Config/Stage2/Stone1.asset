@@ -13,18 +13,18 @@ MonoBehaviour:
   m_Name: Stone1
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
   ObjectName: Stone
-  Prefab: {fileID: 7014438214332345154, guid: 5ec3fbe467aec484fbb4a840686c9c7b, type: 3}
+  Prefab: {fileID: 3827549956472576141, guid: 92994325c6fc4e441bd46e18a5dd2e59, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
   BaseRadius: 3.25
   BaseHeight: 2
   MinScale: 0.1
-  MaxScale: 0.5
+  MaxScale: 1
   BaseRotation: {x: 0, y: 0, z: 0}
   PositionOffset: {x: 0, y: 0, z: 0}
   RoadRule: 1
   MinSpacing: 10
-  Density: 0.3
+  Density: 0.1
   MaxSlopeDiff: 0.7
   RequiredNoiseMap: 0
   NoiseThreshold: 0.5

@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 52be4a303351f644a9d263590dc37957, type: 3}
-  m_Name: Tree1
+  m_Name: Stone4
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
-  ObjectName: Tree1
-  Prefab: {fileID: 117156, guid: aad126ecada0d7a4abd8187547204868, type: 3}
+  ObjectName: Stone4
+  Prefab: {fileID: 2318272937317203139, guid: 363ed4365cc30524b8bc7ffe23d5de80, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
-  BaseRadius: 0.5
-  BaseHeight: 2
-  MinScale: 2
-  MaxScale: 6
+  BaseRadius: 7
+  BaseHeight: 3
+  MinScale: 0.1
+  MaxScale: 1
   BaseRotation: {x: 0, y: 0, z: 0}
   PositionOffset: {x: 0, y: 0, z: 0}
-  RoadRule: 0
-  MinSpacing: 50
-  Density: 0.2
-  MaxSlopeDiff: 0.5
+  RoadRule: 1
+  MinSpacing: 10
+  Density: 0.1
+  MaxSlopeDiff: 0.7
   RequiredNoiseMap: 0
   NoiseThreshold: 0.5

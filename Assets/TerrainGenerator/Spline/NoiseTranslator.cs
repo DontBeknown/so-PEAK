@@ -45,6 +45,8 @@ public class NoiseTranslator : MonoBehaviour
     public int levelOfDetail;
     [Range(1, 5)]
     public int mapIteration;
+    [Range(1, 6)]
+    public int smoothMapPasses = 1;
 
 
 
@@ -126,7 +128,7 @@ public class NoiseTranslator : MonoBehaviour
         //then carve a road
         ErodedMountain(seed);
         //smooth test
-        depthMap = SmoothHeightMap(depthMap, 3);
+        depthMap = SmoothHeightMap(depthMap, smoothMapPasses);
         //then buffer zone
         GenerateBufferArea();
         

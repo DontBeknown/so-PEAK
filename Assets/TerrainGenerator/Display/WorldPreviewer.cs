@@ -1,6 +1,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class PreviewCategory
+{
+    public string categoryName = "New Category";
+    public Color gizmoColor = Color.white;
+    [Tooltip("Type a part of the prefab name (e.g., 'tree', 'rock', 'camp')")]
+    public List<string> nameKeywords = new List<string>();
+}
+
 public class WorldPreviewer : MonoBehaviour
 {
     [Header("Links")]
@@ -14,17 +23,30 @@ public class WorldPreviewer : MonoBehaviour
     [Range(2, 20)] public int previewStep = 5;
     public Color terrainPreviewColor = new Color(1, 1, 1, 0.3f);
 
-    [Header("Object Colors")]
-    public Color treeColor = Color.green;
-    public Color campfireColor = Color.red;
+    [Header("Object Categories")]
     public Color defaultColor = Color.white;
+    public List<PreviewCategory> objectCategories = new List<PreviewCategory>();
 
     private Mesh previewMesh;
 
-    // Triggered whenever you change a value in the Inspector
     private void OnValidate()
     {
         GeneratePreviewMesh();
+    }
+
+    [ContextMenu("Force Generate World Data")]
+    public void ForceGenerateWorld()
+    {
+        if (dataManager != null)
+        {
+            dataManager.GenerateWorldData(41);
+            GeneratePreviewMesh();
+            Debug.Log("[Previewer] World Data manually generated! Gizmos should now appear.");
+        }
+        else
+        {
+            Debug.LogWarning("Assign the Data Manager first!");
+        }
     }
 
     public void GeneratePreviewMesh()
@@ -36,14 +58,12 @@ public class WorldPreviewer : MonoBehaviour
         int width = map.GetLength(0);
         int length = map.GetLength(1);
 
-        // Calculate grid dimensions based on the step
         int xSize = (width - 1) / previewStep;
         int zSize = (length - 1) / previewStep;
 
         Vector3[] vertices = new Vector3[(xSize + 1) * (zSize + 1)];
         int[] triangles = new int[xSize * zSize * 6];
 
-        // 1. Generate Vertices
         int i = 0;
         for (int z = 0; z <= length - 1; z += previewStep)
         {
@@ -55,7 +75,6 @@ public class WorldPreviewer : MonoBehaviour
             }
         }
 
-        // 2. Generate Triangles (Stitching the grid)
         int vert = 0;
         int tris = 0;
         for (int z = 0; z < zSize; z++)
@@ -75,7 +94,6 @@ public class WorldPreviewer : MonoBehaviour
             vert++;
         }
 
-        // 3. Update the Mesh Object
         if (previewMesh == null)
         {
             previewMesh = new Mesh();
@@ -92,14 +110,12 @@ public class WorldPreviewer : MonoBehaviour
     {
         if (dataManager == null) return;
 
-        // Draw the Solid 3D Preview
         if (showTerrainPreview && previewMesh != null)
         {
             Gizmos.color = terrainPreviewColor;
             Gizmos.DrawMesh(previewMesh);
         }
 
-        // Draw the Objects
         if (showObjectPreview)
         {
             DrawObjectGizmos();
@@ -115,20 +131,36 @@ public class WorldPreviewer : MonoBehaviour
         {
             foreach (PlacedObject obj in chunk.Value)
             {
-                // Logic to color based on Prefab Name
+                Color colorToDraw = defaultColor;
+
                 if (obj.Prefab != null)
                 {
                     string pName = obj.Prefab.name.ToLower();
-                    if (pName.Contains("tree")) Gizmos.color = treeColor;
-                    else if (pName.Contains("camp")) Gizmos.color = campfireColor;
-                    else Gizmos.color = defaultColor;
+
+                    // Look through every category you made in the Inspector
+                    foreach (PreviewCategory category in objectCategories)
+                    {
+                        foreach (string keyword in category.nameKeywords)
+                        {
+                            // If the prefab name contains the word (e.g., "tree")
+                            if (!string.IsNullOrEmpty(keyword) && pName.Contains(keyword.ToLower()))
+                            {
+                                colorToDraw = category.gizmoColor;
+                                break;
+                            }
+                        }
+                        if (colorToDraw != defaultColor) break;
+                    }
                 }
 
-                // Using Cubes for grass/small objects is faster than Spheres
-                if (obj.BoundingRadius < 1f)
-                    Gizmos.DrawCube(obj.Position, Vector3.one * obj.BoundingRadius);
+                Gizmos.color = colorToDraw;
+
+                float drawSize = obj.BoundingRadius > 0.1f ? obj.BoundingRadius : 3f;
+
+                if (drawSize < 1f)
+                    Gizmos.DrawCube(obj.Position, Vector3.one * drawSize);
                 else
-                    Gizmos.DrawSphere(obj.Position, obj.BoundingRadius);
+                    Gizmos.DrawSphere(obj.Position, drawSize);
             }
         }
     }

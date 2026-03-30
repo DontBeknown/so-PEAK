@@ -22,7 +22,7 @@ MonoBehaviour:
   MaxScale: 60
   BaseRotation: {x: 0, y: 0, z: 0}
   PositionOffset: {x: 0, y: 0.5, z: 0}
-  RoadRule: 0
+  RoadRule: 1
   MinSpacing: 200
   Density: 0.5
   MaxSlopeDiff: 0.3
