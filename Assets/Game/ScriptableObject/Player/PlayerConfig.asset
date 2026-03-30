@@ -22,7 +22,7 @@ MonoBehaviour:
   maxSlopeSpeedMultiplier: 1
   climbDetectionRange: 3
   climbDetectionRadiusMultiplier: 0.9
-  minClimbableWallAngle: 70
+  minClimbableWallAngle: 45
   maxClimbableWallAngle: 110
   maxClimbApproachAngle: 60
   climbableLayer:

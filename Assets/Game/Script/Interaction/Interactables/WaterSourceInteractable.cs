@@ -316,7 +316,7 @@ namespace Game.Interaction
 
         #region Editor Helpers
 
-        private void OnDrawGizmos()
+        /*private void OnDrawGizmos()
         {
             Gizmos.color = isCurrentlyRefilling ? Color.cyan : Color.blue;
             Gizmos.DrawWireSphere(transform.position, 0.5f);
@@ -329,7 +329,7 @@ namespace Game.Interaction
                 : $"Water Source\n{refillDuration}s refill";
             
             UnityEditor.Handles.Label(transform.position + Vector3.up * 2f, label);
-        }
+        }*/
 
         #endregion
     }

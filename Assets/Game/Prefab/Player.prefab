@@ -5473,8 +5473,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4283518300
-  m_fontColor: {r: 0.36078432, g: 0.3019608, b: 0.31764707, a: 1}
+    rgba: 4282603208
+  m_fontColor: {r: 0.7830189, g: 0.33815134, b: 0.2622375, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -9910,6 +9910,41 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!1 &4474409489764060963
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8705335053431079770}
+  m_Layer: 5
+  m_Name: PauseMenu
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &8705335053431079770
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4474409489764060963}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5510900426120375645}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &4482526209655570014
 GameObject:
   m_ObjectHideFlags: 0
@@ -10449,6 +10484,7 @@ RectTransform:
   - {fileID: 7985487933951787992}
   - {fileID: 3676229773686032683}
   - {fileID: 7354121304887148722}
+  - {fileID: 8705335053431079770}
   m_Father: {fileID: 437050701338270975}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -10669,6 +10705,7 @@ GameObject:
   - component: {fileID: 1479353613100785103}
   - component: {fileID: 9149422289982754082}
   - component: {fileID: 6155206010910934308}
+  - component: {fileID: 2180679045681696666}
   m_Layer: 5
   m_Name: Save and Exit Button
   m_TagString: Untagged
@@ -10791,6 +10828,29 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaveExitButton
   menuSceneName: Scene_Menu
+--- !u!114 &2180679045681696666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4847711875378320409}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df1f3bc958427014ebcacc80324bb6f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Menu.ButtonHoverScale
+  soundService: {fileID: 445719365846831467}
+  hoverScale: 1.1
+  pressedScale: 0.95
+  hoverDuration: 0.2
+  pressDuration: 0.1
+  hoverEase: 27
+  pressEase: 6
+  hoverSoundId: ui_hover
+  hoverVolumeScale: 0.3
+  clickSoundId: ui_click
+  clickVolumeScale: 0.3
 --- !u!1 &4935684337696116361
 GameObject:
   m_ObjectHideFlags: 0
