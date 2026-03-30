@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using Game.Core.DI;
 using Game.Core.Events;
+using Game.Environment.DayNight;
 
 public class PlayerStats : MonoBehaviour
 {
@@ -13,6 +14,9 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private ThirstStat thirst;
     [SerializeField] private StaminaStat stamina;
     [SerializeField] private FatigueStat fatigue;
+    // NOTE: Not [SerializeField] — always created fresh in Awake() to prevent
+    // Unity's deserialization from overwriting the 37°C starting value.
+    private TemperatureStat temperature;
     
     private IStatModifierCalculator statModifierCalculator;
 
@@ -20,6 +24,7 @@ public class PlayerStats : MonoBehaviour
 
     public event Action<float, float> OnHealthChanged;
     public event Action<float, float> OnStaminaChanged;
+    public event Action<float, float> OnTemperatureChanged;
     public event Action OnDeath;
     
     // Stat tracking events
@@ -34,6 +39,8 @@ public class PlayerStats : MonoBehaviour
     private bool isSprinting;
 
     private IEventBus _eventBus;
+    private IDayNightCycleService _dayNightService;
+    private ISaveLoadService _saveLoadService;
     private DeathCause _lastDamageSource = DeathCause.Unknown;
     public DeathCause LastDamageSource => _lastDamageSource;
 
@@ -45,14 +52,29 @@ public class PlayerStats : MonoBehaviour
         thirst ??= new ThirstStat();
         stamina ??= new StaminaStat();
         fatigue ??= new FatigueStat();
+        // Always create fresh — bypasses any stale serialized state
+        temperature = new TemperatureStat();
 
         hunger.Init(config.hungerDrainPerSecond, config.hungerHurtThreshold, config.starvationDPS, config.hungerSprintMultiplier);
         thirst.Init(config.thirstDrainPerSecond, config.thirstHurtThreshold, config.dehydrationDPS, config.thirstSprintMultiplier);
         stamina.Init(config.staminaRegenPerSecond, config.staminaDrainCooldown, config.climbStaminaDrainPerSecond);
         fatigue.Init(config.maxFatigue, config.fatigueRateTime, config.fatigueRateElev);
+        temperature.Init(
+            config.tempColdThreshold, config.tempHotThreshold,
+            config.tempColdDPS,       config.tempHotDPS,
+            config.tempDriftRate,
+            config.tempColdSpeedPenaltyThreshold,
+            config.tempColdHungerPenaltyThreshold,
+            config.tempHotThirstPenaltyThreshold,
+            config.tempColdSpeedMinMultiplier,
+            config.tempHungerColdMaxMultiplier,
+            config.tempThirstHotMaxMultiplier,
+            config.tempHeatSourceRadius,
+            config.tempHeatSourceLayer);
 
         health.OnChanged += (c, m) => OnHealthChanged?.Invoke(c, m);
         stamina.OnChanged += (c, m) => OnStaminaChanged?.Invoke(c, m);
+        temperature.OnChanged += (c, m) => OnTemperatureChanged?.Invoke(c, m);
 
         
         // Subscribe to stat tracking events
@@ -64,6 +86,8 @@ public class PlayerStats : MonoBehaviour
     private void Start()
     {
         _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+        _dayNightService = ServiceContainer.Instance.TryGet<IDayNightCycleService>();
+        _saveLoadService = ServiceContainer.Instance.TryGet<ISaveLoadService>();
         health.OnDeath += () =>
         {
             OnDeath?.Invoke();
@@ -104,25 +128,58 @@ public class PlayerStats : MonoBehaviour
         stamina.Tick(dt);
         fatigue.Tick(dt);
 
+        // Temperature: gather heat sources → set env target → tick
+        temperature.GatherHeatSources(transform.position);
+        if (_dayNightService != null)
+        {
+            int level = _saveLoadService?.GetCurrentLevel() ?? 1;
+            AnimationCurve selectedCurve = level switch
+            {
+                2 => config.temperatureDayCurveLevel2,
+                3 => config.temperatureDayCurveLevel3,
+                _ => config.temperatureDayCurveLevel1
+            };
+
+            float ambient = selectedCurve != null
+                ? selectedCurve.Evaluate(_dayNightService.DayProgress)
+                : 37f;
+            temperature.SetEnvironmentTarget(ambient);
+        }
+        temperature.Tick(dt);
+
+        // Push temperature penalties into hunger/thirst each frame
+        hunger.SetTemperatureMultiplier(temperature.GetHungerDrainMultiplier());
+        thirst.SetTemperatureMultiplier(temperature.GetThirstDrainMultiplier());
+
         if (!isImmune && hunger.ShouldHurt)
         {
             _lastDamageSource = DeathCause.Starvation;
             health.Damage(hunger.StarveDPS * dt);
         }
-            
 
         if (!isImmune && thirst.ShouldHurt)
         {
             _lastDamageSource = DeathCause.Dehydration;
             health.Damage(thirst.DehydrateDPS * dt);
         }
-            
+
+        // Temperature damage
+        if (!isImmune && temperature.IsFreezing)
+        {
+            _lastDamageSource = DeathCause.Freezing;
+            health.Damage(temperature.ColdDPS * dt);
+        }
+
+        if (!isImmune && temperature.IsOverheating)
+        {
+            _lastDamageSource = DeathCause.Heatstroke;
+            health.Damage(temperature.HotDPS * dt);
+        }
 
         if (isSprinting)
         {
             //stamina.Drain(sprintDrainPerSecond * dt);
         }
-            
     }
 
     public void OnJump()
@@ -174,9 +231,19 @@ public class PlayerStats : MonoBehaviour
 
     public void ModifyTemperature(float amount)
     {
-        // Add temperature stat if you haven't already, or modify existing temperature system
-        // temperature.Add(amount);
-        //Debug.Log($"Temperature modified by {amount}");
+        temperature.Add(amount);
+    }
+
+    /// <summary>Adjust ambient temperature offset from a weather system (e.g. blizzard = -15).</summary>
+    public void SetWeatherTemperatureOffset(float offsetCelsius)
+    {
+        temperature.SetWeatherTemperatureOffset(offsetCelsius);
+    }
+
+    /// <summary>Set equipment insulation. 0 = none, 1 = perfect (stays at 37°C).</summary>
+    public void SetTemperatureInsulation(float insulation)
+    {
+        temperature.SetInsulation(insulation);
     }
 
     public void RestoreStamina(float amount)
@@ -208,6 +275,10 @@ public class PlayerStats : MonoBehaviour
     public float MaxStamina => stamina.Max;
     public float StaminaPercent => stamina.Percent;
     
+    public float Temperature        => temperature.Current;
+    public float MaxTemperature     => temperature.Max;
+    public float TemperaturePercent => temperature.Percent;
+    
     public float Fatigue => fatigue.Current;
     public float MaxFatigue => fatigue.Max;
     public float FatiguePercent => fatigue.Percent;
@@ -215,16 +286,17 @@ public class PlayerStats : MonoBehaviour
     // Expose stat instances for advanced operations
     public StaminaStat StaminaStat => stamina;
     public FatigueStat FatigueStat => fatigue;
+    public TemperatureStat TemperatureStat => temperature;
 
     public IStat GetStat(StatType statType)
     {
         return statType switch
         {
-            StatType.Health => health,
-            StatType.Hunger => hunger,
-            StatType.Thirst => thirst,
-            StatType.Stamina => stamina,
-            // StatType.Temperature => temperature, // Add when you implement temperature
+            StatType.Health      => health,
+            StatType.Hunger      => hunger,
+            StatType.Thirst      => thirst,
+            StatType.Stamina     => stamina,
+            StatType.Temperature => temperature,
             _ => null
         };
     }

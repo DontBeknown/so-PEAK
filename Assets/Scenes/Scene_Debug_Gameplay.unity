@@ -7036,6 +7036,10 @@ PrefabInstance:
       propertyPath: playerCamera
       value: 
       objectReference: {fileID: 2006899472}
+    - target: {fileID: 4013136103283677608, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: temperature.current
+      value: 37
+      objectReference: {fileID: 0}
     - target: {fileID: 4249064960835618528, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0

@@ -97,6 +97,12 @@ public class WalkingState : IPlayerState
             {
                 combinedMultiplier *= model.Stats.Config.staminaExhaustedSpeedMultiplier;
             }
+
+            // Temperature cold penalty: slows movement when freezing
+            if (model.Stats?.TemperatureStat != null)
+            {
+                combinedMultiplier *= model.Stats.TemperatureStat.GetColdSpeedPenalty();
+            }
             
             horizontal *= combinedMultiplier;
 

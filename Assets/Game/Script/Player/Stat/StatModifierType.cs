@@ -23,5 +23,8 @@ public enum StatModifierType
     // Fatigue Modifiers
     UniversalFatigueReduce,  // Reduces all fatigue accumulation
     SlopeFatigueReduce,      // Reduces fatigue on slopes
-    FatigueGainWhenRest      // Increases fatigue recovery when resting
+    FatigueGainWhenRest,     // Increases fatigue recovery when resting
+
+    // Temperature Modifiers
+    WarmthInsulation         // 0..1 — blends temperature drift toward comfort zone (37°C)
 }
