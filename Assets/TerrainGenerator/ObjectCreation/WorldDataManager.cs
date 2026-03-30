@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using static UnityEngine.Rendering.STP;
 
@@ -17,7 +18,6 @@ public class WorldLevelProfile
 {
     public string levelName;
     public NoiseTranslator generator;
-    public Color fieldColor;
 
 
     [Header("Stage Specific Spawning")]
@@ -42,11 +42,12 @@ public class WorldDataManager : MonoBehaviour
     [HideInInspector] public NoiseTranslator activeGen;
     public float[,] globalHeightMap;
     public Color[,] globalColorMap;
-    public Color fieldColor;
 
-    // REMOVED: Global resourceNoiseGenerators, lighthouseConfig, and worldSpawnConfigs
-    // These now live inside the WorldLevelProfile above!
 
+    //ridge expanded
+    [HideInInspector] public float[,] expandedRoadRidge;
+    [HideInInspector] public Texture2D roadRidgeTexture;
+    [HideInInspector] public Color fieldColor, roadColor, sideRockColor;
     [HideInInspector] public int activeLevelSeed, seed1, seed2, seed3;
     public Dictionary<Vector2Int, List<PlacedObject>> masterSpawnGrid;
 
@@ -69,7 +70,6 @@ public class WorldDataManager : MonoBehaviour
 
         // 2. Set ACTIVE references
         activeGen = profile.generator;
-        this.fieldColor = profile.fieldColor;
         
 
         activeLevelSeed = currentLevel switch
@@ -83,10 +83,16 @@ public class WorldDataManager : MonoBehaviour
         // 3. Generate Terrain
         activeGen.TerrainDrawing(activeLevelSeed);
         globalHeightMap = activeGen.completeMap;
-        globalColorMap = activeGen.colorMap;
+        //globalColorMap = activeGen.colorMap;
 
-        float[,] expandedRoadMask = new float[activeGen.mapWidth + activeGen.bufferLength, activeGen.mapLength + activeGen.bufferLength];
-        BufferGen.GenRoadMaskWithBuffer(activeGen.roadRidge, expandedRoadMask, activeGen.bufferLength);
+        expandedRoadRidge = new float[activeGen.mapWidth + activeGen.bufferLength, activeGen.mapLength + activeGen.bufferLength];
+        BufferGen.GenRoadMaskWithBuffer(activeGen.roadRidge, expandedRoadRidge, activeGen.bufferLength);
+
+        // get color and prepare ridge for render shader
+        roadColor = activeGen.roadColor;
+        sideRockColor = activeGen.sideRockColor;
+        fieldColor = activeGen.fieldColor;
+        roadRidgeTexture =  GenerateRoadMaskTexture(expandedRoadRidge);
 
         // 4. Generate Resource Noise Maps (Using PROFILE specific list)
         Dictionary<NoiseType, float[,]> availableNoiseMaps = new Dictionary<NoiseType, float[,]>();
@@ -130,7 +136,7 @@ public class WorldDataManager : MonoBehaviour
                 }
             }
             UniversalSpawner.GenerateObjectData(
-                config, globalHeightMap, expandedRoadMask, mapToHandOver,
+                config, globalHeightMap, expandedRoadRidge, mapToHandOver,
                 activeGen.meshHeightMultiplier, chunkSize - 1, activeLevelSeed + i,
                 worldGuid, (int)currentLevel, i,
                 ref masterSpawnGrid
@@ -174,6 +180,45 @@ public class WorldDataManager : MonoBehaviour
         }
         return null;
     }
+
+    private Texture2D GenerateRoadMaskTexture(float[,] roadRidgeArray)
+    {
+
+
+        int width = roadRidgeArray.GetLength(0);
+        int length = roadRidgeArray.GetLength(1);
+
+        // Create the blank texture
+        Texture2D roadMask = new Texture2D(width, length);
+
+        roadMask.filterMode = FilterMode.Bilinear; // This forces Unity to blur and smooth the pixels!
+        roadMask.wrapMode = TextureWrapMode.Clamp; // Prevents the road from glitching at the edges of the map
+
+        // Using a 1D array is required for the fast SetPixels() method
+        Color[] pixels = new Color[width * length];
+
+        // We can calculate the colors in parallel for speed
+        Parallel.For(0, length, z =>
+        {
+            for (int x = 0; x < width; x++)
+            {
+                float roadValue = roadRidgeArray[x, z];
+
+                // If it's below 0.25, paint it White (1). Otherwise, Black (0).
+                float maskIntensity = Mathf.InverseLerp(0.35f, 0.20f, roadValue);
+
+                // Map the 2D [x, z] coordinates to the 1D array index
+                pixels[z * width + x] = new Color(maskIntensity, maskIntensity, maskIntensity);
+            }
+        });
+
+        // Apply the pixel array to the texture (Must happen on the main thread)
+        roadMask.SetPixels(pixels);
+        roadMask.Apply();
+
+        return roadMask;
+    }
+
 
 
     private void LoadSeed()

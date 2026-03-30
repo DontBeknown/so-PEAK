@@ -49,9 +49,9 @@ public class NoiseTranslator : MonoBehaviour
 
 
     [Header("Terrain Colors")]
-    [SerializeField] private Color roadColor = new Color(0.70f, 0.55f, 0.35f);
-    [SerializeField] private Color sideRockColor = new Color(0.35f, 0.20f, 0.10f);
-    [SerializeField] private Color fieldColor = new Color(0.20f, 0.70f, 0.20f);
+    [SerializeField] public Color roadColor = new Color(0.70f, 0.55f, 0.35f);
+    [SerializeField] public Color sideRockColor = new Color(0.35f, 0.20f, 0.10f);
+    [SerializeField] public Color fieldColor = new Color(0.20f, 0.70f, 0.20f);
 
     [HideInInspector] public Spline mainSpline;
     [HideInInspector] public Color[,] colorMap;
@@ -125,13 +125,16 @@ public class NoiseTranslator : MonoBehaviour
         //FindPeakPoints(depthMap, peakPoints);
         //then carve a road
         ErodedMountain(seed);
+        //smooth test
+        depthMap = SmoothHeightMap(depthMap, 3);
         //then buffer zone
         GenerateBufferArea();
+        
         // Flatten the ground AND get the offset spawn coordinate
         mainPeak = CarveLighthouseFoundation(completeMap, mainPeak, completeMap[mainPeak.x, mainPeak.y]);
 
         //then color map
-        colorMap = ColorMapping();
+        //colorMap = ColorMapping();
 
         TreeNoise.GenerateMap(seed);
         treeNoiseMap = TreeNoise.noiseMap;
@@ -153,7 +156,7 @@ public class NoiseTranslator : MonoBehaviour
                         else if (drawMode == DrawMode.Mesh)
                         {
                             display.DrawMesh(PerlinTerrainMeshGenerator.GenerateTerrainMesh(
-                                completeMap, colorMap, meshHeightMultiplier, levelOfDetail));
+                                completeMap, meshHeightMultiplier, levelOfDetail));
 
                         }
 
@@ -202,6 +205,45 @@ public class NoiseTranslator : MonoBehaviour
 
     }
 
+    private float[,] SmoothHeightMap(float[,] map, int passes = 1)
+    {
+        int width = map.GetLength(0);
+        int length = map.GetLength(1);
+
+        // We need a temporary array so we don't blur using already-blurred pixels
+        float[,] smoothedMap = new float[width, length];
+
+        for (int p = 0; p < passes; p++)
+        {
+            // Copy the array to process it safely
+            Array.Copy(map, smoothedMap, map.Length);
+
+            Parallel.For(1, length - 1, z =>
+            {
+                for (int x = 1; x < width - 1; x++)
+                {
+                    // A simple 3x3 Box Blur
+                    float averageHeight = (
+                        map[x - 1, z - 1] + map[x, z - 1] + map[x + 1, z - 1] +
+                        map[x - 1, z] + map[x, z] + map[x + 1, z] +
+                        map[x - 1, z + 1] + map[x, z + 1] + map[x + 1, z + 1]
+                    ) / 9f;
+
+                    smoothedMap[x, z] = averageHeight;
+                }
+            });
+
+            // Put the smoothed data back into the main map for the next pass
+            Array.Copy(smoothedMap, map, smoothedMap.Length);
+        }
+
+        return smoothedMap;
+    }
+
+   
+
+
+    // would delete Later
     private Color[,] ColorMapping()
     { 
         //init color map size would be like complete heightmap
@@ -226,31 +268,46 @@ public class NoiseTranslator : MonoBehaviour
 
                 Color finalColor;
 
-                //Road check from the value we get 
+                float heightLeft = (x > 0) ? completeMap[x - 1, z] : heightHere;
+                float heightRight = (x < totalWidth - 1) ? completeMap[x + 1, z] : heightHere;
+                float heightUp = (z > 0) ? completeMap[x, z - 1] : heightHere;
+                float heightDown = (z < totalLength - 1) ? completeMap[x, z + 1] : heightHere;
+
+                // Divide by 2 because we are measuring across 2 grid cells (Left to Right)
+                float dX = (heightRight - heightLeft) / 2f;
+                float dZ = (heightDown - heightUp) / 2f;
+
+                dX *= meshHeightMultiplier;
+                dZ *= meshHeightMultiplier;
+
+                // 2. Convert to Angle
+                // If your terrain heights are scaled up compared to your X/Z grid, adjust this.
+                // Usually, it's 1.0f if 1 unit of height == 1 unit of grid width.
+                float gridSpacing = 1.0f;
+                Vector3 surfaceNormal = new Vector3(-dX, gridSpacing, -dZ).normalized;
+
+                // Get the angle between straight up (0 degrees) and our slope normal
+                float slopeAngle = Vector3.Angle(Vector3.up, surfaceNormal);
+
+
+
+
                 if (roadValue < 0.25f)
                 {
                     finalColor = roadColor;
                 }
                 else
                 {
-                    // 2. Compute steepness (compare with right and down neighbors)
-                    
-                    float heightRight = (x < totalWidth - 1) ? completeMap[x + 1, z] : heightHere;
-                    float heightDown = (z < totalLength - 1) ? completeMap[x, z + 1] : heightHere;
+                    // Define your transition zone
+                    float minRockAngle = 25f; // Anything below this is 100% fieldColor
+                    float maxRockAngle = 45f; // Anything above this is 100% sideRockColor
 
-                    float steepness = Mathf.Max(
-                        Mathf.Abs(heightHere - heightRight),
-                        Mathf.Abs(heightHere - heightDown)
-                    );
+                    // InverseLerp outputs a float between 0.0 and 1.0. 
+                    // E.g., if the angle is 35, it outputs 0.5 (50% rock, 50% grass)
+                    float rockBlend = Mathf.InverseLerp(minRockAngle, maxRockAngle, slopeAngle);
 
-                    if (steepness > 0.15f)
-                    {
-                        finalColor = sideRockColor;
-                    }
-                    else
-                    {
-                        finalColor = fieldColor;
-                    }
+                    // Smoothly mix the two colors based on the blend percentage
+                    finalColor = Color.Lerp(fieldColor, sideRockColor, rockBlend);
                 }
 
                 colorMap[x, z] = finalColor;

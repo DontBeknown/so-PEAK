@@ -5,7 +5,7 @@ using UnityEngine;
     public static class MapSlicer
     {
 
-        public static MapData GetChunkData(Vector2 chunkCoord, int chunkSize, float[,] globalHeightMap, Color[,] globalColorMap, Color defaultColor)
+        public static float[,] GetChunkData(Vector2 chunkCoord, int chunkSize, float[,] globalHeightMap)
         {
 
             int width = chunkSize;
@@ -44,18 +44,16 @@ using UnityEngine;
                     {
                         // FIX: Use invertedY here!
                         slicedHeights[x, invertedY] = globalHeightMap[globalX, globalY];
-                        slicedColors[x, invertedY] = globalColorMap[globalX, globalY];
                 }
                     else
                     {
                     // FIX: Use invertedY here too!
                         slicedHeights[x, invertedY] = 0f;
-                        slicedColors[x, invertedY] = defaultColor;
                     }
                 }
             }
 
-            return new MapData(slicedHeights, slicedColors);
+            return slicedHeights;
         }
     }
 

@@ -14,7 +14,8 @@ public class RenderController : MonoBehaviour
 
     [Header("References")]
     public Transform player;
-    public Material mapMaterial;
+    public Material mapMaterial; // This is your base Shader Graph material!
+    private Material currentStageMaterial; // ADD THIS: Holds the clone for the current stage
     public PlayerSpawner spawner;
 
     [Header("Camera Settings")]
@@ -56,6 +57,8 @@ public class RenderController : MonoBehaviour
         if (dataManager != null)
         {
             dataManager.GenerateWorldData(chunkSize);
+
+            SetupStageMaterial();
 
             maxChunkX = (dataManager.globalHeightMap.GetLength(0) - 1) / (chunkSize - 1);
             maxChunkZ = (dataManager.globalHeightMap.GetLength(1) - 1) / (chunkSize - 1);
@@ -204,17 +207,16 @@ public class RenderController : MonoBehaviour
         float heightMult = dataManager.activeGen.meshHeightMultiplier;
         int lod = wantedHighRes ? dataManager.activeGen.levelOfDetail : lowResLOD;
         float[,] hMap = dataManager.globalHeightMap;
-        Color[,] cMap = dataManager.globalColorMap;
+        //Color[,] cMap = dataManager.globalColorMap;
         Color fCol = dataManager.fieldColor;
 
         Task.Run(() =>
         {
             // Use the captured map data
-            MapData mapData = MapSlicer.GetChunkData(coord, chunkSize, hMap, cMap, fCol);
+            float[,] mapData = MapSlicer.GetChunkData(coord, chunkSize, hMap);
 
             MeshData meshData = PerlinTerrainMeshGenerator.GenerateTerrainMesh(
-                mapData.heightMap,
-                mapData.colourMap,
+                mapData,
                 heightMult,
                 lod
             );
@@ -250,7 +252,7 @@ public class RenderController : MonoBehaviour
 
         Mesh finalMesh = meshData.CreateMesh();
         mf.mesh = finalMesh;
-        mr.material = mapMaterial;
+        mr.sharedMaterial = currentStageMaterial;
 
         // --- YOUR SMART STATE LOGIC ---
         if (isHighRes)
@@ -379,8 +381,12 @@ public class RenderController : MonoBehaviour
         {
             sharedNowhereMaterial = new Material(mapMaterial);
 
-            // Grab the fieldColor directly from the dataManager!
-            sharedNowhereMaterial.color = dataManager.fieldColor;
+            // 1. Use your exact Shader Graph property name!
+            sharedNowhereMaterial.SetColor("_Field_Color", dataManager.fieldColor);
+
+            // 2. Pass a pure black texture so the Shader Graph doesn't try 
+            // to paint random roads on your empty background planes!
+            sharedNowhereMaterial.SetTexture("_Road_Mask", Texture2D.blackTexture);
         }
 
         mr.sharedMaterial = sharedNowhereMaterial;
@@ -392,6 +398,28 @@ public class RenderController : MonoBehaviour
 
         // Save it to the dictionary
         terrainChunks[coord] = nowhereObj;
+    }
+
+    private void SetupStageMaterial()
+    {
+        // 1. Clone the base Shader Graph material
+        currentStageMaterial = new Material(mapMaterial);
+
+        // 2. Pass the colors (Grab these from your dataManager!)
+        Debug.Log($"[RenderController] Field Color is: {dataManager.fieldColor}");
+        currentStageMaterial.SetColor("_Field_Color", dataManager.fieldColor);
+
+        // Assuming you add a rock color and road color to your dataManager...
+        currentStageMaterial.SetColor("_Side_Rock_Color", dataManager.sideRockColor);
+        currentStageMaterial.SetColor("_Road_Color", dataManager.roadColor);
+
+        // 3. Generate and pass the Road Mask Texture
+        // NOTE: Replace 'dataManager.globalRoadMap' with wherever your road float array is stored!
+        if (dataManager.roadRidgeTexture != null)
+        {
+            currentStageMaterial.SetTexture("_Road_Mask", dataManager.roadRidgeTexture);
+            currentStageMaterial.SetFloat("_Global_Map_Size", dataManager.expandedRoadRidge.GetLength(0));
+        }
     }
 
     private bool IsCoordInWorld(Vector2Int coord)

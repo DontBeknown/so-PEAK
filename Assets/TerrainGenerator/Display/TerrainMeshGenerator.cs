@@ -5,7 +5,7 @@ using UnityEngine;
 public static class PerlinTerrainMeshGenerator
 {
 
-    public static MeshData GenerateTerrainMesh(float[,] heightMap, Color[,] colorMap, float heightMultiplier, int levelOfDetail)
+    public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, int levelOfDetail)
     {
         int width = heightMap.GetLength(0);
         int length = heightMap.GetLength(1);
@@ -48,7 +48,7 @@ public static class PerlinTerrainMeshGenerator
                 meshData.vertices[vertexIndex] = new Vector3(topLeftX + x, vertexHeight, topLeftZ - y);
 
                 // Assign into mesh
-                meshData.colors[vertexIndex] = colorMap[x,y];
+                //meshData.colors[vertexIndex] = colorMap[x,y];
 
                 vertexIndex++;
             }
@@ -64,7 +64,7 @@ public class MeshData
     public int[] triangles;
     public Vector2[] uvs;
 
-    public Color[] colors;
+    //public Color[] colors;
 
     public int triangleIndex;
 
@@ -73,7 +73,7 @@ public class MeshData
         vertices = new Vector3[meshWidth * meshHeight];
         uvs = new Vector2[meshWidth * meshHeight];
         triangles = new int[(meshWidth - 1) * (meshHeight - 1) * 6];
-        colors = new Color[meshWidth * meshHeight];
+        //colors = new Color[meshWidth * meshHeight];
     }
 
     public void AddTriangle(int a, int b, int c)
@@ -96,7 +96,7 @@ public class MeshData
         mesh.triangles = triangles;
         mesh.uv = uvs;
 
-        mesh.colors = colors;
+        //mesh.colors = colors;
 
         mesh.RecalculateNormals();
 
