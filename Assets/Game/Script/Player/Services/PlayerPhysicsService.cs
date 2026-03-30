@@ -20,6 +20,13 @@ namespace Game.Player.Services
 
         public PlayerPhysicsService(Transform transform, CharacterController controller, PlayerConfig config)
         {
+            if (transform == null)
+                throw new System.ArgumentNullException(nameof(transform), "Transform cannot be null");
+            if (controller == null)
+                throw new System.ArgumentNullException(nameof(controller), "CharacterController cannot be null");
+            if (config == null)
+                throw new System.ArgumentNullException(nameof(config), "PlayerConfig cannot be null");
+
             _transform = transform;
             _controller = controller;
             _config = config;
@@ -36,17 +43,15 @@ namespace Game.Player.Services
             Vector3 origin = _transform.position + Vector3.up * (_controller.height * 0.5f);
             float maxDistance = (_controller.height * 0.5f) + _config.groundCheckDistance;
 
-            bool hit = Physics.SphereCast(
+            return Physics.SphereCast(
                 origin,
                 sphereRadius,
                 Vector3.down,
-                out RaycastHit hitInfo,
+                out _,
                 maxDistance,
                 _config.groundLayer,
                 QueryTriggerInteraction.Ignore
             );
-
-            return hit;
         }
 
         public bool TryDetectClimbable(out RaycastHit hit)
@@ -64,17 +69,40 @@ namespace Game.Player.Services
                 QueryTriggerInteraction.Ignore
             );
 
-            if (!hasHit)
-                return false;
+            // Draw sphere cast visualization
+            Vector3 castEnd = origin + _transform.forward * _config.climbDetectionRange;
+            Debug.DrawLine(origin, castEnd, Color.cyan, 0);
+            DebugDrawWireSphere(origin, castRadius, Color.cyan, 0);
+            if (hasHit)
+                DebugDrawWireSphere(hit.point, castRadius, Color.green, 0);
 
-            float wallAngle = Vector3.Angle(hit.normal, Vector3.up);
-            if (wallAngle < _config.minClimbableWallAngle || wallAngle > _config.maxClimbableWallAngle)
+            if (!hasHit)
+            {
+                Debug.Log($"[TryDetectClimbable] No climbable surface hit. Cast from {origin} forward {_config.climbDetectionRange}m with radius {castRadius}");
                 return false;
+            }
+
+            // Wall angle: 0° = ceiling (normal points up), 90° = vertical wall (normal points horizontal), 180° = floor
+            // Config range 70-110° means we accept surfaces that are nearly vertical (± 20° from perfectly vertical)
+            float wallAngle = Vector3.Angle(hit.normal, Vector3.up);
+            Debug.DrawRay(hit.point, hit.normal * 0.5f, Color.red, 0);
+            
+            if (wallAngle < _config.minClimbableWallAngle || wallAngle > _config.maxClimbableWallAngle)
+            {
+                Debug.Log($"[TryDetectClimbable] Wall angle REJECTED: {wallAngle:F1}° (valid range: {_config.minClimbableWallAngle}-{_config.maxClimbableWallAngle}°)");
+                return false;
+            }
 
             float approachAngle = Vector3.Angle(_transform.forward, -hit.normal);
+            Debug.DrawRay(hit.point, -hit.normal * 0.5f, Color.magenta, 0);
+            
             if (approachAngle > _config.maxClimbApproachAngle)
+            {
+                Debug.Log($"[TryDetectClimbable] Approach angle REJECTED: {approachAngle:F1}° (max allowed: {_config.maxClimbApproachAngle}°)");
                 return false;
+            }
 
+            Debug.Log($"[TryDetectClimbable] SUCCESS - Wall angle: {wallAngle:F1}°, Approach angle: {approachAngle:F1}°");
             return true;
         }
 
@@ -115,6 +143,36 @@ namespace Game.Player.Services
         public bool CheckCapsuleOverlap(Vector3 bottom, Vector3 top, float radius)
         {
             return Physics.CheckCapsule(bottom, top, radius, ~0, QueryTriggerInteraction.Ignore);
+        }
+
+        /// <summary>
+        /// Draw a wire sphere for debugging purposes
+        /// </summary>
+        private void DebugDrawWireSphere(Vector3 center, float radius, Color color, float duration)
+        {
+            int segments = 16;
+            float angleDelta = 360f / segments;
+
+            // Draw circles on X-Z plane (horizontal)
+            for (int i = 0; i < segments; i++)
+            {
+                float angle1 = i * angleDelta * Mathf.Deg2Rad;
+                float angle2 = (i + 1) * angleDelta * Mathf.Deg2Rad;
+
+                Vector3 p1 = center + new Vector3(Mathf.Cos(angle1) * radius, 0, Mathf.Sin(angle1) * radius);
+                Vector3 p2 = center + new Vector3(Mathf.Cos(angle2) * radius, 0, Mathf.Sin(angle2) * radius);
+                Debug.DrawLine(p1, p2, color, duration);
+
+                // Draw circles on Y-Z plane (vertical)
+                p1 = center + new Vector3(0, Mathf.Cos(angle1) * radius, Mathf.Sin(angle1) * radius);
+                p2 = center + new Vector3(0, Mathf.Cos(angle2) * radius, Mathf.Sin(angle2) * radius);
+                Debug.DrawLine(p1, p2, color, duration);
+
+                // Draw circles on X-Y plane (vertical)
+                p1 = center + new Vector3(Mathf.Cos(angle1) * radius, Mathf.Sin(angle1) * radius, 0);
+                p2 = center + new Vector3(Mathf.Cos(angle2) * radius, Mathf.Sin(angle2) * radius, 0);
+                Debug.DrawLine(p1, p2, color, duration);
+            }
         }
     }
 }

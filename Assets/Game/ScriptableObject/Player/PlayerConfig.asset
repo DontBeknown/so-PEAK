@@ -21,6 +21,10 @@ MonoBehaviour:
   minSlopeSpeedMultiplier: 0.7
   maxSlopeSpeedMultiplier: 1
   climbDetectionRange: 3
+  climbDetectionRadiusMultiplier: 0.9
+  minClimbableWallAngle: 70
+  maxClimbableWallAngle: 110
+  maxClimbApproachAngle: 60
   climbableLayer:
     serializedVersion: 2
     m_Bits: 128
