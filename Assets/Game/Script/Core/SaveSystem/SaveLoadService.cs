@@ -298,11 +298,14 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             {
                 var pos = player.transform.position;
                 var rot = player.transform.rotation;
-                
                 currentWorldSave.playerData.position = new float[] { pos.x, pos.y, pos.z };
                 currentWorldSave.playerData.rotation = new float[] { rot.x, rot.y, rot.z, rot.w };
-                
+                Debug.Log($"[SaveLoadService] Player reference found. Position: {pos}");
                 if (enableDebug) Debug.Log($"Updated player position: {pos}");
+            }
+            else
+            {
+                Debug.LogWarning("[SaveLoadService] Player reference NOT found during save. Position will not be saved.");
             }
             
             // Get player stats
@@ -390,7 +393,8 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             }
             
             // Update play time
-            currentWorldSave.totalPlayTime += Time.deltaTime;
+            currentWorldSave.totalPlayTime += Time.unscaledDeltaTime;
+            Debug.Log($"[SaveLoadService] Updated total play time: {currentWorldSave.totalPlayTime:F1} seconds {Time.unscaledDeltaTime}");
             
             if (enableDebug) Debug.Log("[SaveLoadService] Player data updated from game state");
         }

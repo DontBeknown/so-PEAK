@@ -24,10 +24,16 @@ namespace Game.Script.Dialog
 
         private void Start()
         {
-            if (_dialogManager != null && dialogData != null)
+            // Check if SaveLoadService exists and level is 1
+            var saveLoadService = SaveLoadService.Instance;
+            if (saveLoadService != null && _dialogManager != null && dialogData != null)
             {
-                _dialogManager.StartDialog(dialogData, replayIfTriggered);
-                Debug.Log($"DialogOnStart: Started dialog '{dialogData.dialogId}' on start. Replay if triggered: {replayIfTriggered}");
+                int currentLevel = saveLoadService.GetCurrentLevel();
+                if (currentLevel == 1)
+                {
+                    _dialogManager.StartDialog(dialogData, replayIfTriggered);
+                    //Debug.Log($"DialogOnStart: Started dialog '{dialogData.dialogId}' on start. Replay if triggered: {replayIfTriggered}");
+                }
             }
             else if (dialogData == null)
             {

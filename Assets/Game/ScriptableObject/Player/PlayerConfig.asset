@@ -36,7 +36,7 @@ MonoBehaviour:
   coyoteTimeDuration: 0
   jumpStaminaCost: 20
   sprintStaminaDrainPerSecond: 25
-  climbStaminaDrainPerSecond: 5
+  climbStaminaDrainPerSecond: 0
   staminaExhaustedSpeedMultiplier: 0.4
   staminaRegenPerSecond: 15
   staminaDrainCooldown: 1

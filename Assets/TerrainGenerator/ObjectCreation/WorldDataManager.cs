@@ -231,8 +231,8 @@ public class WorldDataManager : MonoBehaviour
         }
 
         ////////////////Load level would uncomment if test completed
-        //int savedLevelInt = saveService.GetCurrentLevel();
-        //currentLevel = (WorldLevel)savedLevelInt;
+        int savedLevelInt = saveService.GetCurrentLevel();
+        currentLevel = (WorldLevel)savedLevelInt;
 
 
         SeedData seedData = saveService.CurrentWorldSave.seedData;

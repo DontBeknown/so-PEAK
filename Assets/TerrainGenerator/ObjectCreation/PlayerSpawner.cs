@@ -60,6 +60,7 @@ public class PlayerSpawner : MonoBehaviour
         Vector3 targetXZ;
         float savedY = targetSpawnPosition.y; // Store default Y
         
+        //Debug.Log($"[PlayerSpawner] {SaveLoadService.Instance.IsNewWorld()} and loadFromSave={loadFromSave}");
         if(!SaveLoadService.Instance.IsNewWorld() && loadFromSave)
         {
            WorldSaveData saveData = SaveLoadService.Instance.CurrentWorldSave;
@@ -106,7 +107,7 @@ public class PlayerSpawner : MonoBehaviour
         GameObject spawnedPlayerObj = Instantiate(playerPrefab, finalSpawnPosition, Quaternion.identity);
         SpawnedPlayer = spawnedPlayerObj.transform;
         
-        //Debug.Log($"[PlayerSpawner] Player instantiated at {finalSpawnPosition}");
+       //Debug.Log($"[PlayerSpawner] Player instantiated at {finalSpawnPosition}");
         
         // 5.5. UPDATE UI SERVICE PROVIDER WITH NEW PLAYER REFERENCE
         UIServiceProvider uiService = ServiceContainer.Instance.TryGet<UIServiceProvider>();
