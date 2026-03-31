@@ -142,11 +142,11 @@ public class PlayerConfig : ScriptableObject
     [Header("Temperature — Environment Curves by Level")]
     [Tooltip("Level 1: neutral environment all day. Keep at 37°C across the full 24-hour cycle.")]
     public AnimationCurve temperatureDayCurveLevel1 = new AnimationCurve(
-        new Keyframe(0f,    37f),
-        new Keyframe(0.25f, 37f),
-        new Keyframe(0.5f,  37f),
-        new Keyframe(0.75f, 37f),
-        new Keyframe(1f,    37f)
+        new Keyframe(0f,    50f),
+        new Keyframe(0.25f, 50f),
+        new Keyframe(0.5f,  50f),
+        new Keyframe(0.75f, 50f),
+        new Keyframe(1f,    50f)
     );
 
     [Tooltip("Level 2: cold at night, hot in daytime, but stays below critical thresholds by default.")]

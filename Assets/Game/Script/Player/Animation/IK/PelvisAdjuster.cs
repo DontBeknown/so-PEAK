@@ -10,10 +10,13 @@ namespace Game.Player.Animation
     {
         private readonly FootIKConfig _config;
         private float _lastPelvisPositionY;
+        private bool _isInitialized;
 
         public PelvisAdjuster(FootIKConfig config)
         {
             _config = config;
+            _lastPelvisPositionY = 0f;
+            _isInitialized = false;
         }
 
         /// <summary>
@@ -26,6 +29,12 @@ namespace Game.Player.Animation
         {
             if (!_config.enablePelvisAdjustment || animator == null)
                 return;
+
+            if (!_isInitialized)
+            {
+                _lastPelvisPositionY = animator.bodyPosition.y;
+                _isInitialized = true;
+            }
 
             // Use the LOWEST foot to prevent overextension (keeps character grounded)
             float lowestFootOffset = Mathf.Min(leftFootOffset, rightFootOffset);
@@ -55,6 +64,7 @@ namespace Game.Player.Animation
         public void Reset(float currentBodyY = 0f)
         {
             _lastPelvisPositionY = currentBodyY;
+            _isInitialized = true;
         }
     }
 }

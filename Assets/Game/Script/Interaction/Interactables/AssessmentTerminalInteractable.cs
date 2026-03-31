@@ -45,6 +45,8 @@ namespace Game.Interaction
         [SerializeField] private bool healOnUse = false;
         [Min(0f)]
         [SerializeField] private float healAmountOnUse = 25f;
+        [Tooltip("Optional custom spawn transform to save for the player. If null, current player position is used.")]
+        [SerializeField] private Transform customSaveSpawnPoint;
         [SerializeField] private bool progressNextLevelOnUse = false; 
         
         private float lastInteractionTime = -999f;
@@ -303,7 +305,7 @@ namespace Game.Interaction
             }
 
             // Save the game (captures updated day, time, stats, etc.)
-            SaveLoadService.Instance?.PerformAutoSave();
+            SaveLoadService.Instance?.PerformAutoSave(customSaveSpawnPoint);
 
             // Mark as used for one-time-use terminals
             if (oneTimeUse)

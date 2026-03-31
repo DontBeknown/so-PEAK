@@ -279,6 +279,37 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             SaveWorld(currentWorldSave);
         }
     }
+
+    /// <summary>
+    /// Auto-save that can persist a custom player spawn transform.
+    /// If customSpawnPoint is null, the current player transform is saved instead.
+    /// </summary>
+    public void PerformAutoSave(Transform customSpawnPoint)
+    {
+        if (currentWorldSave == null)
+        {
+            return;
+        }
+
+        UpdatePlayerDataFromGame();
+
+        if (customSpawnPoint != null)
+        {
+            var pos = customSpawnPoint.position;
+            var rot = customSpawnPoint.rotation;
+
+            currentWorldSave.playerData.position = new[] { pos.x, pos.y, pos.z };
+            currentWorldSave.playerData.rotation = new[] { rot.x, rot.y, rot.z, rot.w };
+
+            if (enableDebug)
+            {
+                Debug.Log($"[SaveLoadService] Overriding saved spawn with custom transform at {pos}");
+            }
+        }
+
+        if (enableDebug) Debug.Log("Auto-saving...");
+        SaveWorld(currentWorldSave);
+    }
     
     /// <summary>
     /// Updates current world save with player data from game state

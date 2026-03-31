@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
   itemName: Apple
   description: Uhmmm Tasty!!!
-  icon: {fileID: 21300000, guid: 9ea00ca880ed1cb45af88f07df34b924, type: 3}
+  icon: {fileID: 21300000, guid: adaac68d8e5d693499597113889d11d3, type: 3}
   maxStackSize: 1
   itemType: 1
   category: 4

@@ -17,6 +17,7 @@ public class FootIKControllerRefactored : MonoBehaviour
 
     [Header("Runtime Control")]
     [SerializeField] private bool enableFootIK = true;
+    [SerializeField] private float initialIKDelaySeconds = 0.15f;
 
     // Strategy Pattern
     private IFootIKStrategy _currentStrategy;
@@ -31,6 +32,8 @@ public class FootIKControllerRefactored : MonoBehaviour
     // State tracking
     private bool _isAirborne;
     private bool _wasAirborne;
+    private bool _hasSeededPelvis;
+    private float _ikStartTime;
 
     private void Start()
     {
@@ -38,13 +41,25 @@ public class FootIKControllerRefactored : MonoBehaviour
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
 
+        if (animator == null)
+        {
+            Debug.LogError("FootIKControllerRefactored: No Animator found!");
+            enabled = false;
+            return;
+        }
+
         if (playerController == null)
             playerController = GetComponent<PlayerControllerRefactored>();
 
         if (config == null)
         {
-            Debug.LogWarning("FootIKControllerRefactored: No config assigned! Using default settings.");
-            config = ScriptableObject.CreateInstance<FootIKConfig>();
+            config = Resources.Load<FootIKConfig>("FootIKConfig");
+            if (config == null)
+            {
+                Debug.LogError("FootIKControllerRefactored: No FootIKConfig assigned or found in Resources/FootIKConfig. Disabling Foot IK to avoid unstable startup behavior.");
+                enabled = false;
+                return;
+            }
         }
 
         // Initialize strategies
@@ -55,16 +70,32 @@ public class FootIKControllerRefactored : MonoBehaviour
         // Start with ground strategy
         SetStrategy(_groundHandler);
 
-        if (animator == null)
-        {
-            Debug.LogError("FootIKControllerRefactored: No Animator found!");
-            enabled = false;
-        }
+        // Force a reliable first landing transition and seed values on the first IK frame.
+        _wasAirborne = true;
+        _hasSeededPelvis = false;
+        _leftFootIKWeight = 0f;
+        _rightFootIKWeight = 0f;
+        _ikStartTime = Time.time;
     }
 
     private void OnAnimatorIK(int layerIndex)
     {
         if (animator == null || !enableFootIK) return;
+
+        if (!_hasSeededPelvis)
+        {
+            _pelvisAdjuster.Reset(animator.bodyPosition.y);
+            _hasSeededPelvis = true;
+        }
+
+        if (Time.time - _ikStartTime < initialIKDelaySeconds)
+        {
+            animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 0f);
+            animator.SetIKRotationWeight(AvatarIKGoal.LeftFoot, 0f);
+            animator.SetIKPositionWeight(AvatarIKGoal.RightFoot, 0f);
+            animator.SetIKRotationWeight(AvatarIKGoal.RightFoot, 0f);
+            return;
+        }
 
         // Check if player is in a non-grounded state
         UpdateAirborneState();
@@ -103,6 +134,12 @@ public class FootIKControllerRefactored : MonoBehaviour
         if (playerController != null)
         {
             var state = playerController.GetCurrentState();
+            if (state == null)
+            {
+                _isAirborne = false;
+                return;
+            }
+
             _isAirborne = state is ClimbingState
                        || state is MantlingState
                        || state is FallingState;
@@ -169,6 +206,10 @@ public class FootIKControllerRefactored : MonoBehaviour
             _groundHandler = new GroundFootIKHandler(config);
             _climbingHandler = new ClimbingFootIKHandler(config);
             _pelvisAdjuster = new PelvisAdjuster(config);
+            _hasSeededPelvis = false;
+            _leftFootIKWeight = 0f;
+            _rightFootIKWeight = 0f;
+            _ikStartTime = Time.time;
             
             // Reapply current strategy
             SetStrategy(_isAirborne ? (IFootIKStrategy)_climbingHandler : _groundHandler);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public interface ISaveLoadService
 {
@@ -14,6 +15,7 @@ public interface ISaveLoadService
     void EnableAutoSave(float intervalSeconds);
     void DisableAutoSave();
     void PerformAutoSave();
+    void PerformAutoSave(Transform customSpawnPoint);
     
     // Backup
     bool CreateBackup(string worldGuid);
