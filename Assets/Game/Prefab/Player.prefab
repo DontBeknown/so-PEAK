@@ -2780,7 +2780,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1675594734445087880
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2799,7 +2799,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: 214.41}
+  m_AnchoredPosition: {x: 0, y: 307}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &4278257729089796418
@@ -2867,7 +2867,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
   m_Padding:
-    m_Left: 20
+    m_Left: 97
     m_Right: 20
     m_Top: 5
     m_Bottom: 5
@@ -3850,6 +3850,7 @@ GameObject:
   - component: {fileID: 3761118848655843513}
   - component: {fileID: 7826473414410841880}
   - component: {fileID: 4036666107913804897}
+  - component: {fileID: 6210602212309693783}
   m_Layer: 0
   m_Name: 'Collectable & Dialog Manager  '
   m_TagString: Untagged
@@ -3896,6 +3897,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05101b01e5fe97a4aac65a6d2de33877, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Dialog.DialogManager
+--- !u!114 &6210602212309693783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1455667423550851352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f77f3d3b2fd8aef4781a45d7f8b36c07, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Script.Dialog.DialogOnStart
+  dialogData: {fileID: 11400000, guid: 383feb82d6b3abf4b88d61b8626b8852, type: 2}
+  replayIfTriggered: 0
+  _dialogManager: {fileID: 4036666107913804897}
 --- !u!1 &1457493142206553030
 GameObject:
   m_ObjectHideFlags: 0
@@ -9327,7 +9343,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: TextlineTextline
+  m_text: "Okay. The coordinates from that radio static pointed here. \n(Taking a
+    shaky breath, rubbing her arms against the chill) "
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2f514087d26fb4743b4a83f724e5930c, type: 2}
   m_sharedMaterial: {fileID: 3324513821055252714, guid: 2f514087d26fb4743b4a83f724e5930c, type: 2}
@@ -10866,7 +10883,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &5904092251531469211
 RectTransform:
   m_ObjectHideFlags: 0
@@ -20170,6 +20187,7 @@ GameObject:
   - component: {fileID: 2540841615581674995}
   - component: {fileID: 7985535777788179701}
   - component: {fileID: 2649798899461038721}
+  - component: {fileID: 2307813983863217037}
   m_Layer: 5
   m_Name: Speaker Text (TMP)
   m_TagString: Untagged
@@ -20191,10 +20209,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1675594734445087880}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 72.30499, y: -23.69}
+  m_SizeDelta: {x: 105.45, y: 37.38}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7985535777788179701
 CanvasRenderer:
@@ -20224,7 +20242,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Speaker :'
+  m_text: 'Aira :'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2f514087d26fb4743b4a83f724e5930c, type: 2}
   m_sharedMaterial: {fileID: 3324513821055252714, guid: 2f514087d26fb4743b4a83f724e5930c, type: 2}
@@ -20296,6 +20314,26 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &2307813983863217037
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6624331514136560431}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
+  m_IgnoreLayout: 1
+  m_MinWidth: -1
+  m_MinHeight: -1
+  m_PreferredWidth: -1
+  m_PreferredHeight: -1
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
 --- !u!1 &6649617682387402505
 GameObject:
   m_ObjectHideFlags: 0
@@ -22869,7 +22907,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8526921162826750404
 RectTransform:
   m_ObjectHideFlags: 0
@@ -25214,7 +25252,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Assesment Rank
+  m_text: Assessment Rank
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2f514087d26fb4743b4a83f724e5930c, type: 2}
   m_sharedMaterial: {fileID: 3324513821055252714, guid: 2f514087d26fb4743b4a83f724e5930c, type: 2}

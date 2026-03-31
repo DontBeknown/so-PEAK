@@ -58,4 +58,21 @@ namespace Game.Player.Inventory.Effects
             //Debug.Log($"[StaminaEffectStrategy] Applied {effect.value} stamina. " + $"Current: {stats.Stamina}/{stats.MaxStamina}");
         }
     }
+    /// <summary>
+    /// Strategy for Thirst stat modification
+    /// </summary>
+    public class ThirstEffectStrategy : IEffectStrategy
+    {
+        public void Apply(ConsumableEffect effect, PlayerStats stats)
+        {
+            if (stats == null)
+            {
+                Debug.LogWarning("[ThirstEffectStrategy] PlayerStats is null");
+                return;
+            }
+
+            stats.Drink(effect.value);
+            //Debug.Log($"[ThirstEffectStrategy] Applied {effect.value} thirst.");
+        }
+    }
 }
