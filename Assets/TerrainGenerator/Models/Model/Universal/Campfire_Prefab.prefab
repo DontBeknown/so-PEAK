@@ -50,7 +50,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: bf577ae7a68526e47b71ea5c40963088, type: 3}
       propertyPath: m_Name
-      value: re_campfire
+      value: Campfire_Prefab
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: bf577ae7a68526e47b71ea5c40963088, type: 3}
       propertyPath: m_Layer
@@ -84,12 +84,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d5cfb5168eca70458715d3d8d6c1216, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.AssessmentTerminalInteractable
+  holdDuration: 3
+  interactionPriority: 0.8
+  highlightEffect: {fileID: 0}
+  holdStartSound: {fileID: 0}
+  holdCompleteSound: {fileID: 0}
+  holdCancelSound: {fileID: 0}
   customPrompt: Rest
   interactionVerb: Press F to
-  interactionPriority: 0.8
+  terminalInteractionPriority: 0.8
   lockPlayerInputDuringUI: 1
   pauseGameDuringUI: 0
-  highlightEffect: {fileID: 0}
+  terminalHighlightEffect: {fileID: 0}
   interactSound: {fileID: 0}
   highlightColor: {r: 0, g: 1, b: 1, a: 1}
   useCooldown: 0
@@ -97,6 +103,8 @@ MonoBehaviour:
   oneTimeUse: 1
   skipDayOnUse: 1
   resetFatigueOnUse: 0
+  healOnUse: 1
+  healAmountOnUse: 25
   progressNextLevelOnUse: 0
 --- !u!65 &3425832470417675574
 BoxCollider:
