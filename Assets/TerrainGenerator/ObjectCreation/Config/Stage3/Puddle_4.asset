@@ -18,13 +18,13 @@ MonoBehaviour:
   TreePrototypeIndex: 0
   BaseRadius: 0.5
   BaseHeight: 0.05
-  MinScale: 20
-  MaxScale: 60
+  MinScale: 10
+  MaxScale: 20
   BaseRotation: {x: 0, y: 0, z: 0}
   PositionOffset: {x: 0, y: 0.5, z: 0}
-  RoadRule: 1
-  MinSpacing: 150
-  Density: 0.5
+  RoadRule: 0
+  MinSpacing: 80
+  Density: 0.2
   MaxSlopeDiff: 0.3
   RequiredNoiseMap: 0
   NoiseThreshold: 0.5
