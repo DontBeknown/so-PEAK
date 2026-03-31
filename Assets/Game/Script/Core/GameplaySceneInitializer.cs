@@ -193,6 +193,14 @@ public class GameplaySceneInitializer : MonoBehaviour
             playerStats.RestoreStamina(staminaDiff);
         else if (staminaDiff < 0)
             playerStats.ConsumeStamina(-staminaDiff);
+
+        // Restore temperature (shift from starting 37°C to saved value)
+        if (playerData.temperature > 0f)
+        {
+            float tempDiff = playerData.temperature - playerStats.Temperature;
+            if (Mathf.Abs(tempDiff) > 0.01f)
+                playerStats.ModifyTemperature(tempDiff);
+        }
     }
     
     private void RestoreInventory(PlayerSaveData playerData)

@@ -63,8 +63,32 @@ namespace Game.Interaction
         }
         private void Start()
         {
-            _dayNightService = ServiceContainer.Instance.TryGet<IDayNightCycleService>();
-            _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+            // Defer service initialization - they may not be ready yet when spawned dynamically
+            // Services will be fetched on-demand in other methods
+        }
+        
+        /// <summary>
+        /// Ensures all required services are initialized. Called before use.
+        /// </summary>
+        private void EnsureServicesInitialized()
+        {
+            if (_dayNightService == null)
+            {
+                _dayNightService = ServiceContainer.Instance.TryGet<IDayNightCycleService>();
+                if (_dayNightService == null)
+                {
+                    // Debug.LogWarning("[AssessmentTerminalInteractable] IDayNightCycleService not available yet");
+                }
+            }
+            
+            if (_eventBus == null)
+            {
+                _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+                if (_eventBus == null)
+                {
+                    // Debug.LogError("[AssessmentTerminalInteractable] IEventBus not found in ServiceContainer!");
+                }
+            }
         }
 
         public override string InteractionPrompt => customPrompt;
@@ -79,7 +103,7 @@ namespace Game.Interaction
                     uiServiceProvider = ServiceContainer.Instance.TryGet<UIServiceProvider>();
                     if (uiServiceProvider == null)
                     {
-                        Debug.LogError("[AssessmentTerminalInteractable] UIServiceProvider not found in ServiceContainer!");
+                        // Debug.LogError("[AssessmentTerminalInteractable] UIServiceProvider not found in ServiceContainer!");
                         return false;
                     }
                 }
@@ -137,11 +161,21 @@ namespace Game.Interaction
 
             OpenAssessmentUI();
 
+            // Ensure services are available before subscribing
+            EnsureServicesInitialized();
+
             // Subscribe to panel close to trigger skip to next morning and cleanup.
             if (_eventBus != null && !_isWaitingForPanelClose)
             {
                 _isWaitingForPanelClose = true;
+                // Debug.Log("[AssessmentTerminalInteractable] Subscribing to PanelClosedEvent");
                 _eventBus.Subscribe<PanelClosedEvent>(OnPanelClosed);
+            }
+            else if (_eventBus == null)
+            {
+                // Debug.LogError("[AssessmentTerminalInteractable] EventBus is still null! Will attempt to bind on next frame.");
+                // Retry next frame - services may have initialized
+                StartCoroutine(RetryEventSubscription());
             }
 
             // Hold base cleanup unlocks the player; re-apply lock for terminal UI usage.
@@ -151,6 +185,27 @@ namespace Game.Interaction
                 StartCoroutine(ReapplyPlayerLockNextFrame(currentPlayer));
             }
         }
+        
+        /// <summary>
+        /// Retry subscribing to PanelClosedEvent if initial attempt failed
+        /// </summary>
+        private IEnumerator RetryEventSubscription()
+        {
+            yield return new WaitForSeconds(0.5f);
+            
+            EnsureServicesInitialized();
+            
+            if (_eventBus != null && !_isWaitingForPanelClose)
+            {
+                _isWaitingForPanelClose = true;
+                // Debug.Log("[AssessmentTerminalInteractable] Successfully subscribed to PanelClosedEvent on retry");
+                _eventBus.Subscribe<PanelClosedEvent>(OnPanelClosed);
+            }
+            else if (_eventBus == null)
+            {
+                // Debug.LogError("[AssessmentTerminalInteractable] EventBus still unavailable after retry!");
+            }
+        }
 
         #endregion
 
@@ -158,7 +213,7 @@ namespace Game.Interaction
         {
             if (uiServiceProvider == null)
             {
-                Debug.LogError("[AssessmentTerminalInteractable] UIServiceProvider not found!");
+                // Debug.LogError("[AssessmentTerminalInteractable] UIServiceProvider not found!");
                 UnlockPlayer();
                 return;
             }
@@ -167,11 +222,17 @@ namespace Game.Interaction
             uiServiceProvider.OpenPanel("PlayerStatsTracker");
             
             // Publish event to communicate context to UI (progression mode enabled/disabled)
-            if (_eventBus != null)
+            if (_eventBus == null)
             {
-                _eventBus.Publish(new AssessmentUIOpenedEvent("PlayerStatsTracker", progressNextLevelOnUse));
+               _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+               if (_eventBus == null){
+                   // Debug.LogError("[AssessmentTerminalInteractable] EventBus not found in ServiceContainer!");
+                   return;
+                }
             }
-            //Debug.Log("[AssessmentTerminalInteractable] Stats tracker opened via UIServiceProvider");
+
+            _eventBus.Publish(new AssessmentUIOpenedEvent("PlayerStatsTracker", progressNextLevelOnUse));
+            // Debug.Log("[AssessmentTerminalInteractable] Stats tracker opened via UIServiceProvider");
         }
 
         /// <summary>
@@ -196,13 +257,30 @@ namespace Game.Interaction
         {
             if (evt.PanelName != "PlayerStatsTracker") return;
             
+            // Debug.Log($"[AssessmentTerminalInteractable] OnPanelClosed called for {evt.PanelName}");
+            
             // Unsubscribe immediately so this only fires once per interaction
             _eventBus?.Unsubscribe<PanelClosedEvent>(OnPanelClosed);
             _isWaitingForPanelClose = false;
+
+            // Debug.Log("[AssessmentTerminalInteractable] Panel closed event received.");
+            
+            // Ensure day/night service is available
+            if (_dayNightService == null)
+            {
+                _dayNightService = ServiceContainer.Instance.TryGet<IDayNightCycleService>();
+            }
             
             // Skip time to next morning only if configured
             if (skipDayOnUse)
             {
+                // Debug.Log("[AssessmentTerminalInteractable] Skipping to next morning...");
+                if(_dayNightService == null)
+                {
+                    // Debug.LogError("[AssessmentTerminalInteractable] DayNightCycleService not found in ServiceContainer!");
+                    UnlockPlayer();
+                    return;
+                }
                 _dayNightService?.SkipToNextMorning();
             }
 

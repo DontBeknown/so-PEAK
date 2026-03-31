@@ -315,7 +315,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
                 currentWorldSave.playerData.maxHunger = stats.MaxHunger;
                 currentWorldSave.playerData.stamina = stats.Stamina;
                 currentWorldSave.playerData.maxStamina = stats.MaxStamina;
-                //currentWorldSave.playerData.temperature = stats.Temperature;
+                currentWorldSave.playerData.temperature = stats.Temperature;
                 
                 if (enableDebug) Debug.Log($"Updated player stats: HP={stats.Health}/{stats.MaxHealth}");
             }

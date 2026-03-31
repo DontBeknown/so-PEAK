@@ -1618,12 +1618,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d5cfb5168eca70458715d3d8d6c1216, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.AssessmentTerminalInteractable
+  holdDuration: 3
+  interactionPriority: 0.8
+  highlightEffect: {fileID: 0}
+  holdStartSound: {fileID: 0}
+  holdCompleteSound: {fileID: 0}
+  holdCancelSound: {fileID: 0}
   customPrompt: Progress to next level
   interactionVerb: Press F to
-  interactionPriority: 0.8
+  terminalInteractionPriority: 0.8
   lockPlayerInputDuringUI: 1
   pauseGameDuringUI: 0
-  highlightEffect: {fileID: 0}
+  terminalHighlightEffect: {fileID: 0}
   interactSound: {fileID: 0}
   highlightColor: {r: 0, g: 1, b: 1, a: 1}
   useCooldown: 0
@@ -1631,4 +1637,6 @@ MonoBehaviour:
   oneTimeUse: 1
   skipDayOnUse: 1
   resetFatigueOnUse: 1
+  healOnUse: 1
+  healAmountOnUse: 100
   progressNextLevelOnUse: 1

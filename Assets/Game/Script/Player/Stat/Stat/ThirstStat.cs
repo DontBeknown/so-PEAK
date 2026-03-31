@@ -9,6 +9,7 @@ public class ThirstStat : Stat
     [SerializeField] private float hurtThreshold = 60f;
     [SerializeField] private float damagePerSecond = 2f;
     private float sprintDrainMultiplier = 2.5f;
+    private float _temperatureMultiplier = 1f; // set each frame by PlayerStats
 
     private bool isSprinting;
 
@@ -26,9 +27,15 @@ public class ThirstStat : Stat
         isSprinting = sprinting;
     }
 
+    /// <summary>Applied by PlayerStats each frame. 1.0 = normal. >1 = faster drain (e.g. heat sweating).</summary>
+    public void SetTemperatureMultiplier(float multiplier)
+    {
+        _temperatureMultiplier = Mathf.Max(1f, multiplier);
+    }
+
     public override void Tick(float deltaTime)
     {
-        float multiplier = isSprinting ? sprintDrainMultiplier : 1f;
+        float multiplier = (isSprinting ? sprintDrainMultiplier : 1f) * _temperatureMultiplier;
         Subtract(gainPerSecond * multiplier * deltaTime);
     }
 

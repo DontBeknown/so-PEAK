@@ -26,6 +26,7 @@ namespace Game.Player.Inventory.Effects
             RegisterEffectStrategy(StatType.Health, new HealthEffectStrategy());
             RegisterEffectStrategy(StatType.Hunger, new HungerEffectStrategy());
             RegisterEffectStrategy(StatType.Stamina, new StaminaEffectStrategy());
+            RegisterEffectStrategy(StatType.Thirst, new ThirstEffectStrategy());
         }
 
         public void RegisterEffectStrategy(StatType statType, IEffectStrategy strategy)

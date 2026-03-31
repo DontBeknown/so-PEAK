@@ -4,5 +4,7 @@ public enum DeathCause
     Damage,
     Starvation,
     Dehydration,
-    Falling
+    Falling,
+    Freezing,
+    Heatstroke
 }

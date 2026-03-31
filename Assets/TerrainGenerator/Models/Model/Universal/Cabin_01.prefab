@@ -281,6 +281,7 @@ GameObject:
   - component: {fileID: 3365974}
   - component: {fileID: 2385258}
   - component: {fileID: 567015369870630683}
+  - component: {fileID: 8094914715241002995}
   m_Layer: 0
   m_Name: Wall_Wide_01_a
   m_TagString: Untagged
@@ -382,6 +383,27 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: 3c96dad9b398e8644bbff2740043bfec, type: 3}
+--- !u!65 &8094914715241002995
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 138400}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.21257326, y: 5.9674525, z: 1.7400004}
+  m_Center: {x: -0.00000009685755, y: -0.000002026558, z: 0.00000014901164}
 --- !u!1 &157016
 GameObject:
   m_ObjectHideFlags: 0
@@ -394,6 +416,7 @@ GameObject:
   - component: {fileID: 3315572}
   - component: {fileID: 2369578}
   - component: {fileID: 6067056086792568783}
+  - component: {fileID: 1568452275942284085}
   m_Layer: 0
   m_Name: Wall_Narrow_02_a
   m_TagString: Untagged
@@ -495,6 +518,27 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: 6c386fd12b31c874b82508becbbb9279, type: 3}
+--- !u!65 &1568452275942284085
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 157016}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 4, y: 0.13668936, z: 3.7712245}
+  m_Center: {x: 0.0000009536743, y: -0.0000019073486, z: -0.00000041723257}
 --- !u!1 &177148
 GameObject:
   m_ObjectHideFlags: 0
@@ -505,7 +549,8 @@ GameObject:
   m_Component:
   - component: {fileID: 415204}
   - component: {fileID: 2927236465249440365}
-  m_Layer: 0
+  - component: {fileID: 9156933558977979923}
+  m_Layer: 11
   m_Name: Cabin_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -522,7 +567,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.6555717, y: 0, z: 1.7721119}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.458061, y: 1.458061, z: 1.458061}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 429796}
@@ -548,12 +593,46 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 4.162586, y: 3.9943266, z: 6.197891}
+  m_Center: {x: 0.6958618, y: 0.30410248, z: -1.3377495}
+--- !u!114 &9156933558977979923
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177148}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d5cfb5168eca70458715d3d8d6c1216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.AssessmentTerminalInteractable
+  holdDuration: 3
+  interactionPriority: 1.2
+  highlightEffect: {fileID: 0}
+  holdStartSound: {fileID: 0}
+  holdCompleteSound: {fileID: 0}
+  holdCancelSound: {fileID: 0}
+  customPrompt: Check Assessment Report
+  interactionVerb: Hold F to
+  terminalInteractionPriority: 0.8
+  lockPlayerInputDuringUI: 1
+  pauseGameDuringUI: 0
+  terminalHighlightEffect: {fileID: 0}
+  interactSound: {fileID: 0}
+  highlightColor: {r: 0, g: 1, b: 1, a: 1}
+  useCooldown: 0
+  cooldownTime: 2
+  oneTimeUse: 1
+  skipDayOnUse: 1
+  resetFatigueOnUse: 1
+  healOnUse: 1
+  healAmountOnUse: 50
+  progressNextLevelOnUse: 0
 --- !u!1 &195904
 GameObject:
   m_ObjectHideFlags: 0
@@ -566,6 +645,7 @@ GameObject:
   - component: {fileID: 3371292}
   - component: {fileID: 2369466}
   - component: {fileID: 3910837582544627771}
+  - component: {fileID: 8196348621458889806}
   m_Layer: 0
   m_Name: Floor_01_a
   m_TagString: Untagged
@@ -667,6 +747,27 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: 9afcc06a7f7bc7e43b66bd28f58639d8, type: 3}
+--- !u!65 &8196348621458889806
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 195904}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 4.0031223, y: 5.8899364, z: 0.100000024}
+  m_Center: {x: 0, y: -0.0000038146973, z: 0.00000011920929}
 --- !u!1 &196044
 GameObject:
   m_ObjectHideFlags: 0
@@ -679,6 +780,7 @@ GameObject:
   - component: {fileID: 3364588}
   - component: {fileID: 2365980}
   - component: {fileID: 1258230514704104224}
+  - component: {fileID: 5687597557748790723}
   m_Layer: 0
   m_Name: Wall_Wide_02_a
   m_TagString: Untagged
@@ -780,3 +882,24 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: 3fb5028740aea044caab166b7cef0df5, type: 3}
+--- !u!65 &5687597557748790723
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 196044}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.23507848, y: 5.9701815, z: 1.7404076}
+  m_Center: {x: 0.00000009685755, y: -0.0000021457672, z: -0.00000008940699}

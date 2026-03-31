@@ -85,6 +85,7 @@ namespace Game.UI
             
             // Publish event via EventBus (SOLID: Dependency Inversion)
             _eventBus?.Publish(new PanelClosedEvent(panelName));
+
         }
         
         /// <summary>

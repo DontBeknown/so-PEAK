@@ -99,6 +99,12 @@ public class RunningState : IPlayerState
                 combinedMultiplier *= config.staminaExhaustedSpeedMultiplier;
             }
 
+            // Temperature cold penalty: slows movement when freezing
+            if (model.Stats?.TemperatureStat != null)
+            {
+                combinedMultiplier *= model.Stats.TemperatureStat.GetColdSpeedPenalty();
+            }
+
             horizontal *= combinedMultiplier;
 
             // Align movement along the slope surface so the player follows terrain contours
