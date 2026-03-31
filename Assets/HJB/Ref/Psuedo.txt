@@ -1,0 +1,352 @@
+-------------------------------------------------------------
+0. INITIALIZATION
+-------------------------------------------------------------
+Load DEM
+--- DEM smoothing เพื่อลด noise จากข้อมูล ---
+DEM = GaussianSmooth(DEM_raw, sigma = 1 pixel)
+--- คำนวณความชันและต้นทุนพื้นฐาน ---
+Compute slope(x,y) from DEM
+Compute base_speed(x,y) from Tobler or similar relation
+# อันบนคำนวณความชันและค่าเดินพื้นฐานจาก DEM
+
+Clamp base_speed(x,y) = max(base_speed(x,y), V_min = 0.05) # ป้องกันความเร็วเป็นศูนย์ หยุดอยู่กับที่และคำนวณเป็นอนันต์
+Compute base_cost(x,y) = 1 / base_speed(x,y) [TS1.1]# ต้นทุนการเดิน (cost) ต่อระยะทาง 1 เมตร 
+
+--- พารามิเตอร์พื้นฐาน ---
+Δx = 1 # grid resolution (เมตรต่อเซลล์) 1 m
+buffer_step = 15.0 [TS2.1]# ระยะก้าวในการคำนวณแบบ semi-Lagrangian (Δs)
+M = 16 # จำนวนทิศทางที่ลองยิง characteristic (16 ทิศ)
+Δs = buffer_step
+tol = 1e-3 # ค่าความคลาดเคลื่อน (tolerance) ที่ใช้ตรวจว่า คำนวณเสร็จแล้วหรือยัง
+max_iter = 20000 # จำกัดจำนวนรอบอัปเดตสูงสุด
+fatigue_limit = 1.0
+fatigue_rate_time = 0.12 # ความเหนื่อยเพิ่มขึ้นตามเวลาเดิน
+fatigue_rate_elev = 0.0005 # ความเหนื่อยเพิ่มขึ้นตามความชัน/ระดับสูง
+risk_weight = c_risk = 0.03 # น้ำหนักของความเสี่ยง
+recovery rates
+recovery_maincamp = 0.85 # ฟื้น 85% เมื่อถึงแคมป์หลัก
+recovery_shelter = 0.35 # ฟื้น 35% เมื่อถึงจุดพักรอง
+penalty_lambda_sequence = [0.3, 0.6, 1.0] # ลำดับน้ำหนัก penalty ค่า fatigue[TS3.1]
+Mark main camps (C) # กำหนดตำแหน่งแคมป์หลัก
+Mark secondary shelters (S) # กำหนดตำแหน่งที่พักรอง
+[TS4.1][TS4.2]Define start point and goal point
+Initialize T(x,y) = +∞ on entire grid # ตั้งค่าเวลาเดินเริ่มต้นเป็นอนันต์
+Initialize fatigue(x,y) = 0
+T(goal)=0, fatigue(goal)=0
+-------------------------------------------------------------
+1. HELPER FUNCTIONS
+-------------------------------------------------------------
+function SpeedFromSlope(slope):
+return base_speed * exp(-3.5 * abs(slope + 0.05)) # โมเดล Tobler
+function FatigueIncrease(slope, time_step):
+return fatigue_rate_time * time_step + fatigue_rate_elev * abs(slope)
+function RecoverFatigue(type, f):
+if type == MAIN_CAMP:
+return f*(1 - recovery_maincamp) # ลดความเหนื่อยตามอัตราฟื้นตัว
+if type == SHELTER:
+return f*(1 - recovery_shelter)
+return f
+function LocalCost(x, y, slope, λ):
+risk_term = risk_map(x,y) * c_risk # ค่าความเสี่ยงของพื้นที่
+penalty_term = λ * fatigue(x,y) # ค่า penalty จาก fatigue[TS5.1][TS5.2]
+return base_cost(x,y) + risk_term + penalty_term
+-------------------------------------------------------------
+2. SEMI-LAGRANGIAN UPDATE (HJB)
+-------------------------------------------------------------
+function UpdateSL(x,y, λ):
+best_value = T(x,y)
+best_fatigue = fatigue(x,y)
+for dir in 1..M:
+    # unit vector ของทิศทางนั้น
+    (dx, dy) = direction_unit(dir)
+
+    # จุดที่ characteristic ยิงไปตก
+    x2 = x + dx*Δs
+    y2 = y + dy*Δs
+    if outside_domain(x2,y2): continue
+
+    # ค่าแทรกเพื่ออ่านจากช่องที่ไม่ตรงกริดพอดี
+    slope2 = slope(x2,y2)
+    T2 = Interp(T, x2,y2)
+
+    # ความเร็วและเวลาเดินช่วงนี้
+    v = SpeedFromSlope(slope2)
+    travel_time = Δs / v
+
+    # อัปเดตค่า fatigue
+    f_local = fatigue(x,y) + FatigueIncrease(slope2, travel_time)
+
+    # ถ้าเหนื่อยเกิน limit → เพิ่มเวลาเดินเป็นบทลงโทษแบบ soft
+    if f_local > fatigue_limit:
+        travel_time += (f_local - fatigue_limit)*5.0
+
+    # ต้นทุนรวมของช่วงนี้ (พื้นฐาน + เสี่ยง + penalty)
+    c_local = LocalCost(x,y, slope2, λ)
+
+    # สูตร semi-Lagrangian: ค่าในเซลล์ = cost local + ค่าอนาคต
+    candidate = c_local * travel_time + T2
+
+    # เลือกทิศที่ต้นทุนต่ำที่สุด
+    if candidate < best_value:
+        best_value = candidate
+        best_fatigue = f_local
+
+return best_value, best_fatigue
+-------------------------------------------------------------
+3. MAIN LOOP + PENALTY SEQUENCE
+-------------------------------------------------------------
+for λ in penalty_lambda_sequence: # รันซ้ำโดยเพิ่ม penalty ถ้า fatigue ยังสูง
+iter = 0
+converged = false
+
+while iter < max_iter:
+    diff = 0
+
+    # Gauss-Seidel sweep (อัปเดตแบบไล่เรียง ทำให้ลู่เร็วขึ้น)
+    for each cell (x,y) in traversal_order:
+
+        oldT = T(x,y)
+        oldF = fatigue(x,y)
+
+        newT, newF = UpdateSL(x,y, λ)
+
+        # ถ้าเดินมาถึงแคมป์/ที่พัก → ลดความเหนื่อยตามชนิดของสถานที่
+        if isMainCamp(x,y):
+            newF = RecoverFatigue(MAIN_CAMP, newF)
+        elif isShelter(x,y):
+            newF = RecoverFatigue(SHELTER, newF)
+
+        T(x,y) = newT
+        fatigue(x,y) = newF
+
+        diff = max(diff, abs(newT - oldT))
+
+    # ถ้าเปลี่ยนแปลงน้อยกว่า tol → ถือว่าลู่แล้ว
+    if diff < tol:
+        converged = true
+        break
+
+    iter += 1
+
+# ตรวจว่าทางที่ได้ยังคงความเหนื่อยไม่เกินกำหนดหรือไม่
+if CheckFatigueFeasible(start, goal, T, fatigue):
+    break      # ถ้าทางดีแล้ว ก็ไม่ต้องเพิ่ม λ อีก
+-------------------------------------------------------------
+4. BACKTRACK FINAL PATH
+-------------------------------------------------------------
+path = []
+p = start
+while p != goal:
+best_next = None
+best_val = +∞
+for dir in 1..M:
+    (dx,dy)=direction_unit(dir)
+    x2 = p.x + dx*Δs
+    y2 = p.y + dy*Δs
+    if outside_domain(x2,y2): continue
+
+    val = T(x2,y2)
+    if val < best_val:
+        best_val = val
+        best_next = (x2,y2)
+
+path.append(best_next)
+p = best_next
+return path
+
+ 
+Tobler's Hiking Function (Tobler’s model)
+คือ สมการประเมินความเร็วในการเดินตามความชันของภูมิประเทศ (slope) ที่ใช้บ่อยมากในงานทำ cost surface หรือ least-cost path.
+มันเป็นฟังก์ชันเชิงประจักษ์ที่นักภูมิศาสตร์ Waldo Tobler สร้างขึ้นจากข้อมูลการเดินจริงของมนุษย์
+________________________________________
+⭐ Tobler’s Hiking Function
+สมการคือ:
+V=6×e^(-3.5∣s+0.05∣)
+
+โดยที่
+	V= ความเร็วการเดิน (กม./ชม.)
+	s= slope (ความชัน) = ความสูงต่าง / ระยะทางแนวนอน
+________________________________________
+⭐ สรุปพฤติกรรมของโมเดล
+	เดินเร็วสุดตอนลงเนินเล็กน้อย (≈ –5° → ความชัน –0.05)
+	ชันมากความเร็วลดลงรวดเร็ว
+	ขึ้นชันเร็วลดลงเร็วกว่า
+	ลงชันมากก็เดินช้าลงเพราะต้องเบรก/ทรงตัว
+ภาพรวมแบบ intuitive:
+ชนิดพื้นที่	Slope	ความเร็วโดยประมาณ
+ทางราบ	0	~5.0–5.5 km/h
+ลงนิดๆ (–5°)	–0.05	~6 km/h (สูงสุด)
+ชัน 20°	0.36	ช้ามาก
+ลงชันมาก (–30°)	–0.58	ช้ามาก
+________________________________________
+⭐ ทำไมใช้ในโมเดลวางเส้นทาง (HJB / shortest path)?
+เพราะต้องการ คำนวณค่าสปีด (หรือ cost per meter) ของแต่ละ cell ใน DEM
+และ Tobler ให้ speed ที่สัมพันธ์กับ slope อย่างสมจริงทางกายภาพของคนเดินจริง
+ใช้ใน HJB แบบนี้:
+V(x)="Tobler"(slope(x))
+
+แล้วใช้คำนวณ cost ต่อ cell:
+cost=Δx/(V(x)) "(เวลาเดิน)"
+
+________________________________________
+⭐ สรุปง่ายสุด
+Tobler = “สูตรคำนวนความเร็วการเดินตามความชัน”
+ใช้เพื่อให้เส้นทางที่คำนวณออกมา สมจริง → ไม่วิ่งลงหน้าผา/ปีนเขาชันแบบเร็วผิดจริง
+รวมอ้างอิงเฉยๆ
+
+1.ความชัน max
+-USGS Topographic Engineering Handbook (2015)
+นิยาม “maximum walkable slope” สำหรับการสำรวจภาคสนาม = 35–40° (ขึ้นอยู่กับสภาพพื้นผิวและอุปกรณ์สวมใส่)
+-FAO & WHO Terrain Accessibility Guidelines (2016)
+กำหนด slope > 40° เป็น inaccessible without climbing aids
+-Langmuir, E. (2013). “Mountaincraft and Leadership.” 4th ed., The Scottish Mountain Training Board.
+ระบุว่า “non-technical scrambles” คือพื้นชัน 30–40°, หลังจากนั้นถือว่า “technical climb” ต้องใช้อุปกรณ์
+
+
+แมพ= เสาเข็ม ปักเสาเข็มไว้ตามโหนดของ shortest path จะได้ไม่หลง
+
+****อาจจะ คิดไปทีละจุดพักแทนที่จะคิดทีเดียว ใช้เวลา optimize ไปกับอนิเมชั่น
+
+
+
+
+
+
+
+
+อีกอันล่าสุด
+E(x,y)          ← DEM (ความสูง)
+Δgrid           ← ขนาด DEM (10–30 m)
+Δnode           ← 200 m  # spacing ของ nodes หลัก
+start, goal     ← จุดเริ่ม + จุดยอดเขา
+terrain(x,y)    ← ประเภทพื้นผิว (rock, sand, snow...)
+α(x,y)          ← terrain resistance factor
+θ ∈ [0,2π)       ← ชุดทิศทาง (8 หรือ 16 ทิศ)
+
+V(S)            ← ฟังก์ชันความเร็วตามความชัน
+S_up_max        = 0.8
+S_down_max      = 0.7
+
+T(x)            ← travel-time field (ผลลัพธ์)
+fatigue_rate_time = 0.12
+fatigue_rate_elev = 0.0005
+fatigue_limit   = 1.0
+-----------------------------------------
+STEP 1 — สร้าง Node Graph + Buffer Zone
+-----------------------------------------
+nodes ← []
+
+for ทุก cell ใน DEM แบบ subsample ทุก 200 m:
+    if inside_buffer(cell, width = 200 m):
+         nodes.add(cell)
+buffer หมายถึง:
+เฉพาะจุดใน DEM ที่อยู่ภายใน “เส้นทางที่เป็นไปได้” เช่น แถว ๆ ridge / valley line ไม่คำนวณทั่วทั้ง 2000×2000 m ในครั้งเดียว → ลดงานลง 90%
+
+-----------------------------------------
+STEP 2 — คำนวณ gradient ของ DEM
+-----------------------------------------
+css
+Copy code
+for ทุก node i:
+    ∂E/∂x(i) = (E(i+Δgrid,x) - E(i-Δgrid,x)) / (2Δgrid)
+    ∂E/∂y(i) = (E(i+Δgrid,y) - E(i-Δgrid,y)) / (2Δgrid)
+    gradE(i) = (∂E/∂x, ∂E/∂y)
+-----------------------------------------
+STEP 3 — Precompute direction speeds
+-----------------------------------------
+css
+Copy code
+for node i:
+    for ทุกทิศทาง θ:
+        s = (cosθ, sinθ)
+        S = dot(s, gradE(i))
+
+        if S > S_up_max OR S < -S_down_max:
+            Veff(i,θ) = 0
+        else:
+            risk   = compute_risk(i)
+            Veff(i,θ) = (V(S) * risk) / α(i)
+-----------------------------------------
+STEP 4 — Semi-Lagrangian HJB Solve
+-----------------------------------------
+Initialize:
+for ทุก node:     T(node) = +∞
+T(start) = 0
+Iterative update (Gauss–Seidel style):
+
+repeat until converged:
+    for node i:
+        T_new = +∞
+        
+        for ทุกทิศทาง θ:
+            # 1. เดินจาก node i ไปตำแหน่งย้อนทิศ
+            x_prev = i - Δnode * s(θ)
+
+            if x_prev อยู่ใน nodes:
+                cost = Δnode / Veff(x_prev,θ)   # เวลาเดินระหว่างสองจุด
+                T_new = min(T_new, T(x_prev) + cost)
+
+        T(i) = T_new
+เหตุผลที่ไม่เกิด artifact:
+Semi-Lagrangian ใช้ค่า interpolated จาก “ตำแหน่งก่อนหน้า”
+→ ไม่ขึ้นกับ orientation grid → ไม่มี staircase pattern
+
+-----------------------------------------
+STEP 5 — Backtrack หา optimal path
+-----------------------------------------
+kotlin
+Copy code
+path = [goal]
+x = goal
+
+while distance(x, start) > Δnode:
+
+    bestθ = None
+    bestVal = +∞
+
+    for ทุกทิศ θ:
+        x_prev = x - Δnode * s(θ)
+        if x_prev เป็น node:
+            val = T(x_prev)
+            if val < bestVal:
+                bestVal = val
+                bestθ = θ
+
+    x = x - Δnode * s(bestθ)
+    path.append(x)
+-----------------------------------------
+STEP 6 — คำนวณ fatigue ของ segment นี้
+-----------------------------------------
+makefile
+Copy code
+total_time = T(goal)
+
+elev_gain = sum_positive(E(path[k+1]) - E(path[k]))
+
+fatigue = fatigue_rate_time * total_time +
+          fatigue_rate_elev * elev_gain
+
+if fatigue > fatigue_limit:
+    mark_segment_unreachable()
+else:
+    acceptable_segment()
+ถ้าแบ่งเป็นแคมป์
+นำ fatigue ปัจจุบันไปใส่เป็น initial fatigue ของ segment ต่อไป
+(ซึ่งคุณอาจจะไม่ใช้แล้วก็ได้)
+
+-----------------------------------------
+STEP 7 — แสดงผล
+-----------------------------------------
+arduino
+Copy code
+output:
+    path
+    T-field
+    slope map
+    risk map
+    fatigue (ถ้าใช้)
+
+
+
+
+ 
