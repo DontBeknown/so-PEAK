@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PlayerConfig
   m_EditorClassIdentifier: Assembly-CSharp::PlayerConfig
   baseWalkSpeed: 5
-  baseRunSpeed: 20
+  baseRunSpeed: 8
   runAcceleration: 8
   baseClimbSpeed: 2
   jumpForce: 5
@@ -35,8 +35,8 @@ MonoBehaviour:
     m_Bits: 384
   coyoteTimeDuration: 0
   jumpStaminaCost: 20
-  sprintStaminaDrainPerSecond: 0
-  climbStaminaDrainPerSecond: 0
+  sprintStaminaDrainPerSecond: 25
+  climbStaminaDrainPerSecond: 10
   staminaExhaustedSpeedMultiplier: 0.4
   staminaRegenPerSecond: 15
   staminaDrainCooldown: 1
@@ -83,7 +83,7 @@ MonoBehaviour:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 50
+      value: 37
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -92,7 +92,7 @@ MonoBehaviour:
       outWeight: 0
     - serializedVersion: 3
       time: 0.25
-      value: 50
+      value: 37
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -101,7 +101,7 @@ MonoBehaviour:
       outWeight: 0
     - serializedVersion: 3
       time: 0.5
-      value: 50
+      value: 37
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -110,7 +110,7 @@ MonoBehaviour:
       outWeight: 0
     - serializedVersion: 3
       time: 0.75
-      value: 50
+      value: 37
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -119,7 +119,7 @@ MonoBehaviour:
       outWeight: 0
     - serializedVersion: 3
       time: 1
-      value: 50
+      value: 37
       inSlope: 0
       outSlope: 0
       tangentMode: 0

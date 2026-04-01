@@ -362,13 +362,15 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
                 currentWorldSave.playerData.inventoryItems = new List<InventoryItemSaveData>();
                 foreach (var p in placements)
                 {
+                    var generatedEquipment = BuildGeneratedEquipmentPayload(p.Item);
                     currentWorldSave.playerData.inventoryItems.Add(new InventoryItemSaveData
                     {
-                        itemId = p.Item.name,
+                        itemId = generatedEquipment?.templateItemId ?? p.Item.name,
                         quantity = 1,
                         gridX = p.Position.x,
                         gridY = p.Position.y,
-                        isRotated = p.Rotated
+                        isRotated = p.Rotated,
+                        generatedEquipment = generatedEquipment
                     });
                 }
                 if (enableDebug) Debug.Log($"[SaveLoadService] Saved {placements.Count} inventory items");
@@ -385,10 +387,13 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
                     var equippedObj = equipped as UnityEngine.Object;
                     if (equippedObj != null)
                     {
+                        var equippedInventoryItem = equipped as InventoryItem;
+                        var generatedEquipment = BuildGeneratedEquipmentPayload(equippedInventoryItem);
                         currentWorldSave.playerData.equippedItems.Add(new EquipmentSlotSaveData
                         {
                             slotType = slotType.ToString(),
-                            itemId = equippedObj.name
+                            itemId = generatedEquipment?.templateItemId ?? equippedObj.name,
+                            generatedEquipment = generatedEquipment
                         });
                     }
                 }
@@ -832,6 +837,16 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         }
 
         Debug.LogWarning("[SaveLoadService] Could not reload scene after level progression.");
+    }
+
+    private GeneratedEquipmentSaveData BuildGeneratedEquipmentPayload(InventoryItem item)
+    {
+        if (item is not EquipmentItem equipmentItem)
+        {
+            return null;
+        }
+
+        return RuntimeEquipmentFactory.CreateSavePayload(equipmentItem);
     }
     
     // Compression helpers (simple base64 for now)

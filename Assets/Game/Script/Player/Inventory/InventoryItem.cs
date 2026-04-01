@@ -12,7 +12,6 @@ public class InventoryItem : ScriptableObject
 
     [Header("Item Type")]
     public ItemType itemType;
-    public ItemCategory category;
 
     [Header("Grid Size (cells)")]
     public Vector2Int gridSize = Vector2Int.one;

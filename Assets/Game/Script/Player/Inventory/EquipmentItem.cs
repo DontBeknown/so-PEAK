@@ -17,9 +17,28 @@ public class EquipmentItem : InventoryItem, IEquippable
     [Header("Stat Modifiers")]
     [SerializeField] private StatModifier[] statModifiers = new StatModifier[0];
 
+    [Header("Runtime Roll Metadata")]
+    [SerializeField, HideInInspector] private bool isRuntimeGenerated;
+    [SerializeField, HideInInspector] private string runtimeInstanceId;
+    [SerializeField, HideInInspector] private string runtimeTemplateItemId;
+
     public EquipmentSlotType EquipmentSlot => equipmentSlot;
     
     public IReadOnlyList<IStatModifier> StatModifiers => statModifiers;
+
+    public bool IsRuntimeGenerated => isRuntimeGenerated;
+    public string RuntimeInstanceId => runtimeInstanceId;
+    public string RuntimeTemplateItemId => runtimeTemplateItemId;
+
+    public void ConfigureRuntimeRoll(string templateItemId, string instanceId, EquipmentSlotType slot, StatModifier[] modifiers)
+    {
+        equipmentSlot = slot;
+        statModifiers = modifiers ?? new StatModifier[0];
+
+        isRuntimeGenerated = true;
+        runtimeTemplateItemId = templateItemId;
+        runtimeInstanceId = instanceId;
+    }
 
     /// <summary>
     /// Called when this equipment is equipped.

@@ -70,6 +70,9 @@ public class InventoryItemSaveData
     
     // Held item state (for torch, canteen, etc.)
     public HeldItemStateSaveData heldItemState;
+
+    // Runtime-generated equipment roll payload
+    public GeneratedEquipmentSaveData generatedEquipment;
 }
 
 [Serializable]
@@ -86,6 +89,26 @@ public class EquipmentSlotSaveData
 {
     public string slotType; // "Head", "Chest", etc.
     public string itemId;
+
+    // Runtime-generated equipment roll payload
+    public GeneratedEquipmentSaveData generatedEquipment;
+}
+
+[Serializable]
+public class GeneratedEquipmentSaveData
+{
+    public string runtimeId;
+    public string templateItemId;
+    public string slotType;
+    public List<StatModifierSaveData> modifiers;
+}
+
+[Serializable]
+public class StatModifierSaveData
+{
+    public string modifierType;
+    public float value;
+    public bool isMultiplicative;
 }
 
 [Serializable]
