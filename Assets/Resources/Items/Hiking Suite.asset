@@ -17,7 +17,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 686161071ef7775448055f798bea6d70, type: 3}
   maxStackSize: 1
   itemType: 3
-  gridSize: {x: 1, y: 1}
+  gridSize: {x: 3, y: 2}
   worldPrefab: {fileID: 4737707862607104392, guid: 88874d1506ece1344800825b52dc4be2, type: 3}
   isConsumable: 0
   consumableEffects: []

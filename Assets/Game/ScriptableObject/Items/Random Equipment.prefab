@@ -121,9 +121,9 @@ MonoBehaviour:
   minModifierCount: 1
   maxModifierCount: 2
   allowDuplicateModifierTypes: 0
-  infiniteUses: 1
-  maxUses: 999
-  destroyWhenExhausted: 0
+  infiniteUses: 0
+  maxUses: 1
+  destroyWhenExhausted: 1
 --- !u!1001 &734108583454163077
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -174,7 +174,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4380190821754405079, guid: 22e5348f99abc7848b965edaa5436eab, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.289
+      value: -0.193
       objectReference: {fileID: 0}
     - target: {fileID: 4380190821754405079, guid: 22e5348f99abc7848b965edaa5436eab, type: 3}
       propertyPath: m_LocalPosition.z

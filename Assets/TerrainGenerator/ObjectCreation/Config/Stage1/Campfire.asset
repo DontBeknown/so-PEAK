@@ -16,12 +16,14 @@ MonoBehaviour:
   Prefab: {fileID: 6416393420368611573, guid: e6c2aedcde0f1ad47aa493247d53a68a, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
-  BaseRadius: 1
+  BaseRadius: 2
   BaseHeight: 1.43
   MinScale: 1
   MaxScale: 1
   BaseRotation: {x: 0, y: 0, z: 0}
   PositionOffset: {x: 0, y: 0, z: 0}
+  AlignToTerrainNormal: 0
+  MaxAlignAngle: 20
   RoadRule: 1
   MinSpacing: 70
   Density: 1

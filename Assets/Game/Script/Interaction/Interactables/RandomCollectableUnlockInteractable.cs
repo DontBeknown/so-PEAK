@@ -204,7 +204,7 @@ namespace Game.Interaction
 
             if (string.IsNullOrWhiteSpace(alreadyUnlockedMessage))
             {
-                alreadyUnlockedMessage = "Already unlocked";
+                alreadyUnlockedMessage = "Note";
             }
         }
     }
