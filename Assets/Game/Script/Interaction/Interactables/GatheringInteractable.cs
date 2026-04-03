@@ -78,6 +78,8 @@ namespace Game.Interaction
         private AudioSource loopingAudioSource;
         private IEventBus eventBus;
 
+        public ResourceDrop[] ResourceDrops => resourceDrops;
+
         #region IInteractable Implementation
 
         public string InteractionPrompt

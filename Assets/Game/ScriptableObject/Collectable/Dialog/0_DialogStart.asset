@@ -31,15 +31,3 @@ MonoBehaviour:
       trying to reassure)"
   - speakerName: Aira
     text: 'Something''s wrong with this place, though. It''s too quiet. And the map... '
-  - speakerName: Aira
-    text: "the map says this grove shouldn't even be here. \n(Voice dropping to a
-      nervous whisper)"
-  - speakerName: Aira
-    text: "The trunks... it almost looks like they're leaning toward the path. \nLike
-      they're listening to me breathe. (A slight tremor voice)"
-  - speakerName: Aira
-    text: "Stop it. You're just exhausted. Just keep moving. \nFind the survivors.
-      And whatever you do... "
-  - speakerName: Aira
-    text: "don't stay in the shade too long. \n(Shaking off the fear, voice firming
-      up)"

@@ -17,13 +17,15 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: adaac68d8e5d693499597113889d11d3, type: 3}
   maxStackSize: 1
   itemType: 1
-  category: 4
   gridSize: {x: 1, y: 1}
   worldPrefab: {fileID: 78035215225619657, guid: 1d05b482df4f5454cb2cda76219d8d08, type: 3}
   isConsumable: 1
   consumableEffects:
   - statType: 1
     value: 15
+    isPercentage: 0
+  - statType: 2
+    value: 3
     isPercentage: 0
   isCraftingMaterial: 0
   isCraftedItem: 0
