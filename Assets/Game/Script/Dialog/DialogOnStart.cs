@@ -8,7 +8,7 @@ namespace Game.Script.Dialog
         [SerializeField] private DialogData dialogData;
         [SerializeField] private bool replayIfTriggered = false;
         [SerializeField] private DialogManager _dialogManager;
-
+        
         private void Awake()
         {
             // Auto-find DialogManager if not assigned in inspector
@@ -29,7 +29,7 @@ namespace Game.Script.Dialog
             if (saveLoadService != null && _dialogManager != null && dialogData != null)
             {
                 int currentLevel = saveLoadService.GetCurrentLevel();
-                if (currentLevel == 1)
+                if (currentLevel == 1 && saveLoadService.IsNewWorld())
                 {
                     _dialogManager.StartDialog(dialogData, replayIfTriggered);
                     //Debug.Log($"DialogOnStart: Started dialog '{dialogData.dialogId}' on start. Replay if triggered: {replayIfTriggered}");

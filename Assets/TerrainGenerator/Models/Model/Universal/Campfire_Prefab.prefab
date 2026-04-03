@@ -437,7 +437,7 @@ MonoBehaviour:
   cooldownTime: 2
   oneTimeUse: 1
   skipDayOnUse: 1
-  resetFatigueOnUse: 0
+  resetFatigueOnUse: 1
   healOnUse: 1
   healAmountOnUse: 25
   customSaveSpawnPoint: {fileID: 0}

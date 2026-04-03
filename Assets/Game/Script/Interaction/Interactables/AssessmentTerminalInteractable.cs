@@ -56,6 +56,7 @@ namespace Game.Interaction
         private IEventBus _eventBus;
         private bool _isWaitingForPanelClose = false;
         private bool _playerLockManagedByTerminal = false;
+        private Game.Player.PlayerControllerRefactored _interactingPlayer;
 
         #region IInteractable Implementation
 
@@ -149,6 +150,7 @@ namespace Game.Interaction
         protected override void OnHoldComplete()
         {
             lastInteractionTime = Time.time;
+            _interactingPlayer = currentPlayer;
 
             // Play interaction sound when hold finishes.
             if (interactSound != null)
@@ -175,16 +177,16 @@ namespace Game.Interaction
             }
             else if (_eventBus == null)
             {
-                // Debug.LogError("[AssessmentTerminalInteractable] EventBus is still null! Will attempt to bind on next frame.");
+                Debug.LogWarning("[AssessmentTerminalInteractable] EventBus unavailable on hold complete, retrying subscription.");
                 // Retry next frame - services may have initialized
                 StartCoroutine(RetryEventSubscription());
             }
 
             // Hold base cleanup unlocks the player; re-apply lock for terminal UI usage.
-            if (lockPlayerInputDuringUI && currentPlayer != null)
+            if (lockPlayerInputDuringUI && _interactingPlayer != null)
             {
                 _playerLockManagedByTerminal = true;
-                StartCoroutine(ReapplyPlayerLockNextFrame(currentPlayer));
+                StartCoroutine(ReapplyPlayerLockNextFrame(_interactingPlayer));
             }
         }
         
@@ -193,7 +195,8 @@ namespace Game.Interaction
         /// </summary>
         private IEnumerator RetryEventSubscription()
         {
-            yield return new WaitForSeconds(0.5f);
+            // Use realtime delay so retry still executes while gameplay is paused.
+            yield return new WaitForSecondsRealtime(0.5f);
             
             EnsureServicesInitialized();
             
@@ -205,7 +208,7 @@ namespace Game.Interaction
             }
             else if (_eventBus == null)
             {
-                // Debug.LogError("[AssessmentTerminalInteractable] EventBus still unavailable after retry!");
+                Debug.LogWarning("[AssessmentTerminalInteractable] EventBus still unavailable after retry; panel close effects may not run.");
             }
         }
 
@@ -259,7 +262,7 @@ namespace Game.Interaction
         {
             if (evt.PanelName != "PlayerStatsTracker") return;
             
-            // Debug.Log($"[AssessmentTerminalInteractable] OnPanelClosed called for {evt.PanelName}");
+            //Debug.Log($"[AssessmentTerminalInteractable] OnPanelClosed called for {evt.PanelName}");
             
             // Unsubscribe immediately so this only fires once per interaction
             _eventBus?.Unsubscribe<PanelClosedEvent>(OnPanelClosed);
@@ -287,9 +290,13 @@ namespace Game.Interaction
             }
 
             PlayerStats playerStats = null;
-            if (currentPlayer != null)
+            if (_interactingPlayer != null)
             {
-                playerStats = currentPlayer.GetComponent<PlayerStats>();
+                playerStats = _interactingPlayer.GetComponent<PlayerStats>();
+            }
+            else
+            {
+                Debug.LogWarning("[AssessmentTerminalInteractable] Missing interacting player on panel close; rest/heal effects cannot be applied.");
             }
             
             // Reset fatigue (rest) only if configured
@@ -317,14 +324,16 @@ namespace Game.Interaction
             }
             
             UnlockPlayer();
+            _interactingPlayer = null;
         }
 
         private void UnlockPlayer()
         {
             // Unlock player input
-            if (_playerLockManagedByTerminal && currentPlayer != null)
+            var playerToUnlock = _interactingPlayer != null ? _interactingPlayer : currentPlayer;
+            if (_playerLockManagedByTerminal && playerToUnlock != null)
             {
-                currentPlayer.SetInputBlocked(false);
+                playerToUnlock.SetInputBlocked(false);
             }
             _playerLockManagedByTerminal = false;
             
@@ -345,6 +354,7 @@ namespace Game.Interaction
 
             _isWaitingForPanelClose = false;
             UnlockPlayer();
+            _interactingPlayer = null;
             base.OnDestroy();
         }
 
