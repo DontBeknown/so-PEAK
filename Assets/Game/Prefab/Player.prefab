@@ -13033,8 +13033,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Player.Inventory.InventoryManagerRefactored
   playerStats: {fileID: 4013136103283677608}
+  resolvePlayerStatsOnStart: 1
   gridWidth: 6
   gridHeight: 8
+  addStartingItemsOnStart: 1
+  onlyAddStartingItemsWhenEmpty: 1
+  startingItems:
+  - item: {fileID: 11400000, guid: cfcdb5955f6b756488026f4025cb8fd0, type: 2}
+    quantity: 1
 --- !u!114 &7247859217976784321
 MonoBehaviour:
   m_ObjectHideFlags: 0

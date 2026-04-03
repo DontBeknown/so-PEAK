@@ -9,6 +9,13 @@ using Game.Player.Stat;
 
 namespace Game.Player.Inventory
 {
+    [System.Serializable]
+    public class StartingInventoryEntry
+    {
+        public InventoryItem item;
+        [Min(1)] public int quantity = 1;
+    }
+
     /// <summary>
     /// Refactored inventory manager following SOLID principles
     /// Coordinates between storage, service, and effect systems
@@ -18,10 +25,16 @@ namespace Game.Player.Inventory
     {
         [Header("Configuration")]
         [SerializeField] private PlayerStats playerStats;
+        [SerializeField] private bool resolvePlayerStatsOnStart = true;
 
         [Header("Grid Inventory")]
         [SerializeField] private int gridWidth = 10;
         [SerializeField] private int gridHeight = 6;
+
+        [Header("Starting Inventory")]
+        [SerializeField] private bool addStartingItemsOnStart = false;
+        [SerializeField] private bool onlyAddStartingItemsWhenEmpty = true;
+        [SerializeField] private List<StartingInventoryEntry> startingItems = new List<StartingInventoryEntry>();
 
         #region Private Fields
 
@@ -46,6 +59,12 @@ namespace Game.Player.Inventory
         {
             // Cleanup if needed
             //Debug.Log("[InventoryManagerRefactored] Destroyed");
+        }
+
+        private void Start()
+        {
+            ResolvePlayerStatsAtStartIfNeeded();
+            AddStartingItemsIfConfigured();
         }
 
         #endregion
@@ -107,6 +126,77 @@ namespace Game.Player.Inventory
             //Debug.Log("[InventoryManagerRefactored] IConsumableEffectSystem registered");
 
             //Debug.Log("[InventoryManagerRefactored] All services registered");
+        }
+
+        private void ResolvePlayerStatsAtStartIfNeeded()
+        {
+            if (!resolvePlayerStatsOnStart || playerStats != null)
+            {
+                return;
+            }
+
+            playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
+            if (playerStats == null)
+            {
+                playerStats = FindFirstObjectByType<PlayerStats>();
+            }
+
+            if (playerStats == null)
+            {
+                Debug.LogWarning("[InventoryManagerRefactored] PlayerStats still missing at Start. Consumables may fail.");
+                return;
+            }
+
+            // Recreate and re-register effect system to avoid stale null PlayerStats from Awake.
+            _effectSystem = new ConsumableEffectSystem(playerStats);
+            ServiceContainer.Instance.Register<IConsumableEffectSystem>(_effectSystem);
+        }
+
+        private void AddStartingItemsIfConfigured()
+        {
+            if (!addStartingItemsOnStart || _service == null || startingItems == null || startingItems.Count == 0)
+            {
+                return;
+            }
+
+            if (onlyAddStartingItemsWhenEmpty && !IsInventoryEmpty())
+            {
+                return;
+            }
+
+            foreach (var entry in startingItems)
+            {
+                if (entry == null || entry.item == null || entry.quantity <= 0)
+                {
+                    continue;
+                }
+
+                _service.AddItem(entry.item, entry.quantity, suppressNotification: true);
+            }
+        }
+
+        private bool IsInventoryEmpty()
+        {
+            if (_storage == null)
+            {
+                return true;
+            }
+
+            var slots = _storage.GetAllSlots();
+            if (slots == null)
+            {
+                return true;
+            }
+
+            foreach (var slot in slots)
+            {
+                if (slot != null && !slot.IsEmpty)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         #endregion
