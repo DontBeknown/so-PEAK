@@ -7,6 +7,7 @@ public static class UniversalSpawner
         SpawnConfig config,
         float[,] depthMap,
         float[,] roadMask,
+        bool[,] waterMask, 
         float[,] noiseMap, // Can be null if config.UseNoiseMap is false
         float terrainHeightMultiplier,
         int chunkSize,
@@ -72,6 +73,11 @@ public static class UniversalSpawner
                 // E. Underwater Check
                 float baseH = depthMap[x, z];
                 if (baseH <= 0.01f) continue;
+
+                if (waterMask != null && waterMask[x, z] == true)
+                {
+                    continue;
+                }
 
                 // --- 1. CALCULATE POSITION & SCALE ---
                 float jitterX = Random.Range(-config.MinSpacing * 0.4f, config.MinSpacing * 0.4f);

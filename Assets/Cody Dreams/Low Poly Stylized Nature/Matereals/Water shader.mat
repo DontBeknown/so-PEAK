@@ -99,7 +99,7 @@ Material:
     - _Distance: 7.85
     - _DstBlend: 10
     - _DstBlendAlpha: 10
-    - _Foam_Amount: 6.2
+    - _Foam_Amount: 1
     - _Foam_cutout: 4.15
     - _Foam_highet: -0.59
     - _Glossiness: 0.5
@@ -123,8 +123,8 @@ Material:
     - _ZTest: 2
     - _ZWrite: 0
     - _ZWriteControl: 0
-    - _amplitute: 0.2
-    - _foam_scale: 25.9
+    - _amplitute: 0.1
+    - _foam_scale: 1
     - _foam_speed: 0.1
     - _length: 50
     - _noise_power: 0

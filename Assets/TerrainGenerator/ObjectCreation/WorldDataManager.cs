@@ -49,6 +49,7 @@ public class WorldDataManager : MonoBehaviour
     [HideInInspector] public Texture2D roadRidgeTexture;
     [HideInInspector] public Color fieldColor, roadColor, sideRockColor;
     [HideInInspector] public int activeLevelSeed, seed1, seed2, seed3;
+    [HideInInspector] public bool[,] globalWaterMask;
     public Dictionary<Vector2Int, List<PlacedObject>> masterSpawnGrid;
 
     public void GenerateWorldData(int chunkSize)
@@ -83,8 +84,10 @@ public class WorldDataManager : MonoBehaviour
         // 3. Generate Terrain
         activeGen.TerrainDrawing(activeLevelSeed);
         globalHeightMap = activeGen.completeMap;
-        //globalColorMap = activeGen.colorMap;
-
+        //water mask expand
+        globalWaterMask = new bool[activeGen.mapWidth + activeGen.bufferLength, activeGen.mapLength + activeGen.bufferLength];
+        BufferGen.GenWaterMaskWithBuffer(activeGen.waterMask, globalWaterMask, activeGen.bufferLength);
+        //road expand
         expandedRoadRidge = new float[activeGen.mapWidth + activeGen.bufferLength, activeGen.mapLength + activeGen.bufferLength];
         BufferGen.GenRoadMaskWithBuffer(activeGen.roadRidge, expandedRoadRidge, activeGen.bufferLength);
 
@@ -136,7 +139,7 @@ public class WorldDataManager : MonoBehaviour
                 }
             }
             UniversalSpawner.GenerateObjectData(
-                config, globalHeightMap, expandedRoadRidge, mapToHandOver,
+                config, globalHeightMap, expandedRoadRidge, globalWaterMask, mapToHandOver,
                 activeGen.meshHeightMultiplier, chunkSize - 1, activeLevelSeed + i,
                 worldGuid, (int)currentLevel, i,
                 ref masterSpawnGrid

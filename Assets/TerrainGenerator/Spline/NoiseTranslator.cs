@@ -20,6 +20,9 @@ public class NoiseTranslator : MonoBehaviour
     public MapGenerator RoadNoise;
     public MapGenerator TreeNoise;
 
+    [Header("Puddle Generator")]
+    public PondGenerator pondGenerator;
+
 
     [Header("Map Size")]
     public int mapWidth = 1000;
@@ -62,6 +65,8 @@ public class NoiseTranslator : MonoBehaviour
     [HideInInspector] public float[,] tempHeight;
     [HideInInspector] public float[,] treeNoiseMap;
     [HideInInspector] public float[,] roadRidge;
+    [HideInInspector] public bool[,] waterMask;
+
 
 
 
@@ -123,12 +128,15 @@ public class NoiseTranslator : MonoBehaviour
     {
         //first gen mountain
         DepthNoise(seed);
-        ////find peaks coordinates here
-        //FindPeakPoints(depthMap, peakPoints);
         //then carve a road
         ErodedMountain(seed);
         //smooth test
         depthMap = SmoothHeightMap(depthMap, smoothMapPasses);
+
+        int halfBuffer = bufferLength / 2;
+        waterMask = new bool[mapWidth, mapLength];
+        //dig some ponds
+        pondGenerator.MassSpawnPonds(depthMap, roadRidge, waterMask, seed, meshHeightMultiplier, halfBuffer);
         //then buffer zone
         GenerateBufferArea();
         

@@ -67,7 +67,36 @@ public static class BufferGen
         });
     }
 
+    public static void GenWaterMaskWithBuffer(bool[,] oldMask, bool[,] newMask, int bufferSize)
+    {
+        int newWidth = newMask.GetLength(0);
+        int newLength = newMask.GetLength(1);
+        int oldWidth = oldMask.GetLength(0);
+        int oldLength = oldMask.GetLength(1);
 
+        // Center the old mask inside the new buffered mask
+        int offsetX = (newWidth - oldWidth) / 2;
+        int offsetZ = (newLength - oldLength) / 2;
+
+        Parallel.For(0, newLength, z =>
+        {
+            for (int x = 0; x < newWidth; x++)
+            {
+                int oldX = x - offsetX;
+                int oldZ = z - offsetZ;
+
+                if (oldX >= 0 && oldX < oldWidth && oldZ >= 0 && oldZ < oldLength)
+                {
+                    newMask[x, z] = oldMask[oldX, oldZ];
+                }
+                else
+                {
+                    // In the buffer zone: False means "NO POND HERE"
+                    newMask[x, z] = false;
+                }
+            }
+        });
+    }
 
     //first we get the relative coordinates
     public static Vector2Int GetReferenceCoordinate(int x, int z, float[,] oldHeightMap, int halfBuffer)
