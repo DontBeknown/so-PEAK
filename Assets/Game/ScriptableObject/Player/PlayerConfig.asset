@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PlayerConfig
   m_EditorClassIdentifier: Assembly-CSharp::PlayerConfig
   baseWalkSpeed: 5
-  baseRunSpeed: 8
+  baseRunSpeed: 20
   runAcceleration: 8
   baseClimbSpeed: 2
   jumpForce: 5
@@ -35,7 +35,7 @@ MonoBehaviour:
     m_Bits: 384
   coyoteTimeDuration: 0
   jumpStaminaCost: 20
-  sprintStaminaDrainPerSecond: 5
+  sprintStaminaDrainPerSecond: 0
   climbStaminaDrainPerSecond: 8
   staminaExhaustedSpeedMultiplier: 0.4
   staminaRegenPerSecond: 15
@@ -56,9 +56,10 @@ MonoBehaviour:
   hungerHurtThreshold: 10
   starvationDPS: 1
   hungerSprintMultiplier: 2
-  fallDamageSafeSpeed: 8
-  fallDamageLethalSpeed: 25
+  fallDamageSafeSpeed: 0
+  fallDamageLethalSpeed: 0
   fallDamageMax: 100
+  longFallDeathTime: 8
   thirstDrainPerSecond: 0.17
   thirstHurtThreshold: 10
   dehydrationDPS: 2
