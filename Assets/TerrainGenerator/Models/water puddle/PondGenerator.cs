@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Game.Interaction;
 
 [System.Serializable]
 public struct PuddleSubEllipse
@@ -32,6 +33,12 @@ public class PondGenerator : MonoBehaviour
     public Material waterMaterial;
     [Range(0.1f, 1.0f)]
     public float waterFillLevel = 0.8f;
+
+    [Header("Water Interaction")]
+    [Tooltip("If enabled, each spawned pond water mesh gets a WaterSourceInteractable component.")]
+    public bool addWaterSourceInteractable = true;
+    [Tooltip("Layer name assigned to spawned pond water objects for interaction detection.")]
+    public string pondInteractableLayer = "Interaction";
 
     [Header("Debugging")]
     public bool spawnDebugMarkers = true;
@@ -214,6 +221,12 @@ public class PondGenerator : MonoBehaviour
         waterObj.transform.parent = this.transform;
         waterObj.transform.position = new Vector3(worldCenterX, worldY, worldCenterZ);
 
+        int interactableLayer = LayerMask.NameToLayer(pondInteractableLayer);
+        if (interactableLayer != -1)
+        {
+            waterObj.layer = interactableLayer;
+        }
+
         MeshFilter mf = waterObj.AddComponent<MeshFilter>();
         MeshRenderer mr = waterObj.AddComponent<MeshRenderer>();
         if (waterMaterial != null) mr.material = waterMaterial;
@@ -253,6 +266,14 @@ public class PondGenerator : MonoBehaviour
         Mesh mesh = new Mesh { vertices = vertices, triangles = triangles.ToArray(), uv = uvs };
         mesh.RecalculateNormals();
         mf.mesh = mesh;
+
+        MeshCollider meshCollider = waterObj.AddComponent<MeshCollider>();
+        meshCollider.sharedMesh = mesh;
+
+        if (addWaterSourceInteractable)
+        {
+            waterObj.AddComponent<WaterSourceInteractable>();
+        }
     }
 
     private bool IsPointInsideScaledPuddle(Vector2 localPoint, List<PuddleSubEllipse> shapeData, float scale)
