@@ -96,6 +96,8 @@ public class PlayerConfig : ScriptableObject
     public float fallDamageLethalSpeed = 25f;
     [Tooltip("Maximum damage at lethal fall speed")]
     public float fallDamageMax = 100f;
+    [Tooltip("Continuous falling duration (seconds) that causes instant death")]
+    public float longFallDeathTime = 8f;
 
     [Header("Thirst")]
     public float thirstDrainPerSecond = 0.35f;

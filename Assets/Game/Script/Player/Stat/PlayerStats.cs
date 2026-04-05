@@ -3,6 +3,7 @@ using System;
 using Game.Core.DI;
 using Game.Core.Events;
 using Game.Environment.DayNight;
+using Game.Player;
 
 public class PlayerStats : MonoBehaviour
 {
@@ -37,6 +38,9 @@ public class PlayerStats : MonoBehaviour
     private bool isImmune;
 
     private bool isSprinting;
+    private float _fallingTimer;
+    private bool _longFallDeathTriggered;
+    private PlayerControllerRefactored _playerController;
 
     private IEventBus _eventBus;
     private IDayNightCycleService _dayNightService;
@@ -88,6 +92,7 @@ public class PlayerStats : MonoBehaviour
         _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
         _dayNightService = ServiceContainer.Instance.TryGet<IDayNightCycleService>();
         _saveLoadService = ServiceContainer.Instance.TryGet<ISaveLoadService>();
+        _playerController = GetComponent<PlayerControllerRefactored>();
         health.OnDeath += () =>
         {
             OnDeath?.Invoke();
@@ -180,6 +185,36 @@ public class PlayerStats : MonoBehaviour
         {
             //stamina.Drain(sprintDrainPerSecond * dt);
         }
+
+        HandleLongFallDeath(dt);
+    }
+
+    private void HandleLongFallDeath(float dt)
+    {
+        if (_playerController == null || health.Current <= 0f)
+        {
+            _fallingTimer = 0f;
+            return;
+        }
+
+        bool isFalling = _playerController.GetCurrentState() is FallingState;
+        if (!isFalling)
+        {
+            _fallingTimer = 0f;
+            _longFallDeathTriggered = false;
+            return;
+        }
+
+        if (_longFallDeathTriggered)
+            return;
+
+        _fallingTimer += dt;
+        float longFallThreshold = config != null ? config.longFallDeathTime : 8f;
+        if (_fallingTimer < longFallThreshold)
+            return;
+
+        _longFallDeathTriggered = true;
+        TakeFallDamage(Mathf.Max(health.Current + 1f, health.Max));
     }
 
     public void OnJump()

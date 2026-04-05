@@ -4138,6 +4138,54 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3302541439565449891, guid: 5d5ae4d71c5db7f47be4e05e04358a6d, type: 3}
   m_PrefabInstance: {fileID: 1204663091}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1217619473 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1455667423550851352, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+  m_PrefabInstance: {fileID: 2048165329}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1217619476 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4036666107913804897, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+  m_PrefabInstance: {fileID: 2048165329}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1217619473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05101b01e5fe97a4aac65a6d2de33877, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Dialog.DialogManager
+--- !u!114 &1217619478
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1217619473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8035f3e30abfcac49ad26823cdab9896, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Dialog.Triggers.GatheringDiscoveryDialogTrigger
+  discoveryEntries:
+  - targetItem: {fileID: 11400000, guid: da4382b47225e4e479aca0c167ead00e, type: 2}
+    dialogData: {fileID: 11400000, guid: 51c790c18ef10d744a9d5e0fb7df120d, type: 2}
+    triggerOnce: 1
+  - targetItem: {fileID: 11400000, guid: 00705344c5389cc47b73eb86edcbb90f, type: 2}
+    dialogData: {fileID: 11400000, guid: 3a9e198537636d749974b5014643691a, type: 2}
+    triggerOnce: 1
+  interactionDetector: {fileID: 1245690360}
+  dialogManager: {fileID: 1217619476}
+--- !u!114 &1245690360 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6903466817524714061, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+  m_PrefabInstance: {fileID: 2048165329}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e863cc8fad865414e892155ea6cf024e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.InteractionDetector
 --- !u!1 &1289230028
 GameObject:
   m_ObjectHideFlags: 0
@@ -8918,7 +8966,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1455667423550851352, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1217619478}
   m_SourcePrefab: {fileID: 100100000, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
 --- !u!1 &2052708446
 GameObject:
