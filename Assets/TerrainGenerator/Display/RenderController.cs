@@ -393,8 +393,8 @@ public class RenderController : MonoBehaviour
         // -----------------------
 
         // Destroy the collider to save physics calculations
-        Destroy(nowhereObj.GetComponent<MeshCollider>());
-        nowhereObj.layer = 2; // Ignore Raycast Layer
+        //Destroy(nowhereObj.GetComponent<MeshCollider>());
+        nowhereObj.layer = 7; // Ignore Raycast Layer
 
         // Save it to the dictionary
         terrainChunks[coord] = nowhereObj;

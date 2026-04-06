@@ -17,4 +17,4 @@ MonoBehaviour:
   instructionText: Move the mouse to look around
   inputHintText: Look
   completionType: 2
-  completionThreshold: 90
+  completionThreshold: 180

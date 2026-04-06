@@ -17,4 +17,4 @@ MonoBehaviour:
   instructionText: Use WASD keys to move.
   inputHintText: Move
   completionType: 1
-  completionThreshold: 3
+  completionThreshold: 5

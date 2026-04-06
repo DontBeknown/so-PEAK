@@ -64,11 +64,12 @@ MonoBehaviour:
   thirstHurtThreshold: 10
   dehydrationDPS: 2
   thirstSprintMultiplier: 1.5
+  thirstReductionBuffDurationSeconds: 120
   tempColdThreshold: 12
   tempHotThreshold: 42
-  tempColdDPS: 1.5
-  tempHotDPS: 2
-  tempDriftRate: 1
+  tempColdDPS: 1
+  tempHotDPS: 0.5
+  tempDriftRate: 0.25
   tempColdSpeedPenaltyThreshold: 24
   tempColdHungerPenaltyThreshold: 18
   tempHotThirstPenaltyThreshold: 38

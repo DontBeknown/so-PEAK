@@ -21,11 +21,12 @@ MonoBehaviour:
   worldPrefab: {fileID: 1467677169715172372, guid: 812ddf250fb3bdd479e8048918e9b4f9, type: 3}
   isConsumable: 1
   consumableEffects:
-  - statType: 1
+  - effectKind: 0
+    statType: 1
     value: 10
-    isPercentage: 0
-  - statType: 2
+  - effectKind: 0
+    statType: 2
     value: 5
-    isPercentage: 0
-  isCraftingMaterial: 0
-  isCraftedItem: 0
+  - effectKind: 1
+    statType: 2
+    value: 30
