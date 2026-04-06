@@ -127,7 +127,7 @@ public class PlayerSpawner : MonoBehaviour
         GameObject spawnedPlayerObj = Instantiate(playerPrefab, finalSpawnPosition, Quaternion.identity);
         SpawnedPlayer = spawnedPlayerObj.transform;
         
-        FootIKControllerRefactored footIK = spawnedPlayerObj.GetComponentInChildren<FootIKControllerRefactored>();
+        //FootIKControllerRefactored footIK = spawnedPlayerObj.GetComponentInChildren<FootIKControllerRefactored>();
        //Debug.Log($"[PlayerSpawner] Player instantiated at {finalSpawnPosition}");
         
         // 5.5. UPDATE UI SERVICE PROVIDER WITH NEW PLAYER REFERENCE

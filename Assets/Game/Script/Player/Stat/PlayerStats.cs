@@ -150,6 +150,11 @@ public class PlayerStats : MonoBehaviour
                 : 37f;
             temperature.SetEnvironmentTarget(ambient);
         }
+
+        // Apply equipment warmth insulation before ticking temperature drift.
+        float warmthInsulation = statModifierCalculator?.GetModifiedValue(StatModifierType.WarmthInsulation, 0f) ?? 0f;
+        temperature.SetInsulation(warmthInsulation);
+
         temperature.Tick(dt);
 
         // Push temperature penalties into hunger/thirst each frame
