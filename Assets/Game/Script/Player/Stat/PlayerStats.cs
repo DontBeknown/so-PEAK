@@ -7,6 +7,8 @@ using Game.Player;
 
 public class PlayerStats : MonoBehaviour
 {
+    private const float DefaultThirstReductionBuffDurationSeconds = 30f;
+
     [SerializeField] private PlayerConfig config;
     [SerializeField] private EquipmentManager equipmentManager;
 
@@ -41,12 +43,19 @@ public class PlayerStats : MonoBehaviour
     private float _fallingTimer;
     private bool _longFallDeathTriggered;
     private PlayerControllerRefactored _playerController;
+    private float _thirstDrainReductionMultiplier = 1f;
+    private float _thirstDrainReductionRemaining = 0f;
 
     private IEventBus _eventBus;
     private IDayNightCycleService _dayNightService;
     private ISaveLoadService _saveLoadService;
     private DeathCause _lastDamageSource = DeathCause.Unknown;
     public DeathCause LastDamageSource => _lastDamageSource;
+
+    private float ThirstReductionBuffDurationSeconds =>
+        config != null && config.thirstReductionBuffDurationSeconds > 0f
+            ? config.thirstReductionBuffDurationSeconds
+            : DefaultThirstReductionBuffDurationSeconds;
 
     private void Awake()
     {
@@ -128,6 +137,8 @@ public class PlayerStats : MonoBehaviour
     {
         float dt = Time.deltaTime;
 
+        UpdateThirstDrainReductionBuff(dt);
+
         hunger.Tick(dt);
         thirst.Tick(dt);
         stamina.Tick(dt);
@@ -192,6 +203,21 @@ public class PlayerStats : MonoBehaviour
         }
 
         HandleLongFallDeath(dt);
+    }
+
+    private void UpdateThirstDrainReductionBuff(float dt)
+    {
+        if (_thirstDrainReductionRemaining > 0f)
+        {
+            _thirstDrainReductionRemaining -= dt;
+            if (_thirstDrainReductionRemaining <= 0f)
+            {
+                _thirstDrainReductionRemaining = 0f;
+                _thirstDrainReductionMultiplier = 1f;
+            }
+        }
+
+        thirst.SetConsumableDrainMultiplier(_thirstDrainReductionMultiplier);
     }
 
     private void HandleLongFallDeath(float dt)
@@ -268,6 +294,24 @@ public class PlayerStats : MonoBehaviour
     public void Heal(float amount) => health.Heal(amount);
     public void Eat(float nutrition) => hunger.Add(nutrition);
     public void Drink(float water) => thirst.Add(water);
+
+    /// <summary>
+    /// Applies a temporary thirst drain reduction buff from consumables.
+    /// Buff does not stack; retriggering only refreshes duration.
+    /// </summary>
+    public void ApplyThirstDrainReductionBuff(float reductionPercent)
+    {
+        if (_thirstDrainReductionRemaining > 0f)
+        {
+            _thirstDrainReductionRemaining = ThirstReductionBuffDurationSeconds;
+            return;
+        }
+
+        float normalizedReduction = Mathf.Clamp(reductionPercent, 0f, 100f) / 100f;
+        _thirstDrainReductionMultiplier = 1f - normalizedReduction;
+        _thirstDrainReductionRemaining = ThirstReductionBuffDurationSeconds;
+        thirst.SetConsumableDrainMultiplier(_thirstDrainReductionMultiplier);
+    }
 
     public void ModifyTemperature(float amount)
     {

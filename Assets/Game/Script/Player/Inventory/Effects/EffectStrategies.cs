@@ -75,4 +75,21 @@ namespace Game.Player.Inventory.Effects
             //Debug.Log($"[ThirstEffectStrategy] Applied {effect.value} thirst.");
         }
     }
+
+    /// <summary>
+    /// Strategy for temporary thirst drain reduction buff from consumables.
+    /// </summary>
+    public class ThirstDrainReductionBuffEffectStrategy : IEffectStrategy
+    {
+        public void Apply(ConsumableEffect effect, PlayerStats stats)
+        {
+            if (stats == null)
+            {
+                Debug.LogWarning("[ThirstDrainReductionBuffEffectStrategy] PlayerStats is null");
+                return;
+            }
+
+            stats.ApplyThirstDrainReductionBuff(effect.value);
+        }
+    }
 }

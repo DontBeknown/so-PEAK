@@ -105,6 +105,8 @@ public class PlayerConfig : ScriptableObject
     public float dehydrationDPS = 2f;
     [Tooltip("Thirst drains this many times faster while sprinting")]
     public float thirstSprintMultiplier = 2.5f;
+    [Tooltip("Duration in seconds for consumable thirst drain reduction buff")]
+    public float thirstReductionBuffDurationSeconds = 30f;
 
     [Header("Temperature — Thresholds & Damage")]
     [Tooltip("Body temperature (°C) below which cold damage and penalties apply")]
