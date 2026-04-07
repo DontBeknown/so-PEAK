@@ -49,7 +49,7 @@ public class FootIKControllerRefactored : MonoBehaviour
         }
 
         if (playerController == null)
-            playerController = GetComponent<PlayerControllerRefactored>();
+            playerController = GetComponentInParent<PlayerControllerRefactored>();
 
         if (config == null)
         {
@@ -214,5 +214,50 @@ public class FootIKControllerRefactored : MonoBehaviour
             // Reapply current strategy
             SetStrategy(_isAirborne ? (IFootIKStrategy)_climbingHandler : _groundHandler);
         }
+    }
+
+    /// <summary>
+    /// Rebinds this IK controller to a new animator after a model switch.
+    /// </summary>
+    public void RebindAnimator(Animator newAnimator, bool resetState = true)
+    {
+        if (newAnimator == null)
+        {
+            Debug.LogWarning("[FootIKControllerRefactored] RebindAnimator called with null animator.");
+            return;
+        }
+
+        animator = newAnimator;
+
+        if (config == null)
+        {
+            config = Resources.Load<FootIKConfig>("FootIKConfig");
+            if (config == null)
+            {
+                Debug.LogError("[FootIKControllerRefactored] Missing FootIKConfig while rebinding animator.");
+                enabled = false;
+                return;
+            }
+        }
+
+        if (_groundHandler == null || _climbingHandler == null || _pelvisAdjuster == null)
+        {
+            _groundHandler = new GroundFootIKHandler(config);
+            _climbingHandler = new ClimbingFootIKHandler(config);
+            _pelvisAdjuster = new PelvisAdjuster(config);
+            SetStrategy(_isAirborne ? (IFootIKStrategy)_climbingHandler : _groundHandler);
+        }
+
+        if (resetState)
+        {
+            // Defer animator.bodyPosition reads to OnAnimatorIK only.
+            _hasSeededPelvis = false;
+            _leftFootIKWeight = 0f;
+            _rightFootIKWeight = 0f;
+            _wasAirborne = true;
+            _ikStartTime = Time.time;
+        }
+
+        enabled = true;
     }
 }

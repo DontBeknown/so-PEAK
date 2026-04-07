@@ -9,7 +9,7 @@ namespace Game.Player.Services
     /// </summary>
     public class PlayerAnimationService : IAnimationService
     {
-        private readonly Animator _animator;
+        private Animator _animator;
         private readonly Transform _root;
         private readonly FootIKControllerRefactored _footIKController;
 
@@ -106,6 +106,17 @@ namespace Game.Player.Services
         {
             // Could add a jump trigger if needed
             // _animator.SetTrigger("Jump");
+        }
+
+        public void RebindAnimator(Animator animator)
+        {
+            if (animator == null)
+            {
+                Debug.LogWarning("[PlayerAnimationService] RebindAnimator called with null animator.");
+                return;
+            }
+
+            _animator = animator;
         }
     }
 }

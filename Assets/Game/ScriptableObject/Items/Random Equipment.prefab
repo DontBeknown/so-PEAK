@@ -104,7 +104,9 @@ MonoBehaviour:
   customPrompt: Search
   equipmentTemplates:
   - {fileID: 11400000, guid: 4068dd65798e2fe45b393ed2dcc8859b, type: 2}
-  allowedSlots: 00000000010000000200000003000000
+  - {fileID: 11400000, guid: fdf0b516f48db92498e4a42cfa3f742f, type: 2}
+  - {fileID: 11400000, guid: b7b38b784d04ecd41a55b0f37414f494, type: 2}
+  allowedSlots: 01000000
   modifierPool:
   - modifierType: 0
     minValue: 0.1

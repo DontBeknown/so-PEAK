@@ -62,5 +62,12 @@ namespace Game.Player.Interfaces
         /// Triggers a jump animation
         /// </summary>
         void TriggerJump();
+
+        /// <summary>
+        /// Rebinds the service to a different animator at runtime.
+        /// Useful when the active visual player model changes.
+        /// </summary>
+        /// <param name="animator">New animator to drive.</param>
+        void RebindAnimator(Animator animator);
     }
 }

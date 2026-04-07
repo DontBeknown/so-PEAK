@@ -13,6 +13,10 @@ public class EquipmentItem : InventoryItem, IEquippable
 {
     [Header("Equipment Properties")]
     [SerializeField] private EquipmentSlotType equipmentSlot;
+
+    [Header("Player Model Mapping")]
+    [Tooltip("Set to -1 for no model switch. Set 0/1/2... to switch player model index when this item is equipped.")]
+    [SerializeField] private int playerModelIndex = -1;
     
     [Header("Stat Modifiers")]
     [SerializeField] private StatModifier[] statModifiers = new StatModifier[0];
@@ -29,6 +33,14 @@ public class EquipmentItem : InventoryItem, IEquippable
     public bool IsRuntimeGenerated => isRuntimeGenerated;
     public string RuntimeInstanceId => runtimeInstanceId;
     public string RuntimeTemplateItemId => runtimeTemplateItemId;
+    public int PlayerModelIndex => playerModelIndex;
+    public bool HasPlayerModelOverride => playerModelIndex >= 0;
+
+    public bool TryGetPlayerModelIndex(out int modelIndex)
+    {
+        modelIndex = playerModelIndex;
+        return modelIndex >= 0;
+    }
 
     public void ConfigureRuntimeRoll(string templateItemId, string instanceId, EquipmentSlotType slot, StatModifier[] modifiers)
     {
