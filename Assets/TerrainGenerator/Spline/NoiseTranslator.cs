@@ -197,7 +197,7 @@ public class NoiseTranslator : MonoBehaviour
         RoadNoise.GenerateMap(seed);
         roadRidge = RoadNoise.noiseMap;
 
-        RoadCarver.CarveRoad(depthMap, roadRidge, peakPointsArray, maxHeight, roadHeightCurve, seed,out mainPeak);
+        RoadCarver.CarveRoad(depthMap, roadRidge, peakPointsArray, maxHeight, roadHeightCurve, seed ,out mainPeak);
 
 
         

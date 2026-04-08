@@ -24,13 +24,17 @@ public static class RoadCarver
             // 2. Randomize the Middle Anchor (The "Photoshop Curve" bend)
             // We pull the middle point up or down to create a curve.
             // Range: +/- 15 meters deviation from the straight line
-            float deviation = UnityEngine.Random.Range(-0.15f, 0.15f);
+            float heightDrop = Mathf.Abs(startHeight - endHeight);
+            float safeDeviation = heightDrop * 0.40f;
+
+            float deviation = UnityEngine.Random.Range(-safeDeviation, safeDeviation);
             float targetMidY = linearMidY + deviation;
 
             // 3. THE WALKABLE GUARANTEE (Slope Check)
             // Max Slope = 0.75 (Rise / Run)
             // Run is half the tier length (e.g., 50m)
-            float maxRise = 0.75f * midX;
+            float maxSlope = 0.60f;
+            float maxRise = maxSlope * midX;
 
             // Clamp the middle point so it's reachable from Start and End without being too steep
             float minSafeY = Mathf.Max(p0 - maxRise, p2 - maxRise);
@@ -92,7 +96,7 @@ public static class RoadCarver
 
         OutPeak = mainPeak;
 
-        Vector2Int closestRoad = GetClosestRoadPoint(mainPeak, roadRidge);
+        Vector2Int closestRoad = GetClosestRoadPoint(mainPeak, maxH, roadRidge, depthMap, 0.60f);
         List<Vector2Int> line = GetLine(mainPeak, closestRoad);
         CarveRoad(line, roadRidge);
 
@@ -246,27 +250,62 @@ public static class RoadCarver
         return sorted[sorted.Count / 2];
     }
 
-    private static Vector2Int GetClosestRoadPoint(Vector2Int peak, float[,] roadMask)
+    private static Vector2Int GetClosestRoadPoint(Vector2Int peak, float peakHeight, float[,] roadMask, float[,] depthMap, float maxSlope)
     {
         float bestDist = float.MaxValue;
         Vector2Int best = peak;
-        int mapWidth = roadMask.GetLength(0);
 
-        //MAYBE CAN THREADED?
-        for (int z = 0; z < mapWidth; z++)
+        int mapWidth = roadMask.GetLength(0);
+        int mapLength = roadMask.GetLength(1);
+
+        bool foundValidPoint = false;
+
+        // Fallback variables just in case the map is too tight and NO road fits the slope rule
+        float bestFallbackSlope = float.MaxValue;
+        Vector2Int fallbackPoint = peak;
+
+        // MAYBE CAN THREADED? (Yes, you could Parallel.For this later if it's too slow)
+        for (int z = 0; z < mapLength; z++)
         {
             for (int x = 0; x < mapWidth; x++)
             {
-                if (roadMask[x, z] < 0.25f) // road area
+                if (roadMask[x, z] < 0.25f) // It's a road area
                 {
                     float d = Vector2.Distance(new Vector2(x, z), peak);
-                    if (d < bestDist)
+
+                    // Prevent divide-by-zero if it accidentally checks the peak itself
+                    if (d <= 0.1f) continue;
+
+                    // Calculate the true slope from the peak to this specific road point
+                    float roadHeight = depthMap[x, z];
+                    float slope = Mathf.Abs(peakHeight - roadHeight) / d;
+
+                    // Track the gentlest slope overall as a safety net
+                    if (slope < bestFallbackSlope)
                     {
-                        bestDist = d;
-                        best = new Vector2Int(x, z);
+                        bestFallbackSlope = slope;
+                        fallbackPoint = new Vector2Int(x, z);
+                    }
+
+                    // THE WALKABLE FILTER: Only consider points that obey our slope limit
+                    if (slope <= maxSlope)
+                    {
+                        if (d < bestDist)
+                        {
+                            bestDist = d;
+                            best = new Vector2Int(x, z);
+                            foundValidPoint = true;
+                        }
                     }
                 }
             }
+        }
+
+        if (!foundValidPoint)
+        {
+            Debug.LogWarning($"<color=yellow>[RoadCarver]</color> No existing road found within the {maxSlope} slope limit! " +
+                             $"Falling back to the gentlest available route (Slope: {bestFallbackSlope:F2}).");
+            return fallbackPoint;
         }
 
         return best;
