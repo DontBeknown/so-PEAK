@@ -24,7 +24,7 @@ public class HeldItemBehaviorManager : MonoBehaviour
         playerObject = gameObject;
         
         // Find hand bones in character rig
-        FindHandBones();
+        RefreshHandBoneCache();
     }
 
     private void Start()
@@ -145,6 +145,42 @@ public class HeldItemBehaviorManager : MonoBehaviour
     {
         return activeBehaviors.ContainsKey(item);
     }
+
+    /// <summary>
+    /// Updates cached hand bones used by held-item visuals.
+    /// Pass null references to auto-find bones from the currently active model hierarchy.
+    /// </summary>
+    public void RefreshHandBoneCache(Transform newRightHandBone = null, Transform newLeftHandBone = null)
+    {
+        if (newRightHandBone != null || newLeftHandBone != null)
+        {
+            rightHandBone = newRightHandBone;
+            leftHandBone = newLeftHandBone;
+            return;
+        }
+
+        FindHandBones();
+    }
+
+    /// <summary>
+    /// Rebuilds active held-item behavior so visual attachment uses latest hand-bone cache.
+    /// </summary>
+    public void RebuildActiveBehaviorAttachment()
+    {
+        equipmentManager ??= ServiceContainer.Instance.TryGet<EquipmentManager>();
+        if (equipmentManager == null)
+        {
+            return;
+        }
+
+        HeldEquipmentItem heldItem = equipmentManager.GetEquippedItem(EquipmentSlotType.HeldItem) as HeldEquipmentItem;
+        if (heldItem == null)
+        {
+            return;
+        }
+
+        HandleItemEquipped(heldItem);
+    }
     
     /// <summary>
     /// Finds hand bones in character rig hierarchy.
@@ -152,6 +188,9 @@ public class HeldItemBehaviorManager : MonoBehaviour
     /// </summary>
     private void FindHandBones()
     {
+        rightHandBone = null;
+        leftHandBone = null;
+
         // Common hand bone names across different character rigs
         string[] rightHandNames = { "RightHandEquip" };
         string[] leftHandNames = { "LeftHandEquip" };

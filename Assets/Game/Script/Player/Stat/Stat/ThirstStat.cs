@@ -10,6 +10,7 @@ public class ThirstStat : Stat
     [SerializeField] private float damagePerSecond = 2f;
     private float sprintDrainMultiplier = 2.5f;
     private float _temperatureMultiplier = 1f; // set each frame by PlayerStats
+    private float _consumableDrainMultiplier = 1f; // temporary buff/debuff from consumables
 
     private bool isSprinting;
 
@@ -33,9 +34,15 @@ public class ThirstStat : Stat
         _temperatureMultiplier = Mathf.Max(1f, multiplier);
     }
 
+    /// <summary>Applied by PlayerStats each frame. 1.0 = normal. <1.0 = reduced drain from consumable buff.</summary>
+    public void SetConsumableDrainMultiplier(float multiplier)
+    {
+        _consumableDrainMultiplier = Mathf.Clamp(multiplier, 0f, 1f);
+    }
+
     public override void Tick(float deltaTime)
     {
-        float multiplier = (isSprinting ? sprintDrainMultiplier : 1f) * _temperatureMultiplier;
+        float multiplier = (isSprinting ? sprintDrainMultiplier : 1f) * _temperatureMultiplier * _consumableDrainMultiplier;
         Subtract(gainPerSecond * multiplier * deltaTime);
     }
 

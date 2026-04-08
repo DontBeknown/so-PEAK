@@ -13,18 +13,18 @@ MonoBehaviour:
   m_Name: Tree2
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
   ObjectName: Tree2
-  Prefab: {fileID: 100718, guid: 9a61c17de674a9a4395a6c9d2d0d1b41, type: 3}
-  IsTerrainTree: 0
+  Prefab: {fileID: 100000, guid: d24bd35bb2860044485180edcf9df7b5, type: 3}
+  IsTerrainTree: 1
   TreePrototypeIndex: 0
   BaseRadius: 0.5
   BaseHeight: 2
   MinScale: 2
-  MaxScale: 6
+  MaxScale: 12
   BaseRotation: {x: 0, y: 0, z: 0}
   PositionOffset: {x: 0, y: 0, z: 0}
   RoadRule: 0
-  MinSpacing: 50
-  Density: 0.2
+  MinSpacing: 3
+  Density: 0.1
   MaxSlopeDiff: 0.5
   RequiredNoiseMap: 0
   NoiseThreshold: 0.5

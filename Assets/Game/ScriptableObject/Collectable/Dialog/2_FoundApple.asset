@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b48b7ed3e5647da4191288c45520b384, type: 3}
+  m_Name: 2_FoundApple
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Dialog.DialogData
+  dialogId: 2_FoundApple
+  lines:
+  - speakerName: Aira
+    text: 'This is apple can be eat for hunger and a little bit of thirst
+
+'

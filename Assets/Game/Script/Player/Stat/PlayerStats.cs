@@ -3,9 +3,12 @@ using System;
 using Game.Core.DI;
 using Game.Core.Events;
 using Game.Environment.DayNight;
+using Game.Player;
 
 public class PlayerStats : MonoBehaviour
 {
+    private const float DefaultThirstReductionBuffDurationSeconds = 30f;
+
     [SerializeField] private PlayerConfig config;
     [SerializeField] private EquipmentManager equipmentManager;
 
@@ -37,12 +40,22 @@ public class PlayerStats : MonoBehaviour
     private bool isImmune;
 
     private bool isSprinting;
+    private float _fallingTimer;
+    private bool _longFallDeathTriggered;
+    private PlayerControllerRefactored _playerController;
+    private float _thirstDrainReductionMultiplier = 1f;
+    private float _thirstDrainReductionRemaining = 0f;
 
     private IEventBus _eventBus;
     private IDayNightCycleService _dayNightService;
     private ISaveLoadService _saveLoadService;
     private DeathCause _lastDamageSource = DeathCause.Unknown;
     public DeathCause LastDamageSource => _lastDamageSource;
+
+    private float ThirstReductionBuffDurationSeconds =>
+        config != null && config.thirstReductionBuffDurationSeconds > 0f
+            ? config.thirstReductionBuffDurationSeconds
+            : DefaultThirstReductionBuffDurationSeconds;
 
     private void Awake()
     {
@@ -88,6 +101,7 @@ public class PlayerStats : MonoBehaviour
         _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
         _dayNightService = ServiceContainer.Instance.TryGet<IDayNightCycleService>();
         _saveLoadService = ServiceContainer.Instance.TryGet<ISaveLoadService>();
+        _playerController = GetComponent<PlayerControllerRefactored>();
         health.OnDeath += () =>
         {
             OnDeath?.Invoke();
@@ -123,6 +137,8 @@ public class PlayerStats : MonoBehaviour
     {
         float dt = Time.deltaTime;
 
+        UpdateThirstDrainReductionBuff(dt);
+
         hunger.Tick(dt);
         thirst.Tick(dt);
         stamina.Tick(dt);
@@ -145,6 +161,11 @@ public class PlayerStats : MonoBehaviour
                 : 37f;
             temperature.SetEnvironmentTarget(ambient);
         }
+
+        // Apply equipment warmth insulation before ticking temperature drift.
+        float warmthInsulation = statModifierCalculator?.GetModifiedValue(StatModifierType.WarmthInsulation, 0f) ?? 0f;
+        temperature.SetInsulation(warmthInsulation);
+
         temperature.Tick(dt);
 
         // Push temperature penalties into hunger/thirst each frame
@@ -180,6 +201,51 @@ public class PlayerStats : MonoBehaviour
         {
             //stamina.Drain(sprintDrainPerSecond * dt);
         }
+
+        HandleLongFallDeath(dt);
+    }
+
+    private void UpdateThirstDrainReductionBuff(float dt)
+    {
+        if (_thirstDrainReductionRemaining > 0f)
+        {
+            _thirstDrainReductionRemaining -= dt;
+            if (_thirstDrainReductionRemaining <= 0f)
+            {
+                _thirstDrainReductionRemaining = 0f;
+                _thirstDrainReductionMultiplier = 1f;
+            }
+        }
+
+        thirst.SetConsumableDrainMultiplier(_thirstDrainReductionMultiplier);
+    }
+
+    private void HandleLongFallDeath(float dt)
+    {
+        if (_playerController == null || health.Current <= 0f)
+        {
+            _fallingTimer = 0f;
+            return;
+        }
+
+        bool isFalling = _playerController.GetCurrentState() is FallingState;
+        if (!isFalling)
+        {
+            _fallingTimer = 0f;
+            _longFallDeathTriggered = false;
+            return;
+        }
+
+        if (_longFallDeathTriggered)
+            return;
+
+        _fallingTimer += dt;
+        float longFallThreshold = config != null ? config.longFallDeathTime : 8f;
+        if (_fallingTimer < longFallThreshold)
+            return;
+
+        _longFallDeathTriggered = true;
+        TakeFallDamage(Mathf.Max(health.Current + 1f, health.Max));
     }
 
     public void OnJump()
@@ -228,6 +294,24 @@ public class PlayerStats : MonoBehaviour
     public void Heal(float amount) => health.Heal(amount);
     public void Eat(float nutrition) => hunger.Add(nutrition);
     public void Drink(float water) => thirst.Add(water);
+
+    /// <summary>
+    /// Applies a temporary thirst drain reduction buff from consumables.
+    /// Buff does not stack; retriggering only refreshes duration.
+    /// </summary>
+    public void ApplyThirstDrainReductionBuff(float reductionPercent)
+    {
+        if (_thirstDrainReductionRemaining > 0f)
+        {
+            _thirstDrainReductionRemaining = ThirstReductionBuffDurationSeconds;
+            return;
+        }
+
+        float normalizedReduction = Mathf.Clamp(reductionPercent, 0f, 100f) / 100f;
+        _thirstDrainReductionMultiplier = 1f - normalizedReduction;
+        _thirstDrainReductionRemaining = ThirstReductionBuffDurationSeconds;
+        thirst.SetConsumableDrainMultiplier(_thirstDrainReductionMultiplier);
+    }
 
     public void ModifyTemperature(float amount)
     {

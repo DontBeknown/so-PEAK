@@ -12,7 +12,10 @@ GameObject:
   - component: {fileID: 3361578}
   - component: {fileID: 2329582}
   - component: {fileID: 6449698}
-  m_Layer: 0
+  - component: {fileID: 8312017073033566917}
+  - component: {fileID: 7828803399618264759}
+  - component: {fileID: 3521483157598557546}
+  m_Layer: 11
   m_Name: Dead_Tree_m_BT_04
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -113,3 +116,74 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: 5e972f68d0a40cd4085b704ba9652057, type: 3}
+--- !u!114 &8312017073033566917
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 142238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85ced32b465c7f7409c48d88e099c48c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.GatheringInteractable
+  resourceDrops:
+  - item: {fileID: 11400000, guid: da4382b47225e4e479aca0c167ead00e, type: 2}
+    guaranteedAmount: 2
+    bonusDropChance: 0.4
+    bonusAmount: 1
+  customPrompt: 
+  gatherDuration: 3
+  isMultiUse: 0
+  respawnTime: 60
+  destroyOnUse: 1
+  interactionPriority: 1.2
+  highlightEffect: {fileID: 0}
+  depletedVisual: {fileID: 0}
+  gatherStartSound: {fileID: 0}
+  gatherLoopSound: {fileID: 0}
+  gatherCompleteSound: {fileID: 0}
+  gatherCancelSound: {fileID: 0}
+  itemPickupSFXId: item_pickup
+  itemPickupSFXVolume: 0.45
+  startGatherSoundId: gather_start
+  startGatherSoundVolume: 0.5
+--- !u!65 &7828803399618264759
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 142238}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.7604084, y: 5.478755, z: 1.6028671}
+  m_Center: {x: 0.008681297, y: 2.2393775, z: 0.0055675507}
+--- !u!114 &3521483157598557546
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 142238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ca34c98dd680c94a9678ee88de1def8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.ScaleDownDestroyAnimation
+  bounceDuration: 0.12
+  bounceScale: 1.4
+  shrinkDuration: 0.25
+  bounceEase: 6
+  shrinkEase: 26

@@ -206,7 +206,6 @@ namespace Game.Environment.DayNight
             RenderSettings.skybox = config.GetSkyboxForTime(_currentTimeOfDay);
             DynamicGI.UpdateEnvironment();
 
-            _equipmentManager = ServiceContainer.Instance.TryGet<EquipmentManager>();
             EnsureSubscribedToEvents();
             RefreshTorchEquippedState();
             EvaluateTorchNightFogOverride();

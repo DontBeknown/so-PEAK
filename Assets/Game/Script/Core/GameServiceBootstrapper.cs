@@ -78,22 +78,10 @@ namespace Game.Core
             var eventBus  = container.Get<IEventBus>(); // Already registered above
             
             // Find and register player controller
-            var player = FindFirstObjectByType<PlayerControllerRefactored>();
-            if (player != null)
-            {
-                container.Register(player);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] PlayerControllerRefactored found and registered");
-            }
+            var player = FindAndRegister<PlayerControllerRefactored>("[GameServiceBootstrapper] PlayerControllerRefactored found and registered");
             
             // Find and register player stats
-            var stats = FindFirstObjectByType<PlayerStats>();
-            if (stats != null)
-            {
-                container.Register(stats);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] PlayerStats found and registered");
-            }
+            var stats = FindAndRegister<PlayerStats>("[GameServiceBootstrapper] PlayerStats found and registered");
             
             var inventoryRefactored = FindFirstObjectByType<InventoryManagerRefactored>();
             if (inventoryRefactored != null && enableDebugLogs)
@@ -102,162 +90,73 @@ namespace Game.Core
             }
             
             // Find and register crafting
-            var crafting = FindFirstObjectByType<CraftingManager>();
-            if (crafting != null)
-            {
-                container.Register(crafting);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] CraftingManager found and registered");
-            }
+            var crafting = FindAndRegister<CraftingManager>("[GameServiceBootstrapper] CraftingManager found and registered");
             
             // Find and register UI
-            var inventoryUi = FindFirstObjectByType<TabbedInventoryUI>();
-            if (inventoryUi != null)
-            {
-                container.Register(inventoryUi);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] TabbedInventoryUI found and registered");
-            }
+            var inventoryUi = FindAndRegister<TabbedInventoryUI>("[GameServiceBootstrapper] TabbedInventoryUI found and registered");
             
             // Find and register camera
-            var camera = FindFirstObjectByType<CinemachinePlayerCamera>();
-            if (camera != null)
-            {
-                container.Register(camera);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] CinemachinePlayerCamera found and registered");
-            }
+            var camera = FindAndRegister<CinemachinePlayerCamera>("[GameServiceBootstrapper] CinemachinePlayerCamera found and registered");
             
             // Find and register equipment manager
-            var equipment = FindFirstObjectByType<EquipmentManager>();
-            if (equipment != null)
-            {
-                container.Register(equipment);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] EquipmentManager found and registered");
-            }
+            var equipment = FindAndRegister<EquipmentManager>("[GameServiceBootstrapper] EquipmentManager found and registered");
             
             // Find and register inventory UI
-            var invUI = FindFirstObjectByType<InventoryUI>();
-            if (invUI != null)
-            {
-                container.Register(invUI);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] InventoryUI found and registered");
-            }
+            var invUI = FindAndRegister<InventoryUI>("[GameServiceBootstrapper] InventoryUI found and registered");
             
             // Register TooltipUI
-            var tooltip = FindFirstObjectByType<TooltipUI>();
-            if (tooltip != null)
-            {
-                container.Register(tooltip);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] TooltipUI found and registered");
-            }
+            var tooltip = FindAndRegister<TooltipUI>("[GameServiceBootstrapper] TooltipUI found and registered");
             
             // Register ContextMenuUI
-            var contextMenu = FindFirstObjectByType<ContextMenuUI>();
-            if (contextMenu != null)
-            {
-                container.Register(contextMenu);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] ContextMenuUI found and registered");
-            }
+            var contextMenu = FindAndRegister<ContextMenuUI>("[GameServiceBootstrapper] ContextMenuUI found and registered");
             
             // Register InteractionDetector
-            var interactionDetector = FindFirstObjectByType<InteractionDetector>();
-            if (interactionDetector != null)
-            {
-                container.Register(interactionDetector);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] InteractionDetector found and registered");
-            }
+            var interactionDetector = FindAndRegister<InteractionDetector>("[GameServiceBootstrapper] InteractionDetector found and registered");
             
             // Register InteractionPromptUI
-            var interactionPromptUI = FindFirstObjectByType<Game.Interaction.UI.InteractionPromptUI>();
-            if (interactionPromptUI != null)
-            {
-                container.Register(interactionPromptUI);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] InteractionPromptUI found and registered");
-            }
+            var interactionPromptUI = FindAndRegister<Game.Interaction.UI.InteractionPromptUI>("[GameServiceBootstrapper] InteractionPromptUI found and registered");
             
             // Register ItemNotificationUI
-            var itemNotificationUI = FindFirstObjectByType<ItemNotificationUI>();
-            if (itemNotificationUI != null)
-            {
-                container.Register(itemNotificationUI);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] ItemNotificationUI found and registered");
-            }
+            var itemNotificationUI = FindAndRegister<ItemNotificationUI>("[GameServiceBootstrapper] ItemNotificationUI found and registered");
             
             // Register SimpleStatsHUD
-            var simpleStatsHUD = FindFirstObjectByType<SimpleStatsHUD>();
-            if (simpleStatsHUD != null)
-            {
-                container.Register(simpleStatsHUD);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] SimpleStatsHUD found and registered");
-            }
+            var simpleStatsHUD = FindAndRegister<SimpleStatsHUD>("[GameServiceBootstrapper] SimpleStatsHUD found and registered");
             
+            // Find and register SoundService first - DayNightCycleManager needs it.
+            var soundService = FindFirstObjectByType<SoundService>();
+            if (soundService != null)
+            {
+                soundService.Initialize();
+                container.Register(soundService);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] SoundService found and registered");
+            }
+
             // Register DayNightCycleManager
             var dayNightManager = FindFirstObjectByType<DayNightCycleManager>();
             if (dayNightManager != null)
             {
                 container.Register<IDayNightCycleService>(dayNightManager);
                 container.Register<DayNightCycleManager>(dayNightManager);
-                // SoundService registered below; pass null here and let lazy-guard in
-                // PlayAmbientForCurrentTime() handle the case it wasn't found yet.
-                // We'll re-wire after SoundService is registered.
-                dayNightManager.Initialize(eventBus, null, equipment);
+                dayNightManager.Initialize(eventBus, soundService, equipment);
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] DayNightCycleManager found and registered");
             }
             
             // Register PlayerStatsTrackerUI
-            var playerStatsTrackerUI = FindFirstObjectByType<PlayerStatsTrackerUI>();
-            if (playerStatsTrackerUI != null)
-            {
-                container.Register(playerStatsTrackerUI);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] PlayerStatsTrackerUI found and registered");
-            }
+            var playerStatsTrackerUI = FindAndRegister<PlayerStatsTrackerUI>("[GameServiceBootstrapper] PlayerStatsTrackerUI found and registered");
             
             // Register AssessmentReportUI
-            var assessmentReportUI = FindFirstObjectByType<AssessmentReportUI>();
-            if (assessmentReportUI != null)
-            {
-                container.Register(assessmentReportUI);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] AssessmentReportUI found and registered");
-            }
+            var assessmentReportUI = FindAndRegister<AssessmentReportUI>("[GameServiceBootstrapper] AssessmentReportUI found and registered");
             
             // Register EndingScreenUI
-            var endingScreenUI = FindFirstObjectByType<Game.UI.EndingScreen.EndingScreenUI>();
-            if (endingScreenUI != null)
-            {
-                container.Register(endingScreenUI);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] EndingScreenUI found and registered");
-            }
+            var endingScreenUI = FindAndRegister<Game.UI.EndingScreen.EndingScreenUI>("[GameServiceBootstrapper] EndingScreenUI found and registered");
             
             // Register LearningAssessmentService
-            var learningAssessmentService = FindFirstObjectByType<LearningAssessmentService>();
-            if (learningAssessmentService != null)
-            {
-                container.Register(learningAssessmentService);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] LearningAssessmentService found and registered");
-            }
+            var learningAssessmentService = FindAndRegister<LearningAssessmentService>("[GameServiceBootstrapper] LearningAssessmentService found and registered");
             
             // Register PlayerStatsTrackerService
-            var playerStatsTrackerService = FindFirstObjectByType<PlayerStatsTrackerService>();
-            if (playerStatsTrackerService != null)
-            {
-                container.Register(playerStatsTrackerService);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] PlayerStatsTrackerService found and registered");
-            }
+            var playerStatsTrackerService = FindAndRegister<PlayerStatsTrackerService>("[GameServiceBootstrapper] PlayerStatsTrackerService found and registered");
             
             // Find and register SaveLoadService
             var saveLoadService = FindFirstObjectByType<SaveLoadService>();
@@ -292,24 +191,6 @@ namespace Game.Core
                     Debug.Log("[GameServiceBootstrapper] DialogManager found and registered");
             }
 
-            // Find and register SoundService first — DayNightCycleManager needs a reference to it
-            var soundService = FindFirstObjectByType<SoundService>();
-            if (soundService != null)
-            {
-                soundService.Initialize();
-                container.Register(soundService);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] SoundService found and registered");
-            }
-
-            // Re-init DayNightCycleManager now that SoundService is available
-            if (dayNightManager != null)
-            {
-                dayNightManager.Initialize(eventBus, soundService, equipment);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] DayNightCycleManager re-initialized with SoundService");
-            }
-
             // Find and register TutorialManager
             var tm = tutorialManager ?? FindFirstObjectByType<TutorialManager>();
             if (tm != null)
@@ -341,54 +222,13 @@ namespace Game.Core
             var container = ServiceContainer.Instance;
             var eventBus  = container.Get<IEventBus>();
 
-            if (playerController != null)
-            {
-                container.Register(playerController);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] PlayerControllerRefactored manually registered");
-            }
-            
-            if (playerStats != null)
-            {
-                container.Register(playerStats);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] PlayerStats manually registered");
-            }
-            
-            if (craftingManager != null)
-            {
-                container.Register(craftingManager);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] CraftingManager manually registered");
-            }
-            
-            if (inventoryUI != null)
-            {
-                container.Register(inventoryUI);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] TabbedInventoryUI manually registered");
-            }
-            
-            if (playerCamera != null)
-            {
-                container.Register(playerCamera);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] CinemachinePlayerCamera manually registered");
-            }
-            
-            if (equipmentManager != null)
-            {
-                container.Register(equipmentManager);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] EquipmentManager manually registered");
-            }
-            
-            if (legacyInventoryUI != null)
-            {
-                container.Register(legacyInventoryUI);
-                if (enableDebugLogs)
-                    Debug.Log("[GameServiceBootstrapper] InventoryUI manually registered");
-            }
+            RegisterAndLog(playerController, "[GameServiceBootstrapper] PlayerControllerRefactored manually registered");
+            RegisterAndLog(playerStats, "[GameServiceBootstrapper] PlayerStats manually registered");
+            RegisterAndLog(craftingManager, "[GameServiceBootstrapper] CraftingManager manually registered");
+            RegisterAndLog(inventoryUI, "[GameServiceBootstrapper] TabbedInventoryUI manually registered");
+            RegisterAndLog(playerCamera, "[GameServiceBootstrapper] CinemachinePlayerCamera manually registered");
+            RegisterAndLog(equipmentManager, "[GameServiceBootstrapper] EquipmentManager manually registered");
+            RegisterAndLog(legacyInventoryUI, "[GameServiceBootstrapper] InventoryUI manually registered");
 
             if (collectableManager != null)
             {
@@ -415,7 +255,7 @@ namespace Game.Core
 
                 var player = container.TryGet<PlayerControllerRefactored>();
                 var camera = container.TryGet<CinemachinePlayerCamera>();
-                var svc    = container.TryGet<SaveLoadService>();
+                var svc    = container.TryGet<ISaveLoadService>();
                 tutorialManager.Initialize(eventBus, svc, player, camera);
 
                 if (enableDebugLogs)
@@ -472,6 +312,27 @@ namespace Game.Core
             // Optional: Clear services when destroyed
             // Uncomment if you want to clean up on scene unload
             // ServiceContainer.Instance.Clear();
+        }
+
+        private T FindAndRegister<T>(string logMessage) where T : Component
+        {
+            var instance = FindFirstObjectByType<T>();
+            RegisterAndLog(instance, logMessage);
+            return instance;
+        }
+
+        private void RegisterAndLog<T>(T instance, string logMessage) where T : class
+        {
+            if (instance == null)
+            {
+                return;
+            }
+
+            ServiceContainer.Instance.Register(instance);
+            if (enableDebugLogs)
+            {
+                Debug.Log(logMessage);
+            }
         }
     }
 }

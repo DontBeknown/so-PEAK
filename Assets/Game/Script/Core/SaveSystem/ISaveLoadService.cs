@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public interface ISaveLoadService
 {
+    WorldSaveData CurrentWorldSave { get; }
+
     // World Management
     WorldSaveData CreateNewWorld(string worldName, SeedData seedData, int level = 1);
     bool SaveWorld(WorldSaveData saveData);
@@ -14,6 +17,7 @@ public interface ISaveLoadService
     void EnableAutoSave(float intervalSeconds);
     void DisableAutoSave();
     void PerformAutoSave();
+    void PerformAutoSave(Transform customSpawnPoint);
     
     // Backup
     bool CreateBackup(string worldGuid);

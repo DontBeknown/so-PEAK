@@ -10,12 +10,14 @@ namespace Game.Player.Inventory.Effects
     public class ConsumableEffectSystem : IConsumableEffectSystem
     {
         private readonly Dictionary<StatType, IEffectStrategy> _strategies;
+        private readonly IEffectStrategy _thirstDrainBuffStrategy;
         private readonly PlayerStats _playerStats;
 
         public ConsumableEffectSystem(PlayerStats playerStats)
         {
             _playerStats = playerStats;
             _strategies = new Dictionary<StatType, IEffectStrategy>();
+            _thirstDrainBuffStrategy = new ThirstDrainReductionBuffEffectStrategy();
             
             // Register default strategies
             RegisterDefaultStrategies();
@@ -26,6 +28,7 @@ namespace Game.Player.Inventory.Effects
             RegisterEffectStrategy(StatType.Health, new HealthEffectStrategy());
             RegisterEffectStrategy(StatType.Hunger, new HungerEffectStrategy());
             RegisterEffectStrategy(StatType.Stamina, new StaminaEffectStrategy());
+            RegisterEffectStrategy(StatType.Thirst, new ThirstEffectStrategy());
         }
 
         public void RegisterEffectStrategy(StatType statType, IEffectStrategy strategy)
@@ -43,6 +46,11 @@ namespace Game.Player.Inventory.Effects
         {
             if (effect == null) return false;
             if (_playerStats == null) return false;
+
+            if (effect.effectKind == ConsumableEffectKind.ThirstDrainReductionBuff)
+            {
+                return true;
+            }
             
             return _strategies.ContainsKey(effect.statType);
         }
@@ -51,7 +59,13 @@ namespace Game.Player.Inventory.Effects
         {
             if (!CanApplyEffect(effect))
             {
-                Debug.LogWarning($"[ConsumableEffectSystem] Cannot apply effect for {effect.statType}");
+                Debug.LogWarning($"[ConsumableEffectSystem] Cannot apply effect kind {effect.effectKind} for {effect.statType}");
+                return;
+            }
+
+            if (effect.effectKind == ConsumableEffectKind.ThirstDrainReductionBuff)
+            {
+                _thirstDrainBuffStrategy.Apply(effect, stats);
                 return;
             }
 

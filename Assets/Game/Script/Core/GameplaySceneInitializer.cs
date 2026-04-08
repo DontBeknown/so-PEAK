@@ -210,7 +210,7 @@ public class GameplaySceneInitializer : MonoBehaviour
         
         foreach (var itemData in playerData.inventoryItems)
         {
-            InventoryItem item = Resources.Load<InventoryItem>($"Items/{itemData.itemId}");
+            InventoryItem item = ResolveSavedInventoryItem(itemData.itemId, itemData.generatedEquipment);
             if (item == null) continue;
 
             // Restore at saved grid position; fall back to auto-place if the slot is taken
@@ -233,12 +233,31 @@ public class GameplaySceneInitializer : MonoBehaviour
         
         foreach (var equipData in playerData.equippedItems)
         {
-            InventoryItem item = Resources.Load<InventoryItem>($"Items/{equipData.itemId}");
+            InventoryItem item = ResolveSavedInventoryItem(equipData.itemId, equipData.generatedEquipment);
             if (item != null && item is IEquippable equippable)
             {
                 equipmentManager.Equip(equippable);
             }
         }
+    }
+
+    private InventoryItem ResolveSavedInventoryItem(string itemId, GeneratedEquipmentSaveData generatedEquipment)
+    {
+        if (generatedEquipment != null)
+        {
+            var restoredRuntimeEquipment = RuntimeEquipmentFactory.RestoreFromSave(generatedEquipment);
+            if (restoredRuntimeEquipment != null)
+            {
+                return restoredRuntimeEquipment;
+            }
+        }
+
+        if (string.IsNullOrEmpty(itemId))
+        {
+            return null;
+        }
+
+        return Resources.Load<InventoryItem>($"Items/{itemId}");
     }
     
     private void RestoreResourceNodes(WorldStateSaveData worldState)

@@ -21,7 +21,7 @@ MonoBehaviour:
   MinScale: 4
   MaxScale: 12
   BaseRotation: {x: 0, y: 0, z: 0}
-  PositionOffset: {x: 0, y: 0, z: 0}
+  PositionOffset: {x: 0, y: -0.25, z: 0}
   RoadRule: 0
   MinSpacing: 3
   Density: 0.2

@@ -348,6 +348,27 @@ namespace Game.Player
         
         public IPlayerState GetCurrentState() => _currentState;
 
+        /// <summary>
+        /// Rebinds runtime animation service to a new animator (used by visual model switching).
+        /// </summary>
+        public void RebindAnimationAnimator(Animator animator)
+        {
+            if (animator == null)
+            {
+                Debug.LogWarning("[PlayerControllerRefactored] RebindAnimationAnimator called with null animator.");
+                return;
+            }
+
+            IAnimationService animationService = _model?.GetAnimationService();
+            if (animationService == null)
+            {
+                Debug.LogWarning("[PlayerControllerRefactored] Animation service is not initialized.");
+                return;
+            }
+
+            animationService.RebindAnimator(animator);
+        }
+
         // Inventory Command Pattern - Undo/Redo
         public bool UndoLastInventoryAction() => _inventoryFacade?.UndoLastAction() ?? false;
         public bool RedoLastInventoryAction() => _inventoryFacade?.RedoLastAction() ?? false;

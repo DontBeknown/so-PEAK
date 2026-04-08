@@ -31,7 +31,7 @@ public class HandIKControllerRefactored : MonoBehaviour
     {
         // Auto-assign PlayerController
         if (playerController == null)
-            playerController = GetComponent<PlayerControllerRefactored>();
+            playerController = GetComponentInParent<PlayerControllerRefactored>();
 
         // Auto-assign Rig
         if (handIKRig == null)
@@ -137,5 +137,41 @@ public class HandIKControllerRefactored : MonoBehaviour
     {
         _currentRigWeight = Mathf.Clamp01(weight);
         handIKRig.weight = _currentRigWeight;
+    }
+
+    /// <summary>
+    /// Rebinds rig and hand targets after runtime model switching.
+    /// </summary>
+    public void RebindRigTargets(Rig newRig, Transform newLeftHandTarget, Transform newRightHandTarget, bool resetWeight = true)
+    {
+        handIKRig = newRig;
+        leftHandTarget = newLeftHandTarget;
+        rightHandTarget = newRightHandTarget;
+
+        if (handIKRig == null)
+        {
+            Debug.LogWarning("[HandIKControllerRefactored] RebindRigTargets missing Rig reference.");
+            enabled = false;
+            return;
+        }
+
+        if (config == null)
+        {
+            Debug.LogWarning("[HandIKControllerRefactored] Missing config while rebinding. Creating default config.");
+            config = ScriptableObject.CreateInstance<HandIKConfig>();
+        }
+
+        if (_positioningStrategy == null)
+        {
+            _positioningStrategy = new RaycastHandPositioning(config);
+        }
+
+        if (resetWeight)
+        {
+            _currentRigWeight = 0f;
+            handIKRig.weight = 0f;
+        }
+
+        enabled = true;
     }
 }

@@ -203,7 +203,8 @@ public class ItemNotificationUI : MonoBehaviour
         // Create notification data
         NotificationData data = new NotificationData
         {
-            item = item,
+            itemName = item.itemName,
+            icon = item.icon,
             quantity = quantity,
             type = type
         };
@@ -263,16 +264,24 @@ public class ItemNotificationUI : MonoBehaviour
         }
         
         // Set icon
-        if (notificationUI.iconImage != null && data.item.icon != null)
+        if (notificationUI.iconImage != null)
         {
-            notificationUI.iconImage.sprite = data.item.icon;
-            notificationUI.iconImage.enabled = true;
+            if (data.icon != null)
+            {
+                notificationUI.iconImage.sprite = data.icon;
+                notificationUI.iconImage.enabled = true;
+            }
+            else
+            {
+                notificationUI.iconImage.sprite = null;
+                notificationUI.iconImage.enabled = false;
+            }
         }
         
         // Set item name
         if (notificationUI.itemNameText != null)
         {
-            notificationUI.itemNameText.text = data.item.itemName;
+            notificationUI.itemNameText.text = data.itemName;
         }
         
         // Set quantity
@@ -308,6 +317,7 @@ public class ItemNotificationUI : MonoBehaviour
             NotificationType.Equipped => "Equipped",
             NotificationType.Unequipped => "Unequipped",
             NotificationType.InventoryFull => "Inventory Full",
+            NotificationType.AlreadyUnlocked => "Already unlocked",
             _ => ""
         };
     }
@@ -322,6 +332,7 @@ public class ItemNotificationUI : MonoBehaviour
             NotificationType.Equipped => new Color(0.9f, 0.7f, 0.2f), // Gold
             NotificationType.Unequipped => new Color(0.6f, 0.6f, 0.6f), // Gray
             NotificationType.InventoryFull => new Color(0.9f, 0.4f, 0.1f), // Orange
+            NotificationType.AlreadyUnlocked => new Color(0.7f, 0.7f, 0.7f), // Light gray
             _ => Color.white
         };
     }
@@ -377,15 +388,32 @@ public class ItemNotificationUI : MonoBehaviour
     /// </summary>
     public void ShowCustomNotification(string itemName, Sprite icon, int quantity, NotificationType type)
     {
-        // Create a temporary inventory item for display purposes
-        var tempItem = ScriptableObject.CreateInstance<InventoryItem>();
-        tempItem.itemName = itemName;
-        tempItem.icon = icon;
-        
-        ShowNotification(tempItem, quantity, type);
-        
-        // Clean up temp item after a delay
-        Destroy(tempItem, displayDuration + fadeInDuration + fadeOutDuration + 1f);
+        if (string.IsNullOrWhiteSpace(itemName))
+        {
+            itemName = "Notification";
+        }
+
+        if (notificationPrefab == null)
+        {
+            Debug.LogError("[ItemNotificationUI] Cannot show notification - notificationPrefab is null!");
+            return;
+        }
+
+        if (notificationContainer == null)
+        {
+            Debug.LogError("[ItemNotificationUI] Cannot show notification - notificationContainer is null!");
+            return;
+        }
+
+        NotificationData data = new NotificationData
+        {
+            itemName = itemName,
+            icon = icon,
+            quantity = quantity,
+            type = type
+        };
+
+        CreateNotification(data);
     }
     
     /// <summary>
@@ -427,7 +455,8 @@ public class ItemNotificationUI : MonoBehaviour
 /// </summary>
 public class NotificationData
 {
-    public InventoryItem item;
+    public string itemName;
+    public Sprite icon;
     public int quantity;
     public NotificationType type;
 }
@@ -442,5 +471,6 @@ public enum NotificationType
     Consumed,
     Equipped,
     Unequipped,
-    InventoryFull
+    InventoryFull,
+    AlreadyUnlocked
 }

@@ -134,6 +134,10 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
     
     private void OnEnable()
     {
+        if (_eventBus == null)
+        {
+            _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+        }
         _eventBus?.Subscribe<AssessmentUIOpenedEvent>(OnAssessmentUIOpened);
     }
     
@@ -283,6 +287,14 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
         {
             panel.SetActive(false);
         }
+        
+        // Publish panel closed event so AssessmentTerminalInteractable can handle cleanup
+        if (_eventBus == null)
+        {
+            _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+        }
+        _eventBus?.Publish(new PanelClosedEvent(PanelName));
+        // Debug.Log($"[PlayerStatsTrackerUI] Published PanelClosedEvent for {PanelName}");
     }
     
     /// <summary>
@@ -487,10 +499,14 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
     
     private void OnAssessmentUIOpened(AssessmentUIOpenedEvent evt)
     {
-        if (evt.PanelName != PanelName) return;
-        
-        // Store the progression mode for this terminal
+        // Debug.Log($"[PlayerStatsTrackerUI] Received AssessmentUIOpenedEvent for panel {evt.PanelName} with ProgressNextLevelOnUse={evt.ProgressNextLevelOnUse}");
+        if (evt.PanelName != PanelName) 
+        {
+            // Debug.LogWarning($"[PlayerStatsTrackerUI] Event panel name '{evt.PanelName}' doesn't match our panel name '{PanelName}'");
+            return;
+        }
         _progressNextLevelMode = evt.ProgressNextLevelOnUse;
+        // Debug.Log($"[PlayerStatsTrackerUI] Set _progressNextLevelMode = {_progressNextLevelMode}");
         ApplyButtonMode();
     }
     
@@ -506,10 +522,12 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
     
     private void OnNextLevelButtonPressed()
     {
+        PrepareForSceneTransition();
+
         var saveService = SaveLoadService.Instance;
         if (saveService == null)
         {
-            Debug.LogWarning("[PlayerStatsTrackerUI] SaveLoadService not found");
+            // Debug.LogWarning("[PlayerStatsTrackerUI] SaveLoadService not found");
             return;
         }
         
@@ -529,6 +547,24 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
             // Progression: increment level, save, and reload current scene
             saveService.ProgressToNextLevel();
         }
+    }
+
+    private void PrepareForSceneTransition()
+    {
+        // Ensure no tween continues to update while scene objects are being unloaded.
+        KillActiveTweens();
+
+        if (panel != null)
+        {
+            DOTween.Kill(panel, false);
+        }
+
+        DOTween.Kill(gameObject, false);
+    }
+
+    private void OnDestroy()
+    {
+        PrepareForSceneTransition();
     }
 
     private void InitializeAnimationReferences()

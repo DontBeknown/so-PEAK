@@ -47,9 +47,6 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     private WorldSaveData currentWorldSave;
     private float autoSaveTimer;
     
-    // Singleton instance (backward compatibility for local field)
-    private static SaveLoadService instance;
-    
     // Constants
     private const string SAVE_FILE_EXTENSION = ".sav";
     private const int CURRENT_SAVE_VERSION = 1;
@@ -57,14 +54,13 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     private void Awake()
     {
         // Singleton pattern with DontDestroyOnLoad
-        if (instance != null && instance != this)
+        if (Instance != null && Instance != this)
         {
             //Debug.LogWarning("Duplicate SaveLoadService found. Destroying duplicate.");
             Destroy(gameObject);
             return;
         }
         
-        instance = this;
         Instance = this;
         DontDestroyOnLoad(gameObject);
         
@@ -279,6 +275,37 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             SaveWorld(currentWorldSave);
         }
     }
+
+    /// <summary>
+    /// Auto-save that can persist a custom player spawn transform.
+    /// If customSpawnPoint is null, the current player transform is saved instead.
+    /// </summary>
+    public void PerformAutoSave(Transform customSpawnPoint)
+    {
+        if (currentWorldSave == null)
+        {
+            return;
+        }
+
+        UpdatePlayerDataFromGame();
+
+        if (customSpawnPoint != null)
+        {
+            var pos = customSpawnPoint.position;
+            var rot = customSpawnPoint.rotation;
+
+            currentWorldSave.playerData.position = new[] { pos.x, pos.y, pos.z };
+            currentWorldSave.playerData.rotation = new[] { rot.x, rot.y, rot.z, rot.w };
+
+            if (enableDebug)
+            {
+                Debug.Log($"[SaveLoadService] Overriding saved spawn with custom transform at {pos}");
+            }
+        }
+
+        if (enableDebug) Debug.Log("Auto-saving...");
+        SaveWorld(currentWorldSave);
+    }
     
     /// <summary>
     /// Updates current world save with player data from game state
@@ -298,11 +325,14 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             {
                 var pos = player.transform.position;
                 var rot = player.transform.rotation;
-                
                 currentWorldSave.playerData.position = new float[] { pos.x, pos.y, pos.z };
                 currentWorldSave.playerData.rotation = new float[] { rot.x, rot.y, rot.z, rot.w };
-                
+                Debug.Log($"[SaveLoadService] Player reference found. Position: {pos}");
                 if (enableDebug) Debug.Log($"Updated player position: {pos}");
+            }
+            else
+            {
+                Debug.LogWarning("[SaveLoadService] Player reference NOT found during save. Position will not be saved.");
             }
             
             // Get player stats
@@ -328,13 +358,15 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
                 currentWorldSave.playerData.inventoryItems = new List<InventoryItemSaveData>();
                 foreach (var p in placements)
                 {
+                    var generatedEquipment = BuildGeneratedEquipmentPayload(p.Item);
                     currentWorldSave.playerData.inventoryItems.Add(new InventoryItemSaveData
                     {
-                        itemId = p.Item.name,
+                        itemId = generatedEquipment?.templateItemId ?? p.Item.name,
                         quantity = 1,
                         gridX = p.Position.x,
                         gridY = p.Position.y,
-                        isRotated = p.Rotated
+                        isRotated = p.Rotated,
+                        generatedEquipment = generatedEquipment
                     });
                 }
                 if (enableDebug) Debug.Log($"[SaveLoadService] Saved {placements.Count} inventory items");
@@ -351,10 +383,13 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
                     var equippedObj = equipped as UnityEngine.Object;
                     if (equippedObj != null)
                     {
+                        var equippedInventoryItem = equipped as InventoryItem;
+                        var generatedEquipment = BuildGeneratedEquipmentPayload(equippedInventoryItem);
                         currentWorldSave.playerData.equippedItems.Add(new EquipmentSlotSaveData
                         {
                             slotType = slotType.ToString(),
-                            itemId = equippedObj.name
+                            itemId = generatedEquipment?.templateItemId ?? equippedObj.name,
+                            generatedEquipment = generatedEquipment
                         });
                     }
                 }
@@ -390,7 +425,8 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             }
             
             // Update play time
-            currentWorldSave.totalPlayTime += Time.deltaTime;
+            currentWorldSave.totalPlayTime += Time.unscaledDeltaTime;
+            Debug.Log($"[SaveLoadService] Updated total play time: {currentWorldSave.totalPlayTime:F1} seconds {Time.unscaledDeltaTime}");
             
             if (enableDebug) Debug.Log("[SaveLoadService] Player data updated from game state");
         }
@@ -771,12 +807,12 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
 
         saveData.worldState.spawnedObjectStates ??= new List<SpawnedObjectStateSaveData>();
 
-        //var container = ServiceContainer.Instance;
+        var container = ServiceContainer.Instance;
 
-        var collectableManager = FindFirstObjectByType<CollectableManager>();
+        var collectableManager = container.TryGet<ICollectableManager>();
         collectableManager?.LoadState(saveData.worldState.unlockedCollectables ?? new List<string>());
 
-        var dialogManager = FindFirstObjectByType<DialogManager>();
+        var dialogManager = container.TryGet<IDialogManager>();
         dialogManager?.LoadState(saveData.worldState.triggeredDialogs ?? new List<string>());
     }
 
@@ -797,6 +833,16 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         }
 
         Debug.LogWarning("[SaveLoadService] Could not reload scene after level progression.");
+    }
+
+    private GeneratedEquipmentSaveData BuildGeneratedEquipmentPayload(InventoryItem item)
+    {
+        if (item is not EquipmentItem equipmentItem)
+        {
+            return null;
+        }
+
+        return RuntimeEquipmentFactory.CreateSavePayload(equipmentItem);
     }
     
     // Compression helpers (simple base64 for now)

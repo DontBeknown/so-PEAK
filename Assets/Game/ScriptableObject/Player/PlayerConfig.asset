@@ -35,8 +35,8 @@ MonoBehaviour:
     m_Bits: 384
   coyoteTimeDuration: 0
   jumpStaminaCost: 20
-  sprintStaminaDrainPerSecond: 25
-  climbStaminaDrainPerSecond: 5
+  sprintStaminaDrainPerSecond: 5
+  climbStaminaDrainPerSecond: 8
   staminaExhaustedSpeedMultiplier: 0.4
   staminaRegenPerSecond: 15
   staminaDrainCooldown: 1
@@ -56,10 +56,180 @@ MonoBehaviour:
   hungerHurtThreshold: 10
   starvationDPS: 1
   hungerSprintMultiplier: 2
-  fallDamageSafeSpeed: 8
+  fallDamageSafeSpeed: 10
   fallDamageLethalSpeed: 25
   fallDamageMax: 100
+  longFallDeathTime: 8
   thirstDrainPerSecond: 0.17
   thirstHurtThreshold: 10
   dehydrationDPS: 2
-  thirstSprintMultiplier: 2.5
+  thirstSprintMultiplier: 1.5
+  thirstReductionBuffDurationSeconds: 120
+  tempColdThreshold: 12
+  tempHotThreshold: 42
+  tempColdDPS: 1
+  tempHotDPS: 0.5
+  tempDriftRate: 0.25
+  tempColdSpeedPenaltyThreshold: 24
+  tempColdHungerPenaltyThreshold: 18
+  tempHotThirstPenaltyThreshold: 38
+  tempColdSpeedMinMultiplier: 0.65
+  tempHungerColdMaxMultiplier: 1.3
+  tempThirstHotMaxMultiplier: 1.5
+  tempHeatSourceRadius: 5
+  tempHeatSourceLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  temperatureDayCurveLevel1:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 37
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.25
+      value: 37
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.5
+      value: 37
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.75
+      value: 37
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 37
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  temperatureDayCurveLevel2:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 18
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.25
+      value: 24
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.5
+      value: 39
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.75
+      value: 28
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 18
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  temperatureDayCurveLevel3:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 8
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.25
+      value: 14
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.5
+      value: 19
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.75
+      value: 14
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 8
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4

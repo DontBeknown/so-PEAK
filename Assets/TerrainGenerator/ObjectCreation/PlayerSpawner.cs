@@ -58,9 +58,10 @@ public class PlayerSpawner : MonoBehaviour
 
         // 1. DETERMINE TARGET XZ POSITION (without proper Y yet)
         Vector3 targetXZ;
-        float savedY = targetSpawnPosition.y; // Store default Y
+        bool usingSavedPosition = !SaveLoadService.Instance.IsNewWorld() && loadFromSave;
         
-        if(!SaveLoadService.Instance.IsNewWorld() && loadFromSave)
+        //Debug.Log($"[PlayerSpawner] {SaveLoadService.Instance.IsNewWorld()} and loadFromSave={loadFromSave}");
+        if(usingSavedPosition)
         {
            WorldSaveData saveData = SaveLoadService.Instance.CurrentWorldSave;
            targetXZ = new Vector3(saveData.playerData.position[0], saveData.playerData.position[1], saveData.playerData.position[2]);
@@ -96,17 +97,38 @@ public class PlayerSpawner : MonoBehaviour
         }
         else
         {
-            // No ground found - use target position as-is
-            finalSpawnPosition = targetXZ;
-            //Debug.LogWarning($"[PlayerSpawner] Raycast found no ground. Using position as-is: {finalSpawnPosition}");
+            // No ground found - if loaded from save, fall back to default spawn position.
+            if (usingSavedPosition)
+            {
+                Vector3 defaultRaycastStart = new Vector3(targetSpawnPosition.x, targetSpawnPosition.y + raycastHeight, targetSpawnPosition.z);
+                RaycastHit defaultHit;
+
+                if (Physics.Raycast(defaultRaycastStart, Vector3.down, out defaultHit, raycastDistance, groundLayers, QueryTriggerInteraction.Ignore))
+                {
+                    finalSpawnPosition = new Vector3(targetSpawnPosition.x, defaultHit.point.y + spawnHeightOffset, targetSpawnPosition.z);
+                    //Debug.LogWarning($"[PlayerSpawner] Raycast found no ground at saved position. Falling back to default ground at Y={defaultHit.point.y}: {finalSpawnPosition}");
+                }
+                else
+                {
+                    finalSpawnPosition = targetSpawnPosition;
+                    //Debug.LogWarning($"[PlayerSpawner] Raycast found no ground at saved or default position. Using default position as-is: {finalSpawnPosition}");
+                }
+            }
+            else
+            {
+                finalSpawnPosition = targetXZ;
+                //Debug.LogWarning($"[PlayerSpawner] Raycast found no ground. Using position as-is: {finalSpawnPosition}");
+            }
             //Debug.DrawLine(raycastStart, raycastEnd, Color.red, 120f);
+
         }
 
         // 5. INSTANTIATE PLAYER PREFAB AT FINAL POSITION
         GameObject spawnedPlayerObj = Instantiate(playerPrefab, finalSpawnPosition, Quaternion.identity);
         SpawnedPlayer = spawnedPlayerObj.transform;
         
-        //Debug.Log($"[PlayerSpawner] Player instantiated at {finalSpawnPosition}");
+        //FootIKControllerRefactored footIK = spawnedPlayerObj.GetComponentInChildren<FootIKControllerRefactored>();
+       //Debug.Log($"[PlayerSpawner] Player instantiated at {finalSpawnPosition}");
         
         // 5.5. UPDATE UI SERVICE PROVIDER WITH NEW PLAYER REFERENCE
         UIServiceProvider uiService = ServiceContainer.Instance.TryGet<UIServiceProvider>();

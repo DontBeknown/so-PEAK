@@ -17,7 +17,7 @@ namespace Game.Tutorial
         [SerializeField] private bool debugLogs;
 
         private IEventBus _eventBus;
-        private SaveLoadService _saveLoadService;
+        private ISaveLoadService _saveLoadService;
         private PlayerControllerRefactored _player;
         private CinemachinePlayerCamera _playerCamera;
 
@@ -41,7 +41,7 @@ namespace Game.Tutorial
         public int CurrentStepIndex { get; private set; } = -1;
 
         /// <summary>Called by GameServiceBootstrapper after registration.</summary>
-        public void Initialize(IEventBus eventBus, SaveLoadService saveLoadService,
+        public void Initialize(IEventBus eventBus, ISaveLoadService saveLoadService,
             PlayerControllerRefactored player, CinemachinePlayerCamera playerCamera)
         {
             _eventBus        = eventBus;
@@ -52,9 +52,7 @@ namespace Game.Tutorial
             _tutorialData = Resources.Load<TutorialData>(tutorialResourcePath);
             if (_tutorialData == null)
             {
-                _tutorialData = BuildFallbackTutorialData();
-                if (debugLogs)
-                    Debug.LogWarning("[TutorialManager] TutorialData resource was not found. Using fallback in-code steps.");
+                Debug.LogError($"[TutorialManager] TutorialData not found at Resources/{tutorialResourcePath}. Tutorial disabled.");
             }
         }
 
@@ -218,12 +216,18 @@ namespace Game.Tutorial
 
         private void EnsureReferences()
         {
-            // Dependencies are injected via Initialize(); these are no-op guards
-            // in case Initialize() was not called (e.g. in tests or legacy scenes).
-            _eventBus        ??= ServiceContainer.Instance.TryGet<IEventBus>();
-            _saveLoadService ??= SaveLoadService.Instance ?? FindFirstObjectByType<SaveLoadService>();
-            _player          ??= ServiceContainer.Instance.TryGet<PlayerControllerRefactored>();
-            _playerCamera    ??= ServiceContainer.Instance.TryGet<CinemachinePlayerCamera>();
+            if (_eventBus == null)
+            {
+                Debug.LogError("[TutorialManager] Missing IEventBus. Ensure GameServiceBootstrapper initializes TutorialManager.");
+            }
+
+            if (_saveLoadService == null)
+            {
+                Debug.LogError("[TutorialManager] Missing ISaveLoadService. Ensure GameServiceBootstrapper initializes TutorialManager.");
+            }
+
+            _player ??= ServiceContainer.Instance.TryGet<PlayerControllerRefactored>();
+            _playerCamera ??= ServiceContainer.Instance.TryGet<CinemachinePlayerCamera>();
         }
 
         private void EnsureSaveData()
@@ -574,37 +578,5 @@ namespace Game.Tutorial
             _jumpCount++;
         }
 
-        private TutorialData BuildFallbackTutorialData()
-        {
-            var data = ScriptableObject.CreateInstance<TutorialData>();
-            data.tutorialId = "main_onboarding";
-            data.steps = new List<TutorialStepData>
-            {
-                CreateStep("welcome", "Welcome", "Welcome. Let's learn the basics.", "", TutorialStepType.AutoAdvance, 3f),
-                CreateStep("move", "Move", "Use movement keys to move.", "Move", TutorialStepType.WalkDistance, 3f),
-                CreateStep("look", "Camera", "Move the mouse to look around.", "Look", TutorialStepType.LookAround, 90f),
-                CreateStep("jump", "Jump", "Press jump.", "Jump", TutorialStepType.Jump, 1f),
-                CreateStep("sprint", "Sprint", "Hold sprint while moving.", "Sprint", TutorialStepType.Sprint, 1.5f),
-                CreateStep("interact", "Interact", "Interact with a nearby object - tap or hold.", "Interact", TutorialStepType.PressInteract, 1f),
-                CreateStep("inventory", "Inventory", "Open inventory and check your first item.", "Inventory", TutorialStepType.OpenInventory, 1f),
-                CreateStep("context_menu", "Context Menu", "Open the item context menu.", "Right-click", TutorialStepType.OpenContextMenu, 1f),
-                CreateStep("craft", "Craft", "Craft your first item.", "Craft", TutorialStepType.CompleteCraft, 1f),
-                CreateStep("stats", "Survival", "Watch your hunger, stamina, and temperature.", "", TutorialStepType.AutoAdvance, 5f)
-            };
-
-            return data;
-        }
-
-        private TutorialStepData CreateStep(string id, string title, string body, string hint, TutorialStepType type, float threshold)
-        {
-            var step = ScriptableObject.CreateInstance<TutorialStepData>();
-            step.stepId = id;
-            step.title = title;
-            step.instructionText = body;
-            step.inputHintText = hint;
-            step.completionType = type;
-            step.completionThreshold = threshold;
-            return step;
-        }
     }
 }

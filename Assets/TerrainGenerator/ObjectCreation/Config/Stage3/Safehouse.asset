@@ -23,7 +23,7 @@ MonoBehaviour:
   BaseRotation: {x: 0, y: 0, z: 0}
   PositionOffset: {x: 0, y: 1.8, z: 0}
   RoadRule: 1
-  MinSpacing: 100
+  MinSpacing: 40
   Density: 1
   MaxSlopeDiff: 0.5
   RequiredNoiseMap: 0

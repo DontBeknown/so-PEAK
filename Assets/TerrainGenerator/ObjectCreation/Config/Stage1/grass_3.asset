@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: grass_3
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
   ObjectName: grass_3
-  Prefab: {fileID: 6907849821188569312, guid: 6e74026b235ff3c42829d44efa5ee2a2, type: 3}
+  Prefab: {fileID: 191982, guid: 992066724a0f4ea45801d453797c72b5, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
   BaseRadius: 1
@@ -24,7 +24,7 @@ MonoBehaviour:
   PositionOffset: {x: 0, y: 0, z: 0}
   RoadRule: 1
   MinSpacing: 10
-  Density: 0.1
+  Density: 0.5
   MaxSlopeDiff: 0.7
   RequiredNoiseMap: 0
   NoiseThreshold: 0.5
