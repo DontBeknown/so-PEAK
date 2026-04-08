@@ -4,6 +4,8 @@ using UnityEngine;
 
 public interface ISaveLoadService
 {
+    WorldSaveData CurrentWorldSave { get; }
+
     // World Management
     WorldSaveData CreateNewWorld(string worldName, SeedData seedData, int level = 1);
     bool SaveWorld(WorldSaveData saveData);

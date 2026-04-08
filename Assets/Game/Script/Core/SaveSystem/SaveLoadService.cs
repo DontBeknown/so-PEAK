@@ -47,9 +47,6 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     private WorldSaveData currentWorldSave;
     private float autoSaveTimer;
     
-    // Singleton instance (backward compatibility for local field)
-    private static SaveLoadService instance;
-    
     // Constants
     private const string SAVE_FILE_EXTENSION = ".sav";
     private const int CURRENT_SAVE_VERSION = 1;
@@ -57,14 +54,13 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     private void Awake()
     {
         // Singleton pattern with DontDestroyOnLoad
-        if (instance != null && instance != this)
+        if (Instance != null && Instance != this)
         {
             //Debug.LogWarning("Duplicate SaveLoadService found. Destroying duplicate.");
             Destroy(gameObject);
             return;
         }
         
-        instance = this;
         Instance = this;
         DontDestroyOnLoad(gameObject);
         
@@ -811,12 +807,12 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
 
         saveData.worldState.spawnedObjectStates ??= new List<SpawnedObjectStateSaveData>();
 
-        //var container = ServiceContainer.Instance;
+        var container = ServiceContainer.Instance;
 
-        var collectableManager = FindFirstObjectByType<CollectableManager>();
+        var collectableManager = container.TryGet<ICollectableManager>();
         collectableManager?.LoadState(saveData.worldState.unlockedCollectables ?? new List<string>());
 
-        var dialogManager = FindFirstObjectByType<DialogManager>();
+        var dialogManager = container.TryGet<IDialogManager>();
         dialogManager?.LoadState(saveData.worldState.triggeredDialogs ?? new List<string>());
     }
 

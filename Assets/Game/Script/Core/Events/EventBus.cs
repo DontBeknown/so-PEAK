@@ -65,10 +65,9 @@ namespace Game.Core.Events
                 foreach (var handler in handlersCopy)
                 {
                     // Unity objects can be destroyed while delegates remain subscribed.
-                    // Skip and prune dead targets to prevent MissingReferenceException spam.
+                    // Skip dead targets to prevent MissingReferenceException spam.
                     if (handler.Target is UnityEngine.Object unityTarget && unityTarget == null)
                     {
-                        handlers.Remove(handler);
                         continue;
                     }
 
@@ -81,6 +80,8 @@ namespace Game.Core.Events
                         Debug.LogError($"[EventBus] Error invoking handler for {eventType.Name}: {ex}");
                     }
                 }
+
+                handlers.RemoveAll(h => h.Target is UnityEngine.Object o && o == null);
             }
         }
         
