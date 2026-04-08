@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: 5f2931665ca992f43b57b1b5f2a14eb2, type: 2}
+  m_SkyboxMaterial: {fileID: 2100000, guid: ab675e6698bde46fd87143fb0d7580cb, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -1038,6 +1038,11 @@ Transform:
   - {fileID: 310993023}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &351309341 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 490370941194382865, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+  m_PrefabInstance: {fileID: 2048165329}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &352218015
 GameObject:
   m_ObjectHideFlags: 0
@@ -4558,27 +4563,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85ced32b465c7f7409c48d88e099c48c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.GatheringInteractable
+  holdDuration: 3
+  interactionPriority: 1.2
+  highlightEffect: {fileID: 0}
+  holdStartSound: {fileID: 0}
+  holdCompleteSound: {fileID: 0}
+  holdCancelSound: {fileID: 0}
   resourceDrops:
   - item: {fileID: 11400000, guid: da4382b47225e4e479aca0c167ead00e, type: 2}
     guaranteedAmount: 5
     bonusDropChance: 0.5
     bonusAmount: 1
   customPrompt: 
-  gatherDuration: 3
   isMultiUse: 1
   respawnTime: 1
   destroyOnUse: 1
-  interactionPriority: 1.2
-  highlightEffect: {fileID: 0}
   depletedVisual: {fileID: 0}
-  gatherStartSound: {fileID: 0}
-  gatherLoopSound: {fileID: 0}
-  gatherCompleteSound: {fileID: 0}
-  gatherCancelSound: {fileID: 0}
   itemPickupSFXId: item_pickup
   itemPickupSFXVolume: 0.45
-  startGatherSoundId: gather_start
-  startGatherSoundVolume: 0.5
 --- !u!1001 &1301567467
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6464,13 +6466,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab2f11f5da199d84089c829b06fd048b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.WaterSourceInteractable
-  customPrompt: 
-  refillDuration: 3
+  holdDuration: 3
   interactionPriority: 1.2
   highlightEffect: {fileID: 0}
-  refillStartSound: {fileID: 0}
-  refillCompleteSound: {fileID: 0}
-  refillCancelSound: {fileID: 0}
+  holdStartSound: {fileID: 0}
+  holdCompleteSound: {fileID: 0}
+  holdCancelSound: {fileID: 0}
+  customPrompt: 
+  refillDuration: 3
 --- !u!65 &1723026968
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7961,6 +7964,158 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxPrefab
+      value: 
+      objectReference: {fileID: 7004601246396048841, guid: 2205069423613f64db250ea83f8e9719, type: 3}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: spawnAnchor
+      value: 
+      objectReference: {fileID: 351309341}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: _dayNightService
+      value: 
+      objectReference: {fileID: 781106341}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: _saveLoadService
+      value: 
+      objectReference: {fileID: 957156642}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.size
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[3].prefab
+      value: 
+      objectReference: {fileID: 1078364048527317328, guid: a27daddb8b260e041bebf75d6adcbf67, type: 3}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[4].prefab
+      value: 
+      objectReference: {fileID: 7614013924240662641, guid: 06296f05f985baa49a62ed1808fd6239, type: 3}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[5].prefab
+      value: 
+      objectReference: {fileID: 7614013924240662641, guid: 06296f05f985baa49a62ed1808fd6239, type: 3}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[6].prefab
+      value: 
+      objectReference: {fileID: 7614013924240662641, guid: 06296f05f985baa49a62ed1808fd6239, type: 3}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[7].prefab
+      value: 
+      objectReference: {fileID: 4630792079993105114, guid: 5852d7bbf180ce54f8f509e952627187, type: 3}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[8].prefab
+      value: 
+      objectReference: {fileID: 4630792079993105114, guid: 5852d7bbf180ce54f8f509e952627187, type: 3}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[9].prefab
+      value: 
+      objectReference: {fileID: 4630792079993105114, guid: 5852d7bbf180ce54f8f509e952627187, type: 3}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[0].maxLevel
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[0].minLevel
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[1].maxLevel
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[1].minLevel
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[2].maxLevel
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[2].minLevel
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[3].maxLevel
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[4].maxLevel
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[4].minLevel
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[5].maxLevel
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[5].minLevel
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[6].maxLevel
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[6].minLevel
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[7].maxLevel
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[7].minLevel
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[8].maxLevel
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[8].minLevel
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[9].maxLevel
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[9].minLevel
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[4].timeOfDay
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[5].timeOfDay
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[6].timeOfDay
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[7].timeOfDay
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[8].timeOfDay
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4887785235709659123, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
+      propertyPath: vfxMappings.Array.data[9].timeOfDay
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 4962120396931287550, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
       propertyPath: playerCamera
       value: 
@@ -7998,7 +8153,8 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 6116158872600836734, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 033dffb496ee9554a9e9f581acceb533, type: 3}
