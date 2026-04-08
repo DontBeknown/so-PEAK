@@ -16,6 +16,8 @@ public class HJBPathSolver : MonoBehaviour
     public float fatigueRateElev = 0.0005f;
     public float fatigueLimit = 1.0f;
 
+    public float maxWalkableSlope = 0.8f; // Adding S_up_max limit (0.8 ~ 38 degrees)
+
     const float INF = 1e15f;
     int w, h;
 
@@ -81,7 +83,7 @@ public class HJBPathSolver : MonoBehaviour
 
             if (maxDiff < tolerance)
             {
-                Debug.Log($"Converged at iteration {iter}");
+                UnityEngine.Debug.Log($"Converged at iteration {iter}");
                 break;
             }
         }
@@ -110,6 +112,15 @@ public class HJBPathSolver : MonoBehaviour
             if (T2 >= INF) continue;
 
             float slope2 = terrain.slopeMap[ix, iy];
+
+            // Filter out paths where the slope is too steep (exceeds pseudo max limits)
+            // But we also need to penalize the source node 'x,y', not just the destination 'ix,iy'
+            float slopeCurrent = terrain.slopeMap[x, y];
+            if (Mathf.Abs(slope2) > maxWalkableSlope || Mathf.Abs(slopeCurrent) > maxWalkableSlope)
+            {
+                continue; 
+            }
+
             float speed2 = cost.baseSpeed[ix, iy];
             float travelTime = step / speed2;
 

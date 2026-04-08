@@ -20,19 +20,80 @@ public class HJBClickPathController : MonoBehaviour
     Vector2Int? start = null;
     Vector2Int? goal = null;
 
+    [Header("Player Reference")]
+    public Transform playerTransform; // Assign in inspector or find dynamically
+
+    // Cached path data for manual drawing or exporting to save file (supports up to 3 levels)
+    [HideInInspector] public Dictionary<WorldLevel, List<Vector3>> savedPathsByLevel = new Dictionary<WorldLevel, List<Vector3>>();
+
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetKeyDown(KeyCode.P))
         {
-            SetStart();
+            // Sync the solver step with the current active level height multiplier if needed, 
+            // or just ensure the solver picks up latest terrain updates.
+            if (provider.worldDataManager != null && provider.worldDataManager.activeGen != null)
+            {
+                provider.heightMultiplier = provider.worldDataManager.activeGen.meshHeightMultiplier;
+            }
+
+            SetStartToPlayer();
+            SetGoalToPeak();
             TrySolvePath();
         }
 
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetKeyDown(KeyCode.O))
         {
-            SetGoal();
-            TrySolvePath();
+            DrawCachedPath();
         }
+    }
+
+    void SetStartToPlayer()
+    {
+        if (playerTransform == null)
+        {
+            // Try to find the player if not assigned
+            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj != null)
+            {
+                playerTransform = playerObj.transform;
+            }
+            else if (provider.renderController != null && provider.renderController.player != null)
+            {
+                playerTransform = provider.renderController.player;
+            }
+        }
+
+        if (playerTransform == null)
+        {
+            Debug.LogWarning("[HJBClickPath] Cannot find player to set start position.");
+            return;
+        }
+
+        Vector3 world = playerTransform.position;
+        Vector2Int g = provider.WorldToGrid(world);
+
+        start = g;
+        SpawnMarker(ref startMarker, startMarkerPrefab, world);
+        Debug.Log($"[HJBClickPath] Start set to player at {g}");
+    }
+
+    void SetGoalToPeak()
+    {
+        if (provider.worldDataManager == null || provider.worldDataManager.activeGen == null)
+        {
+            Debug.LogWarning("[HJBClickPath] WorldDataManager or activeGen not ready.");
+            return;
+        }
+
+        // Get the main peak directly from the generator
+        Vector2Int peakCoord = provider.worldDataManager.activeGen.mainPeak;
+        
+        goal = peakCoord;
+        Vector3 worldPos = provider.GridToWorld(peakCoord.x, peakCoord.y);
+
+        SpawnMarker(ref goalMarker, goalMarkerPrefab, worldPos);
+        Debug.Log($"[HJBClickPath] Goal set to Mountain Peak at {peakCoord}");
     }
 
     void TrySolvePath()
@@ -40,57 +101,50 @@ public class HJBClickPathController : MonoBehaviour
         if (start != null && goal != null)
         {
             Debug.Log("Solving path from ClickController...");
-            solver.cost.Build(); // Make sure cost surface is built
+            
+            // First ensure cost surface is built (this happens very quickly)
+            if (solver.cost.baseSpeed == null) 
+            {
+                solver.cost.Build();
+            }
+
             solver.startPos = start.Value;
-            solver.Solve(goal.Value);
-            var path = backtracker.BuildPath(start.Value, goal.Value);
+
+            // Optional: Show some UI loading indication here
+
+            // Run the solver in a background task
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                solver.Solve(goal.Value);
+            }).ContinueWith(t =>
+            {
+                // Retrieve but DO NOT draw the path immediately
+                var generatedPath = backtracker.BuildPath(start.Value, goal.Value);
+                
+                // Store safely in the dictionary based on current WorldLevel
+                WorldLevel currentLvl = provider.worldDataManager.currentLevel;
+                savedPathsByLevel[currentLvl] = generatedPath;
+
+                Debug.Log($"[HJBClickPath] Background path calculation finished for {currentLvl}! Generated {generatedPath.Count} waypoints. Ready to be saved or drawn.");
+            }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
         }
     }
 
-    void SetStart()
+    void DrawCachedPath()
     {
-        Vector3 world;
+        if (provider.worldDataManager == null) return;
+        WorldLevel currentLvl = provider.worldDataManager.currentLevel;
 
-        if (!RaycastTerrain(out world))
-            return;
-
-        Vector2Int g = provider.WorldToGrid(world);
-
-        start = g;
-
-        SpawnMarker(ref startMarker, startMarkerPrefab, world);
-
-    }
-
-    void SetGoal()
-    {
-        Vector3 world;
-
-        if (!RaycastTerrain(out world))
-            return;
-
-        Vector2Int g = provider.WorldToGrid(world);
-
-        goal = g;
-
-        SpawnMarker(ref goalMarker, goalMarkerPrefab, world);
-
-    }
-
-    bool RaycastTerrain(out Vector3 world)
-    {
-        world = Vector3.zero;
-
-        Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit))
+        if (savedPathsByLevel.ContainsKey(currentLvl) && savedPathsByLevel[currentLvl] != null && savedPathsByLevel[currentLvl].Count > 0)
         {
-            world = hit.point;
-            return true;
+            var calculatedPathData = savedPathsByLevel[currentLvl];
+            Debug.Log($"[HJBClickPath] Drawing cached path for {currentLvl} manually...");
+            visualizer.DrawPathWorld(calculatedPathData);
         }
-
-        return false;
+        else
+        {
+            Debug.LogWarning($"[HJBClickPath] No path data cached to draw for {currentLvl}! Press P to calculate first.");
+        }
     }
 
     void SpawnMarker(ref GameObject marker,

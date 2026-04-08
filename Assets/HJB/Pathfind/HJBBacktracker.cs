@@ -71,7 +71,7 @@ public class HJBBacktracker : MonoBehaviour
                 break;
             }
         }
-        visualizer.DrawPathWorld(path);
+        
         Debug.Log($"[Backtracker] Finished! Path length: {path.Count}");
         return path;
     }
