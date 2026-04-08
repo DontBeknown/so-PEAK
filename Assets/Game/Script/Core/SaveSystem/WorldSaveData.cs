@@ -135,6 +135,24 @@ public class WorldStateSaveData
     // Collectables/Dialog
     public List<string> unlockedCollectables = new List<string>();
     public List<string> triggeredDialogs = new List<string>();
+
+    // Cached HJB path waypoints by world level.
+    public List<LevelPathSaveData> cachedPathsByLevel = new List<LevelPathSaveData>();
+}
+
+[Serializable]
+public class LevelPathSaveData
+{
+    public int level;
+    public List<Vector3SaveData> waypoints = new List<Vector3SaveData>();
+}
+
+[Serializable]
+public class Vector3SaveData
+{
+    public float x;
+    public float y;
+    public float z;
 }
 
 [Serializable]

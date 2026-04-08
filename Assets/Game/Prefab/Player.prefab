@@ -13040,15 +13040,15 @@ MonoBehaviour:
   vfxPrefab: {fileID: 7004601246396048841, guid: 2205069423613f64db250ea83f8e9719, type: 3}
   vfxMappings:
   - timeOfDay: 0
-    minLevel: 2
+    minLevel: 1
     maxLevel: 3
     prefab: {fileID: 7004601246396048841, guid: 2205069423613f64db250ea83f8e9719, type: 3}
   - timeOfDay: 1
-    minLevel: 2
+    minLevel: 1
     maxLevel: 3
     prefab: {fileID: 7004601246396048841, guid: 2205069423613f64db250ea83f8e9719, type: 3}
   - timeOfDay: 2
-    minLevel: 2
+    minLevel: 1
     maxLevel: 3
     prefab: {fileID: 7004601246396048841, guid: 2205069423613f64db250ea83f8e9719, type: 3}
   - timeOfDay: 3

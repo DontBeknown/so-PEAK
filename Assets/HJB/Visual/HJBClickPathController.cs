@@ -26,6 +26,24 @@ public class HJBClickPathController : MonoBehaviour
     // Cached path data for manual drawing or exporting to save file (supports up to 3 levels)
     [HideInInspector] public Dictionary<WorldLevel, List<Vector3>> savedPathsByLevel = new Dictionary<WorldLevel, List<Vector3>>();
 
+    void OnEnable()
+    {
+        if (SaveLoadService.Instance != null)
+        {
+            SaveLoadService.Instance.OnWorldLoaded += HandleWorldLoaded;
+        }
+
+        LoadPathsFromCurrentSave();
+    }
+
+    void OnDisable()
+    {
+        if (SaveLoadService.Instance != null)
+        {
+            SaveLoadService.Instance.OnWorldLoaded -= HandleWorldLoaded;
+        }
+    }
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.P))
@@ -40,6 +58,7 @@ public class HJBClickPathController : MonoBehaviour
             SetStartToPlayer();
             SetGoalToPeak();
             TrySolvePath();
+            
         }
 
         if (Input.GetKeyDown(KeyCode.O))
@@ -124,6 +143,7 @@ public class HJBClickPathController : MonoBehaviour
                 // Store safely in the dictionary based on current WorldLevel
                 WorldLevel currentLvl = provider.worldDataManager.currentLevel;
                 savedPathsByLevel[currentLvl] = generatedPath;
+                PersistPathsToCurrentSave(true);
 
                 Debug.Log($"[HJBClickPath] Background path calculation finished for {currentLvl}! Generated {generatedPath.Count} waypoints. Ready to be saved or drawn.");
             }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
@@ -160,6 +180,102 @@ public class HJBClickPathController : MonoBehaviour
         else
         {
             marker.transform.position = pos;
+        }
+    }
+
+    void HandleWorldLoaded(WorldSaveData loadedSave)
+    {
+        LoadPathsFromCurrentSave();
+    }
+
+    void PersistPathsToCurrentSave(bool saveToFile = false)
+    {
+        if (SaveLoadService.Instance == null || SaveLoadService.Instance.CurrentWorldSave == null)
+        {
+            return;
+        }
+
+        var worldState = SaveLoadService.Instance.CurrentWorldSave.worldState;
+        if (worldState == null)
+        {
+            return;
+        }
+
+        var serializedPaths = new List<LevelPathSaveData>();
+        foreach (var kvp in savedPathsByLevel)
+        {
+            var pathEntry = new LevelPathSaveData
+            {
+                level = (int)kvp.Key,
+                waypoints = new List<Vector3SaveData>()
+            };
+
+            if (kvp.Value != null)
+            {
+                foreach (var point in kvp.Value)
+                {
+                    pathEntry.waypoints.Add(new Vector3SaveData
+                    {
+                        x = point.x,
+                        y = point.y,
+                        z = point.z
+                    });
+                }
+            }
+
+            serializedPaths.Add(pathEntry);
+        }
+
+        worldState.cachedPathsByLevel = serializedPaths;
+
+        if (saveToFile)
+        {
+            SaveLoadService.Instance.SaveWorld(SaveLoadService.Instance.CurrentWorldSave);
+        }
+    }
+
+    void LoadPathsFromCurrentSave()
+    {
+        if (SaveLoadService.Instance == null || SaveLoadService.Instance.CurrentWorldSave == null)
+        {
+            return;
+        }
+
+        var worldState = SaveLoadService.Instance.CurrentWorldSave.worldState;
+        if (worldState == null || worldState.cachedPathsByLevel == null)
+        {
+            return;
+        }
+
+        savedPathsByLevel.Clear();
+
+        foreach (var levelPath in worldState.cachedPathsByLevel)
+        {
+            if (levelPath == null)
+            {
+                continue;
+            }
+
+            if (!System.Enum.IsDefined(typeof(WorldLevel), levelPath.level))
+            {
+                continue;
+            }
+
+            var waypoints = new List<Vector3>();
+            if (levelPath.waypoints != null)
+            {
+                foreach (var point in levelPath.waypoints)
+                {
+                    if (point == null)
+                    {
+                        continue;
+                    }
+
+                    waypoints.Add(new Vector3(point.x, point.y, point.z));
+                }
+            }
+
+            savedPathsByLevel[(WorldLevel)levelPath.level] = waypoints;
         }
     }
 }

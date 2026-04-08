@@ -791,7 +791,8 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             resourceNodes = new List<ResourceNodeSaveData>(),
             spawnedObjectStates = new List<SpawnedObjectStateSaveData>(),
             unlockedCollectables = new List<string>(),
-            triggeredDialogs = new List<string>()
+            triggeredDialogs = new List<string>(),
+            cachedPathsByLevel = new List<LevelPathSaveData>()
         };
     }
 
@@ -806,6 +807,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             return;
 
         saveData.worldState.spawnedObjectStates ??= new List<SpawnedObjectStateSaveData>();
+        saveData.worldState.cachedPathsByLevel ??= new List<LevelPathSaveData>();
 
         var container = ServiceContainer.Instance;
 
