@@ -119,6 +119,13 @@ public class HJBClickPathController : MonoBehaviour
     {
         if (start != null && goal != null)
         {
+            WorldLevel currentLvl = provider.worldDataManager.currentLevel;
+            if (savedPathsByLevel.TryGetValue(currentLvl, out var cachedPath) && cachedPath != null && cachedPath.Count > 0)
+            {
+                Debug.Log($"[HJBClickPath] Valid cached path already loaded for {currentLvl}. Skipping recalculation.");
+                return;
+            }
+
             Debug.Log("Solving path from ClickController...");
             
             // First ensure cost surface is built (this happens very quickly)
@@ -141,7 +148,7 @@ public class HJBClickPathController : MonoBehaviour
                 var generatedPath = backtracker.BuildPath(start.Value, goal.Value);
                 
                 // Store safely in the dictionary based on current WorldLevel
-                WorldLevel currentLvl = provider.worldDataManager.currentLevel;
+                currentLvl = provider.worldDataManager.currentLevel;
                 savedPathsByLevel[currentLvl] = generatedPath;
                 PersistPathsToCurrentSave(true);
 
