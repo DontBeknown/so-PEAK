@@ -4,7 +4,7 @@
 
 **Target Audience:** AI agents, developers, and architects analyzing the codebase for improvements, understanding dependencies, or planning refactoring efforts.
 
-**Last Updated:** March 30, 2026
+**Last Updated:** April 9, 2026
 
 ---
 
@@ -35,7 +35,7 @@ Unity-based 3D survival/exploration game with:
 ### Project Structure
 ```
 Assets/Game/Script/
-├── Core/              # Dependency injection, events, bootstrapping
+├── Core/              # Dependency injection, events, bootstrapping, scene loading
 ├── Player/            # Player controller, states, inventory, stats
 ├── UI/                # All UI systems and panels
 ├── Interaction/       # Interaction detection and interactables
@@ -43,6 +43,9 @@ Assets/Game/Script/
 ├── Mountain/          # Terrain generation
 ├── Environment/       # Day/night cycle, weather systems
 └── Climbing/          # (Empty - planned feature)
+
+Assets/TerrainGenerator/Display/
+└── RenderController.cs  # Terrain chunk generation + deferred player spawn
 ```
 
 ### Development Status
@@ -257,7 +260,7 @@ public interface IInventoryCommand
 
 **Location:** `Assets/Game/Script/Core/`
 
-**Purpose:** Foundation services, DI, events, bootstrapping
+**Purpose:** Foundation services, DI, events, bootstrapping, and scene-load orchestration
 
 #### Components:
 
@@ -276,6 +279,19 @@ public interface IInventoryCommand
 - Typed event system
 - Subscribe/Publish/Unsubscribe
 - Type-safe event handling
+
+**SharedLoadingState.cs** *(ScriptableObject — NEW)*
+- Data bus shared between `TerrainGenDemo` and `Scene_Debug_Gameplay`
+- No direct scene-to-scene coupling; both scenes reference the same asset
+- Fields: `progress`, `statusMessage`, `isChunksReady` (Gate 1), `playerConfirmed` (Gate 2), `isComplete`
+- Create asset: **Right-click → Create → Game → Shared Loading State**
+
+**AsyncLoadCoordinator.cs** *(NEW — attach to empty GameObject in TerrainGenDemo)*
+- Orchestrates the two-gate background loading flow
+- **Gate 1:** `WaitUntil(isChunksReady)` — all terrain chunks finalized by `RenderController`
+- **Gate 2:** `WaitUntil(playerConfirmed)` — player pressed Y in `Scene_Debug_Gameplay`
+- After both gates: unloads `Scene_Debug_Gameplay` → re-enables terrain camera → calls `RenderController.SpawnPlayerNow()`
+- Inspector: `renderController`, `terrainCamera`, `loadingState` (SharedLoadingState asset)
 
 **Dependencies:**
 - None (foundation layer)
@@ -435,6 +451,10 @@ public class InventoryManagerRefactored : MonoBehaviour
 - `TooltipUI.cs` - Item tooltips.
 - `ContextMenuUI.cs` - Right-click menu for grid items.
 - `SimpleStatsHUD.cs` - Player stats display with dynamic health bar animations.
+
+**Loading UI (Scene_Debug_Gameplay — NEW):**
+- `LoadingProgressUI.cs` — Reads `SharedLoadingState.progress` every frame; drives a `Slider` + `TextMeshProUGUI` label with smooth `MoveTowards` animation. Wire: `loadingState`, `progressSlider`, `statusText`.
+- `DebugGameplayConfirm.cs` — Shows a confirm prompt (`confirmPromptObject`) only once `isChunksReady` (Gate 1) is true. Listens for **Y** key press; sets `playerConfirmed = true` (Gate 2) and hides the prompt. Internal `_confirmed` flag prevents double-firing.
 
 **Adapters:**
 - Wrap legacy UIs to implement `IUIPanel`
@@ -963,22 +983,44 @@ GameServiceBootstrapper (Entry Point)
 ### Load Existing Save Sequence (Menu -> Terrain Scene)
 
 This is the canonical order when loading an existing world from the menu.
+The flow uses **two gates** to defer player spawning until after the player confirms.
 
 1. Player is in menu scene.
 2. Player selects a save slot and clicks load in `WorldSelectionUI`.
 3. `SaveLoadService.LoadWorld(worldGuid)` deserializes save data in menu scene and stores it in memory (`CurrentWorldSave`).
 4. Menu flow transitions to gameplay scene (`TerrainGenDemo`).
-5. `RenderController.Start()` initializes world data and terrain generation using loaded seed/player context.
-6. First terrain-ready pass triggers `SpawnPlayerSequence()`.
-7. `PlayerSpawner.SpawnPlayer()` instantiates the player using saved/default spawn data.
-8. `GameServiceBootstrapper.UpdatePlayerServices(newPlayer)` refreshes player-related registrations after spawn.
-9. `GameplaySceneInitializer` waits for `RenderController.PlayerSpawnComplete`.
-10. `GameplaySceneInitializer` restores player/world state (stats, inventory, equipment, world state).
+5. `AsyncLoadCoordinator.Start()` fires simultaneously:
+   - Disables the TerrainGenDemo camera.
+   - Loads `Scene_Debug_Gameplay` additively (player sees progress bar immediately).
+6. `RenderController.Start()` initializes world data and begins terrain chunk generation.
+7. As each chunk finalizes, `RenderController.FinalizeChunk()` reports progress to `SharedLoadingState` (`10% → 95%`).
+8. When the last chunk is done: `RenderController` sets `AllChunksReady = true` and `SharedLoadingState.isChunksReady = true` — **Gate 1 opens**. Player is **not yet spawned**.
+9. `AsyncLoadCoordinator` detects Gate 1 → sets `progress = 1.0`, `statusMessage = "Press Y to enter world"`.
+10. `DebugGameplayConfirm` shows the confirm prompt in `Scene_Debug_Gameplay`.
+11. Player presses **Y** → `SharedLoadingState.playerConfirmed = true` — **Gate 2 opens**.
+12. `AsyncLoadCoordinator` unloads `Scene_Debug_Gameplay` → re-enables TerrainGenDemo camera → sets active scene.
+13. `AsyncLoadCoordinator` calls `RenderController.SpawnPlayerNow()` — player spawns now.
+14. `PlayerSpawner.SpawnPlayer()` instantiates the player using saved/default spawn data.
+15. `GameServiceBootstrapper.UpdatePlayerServices(newPlayer)` refreshes player-related registrations.
+16. `RenderController.PlayerSpawnComplete = true`.
+17. `GameplaySceneInitializer` (which was waiting on `PlayerSpawnComplete`) resumes and restores player/world state (stats, inventory, equipment, world state).
+
+#### Two-Gate Summary
+
+| Gate | Condition | Set By | Detected By |
+|------|-----------|--------|-------------|
+| **Gate 1** | All terrain chunks finalized | `RenderController.FinalizeChunk()` | `AsyncLoadCoordinator` |
+| **Gate 2** | Player presses Y | `DebugGameplayConfirm` | `AsyncLoadCoordinator` |
+
+#### Fallback Behaviour
+
+If no `SharedLoadingState` asset is wired to `RenderController`, the system falls back to the **old auto-spawn** path (first `FinalizeChunk` call immediately spawns the player). This means the new coordinator is fully backward-compatible.
 
 #### Common Misconceptions (Corrected)
 
 - Save data is not first loaded in gameplay scene. It is loaded in menu scene before `SceneManager.LoadScene(...)`.
 - `GameServiceBootstrapper` is not player-init-only. It is a broad service bootstrapper; only `UpdatePlayerServices(...)` is post-spawn player-specific.
+- Player spawn is **not** triggered by the first chunk being built. It is now triggered explicitly by `AsyncLoadCoordinator` only after both gates have cleared.
 
 ### Critical Initialization Order
 
@@ -990,13 +1032,21 @@ This is the canonical order when loading an existing world from the menu.
 
 ### Scene Structure
 
-**Main Game Scene:**
-- GameServiceBootstrapper GameObject
-- Player GameObject (with PlayerControllerRefactored)
-- UI Canvas (with UIServiceProvider)
+**TerrainGenDemo (main gameplay scene):**
+- `GameServiceBootstrapper` GameObject
+- `AsyncLoadCoordinator` GameObject *(NEW — orchestrates two-gate loading)*
+- `RenderController` GameObject *(terrain generation + deferred player spawn)*
+- Player GameObject (spawned at runtime by `PlayerSpawner`)
+- UI Canvas (with `UIServiceProvider`)
 - Managers (Inventory, Crafting, Equipment)
-- Camera (Cinemachine)
-- Terrain
+- Camera (Cinemachine) — *disabled while `Scene_Debug_Gameplay` is active*
+- Terrain chunks (built at runtime)
+
+**Scene_Debug_Gameplay (additive loading room):**
+- Own active Camera
+- Canvas with `Slider` + `TextMeshProUGUI` → `LoadingProgressUI` *(NEW)*
+- Confirm Prompt panel (disabled by default) → `DebugGameplayConfirm` *(NEW)*
+- Both UI scripts reference the same `SharedLoadingState` asset as TerrainGenDemo
 
 ---
 
@@ -1117,6 +1167,7 @@ This is the canonical order when loading an existing world from the menu.
 
 ## Related Documentation
 
+- [BACKGROUND_LOADING_PLAN.md](Core/BACKGROUND_LOADING_PLAN.md) - Two-gate background loading flow (Scene_Debug_Gameplay waiting room)
 - [SOLID_REFACTORING_GUIDE_01_OVERVIEW.md](SOLID_REFACTORING_GUIDE_01_OVERVIEW.md) - SOLID violations analysis
 - [SOLID_REFACTORING_GUIDE_02_UIMANAGER.md](SOLID_REFACTORING_GUIDE_02_UIMANAGER.md) - UI refactoring plan
 - [SOLID_REFACTORING_GUIDE_03_INVENTORY.md](SOLID_REFACTORING_GUIDE_03_INVENTORY.md) - Inventory refactoring plan
