@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Game.Core.DI;
 using Game.Environment.DayNight;
@@ -13,19 +14,19 @@ namespace Game.Player.Effects
         [System.Serializable]
         private class VfxMapping
         {
-            public TimeOfDay timeOfDay = TimeOfDay.Day;
+            public List<TimeOfDay> timeOfDays = new List<TimeOfDay> { TimeOfDay.Day };
             [Min(1)] public int minLevel = 1;
             [Min(1)] public int maxLevel = 3;
             public GameObject prefab;
 
             public bool Matches(TimeOfDay currentTimeOfDay, int currentLevel)
             {
-                if (prefab == null)
+                if (prefab == null || timeOfDays == null || timeOfDays.Count == 0)
                 {
                     return false;
                 }
 
-                return timeOfDay == currentTimeOfDay && currentLevel >= minLevel && currentLevel <= maxLevel;
+                return timeOfDays.Contains(currentTimeOfDay) && currentLevel >= minLevel && currentLevel <= maxLevel;
             }
         }
 
@@ -55,7 +56,7 @@ namespace Game.Player.Effects
 
         [Header("Cleanup")]
         [SerializeField] private bool autoDestroySpawnedVfx = true;
-        [SerializeField] private float fallbackLifetimeSeconds = 8f;
+        [SerializeField] private float fallbackLifetimeSeconds = 3f;
 
         private float _spawnTimer;
         private float _nextSpawnDelay;

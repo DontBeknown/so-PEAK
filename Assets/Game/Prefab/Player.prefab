@@ -6400,7 +6400,7 @@ Transform:
   m_GameObject: {fileID: 2185794246363256611}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2.23, z: 2.94}
+  m_LocalPosition: {x: 0, y: 10, z: 2.94}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -13039,46 +13039,26 @@ MonoBehaviour:
   _saveLoadService: {fileID: 0}
   vfxPrefab: {fileID: 7004601246396048841, guid: 2205069423613f64db250ea83f8e9719, type: 3}
   vfxMappings:
-  - timeOfDay: 0
+  - timeOfDays: 000000000100000002000000
     minLevel: 1
-    maxLevel: 3
+    maxLevel: 2
     prefab: {fileID: 7004601246396048841, guid: 2205069423613f64db250ea83f8e9719, type: 3}
-  - timeOfDay: 1
+  - timeOfDays: 0000000002000000
     minLevel: 1
-    maxLevel: 3
-    prefab: {fileID: 7004601246396048841, guid: 2205069423613f64db250ea83f8e9719, type: 3}
-  - timeOfDay: 2
+    maxLevel: 1
+    prefab: {fileID: 4630792079993105114, guid: 5852d7bbf180ce54f8f509e952627187, type: 3}
+  - timeOfDays: 03000000
     minLevel: 1
-    maxLevel: 3
-    prefab: {fileID: 7004601246396048841, guid: 2205069423613f64db250ea83f8e9719, type: 3}
-  - timeOfDay: 3
-    minLevel: 1
-    maxLevel: 3
+    maxLevel: 2
     prefab: {fileID: 1078364048527317328, guid: a27daddb8b260e041bebf75d6adcbf67, type: 3}
-  - timeOfDay: 0
+  - timeOfDays: 00000000010000000200000003000000
+    minLevel: 3
+    maxLevel: 3
+    prefab: {fileID: 227370808448988593, guid: b86ac16968b23c646b4fec4495254506, type: 3}
+  - timeOfDays: 000000000100000002000000
     minLevel: 2
     maxLevel: 2
     prefab: {fileID: 7614013924240662641, guid: 06296f05f985baa49a62ed1808fd6239, type: 3}
-  - timeOfDay: 1
-    minLevel: 2
-    maxLevel: 2
-    prefab: {fileID: 7614013924240662641, guid: 06296f05f985baa49a62ed1808fd6239, type: 3}
-  - timeOfDay: 2
-    minLevel: 2
-    maxLevel: 2
-    prefab: {fileID: 7614013924240662641, guid: 06296f05f985baa49a62ed1808fd6239, type: 3}
-  - timeOfDay: 0
-    minLevel: 1
-    maxLevel: 1
-    prefab: {fileID: 4630792079993105114, guid: 5852d7bbf180ce54f8f509e952627187, type: 3}
-  - timeOfDay: 1
-    minLevel: 1
-    maxLevel: 1
-    prefab: {fileID: 4630792079993105114, guid: 5852d7bbf180ce54f8f509e952627187, type: 3}
-  - timeOfDay: 2
-    minLevel: 1
-    maxLevel: 1
-    prefab: {fileID: 4630792079993105114, guid: 5852d7bbf180ce54f8f509e952627187, type: 3}
   spawnAnchor: {fileID: 490370941194382865}
   fallbackAnchorName: VFXSpawnAnchor
   autoFindAnchor: 1
@@ -13094,7 +13074,7 @@ MonoBehaviour:
   levelRateIncreasePerLevel: 0.12
   maxLevelRateMultiplier: 3
   autoDestroySpawnedVfx: 1
-  fallbackLifetimeSeconds: 15
+  fallbackLifetimeSeconds: 3
 --- !u!1 &4071268454906768997
 GameObject:
   m_ObjectHideFlags: 0
