@@ -11,7 +11,6 @@ public class GameplaySceneInitializer : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private WorldPersistenceManager worldPersistence;
-    [SerializeField] private GameObject playerPrefab;
     [SerializeField] private SaveLoadService saveLoadService; // Optional: will use persisted instance if not set
     
     [Header("Debug")]

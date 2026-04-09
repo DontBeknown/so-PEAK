@@ -35,6 +35,10 @@ public class SaveExitButton : MonoBehaviour
         {
             saveService.PerformAutoSave();
         }
+        else
+        {
+            Debug.LogWarning("SaveLoadService instance not found. Unable to perform auto-save.");
+        }
         
         SceneManager.LoadScene(menuSceneName);
     }

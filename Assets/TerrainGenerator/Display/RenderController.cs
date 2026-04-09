@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using Pathfinding;
 using System.Collections.Concurrent;
+using System.Linq;
 using Game.Interaction;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -32,9 +33,15 @@ public class RenderController : MonoBehaviour
     [Header("Climbable")]
     [SerializeField] private int climbableLayer;
 
+    [Header("Loading State (optional — assign SharedLoadingState asset)")]
+    [SerializeField] private SharedLoadingState loadingState;
+
     // State
     private bool playerHasSpawned = false;
     public bool PlayerSpawnComplete { get; private set; } = false;
+
+    /// <summary>True once every terrain chunk has been finalized. Read by AsyncLoadCoordinator (Gate 1).</summary>
+    public bool AllChunksReady { get; private set; } = false;
     Dictionary<Vector2Int, GameObject> terrainChunks = new Dictionary<Vector2Int, GameObject>();
     Vector2Int currentChunkCoord;
 
@@ -314,10 +321,31 @@ public class RenderController : MonoBehaviour
 
         terrainChunks[coord] = chunkObj;
 
-        if (!playerHasSpawned)
+        // Report real chunk-building progress to SharedLoadingState
+        if (loadingState != null)
         {
-            StartCoroutine(SpawnPlayerSequence());
-            playerHasSpawned = true;
+            int totalExpected = maxChunkX * maxChunkZ;
+            int builtSoFar = terrainChunks.Count(kv => kv.Value != null);
+            loadingState.progress = Mathf.Lerp(0.1f, 0.95f, (float)builtSoFar / totalExpected);
+            loadingState.statusMessage = $"Building terrain... {builtSoFar}/{totalExpected} chunks";
+
+            // Gate 1: all chunks have been placed
+            if (builtSoFar >= totalExpected && !AllChunksReady)
+            {
+                AllChunksReady = true;
+                loadingState.isChunksReady = true;
+                // Leave progress at 0.95f — AsyncLoadCoordinator will snap it to 1.0f
+                Debug.Log("[RenderController] All chunks finalized. Waiting for player confirmation.");
+            }
+        }
+        else
+        {
+            // No shared state wired up — fall back to old auto-spawn behaviour
+            if (!playerHasSpawned)
+            {
+                StartCoroutine(SpawnPlayerSequence());
+                playerHasSpawned = true;
+            }
         }
     }
 
@@ -429,6 +457,18 @@ public class RenderController : MonoBehaviour
     }
 
 
+
+    /// <summary>
+    /// Called by AsyncLoadCoordinator once Scene_Debug_Gameplay has been unloaded
+    /// and the player has confirmed they are ready to enter the world.
+    /// When no SharedLoadingState is wired up, FinalizeChunk calls this directly (fallback).
+    /// </summary>
+    public void SpawnPlayerNow()
+    {
+        if (playerHasSpawned) return;
+        playerHasSpawned = true;
+        StartCoroutine(SpawnPlayerSequence());
+    }
 
     private System.Collections.IEnumerator SpawnPlayerSequence()
     {
