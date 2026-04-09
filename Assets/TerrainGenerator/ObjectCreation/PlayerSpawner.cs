@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using DG.Tweening;
 using Game.UI;
 using Game.Core.DI;
 using Game.Core.Events;
@@ -18,7 +19,9 @@ public class PlayerSpawner : MonoBehaviour
     [SerializeField] private Transform spawnMarkerTransform;
 
     [Header("UI References")]
-    [SerializeField] private GameObject loadingScreen; 
+    [SerializeField] private GameObject loadingScreen;
+    [SerializeField] private float fadeInDuration = 0.3f;
+    [SerializeField] private float fadeOutDuration = 0.5f;
 
     [SerializeField] private bool loadFromSave = true;
     
@@ -53,7 +56,7 @@ public class PlayerSpawner : MonoBehaviour
 
         if (loadingScreen != null)
         {
-            loadingScreen.SetActive(true);
+            yield return FadeInLoadingScreen();
         }
 
         // 1. DETERMINE TARGET XZ POSITION (without proper Y yet)
@@ -157,12 +160,38 @@ public class PlayerSpawner : MonoBehaviour
         
         if (loadingScreen != null)
         {
-            loadingScreen.SetActive(false);
+            yield return FadeOutLoadingScreen();
         }
 
         ServiceContainer.Instance.TryGet<IEventBus>()?.Publish(new PlayMusicEvent("music_gameplay"));
         FindFirstObjectByType<DayNightCycleManager>()?.PlayAmbientForCurrentTime();
 
         //Debug.Log("[PlayerSpawner] Spawn sequence complete!");
+    }
+    
+    private IEnumerator FadeInLoadingScreen()
+    {
+        CanvasGroup canvasGroup = loadingScreen.GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+        {
+            canvasGroup = loadingScreen.AddComponent<CanvasGroup>();
+        }
+        
+        canvasGroup.alpha = 0f;
+        loadingScreen.SetActive(true);
+        
+        yield return canvasGroup.DOFade(1f, fadeInDuration).WaitForCompletion();
+    }
+    
+    private IEnumerator FadeOutLoadingScreen()
+    {
+        CanvasGroup canvasGroup = loadingScreen.GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+        {
+            canvasGroup = loadingScreen.AddComponent<CanvasGroup>();
+        }
+        
+        yield return canvasGroup.DOFade(0f, fadeOutDuration).WaitForCompletion();
+        loadingScreen.SetActive(false);
     }
 }
