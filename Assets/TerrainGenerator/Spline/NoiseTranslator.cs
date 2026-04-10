@@ -66,7 +66,7 @@ public class NoiseTranslator : MonoBehaviour
     [HideInInspector] public float[,] treeNoiseMap;
     [HideInInspector] public float[,] roadRidge;
     [HideInInspector] public bool[,] waterMask;
-
+    [HideInInspector] public Vector2Int spawnCoord;
 
 
 
@@ -197,7 +197,7 @@ public class NoiseTranslator : MonoBehaviour
         RoadNoise.GenerateMap(seed);
         roadRidge = RoadNoise.noiseMap;
 
-        RoadCarver.CarveRoad(depthMap, roadRidge, peakPointsArray, maxHeight, roadHeightCurve, seed ,out mainPeak);
+        RoadCarver.CarveRoad(depthMap, roadRidge, peakPointsArray, maxHeight, roadHeightCurve, seed ,out mainPeak, out spawnCoord);
 
 
         

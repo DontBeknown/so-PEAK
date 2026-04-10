@@ -13,7 +13,6 @@ public static class RoadCarver
 
         public void GenerateWalkableCurve(float startHeight, float endHeight, float tierLength)
         {
-
             p0 = startHeight;
             p2 = endHeight;
 
@@ -22,19 +21,13 @@ public static class RoadCarver
             float linearMidY = (startHeight + endHeight) / 2f;
 
             // 2. Randomize the Middle Anchor (The "Photoshop Curve" bend)
-            // We pull the middle point up or down to create a curve.
             // Range: +/- 15 meters deviation from the straight line
-            float heightDrop = Mathf.Abs(startHeight - endHeight);
-            float safeDeviation = heightDrop * 0.40f;
-
-            float deviation = UnityEngine.Random.Range(-safeDeviation, safeDeviation);
+            float deviation = UnityEngine.Random.Range(-0.07f, 0.07f);
             float targetMidY = linearMidY + deviation;
 
             // 3. THE WALKABLE GUARANTEE (Slope Check)
             // Max Slope = 0.75 (Rise / Run)
-            // Run is half the tier length (e.g., 50m)
-            float maxSlope = 0.60f;
-            float maxRise = maxSlope * midX;
+            float maxRise = 0.60f * midX;
 
             // Clamp the middle point so it's reachable from Start and End without being too steep
             float minSafeY = Mathf.Max(p0 - maxRise, p2 - maxRise);
@@ -51,11 +44,7 @@ public static class RoadCarver
         }
     }
 
-
-
-
-
-    public static void CarveRoad(float[,] depthMap, float[,] roadRidge, List<List<Vector2Int>> allMountainPeakPoints, float maxHeight, AnimationCurve roadHeightCurve, int seed,out Vector2Int OutPeak)
+    public static void CarveRoad(float[,] depthMap, float[,] roadRidge, List<List<Vector2Int>> allMountainPeakPoints, float maxHeight, AnimationCurve roadHeightCurve, int seed, out Vector2Int OutPeak, out Vector2Int OutSpawn)
     {
         Vector2Int[] repPeaks = new Vector2Int[allMountainPeakPoints.Count];
         float[] peakHeights = new float[allMountainPeakPoints.Count];
@@ -96,10 +85,12 @@ public static class RoadCarver
 
         OutPeak = mainPeak;
 
-        Vector2Int closestRoad = GetClosestRoadPoint(mainPeak, maxH, roadRidge, depthMap, 0.60f);
+        Vector2Int closestRoad = GetClosestRoadPoint(mainPeak, roadRidge);
         List<Vector2Int> line = GetLine(mainPeak, closestRoad);
         CarveRoad(line, roadRidge);
 
+        // --- GUARANTEE CONNECTIVITY (Retained from the newer logic) ---
+        OutSpawn = EnsureConnectivity(roadRidge, mainPeak);
 
         /////////////// We will use Dartboard Here //////////////////
         // C. Generate Heightmaps for ALL Mountains (The Dartboards)
@@ -108,11 +99,11 @@ public static class RoadCarver
 
         for (int i = 0; i < repPeaks.Length; i++)
         {
-            // 1. Calculate dynamic tiers for this specific peak
+            // 1. Calculate dynamic tiers for this specific peak (OLD LOGIC RESTORED)
             float maxDist = GetMaxDistanceToCorner(repPeaks[i], mapWidth, mapLength);
             int tierCount = Mathf.CeilToInt(maxDist / ringWidth) + 1;
 
-            // 2. Init Dartboard logic
+            // 2. Init Dartboard logic (OLD LOGIC RESTORED)
             RoadCurveProfile[,] dartboard = InitializeDartboard(peakHeights[i], tierCount, ringWidth, seed);
 
             // 3. Generate the height map for this mountain
@@ -124,8 +115,6 @@ public static class RoadCarver
         // We loop through the map ONCE. If we find a road pixel (from step B),
         // we calculate the max height from our generated maps (Step C) and apply it.
         ApplyCombinedHeights(depthMap, roadRidge, allRoadHeightMaps);
-
-
     }
 
     private static float[,] GenerateHeightMapFromDartboard(RoadCurveProfile[,] dartboard, Vector2Int peak, int width, int length, float ringWidth)
@@ -215,6 +204,7 @@ public static class RoadCarver
             float currentStartH = peakHeight;
             for (int t = 0; t < tierCount; t++)
             {
+                // OLD LOGIC RESTORED
                 float drop = UnityEngine.Random.Range(0.12f, 0.18f);
                 float nextEndH = Mathf.Max(0, currentStartH - drop);
 
@@ -227,7 +217,111 @@ public static class RoadCarver
         return sectors;
     }
 
+    /////////////////////// CONNECTIVITY ALGORITHM ///////////////////////////////
 
+    public static Vector2Int EnsureConnectivity(float[,] roadRidge, Vector2Int mainPeak)
+    {
+        int mapWidth = roadRidge.GetLength(0);
+        int mapLength = roadRidge.GetLength(1);
+
+        // 1. Calculate Spawn Target near (0.8, 0.2)
+        Vector2Int spawnTarget = new Vector2Int(Mathf.FloorToInt(mapWidth * 0.8f), Mathf.FloorToInt(mapLength * 0.2f));
+        Vector2Int spawnPoint = GetClosestRoadPoint(spawnTarget, roadRidge);
+
+        int maxBridges = 25; // Safety fallback
+
+        for (int i = 0; i < maxBridges; i++)
+        {
+            bool reachedPeak = false;
+            bool[,] visited = new bool[mapWidth, mapLength];
+            Queue<Vector2Int> queue = new Queue<Vector2Int>();
+            List<Vector2Int> currentIsland = new List<Vector2Int>();
+
+            // 2. Start Flood Fill (BFS) from the Spawn Point
+            queue.Enqueue(spawnPoint);
+            visited[spawnPoint.x, spawnPoint.y] = true;
+
+            int[] dx = { 0, 0, -1, 1, -1, 1, -1, 1 };
+            int[] dz = { 1, -1, 0, 0, 1, 1, -1, -1 };
+
+            while (queue.Count > 0)
+            {
+                Vector2Int curr = queue.Dequeue();
+                currentIsland.Add(curr);
+
+                // If close enough to main peak, we are fully connected
+                if (Vector2.Distance(curr, mainPeak) <= 15f)
+                {
+                    reachedPeak = true;
+                    break;
+                }
+
+                for (int d = 0; d < 8; d++)
+                {
+                    int nx = curr.x + dx[d];
+                    int nz = curr.y + dz[d];
+
+                    if (nx >= 0 && nx < mapWidth && nz >= 0 && nz < mapLength)
+                    {
+                        if (!visited[nx, nz] && roadRidge[nx, nz] < 0.25f)
+                        {
+                            visited[nx, nz] = true;
+                            queue.Enqueue(new Vector2Int(nx, nz));
+                        }
+                    }
+                }
+            }
+
+            if (reachedPeak)
+            {
+                Debug.Log($"<color=green>[RoadCarver]</color> Connectivity Ensured! Bridges built: {i}");
+                break;
+            }
+
+            // 3. We didn't reach the peak. Find the point in our island closest to the peak.
+            Vector2Int bestEdgePoint = currentIsland[0];
+            float minDistToPeak = float.MaxValue;
+
+            foreach (Vector2Int p in currentIsland)
+            {
+                float distToPeak = Vector2.Distance(p, mainPeak);
+                if (distToPeak < minDistToPeak)
+                {
+                    minDistToPeak = distToPeak;
+                    bestEdgePoint = p;
+                }
+            }
+
+            // 4. Find the closest UNVISITED road using fast Squared Distance
+            Vector2Int targetUnvisitedRoad = bestEdgePoint;
+            float minSqrDistToUnvisited = float.MaxValue;
+
+            for (int x = 0; x < mapWidth; x++)
+            {
+                for (int z = 0; z < mapLength; z++)
+                {
+                    if (roadRidge[x, z] < 0.25f && !visited[x, z])
+                    {
+                        float deltaX = x - bestEdgePoint.x;
+                        float deltaZ = z - bestEdgePoint.y;
+                        float sqrDist = (deltaX * deltaX) + (deltaZ * deltaZ); // Optimized math!
+
+                        if (sqrDist < minSqrDistToUnvisited)
+                        {
+                            minSqrDistToUnvisited = sqrDist;
+                            targetUnvisitedRoad = new Vector2Int(x, z);
+                        }
+                    }
+                }
+            }
+
+            // 5. Carve bridge to unvisited road
+            List<Vector2Int> bridgeLine = GetLine(bestEdgePoint, targetUnvisitedRoad);
+            CarveRoad(bridgeLine, roadRidge);
+        }
+
+        return spawnPoint;
+    }
 
     /////////////////////// HELPERS ///////////////////////////////
 
@@ -250,62 +344,28 @@ public static class RoadCarver
         return sorted[sorted.Count / 2];
     }
 
-    private static Vector2Int GetClosestRoadPoint(Vector2Int peak, float peakHeight, float[,] roadMask, float[,] depthMap, float maxSlope)
+    // OLD 2D Road Point Finder
+    private static Vector2Int GetClosestRoadPoint(Vector2Int peak, float[,] roadMask)
     {
         float bestDist = float.MaxValue;
         Vector2Int best = peak;
-
         int mapWidth = roadMask.GetLength(0);
         int mapLength = roadMask.GetLength(1);
 
-        bool foundValidPoint = false;
-
-        // Fallback variables just in case the map is too tight and NO road fits the slope rule
-        float bestFallbackSlope = float.MaxValue;
-        Vector2Int fallbackPoint = peak;
-
-        // MAYBE CAN THREADED? (Yes, you could Parallel.For this later if it's too slow)
         for (int z = 0; z < mapLength; z++)
         {
             for (int x = 0; x < mapWidth; x++)
             {
-                if (roadMask[x, z] < 0.25f) // It's a road area
+                if (roadMask[x, z] < 0.25f) // road area
                 {
                     float d = Vector2.Distance(new Vector2(x, z), peak);
-
-                    // Prevent divide-by-zero if it accidentally checks the peak itself
-                    if (d <= 0.1f) continue;
-
-                    // Calculate the true slope from the peak to this specific road point
-                    float roadHeight = depthMap[x, z];
-                    float slope = Mathf.Abs(peakHeight - roadHeight) / d;
-
-                    // Track the gentlest slope overall as a safety net
-                    if (slope < bestFallbackSlope)
+                    if (d < bestDist)
                     {
-                        bestFallbackSlope = slope;
-                        fallbackPoint = new Vector2Int(x, z);
-                    }
-
-                    // THE WALKABLE FILTER: Only consider points that obey our slope limit
-                    if (slope <= maxSlope)
-                    {
-                        if (d < bestDist)
-                        {
-                            bestDist = d;
-                            best = new Vector2Int(x, z);
-                            foundValidPoint = true;
-                        }
+                        bestDist = d;
+                        best = new Vector2Int(x, z);
                     }
                 }
             }
-        }
-
-        if (!foundValidPoint)
-        {
-            Debug.LogWarning($"<color=yellow>[RoadCarver]</color> No existing road found within the {maxSlope} slope limit! " +
-                             $"Falling back to the gentlest available route (Slope: {bestFallbackSlope:F2}).");
-            return fallbackPoint;
         }
 
         return best;
@@ -343,6 +403,7 @@ public static class RoadCarver
     {
         int radius = 10;            // road width
         int mapWidth = roadMask.GetLength(0);
+        int mapLength = roadMask.GetLength(1);
 
         foreach (var p in line)
         {
@@ -352,7 +413,7 @@ public static class RoadCarver
                     int xx = p.x + dx;
                     int zz = p.y + dz;
 
-                    if (xx < 0 || zz < 0 || xx >= mapWidth || zz >= mapWidth)
+                    if (xx < 0 || zz < 0 || xx >= mapWidth || zz >= mapLength)
                         continue;
 
                     float dist = Mathf.Sqrt(dx * dx + dz * dz);

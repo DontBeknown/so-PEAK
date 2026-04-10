@@ -50,6 +50,8 @@ public class WorldDataManager : MonoBehaviour
     [HideInInspector] public Color fieldColor, roadColor, sideRockColor;
     [HideInInspector] public int activeLevelSeed, seed1, seed2, seed3;
     [HideInInspector] public bool[,] globalWaterMask;
+
+
     public Dictionary<Vector2Int, List<PlacedObject>> masterSpawnGrid;
 
     public void GenerateWorldData(int chunkSize)
@@ -96,6 +98,10 @@ public class WorldDataManager : MonoBehaviour
         sideRockColor = activeGen.sideRockColor;
         fieldColor = activeGen.fieldColor;
         roadRidgeTexture =  GenerateRoadMaskTexture(expandedRoadRidge);
+
+
+        //Debug Roadmask to png for seeing
+        //SaveTextureAsPNG(roadRidgeTexture, "TerrainGenerator", "DebugRoadMask.png");
 
         // 4. Generate Resource Noise Maps (Using PROFILE specific list)
         Dictionary<NoiseType, float[,]> availableNoiseMaps = new Dictionary<NoiseType, float[,]>();
@@ -222,7 +228,26 @@ public class WorldDataManager : MonoBehaviour
         return roadMask;
     }
 
+    private void SaveTextureAsPNG(Texture2D texture, string folderName, string fileName)
+    {
+        // 1. Get the full physical path to the folder (e.g., .../YourProject/Assets/TerrainGenerator)
+        string folderPath = System.IO.Path.Combine(Application.dataPath, folderName);
 
+        // 2. SAFETY CHECK: If the folder doesn't exist, create it automatically!
+        if (!System.IO.Directory.Exists(folderPath))
+        {
+            System.IO.Directory.CreateDirectory(folderPath);
+        }
+
+        // 3. Combine the safe folder path with your file name
+        string finalPath = System.IO.Path.Combine(folderPath, fileName);
+
+        // 4. Convert and save
+        byte[] bytes = texture.EncodeToPNG();
+        System.IO.File.WriteAllBytes(finalPath, bytes);
+
+        Debug.Log($"<color=yellow>[WorldDataManager]</color> Saved Road Mask to: {finalPath}");
+    }
 
     private void LoadSeed()
     {
