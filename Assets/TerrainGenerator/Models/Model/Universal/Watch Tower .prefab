@@ -1585,6 +1585,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WatchTower
   nightlight: {fileID: 3307165905141297031}
+  eventBusRetryInterval: 1
+  enableRetryLogs: 0
 --- !u!65 &2711291806117546920
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1639,4 +1641,6 @@ MonoBehaviour:
   resetFatigueOnUse: 1
   healOnUse: 1
   healAmountOnUse: 100
+  customSaveSpawnPoint: {fileID: 0}
   progressNextLevelOnUse: 1
+  saveGameOnUse: 1

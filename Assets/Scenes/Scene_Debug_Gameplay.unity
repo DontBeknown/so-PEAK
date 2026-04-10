@@ -2851,6 +2851,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7453063599047344723, guid: dc9baecee7283c340b1c3654f975ca48, type: 3}
+      propertyPath: saveGameOnUse
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7453063599047344723, guid: dc9baecee7283c340b1c3654f975ca48, type: 3}
+      propertyPath: progressNextLevelOnUse
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8274077260532194656, guid: dc9baecee7283c340b1c3654f975ca48, type: 3}
       propertyPath: m_Name
       value: 'Watch Tower '
@@ -3039,6 +3047,7 @@ MonoBehaviour:
   healAmountOnUse: 25
   customSaveSpawnPoint: {fileID: 0}
   progressNextLevelOnUse: 0
+  saveGameOnUse: 1
 --- !u!65 &727518819
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4366,6 +4375,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 959119056674218524, guid: e6c2aedcde0f1ad47aa493247d53a68a, type: 3}
+      propertyPath: saveGameOnUse
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5926820116750258767, guid: e6c2aedcde0f1ad47aa493247d53a68a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 5266.58
@@ -5028,6 +5041,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 415204, guid: b4936c7687dd5034fa6d25e514e6f6da, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3079823974586987774, guid: b4936c7687dd5034fa6d25e514e6f6da, type: 3}
+      propertyPath: saveGameOnUse
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3999352878454309502, guid: b4936c7687dd5034fa6d25e514e6f6da, type: 3}

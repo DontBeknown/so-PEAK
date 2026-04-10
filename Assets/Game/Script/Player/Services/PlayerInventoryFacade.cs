@@ -35,14 +35,19 @@ namespace Game.Player.Services
             bool enableCommandDebugLogs = false,
             CinemachinePlayerCamera playerCamera = null)
         {
-            _inventoryService = inventoryService ?? ServiceContainer.Instance.Get<IInventoryService>();
-            _inventoryStorage = ServiceContainer.Instance.Get<IInventoryStorage>();
+            _inventoryService = inventoryService ?? ServiceContainer.Instance.TryGet<IInventoryService>();
+            _inventoryStorage = ServiceContainer.Instance.TryGet<IInventoryStorage>();
             _craftingManager = craftingManager;
             _uiServiceProvider = uiServiceProvider ?? ServiceContainer.Instance.TryGet<UIServiceProvider>();
             _playerStats = playerStats;
             _playerTransform = playerTransform;
             // Use ServiceContainer instead of FindFirstObjectByType
             _playerCamera = playerCamera ?? ServiceContainer.Instance.TryGet<CinemachinePlayerCamera>();
+
+            if (_inventoryService == null || _inventoryStorage == null)
+            {
+                Debug.LogWarning("[PlayerInventoryFacade] Inventory services are missing. Inventory actions will be unavailable until services are registered.");
+            }
             
             _commandInvoker = new InventoryCommandInvoker(enableDebugLogs: enableCommandDebugLogs);
         }

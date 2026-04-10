@@ -32,9 +32,25 @@ namespace Game.Core
         [Header("Shared State")]
         [SerializeField] private SharedLoadingState loadingState;
 
+        [Header("Options")]
+        [SerializeField] private bool enableAsyncLoadFlow = true;
+
         private IEnumerator Start()
         {
             if (loadingState != null) loadingState.Reset();
+
+            bool shouldUseAsyncLoadFlow = ShouldUseAsyncLoadFlow();
+
+            if (!shouldUseAsyncLoadFlow)
+            {
+                Debug.Log("[AsyncLoadCoordinator] Async loading flow disabled. Waiting for chunks then spawning.");
+
+                if (loadingState != null)
+                    yield return new WaitUntil(() => loadingState.isChunksReady);
+
+                CompleteTransitionAndSpawnPlayer();
+                yield break;
+            }
 
             // --- Step 1: Hide terrain camera so only DebugGameplay camera renders ---
             if (terrainCamera != null)
@@ -67,6 +83,11 @@ namespace Game.Core
             // --- Step 3: Unload the waiting-room scene ---
             yield return SceneManager.UnloadSceneAsync(debugGameplaySceneName);
 
+            CompleteTransitionAndSpawnPlayer();
+        }
+
+        private void CompleteTransitionAndSpawnPlayer()
+        {
             // --- Step 4: Restore terrain camera ---
             if (terrainCamera != null)
                 terrainCamera.gameObject.SetActive(true);
@@ -86,6 +107,56 @@ namespace Game.Core
                 loadingState.isComplete = true;
 
             Debug.Log("[AsyncLoadCoordinator] Transition complete. Player spawning.");
+        }
+
+        private bool ShouldUseAsyncLoadFlow()
+        {
+            if (!enableAsyncLoadFlow)
+            {
+                return false;
+            }
+
+            SaveLoadService saveLoadService = SaveLoadService.Instance;
+            if (saveLoadService == null)
+            {
+                Debug.LogWarning("[AsyncLoadCoordinator] SaveLoadService not available. Async flow will be skipped.");
+                return false;
+            }
+
+            WorldSaveData currentSave = saveLoadService.CurrentWorldSave;
+            if (currentSave == null)
+            {
+                Debug.LogWarning("[AsyncLoadCoordinator] CurrentWorldSave is null. Async flow will be skipped.");
+                return false;
+            }
+
+            if (saveLoadService.IsNewWorld())
+            {
+                return true;
+            }
+
+            WorldStateSaveData worldState = currentSave.worldState;
+            if (worldState == null)
+            {
+                return false;
+            }
+
+            int currentLevel = Mathf.Max(1, worldState.level);
+            if (worldState.cachedPathsByLevel == null)
+            {
+                return true;
+            }
+
+            for (int i = 0; i < worldState.cachedPathsByLevel.Count; i++)
+            {
+                LevelPathSaveData levelPath = worldState.cachedPathsByLevel[i];
+                if (levelPath != null && levelPath.level == currentLevel)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

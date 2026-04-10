@@ -61,6 +61,12 @@ namespace Game.Player
         {
             // Start in walking state
             TransitionTo(new WalkingState(this));
+
+            // Retry after startup order settles in case services were not ready in Awake.
+            if (_inventoryFacade == null)
+            {
+                InitializeInventory();
+            }
         }
 
         private void OnEnable()
@@ -119,7 +125,15 @@ namespace Game.Player
             }
             
             // Resolve services from ServiceContainer
-            var inventoryService = GetComponent<IInventoryService>();
+            var inventoryService = ServiceContainer.Instance.TryGet<IInventoryService>();
+            var inventoryStorage = ServiceContainer.Instance.TryGet<IInventoryStorage>();
+
+            if (inventoryService == null || inventoryStorage == null)
+            {
+                Debug.LogWarning("[PlayerControllerRefactored] Inventory services not ready yet. InitializeInventory will be retried later.");
+                return;
+            }
+
             craftingManager ??= GetComponent<CraftingManager>();
             
             // Use ServiceContainer for cross-scene references (may not be available immediately after spawn)

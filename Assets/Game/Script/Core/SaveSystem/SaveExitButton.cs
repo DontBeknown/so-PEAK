@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 public class SaveExitButton : MonoBehaviour
 {
     [SerializeField] private string menuSceneName = "Scenes_Menu";
+    [SerializeField] private string waitingRoomSceneName = "Scene_Debug_Gameplay";
     private Button _button;
 
     private void Start()
@@ -30,16 +31,40 @@ public class SaveExitButton : MonoBehaviour
         // Ensure gameplay is resumed before scene transition.
         Time.timeScale = 1f;
 
-        var saveService = SaveLoadService.Instance;
-        if (saveService != null)
+        if (IsPlayerInWaitingRoom())
         {
-            saveService.PerformAutoSave();
+            Debug.Log("[SaveExitButton] Skipping save while in waiting room.");
         }
         else
         {
-            Debug.LogWarning("SaveLoadService instance not found. Unable to perform auto-save.");
+            var saveService = SaveLoadService.Instance;
+            if (saveService != null)
+            {
+                saveService.PerformAutoSave();
+            }
+            else
+            {
+                Debug.LogWarning("SaveLoadService instance not found. Unable to perform auto-save.");
+            }
         }
         
         SceneManager.LoadScene(menuSceneName);
+    }
+
+    private bool IsPlayerInWaitingRoom()
+    {
+        if (string.IsNullOrEmpty(waitingRoomSceneName))
+        {
+            return false;
+        }
+
+        Scene activeScene = SceneManager.GetActiveScene();
+        if (activeScene.IsValid() && activeScene.name == waitingRoomSceneName)
+        {
+            return true;
+        }
+
+        Scene waitingRoomScene = SceneManager.GetSceneByName(waitingRoomSceneName);
+        return waitingRoomScene.IsValid() && waitingRoomScene.isLoaded;
     }
 }

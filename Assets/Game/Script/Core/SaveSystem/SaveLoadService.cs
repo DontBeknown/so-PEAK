@@ -183,10 +183,21 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
                 Debug.LogError("Save data validation failed!");
                 return null;
             }
+
+            saveData.tutorial ??= new TutorialSaveData();
+
+            if (saveData.worldState == null)
+            {
+                saveData.worldState = CreateDefaultWorldState();
+            }
+
+            saveData.worldState.spawnedObjectStates ??= new List<SpawnedObjectStateSaveData>();
+            saveData.worldState.cachedPathsByLevel ??= new List<LevelPathSaveData>();
+            saveData.worldState.unlockedCollectables ??= new List<string>();
+            saveData.worldState.triggeredDialogs ??= new List<string>();
             
             currentWorldSave = saveData;
             SpawnedObjectStateRegistry.ImportFromSave(saveData);
-            HydrateWorldServices(saveData);
             OnWorldLoaded?.Invoke(saveData);
             
             if (enableDebug) Debug.Log($"Loaded world: {saveData.worldName}");
@@ -796,18 +807,13 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         };
     }
 
-    private void HydrateWorldServices(WorldSaveData saveData)
+    public void HydrateWorldServices(WorldSaveData saveData)
     {
         if (saveData == null)
             return;
 
-        saveData.tutorial ??= new TutorialSaveData();
-
         if (saveData.worldState == null)
             return;
-
-        saveData.worldState.spawnedObjectStates ??= new List<SpawnedObjectStateSaveData>();
-        saveData.worldState.cachedPathsByLevel ??= new List<LevelPathSaveData>();
 
         var container = ServiceContainer.Instance;
 

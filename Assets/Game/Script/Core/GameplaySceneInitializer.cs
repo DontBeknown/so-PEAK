@@ -22,21 +22,7 @@ public class GameplaySceneInitializer : MonoBehaviour
     private void Start()
     {
         //Debug.Log($"[GameplaySceneInitializer] Start called.");
-        // Get save load service (from Inspector or persisted instance)
-        if (saveLoadService == null)
-        {
-            saveLoadService = SaveLoadService.Instance;
-        }
-        
-        // Fallback to ServiceContainer if available
-        if (saveLoadService == null)
-        {
-            var container = ServiceContainer.Instance;
-            if (container != null)
-            {
-                saveLoadService = container.Get<ISaveLoadService>() as SaveLoadService;
-            }
-        }
+        saveLoadService = ResolveSaveLoadService();
         
         if (saveLoadService == null)
         {
@@ -62,6 +48,13 @@ public class GameplaySceneInitializer : MonoBehaviour
     
     private IEnumerator InitializeWorldCoroutine()
     {
+        saveLoadService = ResolveSaveLoadService();
+        if (saveLoadService == null)
+        {
+            Debug.LogError("SaveLoadService is missing at world initialization time.");
+            yield break;
+        }
+
         WorldSaveData resolvedSaveData = null;
 
         if (worldPersistence.isNewWorld)
@@ -122,6 +115,20 @@ public class GameplaySceneInitializer : MonoBehaviour
             Debug.LogError("No world data to initialize!");
         }
 
+        // Hydrate world-level services only after player spawn and scene restoration are complete.
+        if (resolvedSaveData != null)
+        {
+            saveLoadService = ResolveSaveLoadService();
+            if (saveLoadService == null)
+            {
+                Debug.LogWarning("SaveLoadService not available for hydration!");
+            }
+            else
+            {
+                saveLoadService.HydrateWorldServices(resolvedSaveData);
+            }
+        }
+
         TryStartTutorial(resolvedSaveData);
     }
 
@@ -130,7 +137,9 @@ public class GameplaySceneInitializer : MonoBehaviour
         if (saveData == null)
         {
             Debug.LogWarning("No save data available to check tutorial status. Skipping tutorial start.");
-            saveData = saveLoadService.CurrentWorldSave;
+
+            saveLoadService = ResolveSaveLoadService();
+            saveData = saveLoadService != null ? saveLoadService.CurrentWorldSave : null;
         }
 
         if (saveData == null)
@@ -148,6 +157,24 @@ public class GameplaySceneInitializer : MonoBehaviour
 
         var tutorialManager = ServiceContainer.Instance.TryGet<ITutorialManager>();
         tutorialManager?.StartTutorial();
+    }
+
+    private SaveLoadService ResolveSaveLoadService()
+    {
+        if (saveLoadService != null)
+        {
+            return saveLoadService;
+        }
+
+        saveLoadService = SaveLoadService.Instance;
+        if (saveLoadService != null)
+        {
+            return saveLoadService;
+        }
+
+        var resolvedService = ServiceContainer.Instance.TryGet<ISaveLoadService>();
+        saveLoadService = resolvedService as SaveLoadService;
+        return saveLoadService;
     }
     
     private void SpawnPlayer(Vector3 position, Quaternion rotation)
