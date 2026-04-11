@@ -70,9 +70,9 @@ public static class UniversalSpawner
                     // If the rule is 'AllowEverywhere', it just ignores this check entirely!
                 }
 
-                // E. Underwater Check
-                float baseH = depthMap[x, z];
-                if (baseH <= 0.01f) continue;
+                //// E. Underwater Check
+                //float baseH = depthMap[x, z];
+                //if (baseH <= 0.01f) continue;
 
                 if (waterMask != null && waterMask[x, z] == true)
                 {
