@@ -50,6 +50,8 @@ public class PlayerStats : MonoBehaviour
     private IDayNightCycleService _dayNightService;
     private ISaveLoadService _saveLoadService;
     private DeathCause _lastDamageSource = DeathCause.Unknown;
+    private float _weatherTemperatureOffsetCelsius;
+    private float _debugAreaTemperatureOffsetCelsius;
     public DeathCause LastDamageSource => _lastDamageSource;
 
     private float ThirstReductionBuffDurationSeconds =>
@@ -321,7 +323,23 @@ public class PlayerStats : MonoBehaviour
     /// <summary>Adjust ambient temperature offset from a weather system (e.g. blizzard = -15).</summary>
     public void SetWeatherTemperatureOffset(float offsetCelsius)
     {
-        temperature.SetWeatherTemperatureOffset(offsetCelsius);
+        _weatherTemperatureOffsetCelsius = offsetCelsius;
+        ApplyCombinedTemperatureOffset();
+    }
+
+    /// <summary>
+    /// Sets a temporary debug-area ambient offset applied while inside a trigger zone.
+    /// Positive values heat up, negative values cool down.
+    /// </summary>
+    public void SetDebugAreaTemperatureOffset(float offsetCelsius)
+    {
+        _debugAreaTemperatureOffsetCelsius = offsetCelsius;
+        ApplyCombinedTemperatureOffset();
+    }
+
+    private void ApplyCombinedTemperatureOffset()
+    {
+        temperature.SetWeatherTemperatureOffset(_weatherTemperatureOffsetCelsius + _debugAreaTemperatureOffsetCelsius);
     }
 
     /// <summary>Set equipment insulation. 0 = none, 1 = perfect (stays at 37°C).</summary>

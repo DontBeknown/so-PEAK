@@ -144,3 +144,15 @@ MonoBehaviour:
   - Id: gather_start
     Clips:
     - {fileID: 8300000, guid: 2749924dac07bab4f9d5e44648f0a228, type: 3}
+  - Id: temp_hot_damage
+    Clips:
+    - {fileID: 8300000, guid: 31a7c1391af3fab4bb3763325d963e26, type: 3}
+  - Id: temp_hot_penalty
+    Clips:
+    - {fileID: 8300000, guid: d95791bc334132e47b8e9ec8db0b2eb4, type: 3}
+  - Id: temp_cold_damage
+    Clips:
+    - {fileID: 8300000, guid: 94616e0876585ce4c897f59b4214a9bf, type: 3}
+  - Id: temp_cold_penalty
+    Clips:
+    - {fileID: 8300000, guid: 45f391d466e8d7f418af20760b4d71b5, type: 3}

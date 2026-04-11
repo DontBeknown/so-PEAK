@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using DG.Tweening;
 using Game.Core.DI;
+using Game.Core.Events;
+using Game.Sound.Events;
 
 /// <summary>
 /// Drives separate cold/hot post-process volumes from player temperature.
@@ -26,6 +28,22 @@ public class TemperaturePostProcessFeedback : MonoBehaviour
     [SerializeField] private bool updateFromTemperatureEvent = true;
     [SerializeField] private float updateInterval = 0.1f;
 
+    [Header("UI Feedback")]
+    [Tooltip("Cold warning UI CanvasGroup. Alpha is driven by cold weight (0..1).")]
+    [SerializeField] private CanvasGroup coldFeedbackCanvasGroup;
+    [Tooltip("Hot warning UI CanvasGroup. Alpha is driven by hot weight (0..1).")]
+    [SerializeField] private CanvasGroup hotFeedbackCanvasGroup;
+
+    [Header("Temperature SFX")]
+    [SerializeField] private string coldPenaltySoundId = "temp_cold_penalty";
+    [SerializeField] private float coldPenaltySoundVolume = 0.8f;
+    [SerializeField] private string coldDamageSoundId = "temp_cold_damage";
+    [SerializeField] private float coldDamageSoundVolume = 1f;
+    [SerializeField] private string hotPenaltySoundId = "temp_hot_penalty";
+    [SerializeField] private float hotPenaltySoundVolume = 0.8f;
+    [SerializeField] private string hotDamageSoundId = "temp_hot_damage";
+    [SerializeField] private float hotDamageSoundVolume = 1f;
+
     [Header("Debug")]
     [SerializeField] private bool enableDebugLogs = false;
 
@@ -35,6 +53,8 @@ public class TemperaturePostProcessFeedback : MonoBehaviour
     private float hotPenaltyThreshold;
     private float coldDamageThreshold;
     private float hotDamageThreshold;
+    private float coldWarningStartThreshold;
+    private float hotWarningStartThreshold;
 
     private GameObject coldVolumeObject;
     private GameObject hotVolumeObject;
@@ -44,10 +64,18 @@ public class TemperaturePostProcessFeedback : MonoBehaviour
     private Tween coldTween;
     private Tween hotTween;
 
+    private IEventBus eventBus;
+
+    private bool wasColdPenaltyActive;
+    private bool wasColdDamageActive;
+    private bool wasHotPenaltyActive;
+    private bool wasHotDamageActive;
+
     private float updateTimer;
 
     private void Start()
     {
+        eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
         playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
         if (playerStats == null)
         {
@@ -67,6 +95,17 @@ public class TemperaturePostProcessFeedback : MonoBehaviour
         hotPenaltyThreshold = playerStats.Config.tempHotThirstPenaltyThreshold;
         coldDamageThreshold = playerStats.Config.tempColdThreshold;
         hotDamageThreshold = playerStats.Config.tempHotThreshold;
+
+        float coldWarningOffset = Mathf.Max(0f, playerStats.Config.tempColdWarningOffset);
+        float hotWarningOffset = Mathf.Max(0f, playerStats.Config.tempHotWarningOffset);
+
+        coldWarningStartThreshold = Mathf.Max(coldPenaltyThreshold + coldWarningOffset, coldPenaltyThreshold);
+        if (coldWarningStartThreshold <= coldDamageThreshold)
+            coldWarningStartThreshold = coldDamageThreshold + 0.01f;
+
+        hotWarningStartThreshold = Mathf.Min(hotPenaltyThreshold - hotWarningOffset, hotPenaltyThreshold);
+        if (hotWarningStartThreshold >= hotDamageThreshold)
+            hotWarningStartThreshold = hotDamageThreshold - 0.01f;
 
         CreateVolumes();
 
@@ -157,37 +196,90 @@ public class TemperaturePostProcessFeedback : MonoBehaviour
 
         float temperature = playerStats.Temperature;
 
+        HandleTemperatureSfx(temperature);
+
         float coldTargetWeight = CalculateColdWeight(temperature);
         float hotTargetWeight = CalculateHotWeight(temperature);
 
         TweenVolumeWeight(coldVolume, ref coldTween, coldTargetWeight);
         TweenVolumeWeight(hotVolume, ref hotTween, hotTargetWeight);
+        ApplyCanvasGroupAlpha(coldFeedbackCanvasGroup, coldTargetWeight);
+        ApplyCanvasGroupAlpha(hotFeedbackCanvasGroup, hotTargetWeight);
 
         if (enableDebugLogs)
         {
-            Debug.Log($"TemperaturePostProcessFeedback: temp={temperature:F1}C cold={coldTargetWeight:F2} hot={hotTargetWeight:F2}");
+            Debug.Log($"TemperaturePostProcessFeedback: temp={temperature:F1}C cold={coldTargetWeight:F2} hot={hotTargetWeight:F2} coldStart={coldWarningStartThreshold:F1}C hotStart={hotWarningStartThreshold:F1}C");
         }
+    }
+
+    private void HandleTemperatureSfx(float temperature)
+    {
+        bool isColdPenaltyActive = temperature <= coldPenaltyThreshold;
+        bool isColdDamageActive = temperature <= coldDamageThreshold;
+        bool isHotPenaltyActive = temperature >= hotPenaltyThreshold;
+        bool isHotDamageActive = temperature >= hotDamageThreshold;
+
+        if (isColdPenaltyActive && !wasColdPenaltyActive)
+        {
+            PlayTemperatureSfx(coldPenaltySoundId, coldPenaltySoundVolume);
+        }
+
+        if (isColdDamageActive && !wasColdDamageActive)
+        {
+            PlayTemperatureSfx(coldDamageSoundId, coldDamageSoundVolume);
+        }
+
+        if (isHotPenaltyActive && !wasHotPenaltyActive)
+        {
+            PlayTemperatureSfx(hotPenaltySoundId, hotPenaltySoundVolume);
+        }
+
+        if (isHotDamageActive && !wasHotDamageActive)
+        {
+            PlayTemperatureSfx(hotDamageSoundId, hotDamageSoundVolume);
+        }
+
+        wasColdPenaltyActive = isColdPenaltyActive;
+        wasColdDamageActive = isColdDamageActive;
+        wasHotPenaltyActive = isHotPenaltyActive;
+        wasHotDamageActive = isHotDamageActive;
+    }
+
+    private void PlayTemperatureSfx(string clipId, float volume)
+    {
+        if (eventBus == null || string.IsNullOrWhiteSpace(clipId))
+            return;
+
+        eventBus.Publish(new PlayPositionalSFXEvent(clipId, transform.position, volume));
     }
 
     private float CalculateColdWeight(float temperature)
     {
-        if (temperature >= coldPenaltyThreshold)
+        if (temperature >= coldWarningStartThreshold)
             return 0f;
 
-        float minTemp = Mathf.Min(coldDamageThreshold, coldPenaltyThreshold - 0.01f);
-        if (Mathf.Approximately(coldPenaltyThreshold, minTemp))
+        float minTemp = Mathf.Min(coldDamageThreshold, coldWarningStartThreshold - 0.01f);
+        if (Mathf.Approximately(coldWarningStartThreshold, minTemp))
             return 1f;
 
-        return Mathf.Clamp01(Mathf.InverseLerp(coldPenaltyThreshold, minTemp, temperature));
+        return Mathf.Clamp01(Mathf.InverseLerp(coldWarningStartThreshold, minTemp, temperature));
     }
 
     private float CalculateHotWeight(float temperature)
     {
-        if (temperature <= hotPenaltyThreshold)
+        if (temperature <= hotWarningStartThreshold)
             return 0f;
 
-        float maxTemp = Mathf.Max(hotDamageThreshold, hotPenaltyThreshold + 0.01f);
-        return Mathf.Clamp01(Mathf.InverseLerp(hotPenaltyThreshold, maxTemp, temperature));
+        float maxTemp = Mathf.Max(hotDamageThreshold, hotWarningStartThreshold + 0.01f);
+        return Mathf.Clamp01(Mathf.InverseLerp(hotWarningStartThreshold, maxTemp, temperature));
+    }
+
+    private static void ApplyCanvasGroupAlpha(CanvasGroup targetCanvasGroup, float alpha)
+    {
+        if (targetCanvasGroup == null)
+            return;
+
+        targetCanvasGroup.alpha = Mathf.Clamp01(alpha);
     }
 
     private void TweenVolumeWeight(Volume targetVolume, ref Tween activeTween, float targetWeight)
