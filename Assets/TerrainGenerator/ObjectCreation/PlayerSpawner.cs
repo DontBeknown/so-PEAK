@@ -35,12 +35,12 @@ public class PlayerSpawner : MonoBehaviour
     // Stores the spawned player reference after successful spawn
     public Transform SpawnedPlayer { get; private set; }
     
-    public IEnumerator SpawnPlayer()
+    public IEnumerator SpawnPlayer(Vector3 proceduralSpawnPosition)
     {
-        return SpawnPlayerDelayed();
+        return SpawnPlayerDelayed(proceduralSpawnPosition);
     }
     
-    private System.Collections.IEnumerator SpawnPlayerDelayed()
+    private System.Collections.IEnumerator SpawnPlayerDelayed(Vector3 proceduralSpawnPosition)
     {
         if (playerPrefab == null)
         {
@@ -72,7 +72,7 @@ public class PlayerSpawner : MonoBehaviour
         }
         else
         {
-            targetXZ = targetSpawnPosition;
+            targetXZ = proceduralSpawnPosition;
             //Debug.Log($"[PlayerSpawner] Using default spawn position: {targetXZ}");
         }
 

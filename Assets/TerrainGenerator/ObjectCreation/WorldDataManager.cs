@@ -40,6 +40,7 @@ public class WorldDataManager : MonoBehaviour
 
     [Header("Global Data Outputs")]
     [HideInInspector] public NoiseTranslator activeGen;
+    [HideInInspector] public Vector3 completeSpawnCoord;
     public float[,] globalHeightMap;
     public Color[,] globalColorMap;
 
@@ -99,6 +100,8 @@ public class WorldDataManager : MonoBehaviour
         fieldColor = activeGen.fieldColor;
         roadRidgeTexture =  GenerateRoadMaskTexture(expandedRoadRidge);
 
+        //SpawnCoord Getting
+        GetSpawnCoord();
 
         //Debug Roadmask to png for seeing
         //SaveTextureAsPNG(roadRidgeTexture, "TerrainGenerator", "DebugRoadMask.png");
@@ -227,6 +230,24 @@ public class WorldDataManager : MonoBehaviour
 
         return roadMask;
     }
+
+    private void GetSpawnCoord()
+    {
+        int borderOffset = activeGen.bufferLength / 2;
+
+        int targetX = activeGen.spawnCoord.x + borderOffset;
+        int targetY = activeGen.spawnCoord.y + borderOffset;
+
+        // Safety clamp to guarantee we never check outside the array bounds!
+        targetX = Mathf.Clamp(targetX, 0, globalHeightMap.GetLength(0) - 1);
+        targetY = Mathf.Clamp(targetY, 0, globalHeightMap.GetLength(1) - 1);
+
+        float rawHeight = globalHeightMap[targetX, targetY];
+        float trueYHeight = rawHeight * activeGen.meshHeightMultiplier;
+
+        completeSpawnCoord = new Vector3(targetX, trueYHeight, targetY);
+    }
+
 
     private void SaveTextureAsPNG(Texture2D texture, string folderName, string fileName)
     {

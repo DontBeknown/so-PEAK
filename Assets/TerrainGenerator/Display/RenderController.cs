@@ -473,7 +473,7 @@ public class RenderController : MonoBehaviour
     private System.Collections.IEnumerator SpawnPlayerSequence()
     {
         // Call PlayerSpawner's coroutine and wait for it to complete
-        yield return StartCoroutine(spawner.SpawnPlayer());
+        yield return StartCoroutine(spawner.SpawnPlayer(dataManager.completeSpawnCoord));
 
         // Get the spawned player reference
         Transform spawnedPlayer = spawner.SpawnedPlayer;
