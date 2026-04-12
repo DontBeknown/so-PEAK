@@ -69,5 +69,21 @@ namespace Game.Player.Interfaces
         /// </summary>
         /// <param name="animator">New animator to drive.</param>
         void RebindAnimator(Animator animator);
+
+        /// <summary>
+        /// Sets the tied-to-object loop animation state.
+        /// </summary>
+        /// <param name="isTied">True when the player is currently tied.</param>
+        void SetTied(bool isTied);
+
+        /// <summary>
+        /// Fires the tied start trigger animation.
+        /// </summary>
+        void TriggerTiedStart();
+
+        /// <summary>
+        /// Fires the tied stop trigger animation.
+        /// </summary>
+        void TriggerTiedStop();
     }
 }

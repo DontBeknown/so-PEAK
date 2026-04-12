@@ -22,6 +22,9 @@ namespace Game.Player.Services
         private static readonly int SpeedMultiplierHash = Animator.StringToHash("SpeedMultiplier");
         private static readonly int IsFallingHash = Animator.StringToHash("isFalling");
         private static readonly int IsGroundedHash = Animator.StringToHash("isGround");
+        private static readonly int IsTiedHash = Animator.StringToHash("isTied");
+        private static readonly int TiedStartHash = Animator.StringToHash("TiedStart");
+        private static readonly int TiedStopHash = Animator.StringToHash("TiedStop");
 
         public PlayerAnimationService(Animator animator, Transform root)
         {
@@ -117,6 +120,24 @@ namespace Game.Player.Services
             }
 
             _animator = animator;
+        }
+
+        public void SetTied(bool isTied)
+        {
+            if (_animator == null) return;
+            _animator.SetBool(IsTiedHash, isTied);
+        }
+
+        public void TriggerTiedStart()
+        {
+            if (_animator == null) return;
+            _animator.SetTrigger(TiedStartHash);
+        }
+
+        public void TriggerTiedStop()
+        {
+            if (_animator == null) return;
+            _animator.SetTrigger(TiedStopHash);
         }
     }
 }

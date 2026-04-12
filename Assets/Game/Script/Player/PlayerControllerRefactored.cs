@@ -191,7 +191,7 @@ namespace Game.Player
         private void HandleAutomaticTransitions()
         {
             // Don't interrupt climbing or mantling with automatic transitions
-            if (_currentState is ClimbingState || _currentState is MantlingState)
+            if (_currentState is ClimbingState || _currentState is MantlingState || _currentState is TiedState)
                 return;
 
             bool isGrounded = _physicsService.IsGrounded();
@@ -361,6 +361,33 @@ namespace Game.Player
         public void StartCrafting(CraftingRecipe recipe) => _inventoryFacade?.StartCrafting(recipe);
         
         public IPlayerState GetCurrentState() => _currentState;
+
+        /// <summary>
+        /// Transitions the player into tied state, tethering movement to an anchor radius.
+        /// </summary>
+        public void EnterTiedState(Transform anchor, float radius, float speedMultiplier)
+        {
+            if (anchor == null)
+            {
+                Debug.LogWarning("[PlayerControllerRefactored] EnterTiedState called with null anchor.");
+                return;
+            }
+
+            float safeRadius = Mathf.Max(0.1f, radius);
+            float safeSpeedMultiplier = Mathf.Clamp(speedMultiplier, 0.01f, 1f);
+            TransitionTo(new TiedState(this, anchor, safeRadius, safeSpeedMultiplier));
+        }
+
+        /// <summary>
+        /// Exits tied state and returns the player to walking state.
+        /// </summary>
+        public void ExitTiedState()
+        {
+            if (_currentState is TiedState)
+            {
+                TransitionTo(new WalkingState(this));
+            }
+        }
 
         /// <summary>
         /// Rebinds runtime animation service to a new animator (used by visual model switching).
