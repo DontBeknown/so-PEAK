@@ -2,6 +2,7 @@ public enum DeathCause
 {
     Unknown,
     Damage,
+    LandslideRock,
     Starvation,
     Dehydration,
     Falling,

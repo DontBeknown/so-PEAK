@@ -279,19 +279,22 @@ public class PlayerStats : MonoBehaviour
     }
 
     public void ConsumeStamina(float amount) => stamina.Drain(amount);
-    public void TakeDamage(float dmg)
+    public void TakeDamage(float dmg, DeathCause cause = DeathCause.Damage)
     {
         if (isImmune) return;
-        _lastDamageSource = DeathCause.Damage;
+        _lastDamageSource = cause;
         health.Damage(dmg);
+
+        // Reuse fall-impact feedback for heavy impact-like causes.
+        if (cause == DeathCause.Falling || cause == DeathCause.LandslideRock)
+        {
+            OnFallDamaged?.Invoke(dmg);
+        }
     }
 
     public void TakeFallDamage(float dmg)
     {
-        if (isImmune) return;
-        _lastDamageSource = DeathCause.Falling;
-        health.Damage(dmg);
-        OnFallDamaged?.Invoke(dmg);
+        TakeDamage(dmg, DeathCause.Falling);
     }
     public void Heal(float amount) => health.Heal(amount);
     public void Eat(float nutrition) => hunger.Add(nutrition);

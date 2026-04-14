@@ -156,3 +156,19 @@ MonoBehaviour:
   - Id: temp_cold_penalty
     Clips:
     - {fileID: 8300000, guid: 45f391d466e8d7f418af20760b4d71b5, type: 3}
+  - Id: landslide_impact
+    Clips:
+    - {fileID: 8300000, guid: 73cb07961cc28634787c3b7149195fae, type: 3}
+    - {fileID: 8300000, guid: cf3bb2bf6874b6a408086b4b28f641d3, type: 3}
+    - {fileID: 8300000, guid: 31051cb19a64c02449fcf1fe1d688cd8, type: 3}
+    - {fileID: 8300000, guid: 42d9fdbcbf0bac544804068f8bc31d3e, type: 3}
+    - {fileID: 8300000, guid: 26ba6f7a14e38e0478144d7e4f5e29e8, type: 3}
+  - Id: landslide_rock_crack
+    Clips:
+    - {fileID: 8300000, guid: 812675f196fc3d644bc0e220104e7ad4, type: 3}
+  - Id: landslide_rumble_hard
+    Clips:
+    - {fileID: 8300000, guid: 505cdf372db89d546a24fb8cf6136ff4, type: 3}
+  - Id: landslide_rumble
+    Clips:
+    - {fileID: 8300000, guid: 249dbd0709017f944b44a8566a201b66, type: 3}
