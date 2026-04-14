@@ -25,5 +25,6 @@ MonoBehaviour:
     Please, walk into the shade. It\u2019s so much quieter when you stop being a
     person and start being a forest."
   type: 0
+  biome: 1
   icon: {fileID: 0}
   dialogData: {fileID: 0}

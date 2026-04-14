@@ -23,5 +23,6 @@ MonoBehaviour:
     air is getting thicker, like it\u2019s turning into sap. It\u2019s still a beautiful
     day. The sun is gold. So why am I shivering?"
   type: 0
+  biome: 1
   icon: {fileID: 0}
   dialogData: {fileID: 0}

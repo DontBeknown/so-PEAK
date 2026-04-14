@@ -22,5 +22,6 @@ MonoBehaviour:
     up here. Come by for tea when you\u2019re done with the traps. The mountain is
     so quiet today, it\u2019s like it\u2019s holding its breath just to hear us laugh.\n\n"
   type: 0
+  biome: 1
   icon: {fileID: 0}
   dialogData: {fileID: 0}

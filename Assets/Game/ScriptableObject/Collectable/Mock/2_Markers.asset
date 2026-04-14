@@ -21,5 +21,6 @@ MonoBehaviour:
     rest.\r\n\r\nP.S. Isn\u2019t the air sweet today? Like pine and honey. We are
     so lucky to call this place home.\n\n"
   type: 0
+  biome: 1
   icon: {fileID: 0}
   dialogData: {fileID: 0}

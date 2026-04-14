@@ -23,5 +23,6 @@ MonoBehaviour:
     a melody. It\u2019s probably just the altitude playing tricks on my ears. Still,
     the hawks didn't come out today. They\u2019re staying low in the branches."
   type: 0
+  biome: 1
   icon: {fileID: 0}
   dialogData: {fileID: 0}

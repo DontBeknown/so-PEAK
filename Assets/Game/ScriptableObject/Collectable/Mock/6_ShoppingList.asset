@@ -24,5 +24,6 @@ MonoBehaviour:
     She had her face, but it looked like wood grain. She said the forest is finally
     ready to reach out."
   type: 0
+  biome: 1
   icon: {fileID: 0}
   dialogData: {fileID: 0}

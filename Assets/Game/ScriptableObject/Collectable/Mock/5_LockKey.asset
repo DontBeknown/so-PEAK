@@ -24,5 +24,6 @@ MonoBehaviour:
     it\u2019s just the wind. Or the house trying to stretch. We have enough food
     for a month. We\u2019ll just stay cozy. Love you."
   type: 0
+  biome: 1
   icon: {fileID: 0}
   dialogData: {fileID: 0}
