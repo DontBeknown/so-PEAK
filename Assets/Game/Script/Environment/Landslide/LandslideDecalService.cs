@@ -31,6 +31,8 @@ namespace Game.Environment.Landslide
         private bool _isFadingAllDecals;
         private Coroutine _decalCleanupRoutine;
 
+        public bool IsCleanupIdle => !_isFadingAllDecals && _decalCleanupRoutine == null && _activeDecals.Count == 0;
+
         public void Configure(Transform poolParent, int maxDecalPoolSizePerPrefab, float delayBetweenDecalCleanup)
         {
             _poolParent = poolParent;

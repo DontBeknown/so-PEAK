@@ -134,6 +134,7 @@ namespace Game.Environment.Landslide
         private IEventBus _eventBus;
         private Coroutine _phaseTwoHardRumbleLoopRoutine;
         private bool _isPhaseTwoHardRumbleLoopActive;
+        private bool _hasRegisteredRockfallEncounterEvent;
         #endregion
 
         #region Unity Lifecycle
@@ -229,6 +230,8 @@ namespace Game.Environment.Landslide
                 return;
             }
 
+            _hasRegisteredRockfallEncounterEvent = false;
+
             PlayPhaseOneAnchorSounds(ResolveAudioPosition(spawnAnchors));
             StartCoroutine(SpawnRoutine(spawnAnchors));
         }
@@ -240,6 +243,8 @@ namespace Game.Environment.Landslide
                 Debug.LogWarning("[LandslideRockSpawner] TriggerLandslideAt called with null anchor.");
                 return;
             }
+
+            _hasRegisteredRockfallEncounterEvent = false;
 
             PlayPhaseOneAnchorSounds(anchor.position);
             StartCoroutine(SpawnRoutine(new[] { anchor }));
@@ -258,6 +263,8 @@ namespace Game.Environment.Landslide
                 return;
             }
 
+            _hasRegisteredRockfallEncounterEvent = false;
+
             // Otherwise, create a temporary anchor at the position
             Transform temporaryAnchor = new GameObject($"LandslideAnchor_Temporary").transform;
             temporaryAnchor.SetPositionAndRotation(position, Quaternion.identity);
@@ -269,6 +276,17 @@ namespace Game.Environment.Landslide
         public void RecycleRock(LandslideRockBehavior rock)
         {
             RecycleRock(rock, immediate: false);
+        }
+
+        public bool TryReserveRockfallEncounterEvent()
+        {
+            if (_hasRegisteredRockfallEncounterEvent && !IsCleanupComplete())
+            {
+                return false;
+            }
+
+            _hasRegisteredRockfallEncounterEvent = true;
+            return true;
         }
         #endregion
 
@@ -879,6 +897,13 @@ namespace Game.Environment.Landslide
         private void ResolveEventBus()
         {
             _eventBus ??= ServiceContainer.Instance?.TryGet<IEventBus>();
+        }
+
+        private bool IsCleanupComplete()
+        {
+            bool hasActiveRocks = _activeRocks.Count > 0;
+            bool decalsAreIdle = decalService == null || decalService.IsCleanupIdle;
+            return !hasActiveRocks && decalsAreIdle;
         }
         #endregion
     }

@@ -107,7 +107,7 @@ public class GameplaySceneInitializer : MonoBehaviour
             RestoreInventory(saveData.playerData);
             RestoreEquipment(saveData.playerData);
             RestoreResourceNodes(saveData.worldState);
-
+            
             if (enableDebug) Debug.Log("World state restored successfully");
         }
         else

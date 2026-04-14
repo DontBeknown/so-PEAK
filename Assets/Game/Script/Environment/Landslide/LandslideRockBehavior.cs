@@ -48,6 +48,7 @@ namespace Game.Environment.Landslide
         private Tween _recycleTween;
         private bool _isRecycling;
         private IEventBus _eventBus;
+        private PlayerStatsTrackerService _statsTracker;
 
         private void Awake()
         {
@@ -55,7 +56,6 @@ namespace Game.Environment.Landslide
             _rb.interpolation = RigidbodyInterpolation.Interpolate;
             _rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             _defaultLocalScale = transform.localScale;
-            ResolveEventBus();
         }
 
         private void OnEnable()
@@ -140,6 +140,7 @@ namespace Game.Environment.Landslide
             if (playerStats != null)
             {
                 playerStats.TakeDamage(impactDamage, DeathCause.LandslideRock);
+                RegisterEncounteredRiskEvent(collision, impactDamage);
                 return;
             }
 
@@ -392,6 +393,55 @@ namespace Game.Environment.Landslide
         private void ResolveEventBus()
         {
             _eventBus ??= ServiceContainer.Instance?.TryGet<IEventBus>();
+        }
+
+        private void ResolveStatsTracker()
+        {
+            _statsTracker ??= ServiceContainer.Instance?.TryGet<PlayerStatsTrackerService>();
+        }
+
+        private void RegisterEncounteredRiskEvent(Collision collision, float impactDamage)
+        {
+            ResolveStatsTracker();
+            if (_statsTracker == null)
+            {
+                return;
+            }
+
+            if (_owner != null && !_owner.TryReserveRockfallEncounterEvent())
+            {
+                return;
+            }
+
+            Vector3 eventPosition = collision.contactCount > 0
+                ? collision.GetContact(0).point
+                : collision.transform.position;
+
+            RiskEvent riskEvent = new RiskEvent
+            {
+                riskType = RiskType.Rockfall,
+                location = eventPosition,
+                timestamp = Time.time,
+                wasEncountered = true,
+                severity = EvaluateEncounterSeverity(impactDamage)
+            };
+
+            _statsTracker.RegisterRiskEvent(riskEvent);
+        }
+
+        private float EvaluateEncounterSeverity(float impactDamage)
+        {
+            if (_maxImpactDamage <= 0f)
+            {
+                return 0f;
+            }
+
+            if (_maxImpactDamage <= _minImpactDamage)
+            {
+                return impactDamage > 0f ? 1f : 0f;
+            }
+
+            return Mathf.Clamp01(Mathf.InverseLerp(_minImpactDamage, _maxImpactDamage, impactDamage));
         }
 
         private static void SetProjectorWidth(DecalProjector projector, float width)
