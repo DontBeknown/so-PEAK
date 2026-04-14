@@ -46,6 +46,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     // Current save
     private WorldSaveData currentWorldSave;
     private float autoSaveTimer;
+    private bool freshLevelEntry = false; // Flag to indicate fresh level progression
     
     // Constants
     private const string SAVE_FILE_EXTENSION = ".sav";
@@ -538,6 +539,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
 
     /// <summary>
     /// Increments the world level by 1 and immediately saves.
+    /// Marks this as a fresh level entry so spawner uses procedural position.
     /// </summary>
     public void ProgressToNextLevel()
     {
@@ -547,6 +549,13 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             currentWorldSave.worldState = CreateDefaultWorldState();
 
         currentWorldSave.worldState.level++;
+        
+        // Reset player position to default for new level
+        ResetPlayerSpawnToDefault();
+        
+        // Mark this as a fresh level entry - spawner will use proceduralSpawnPosition
+        freshLevelEntry = true;
+        
         SpawnedObjectStateRegistry.ClearAllDestroyed();
         bool saved = SaveWorld(currentWorldSave);
 
@@ -562,11 +571,43 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     }
 
     /// <summary>
+    /// Checks if this is a fresh level entry after progression.
+    /// Should be called by spawner to determine spawn position.
+    /// Automatically resets the flag after first check.
+    /// </summary>
+    public bool IsFreshLevelEntry()
+    {
+        bool result = freshLevelEntry;
+        if (freshLevelEntry)
+        {
+            freshLevelEntry = false; // Reset for next time
+            if (enableDebug) Debug.Log("[SaveLoadService] Fresh level entry detected - using procedural spawn");
+        }
+        return result;
+    }
+
+    /// <summary>
     /// Returns the current world level from the active save.
     /// </summary>
     public int GetCurrentLevel()
     {
         return currentWorldSave?.worldState?.level ?? 1;
+    }
+
+    /// <summary>
+    /// Resets the player spawn position to default for new level entry.
+    /// Called when progressing to next level.
+    /// </summary>
+    private void ResetPlayerSpawnToDefault()
+    {
+        if (currentWorldSave?.playerData == null)
+            return;
+
+        // Reset position to (0, 10, 0) - will be adjusted by raycast in spawner
+        currentWorldSave.playerData.position = new float[] { 0, 10, 0 };
+        currentWorldSave.playerData.rotation = new float[] { 0, 0, 0, 1 };
+
+        if (enableDebug) Debug.Log("[SaveLoadService] Reset player spawn to default for new level");
     }
     
     #endregion

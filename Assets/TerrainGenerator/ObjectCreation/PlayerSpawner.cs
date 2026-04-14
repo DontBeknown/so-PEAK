@@ -61,9 +61,11 @@ public class PlayerSpawner : MonoBehaviour
 
         // 1. DETERMINE TARGET XZ POSITION (without proper Y yet)
         Vector3 targetXZ;
-        bool usingSavedPosition = !SaveLoadService.Instance.IsNewWorld() && loadFromSave;
+        // Use proceduralSpawnPosition if it's a fresh level entry, otherwise use saved position
+        bool isFreshLevelEntry = SaveLoadService.Instance.IsFreshLevelEntry();
+        bool usingSavedPosition = !isFreshLevelEntry && !SaveLoadService.Instance.IsNewWorld() && loadFromSave;
         
-        //Debug.Log($"[PlayerSpawner] {SaveLoadService.Instance.IsNewWorld()} and loadFromSave={loadFromSave}");
+        //Debug.Log($"[PlayerSpawner] FreshLevelEntry={isFreshLevelEntry}, IsNewWorld={SaveLoadService.Instance.IsNewWorld()}, loadFromSave={loadFromSave}");
         if(usingSavedPosition)
         {
            WorldSaveData saveData = SaveLoadService.Instance.CurrentWorldSave;
@@ -73,7 +75,7 @@ public class PlayerSpawner : MonoBehaviour
         else
         {
             targetXZ = proceduralSpawnPosition;
-            //Debug.Log($"[PlayerSpawner] Using default spawn position: {targetXZ}");
+            //Debug.Log($"[PlayerSpawner] Using procedural spawn position: {targetXZ}");
         }
 
         // 2. MOVE SPAWN MARKER TO TARGET POSITION (to trigger chunk generation)
@@ -129,6 +131,11 @@ public class PlayerSpawner : MonoBehaviour
         // 5. INSTANTIATE PLAYER PREFAB AT FINAL POSITION
         GameObject spawnedPlayerObj = Instantiate(playerPrefab, finalSpawnPosition, Quaternion.identity);
         SpawnedPlayer = spawnedPlayerObj.transform;
+
+        if (isFreshLevelEntry && SaveLoadService.Instance != null)
+        {
+            SaveLoadService.Instance.PerformAutoSave(SpawnedPlayer);
+        }
         
         //FootIKControllerRefactored footIK = spawnedPlayerObj.GetComponentInChildren<FootIKControllerRefactored>();
        //Debug.Log($"[PlayerSpawner] Player instantiated at {finalSpawnPosition}");

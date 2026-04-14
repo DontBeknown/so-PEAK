@@ -560,6 +560,9 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
         }
 
         DOTween.Kill(gameObject, false);
+
+        // changing scenes, kill all
+        DOTween.KillAll();
     }
 
     private void OnDestroy()
