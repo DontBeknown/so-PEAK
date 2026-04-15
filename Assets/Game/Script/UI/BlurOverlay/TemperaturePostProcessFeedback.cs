@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using DG.Tweening;
+using System.Collections;
 using Game.Core.DI;
 using Game.Core.Events;
 using Game.Sound.Events;
@@ -27,6 +28,7 @@ public class TemperaturePostProcessFeedback : MonoBehaviour
     [Header("Update Settings")]
     [SerializeField] private bool updateFromTemperatureEvent = true;
     [SerializeField] private float updateInterval = 0.1f;
+    [SerializeField] private float startupDelaySeconds = 1f;
 
     [Header("UI Feedback")]
     [Tooltip("Cold warning UI CanvasGroup. Alpha is driven by cold weight (0..1).")]
@@ -72,8 +74,10 @@ public class TemperaturePostProcessFeedback : MonoBehaviour
     private bool wasHotDamageActive;
 
     private float updateTimer;
+    private bool isFeedbackActive;
+    private bool isTemperatureSubscribed;
 
-    private void Start()
+    private IEnumerator Start()
     {
         eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
         playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
@@ -81,14 +85,14 @@ public class TemperaturePostProcessFeedback : MonoBehaviour
         {
             Debug.LogError("TemperaturePostProcessFeedback: PlayerStats not found in ServiceContainer!");
             enabled = false;
-            return;
+            yield break;
         }
 
         if (playerStats.Config == null)
         {
             Debug.LogError("TemperaturePostProcessFeedback: PlayerConfig is missing on PlayerStats.");
             enabled = false;
-            return;
+            yield break;
         }
 
         coldPenaltyThreshold = playerStats.Config.tempColdHungerPenaltyThreshold;
@@ -109,16 +113,22 @@ public class TemperaturePostProcessFeedback : MonoBehaviour
 
         CreateVolumes();
 
+        float delay = Mathf.Max(0f, startupDelaySeconds);
+        if (delay > 0f)
+            yield return new WaitForSeconds(delay);
+
+        isFeedbackActive = true;
         if (updateFromTemperatureEvent)
-        {
-            playerStats.OnTemperatureChanged += OnTemperatureChanged;
-        }
+            SubscribeToTemperatureEvent();
 
         RefreshWeights();
     }
 
     private void Update()
     {
+        if (!isFeedbackActive)
+            return;
+
         if (updateFromTemperatureEvent)
             return;
 
@@ -132,10 +142,7 @@ public class TemperaturePostProcessFeedback : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (playerStats != null)
-        {
-            playerStats.OnTemperatureChanged -= OnTemperatureChanged;
-        }
+        UnsubscribeFromTemperatureEvent();
 
         coldTween?.Kill();
         hotTween?.Kill();
@@ -149,7 +156,28 @@ public class TemperaturePostProcessFeedback : MonoBehaviour
 
     private void OnTemperatureChanged(float current, float max)
     {
+        if (!isFeedbackActive)
+            return;
+
         RefreshWeights();
+    }
+
+    private void SubscribeToTemperatureEvent()
+    {
+        if (playerStats == null || isTemperatureSubscribed)
+            return;
+
+        playerStats.OnTemperatureChanged += OnTemperatureChanged;
+        isTemperatureSubscribed = true;
+    }
+
+    private void UnsubscribeFromTemperatureEvent()
+    {
+        if (playerStats == null || !isTemperatureSubscribed)
+            return;
+
+        playerStats.OnTemperatureChanged -= OnTemperatureChanged;
+        isTemperatureSubscribed = false;
     }
 
     private void CreateVolumes()

@@ -16672,7 +16672,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.50980395}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -18021,6 +18021,7 @@ MonoBehaviour:
   fadeOutEase: 6
   updateFromTemperatureEvent: 1
   updateInterval: 0.1
+  startupDelaySeconds: 5
   coldFeedbackCanvasGroup: {fileID: 4758404813939095610}
   hotFeedbackCanvasGroup: {fileID: 9100986204425971270}
   coldPenaltySoundId: temp_cold_penalty
