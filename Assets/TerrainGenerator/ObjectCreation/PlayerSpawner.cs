@@ -70,17 +70,17 @@ public class PlayerSpawner : MonoBehaviour
         {
            WorldSaveData saveData = SaveLoadService.Instance.CurrentWorldSave;
            targetXZ = new Vector3(saveData.playerData.position[0], saveData.playerData.position[1], saveData.playerData.position[2]);
-           //Debug.Log($"[PlayerSpawner] Using saved position: {targetXZ}");
+           Debug.Log($"[PlayerSpawner] Using saved position: {targetXZ}");
         }
         else
         {
             targetXZ = proceduralSpawnPosition;
-            //Debug.Log($"[PlayerSpawner] Using procedural spawn position: {targetXZ}");
+            Debug.Log($"[PlayerSpawner] Using procedural spawn position: {targetXZ}");
         }
 
         // 2. MOVE SPAWN MARKER TO TARGET POSITION (to trigger chunk generation)
         spawnMarkerTransform.position = targetXZ;
-        //Debug.Log($"[PlayerSpawner] Moved spawn marker to {targetXZ} to trigger chunk generation");
+        Debug.Log($"[PlayerSpawner] Moved spawn marker to {targetXZ} to trigger chunk generation");
 
         // 3. WAIT FOR CHUNKS TO GENERATE AND MESH COLLIDERS TO BAKE
         yield return new WaitForSeconds(spawnDelay);
@@ -138,7 +138,7 @@ public class PlayerSpawner : MonoBehaviour
         }
         
         //FootIKControllerRefactored footIK = spawnedPlayerObj.GetComponentInChildren<FootIKControllerRefactored>();
-       //Debug.Log($"[PlayerSpawner] Player instantiated at {finalSpawnPosition}");
+       Debug.Log($"[PlayerSpawner] Player instantiated at {finalSpawnPosition}");
         
         // 5.5. UPDATE UI SERVICE PROVIDER WITH NEW PLAYER REFERENCE
         UIServiceProvider uiService = ServiceContainer.Instance.TryGet<UIServiceProvider>();

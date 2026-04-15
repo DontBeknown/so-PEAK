@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Cactus 2
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
   ObjectName: Cactus 2
-  Prefab: {fileID: 2621632262640215399, guid: 9f73e4362e41c744b9d9bbdfe204ff26, type: 3}
+  Prefab: {fileID: 151356, guid: 4f83564b557272140824a0174425c677, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
   BaseRadius: 0.5

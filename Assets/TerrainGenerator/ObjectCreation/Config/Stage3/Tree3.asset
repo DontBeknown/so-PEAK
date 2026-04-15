@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Tree3
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
   ObjectName: Tree3
-  Prefab: {fileID: 103824, guid: 258145aa384bea0458769ded0cf4a41e, type: 3}
+  Prefab: {fileID: 103824, guid: 309834f88b2c7594f8f695496f413dec, type: 3}
   IsTerrainTree: 1
   TreePrototypeIndex: 0
   BaseRadius: 0.5

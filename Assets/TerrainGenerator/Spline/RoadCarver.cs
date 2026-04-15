@@ -225,8 +225,9 @@ public static class RoadCarver
         int mapLength = roadRidge.GetLength(1);
 
         // 1. Calculate Spawn Target near (0.8, 0.2)
-        Vector2Int spawnTarget = new Vector2Int(Mathf.FloorToInt(mapWidth * 0.8f), Mathf.FloorToInt(mapLength * 0.2f));
+        Vector2Int spawnTarget = new Vector2Int(Mathf.FloorToInt(mapWidth * 0.95f), Mathf.FloorToInt(mapLength * 0.05f));
         Vector2Int spawnPoint = GetClosestRoadPoint(spawnTarget, roadRidge);
+        spawnPoint = CenterSpawnOnRoad(spawnPoint, roadRidge, 12, 3);
 
         int maxBridges = 25; // Safety fallback
 
@@ -397,6 +398,51 @@ public static class RoadCarver
         }
 
         return pts;
+    }
+
+    private static Vector2Int CenterSpawnOnRoad(Vector2Int initialPoint, float[,] roadMask, int radius, int iterations)
+    {
+        Vector2Int currentPoint = initialPoint;
+        int mapWidth = roadMask.GetLength(0);
+        int mapLength = roadMask.GetLength(1);
+
+        for (int i = 0; i < iterations; i++)
+        {
+            long sumX = 0;
+            long sumZ = 0;
+            int roadPixelCount = 0;
+
+            // Create a local bounding box based on our radius
+            int minX = Mathf.Max(0, currentPoint.x - radius);
+            int maxX = Mathf.Min(mapWidth - 1, currentPoint.x + radius);
+            int minZ = Mathf.Max(0, currentPoint.y - radius);
+            int maxZ = Mathf.Min(mapLength - 1, currentPoint.y + radius);
+
+            // Scan the local neighborhood
+            for (int z = minZ; z <= maxZ; z++)
+            {
+                for (int x = minX; x <= maxX; x++)
+                {
+                    if (roadMask[x, z] < 0.25f) // If it is a road pixel
+                    {
+                        sumX += x;
+                        sumZ += z;
+                        roadPixelCount++;
+                    }
+                }
+            }
+
+            // Move the current point to the average center of all nearby road pixels
+            if (roadPixelCount > 0)
+            {
+                currentPoint = new Vector2Int((int)(sumX / roadPixelCount), (int)(sumZ / roadPixelCount));
+            }
+            else
+            {
+                break; // Failsafe in case something goes wrong
+            }
+        }
+        return currentPoint;
     }
 
     private static void CarveRoad(List<Vector2Int> line, float[,] roadMask)

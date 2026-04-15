@@ -51,6 +51,7 @@ public class WorldDataManager : MonoBehaviour
     [HideInInspector] public Color fieldColor, roadColor, sideRockColor;
     [HideInInspector] public int activeLevelSeed, seed1, seed2, seed3;
     [HideInInspector] public bool[,] globalWaterMask;
+    [HideInInspector] public float[,] waterProximityMap;
 
 
     public Dictionary<Vector2Int, List<PlacedObject>> masterSpawnGrid;
@@ -90,6 +91,9 @@ public class WorldDataManager : MonoBehaviour
         //water mask expand
         globalWaterMask = new bool[activeGen.mapWidth + activeGen.bufferLength, activeGen.mapLength + activeGen.bufferLength];
         BufferGen.GenWaterMaskWithBuffer(activeGen.waterMask, globalWaterMask, activeGen.bufferLength);
+
+        waterProximityMap = ProximityGenerator.CreateWaterProximityMap(globalWaterMask, 10);
+
         //road expand
         expandedRoadRidge = new float[activeGen.mapWidth + activeGen.bufferLength, activeGen.mapLength + activeGen.bufferLength];
         BufferGen.GenRoadMaskWithBuffer(activeGen.roadRidge, expandedRoadRidge, activeGen.bufferLength);
@@ -104,10 +108,12 @@ public class WorldDataManager : MonoBehaviour
         GetSpawnCoord();
 
         //Debug Roadmask to png for seeing
-        //SaveTextureAsPNG(roadRidgeTexture, "TerrainGenerator", "DebugRoadMask.png");
+        SaveTextureAsPNG(roadRidgeTexture, "TerrainGenerator", "DebugRoadMask.png");
 
         // 4. Generate Resource Noise Maps (Using PROFILE specific list)
         Dictionary<NoiseType, float[,]> availableNoiseMaps = new Dictionary<NoiseType, float[,]>();
+
+        availableNoiseMaps.Add(NoiseType.PuddleNoise, waterProximityMap);
         int noiseIndex = 0;
 
         foreach (NoiseSource source in profile.resourceNoises)
@@ -248,7 +254,28 @@ public class WorldDataManager : MonoBehaviour
         completeSpawnCoord = new Vector3(targetX, trueYHeight, targetY);
     }
 
+    // Debug Function
+    private Texture2D GenerateFloatMapTexture(float[,] floatMap)
+    {
+        int width = floatMap.GetLength(0);
+        int length = floatMap.GetLength(1);
+        Texture2D tex = new Texture2D(width, length);
+        Color[] pixels = new Color[width * length];
 
+        for (int z = 0; z < length; z++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                // Grayscale: 0.0 is Black, 1.0 is White
+                float val = floatMap[x, z];
+                pixels[z * width + x] = new Color(val, val, val);
+            }
+        }
+
+        tex.SetPixels(pixels);
+        tex.Apply();
+        return tex;
+    }
     private void SaveTextureAsPNG(Texture2D texture, string folderName, string fileName)
     {
         // 1. Get the full physical path to the folder (e.g., .../YourProject/Assets/TerrainGenerator)
