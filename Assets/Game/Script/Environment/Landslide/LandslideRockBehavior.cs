@@ -137,15 +137,14 @@ namespace Game.Environment.Landslide
             }
 
             PlayerStats playerStats = collision.collider.GetComponentInParent<PlayerStats>();
-            if (playerStats != null)
+            if (playerStats == null)
             {
-                playerStats.TakeDamage(impactDamage, DeathCause.LandslideRock);
-                RegisterEncounteredRiskEvent(collision, impactDamage);
+                Debug.LogWarning($"[LandslideRockBehavior] Damage collision on '{collision.collider.name}' matched damage layers but no PlayerStats receiver was found.");
                 return;
             }
 
-            // Fallback hook for other layer-filtered targets with a compatible API.
-            collision.collider.SendMessageUpwards("TakeDamage", impactDamage, SendMessageOptions.DontRequireReceiver);
+            playerStats.TakeDamage(impactDamage, DeathCause.LandslideRock);
+            RegisterEncounteredRiskEvent(collision, impactDamage);
         }
 
         private void HandlePushCollision(Collision collision)
@@ -354,7 +353,15 @@ namespace Game.Environment.Landslide
                     .Append(DOTween.To(() => projector.size.x, value => SetProjectorWidth(projector, value), targetSize, _impactDecalRevealDuration).SetEase(Ease.OutBack))
                     .Join(DOTween.To(() => projector.size.y, value => SetProjectorHeight(projector, value), targetSize, _impactDecalRevealDuration).SetEase(Ease.OutBack));
 
-                _owner?.RegisterSpawnedDecal(decalGO, _impactDecalFadeDuration);
+                if (_owner != null)
+                {
+                    _owner.RegisterSpawnedDecal(decalGO, _impactDecalFadeDuration);
+                }
+                else
+                {
+                    Destroy(decalGO, GetStandaloneImpactVisualLifetime());
+                }
+
                 PublishImpactDecalSound(decalPosition);
             }
             else
@@ -536,6 +543,15 @@ namespace Game.Environment.Landslide
             {
                 _owner.RegisterSpawnedDecal(fx, _impactDecalFadeDuration);
             }
+            else
+            {
+                Destroy(fx, GetStandaloneImpactVisualLifetime());
+            }
+        }
+
+        private float GetStandaloneImpactVisualLifetime()
+        {
+            return Mathf.Max(0.01f, _impactDecalRevealDuration + _impactDecalHoldDuration + _impactDecalFadeDuration);
         }
 
         private static void ScaleBurstCount(ParticleSystem system, float multiplier)

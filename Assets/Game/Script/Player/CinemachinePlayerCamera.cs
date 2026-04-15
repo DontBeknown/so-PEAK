@@ -18,6 +18,16 @@ public class CinemachinePlayerCamera : MonoBehaviour, ICameraInputController
         cinemachineCameras = FindObjectsByType<CinemachineCamera>(FindObjectsSortMode.None);
     }
 
+    public CinemachineCamera[] GetCinemachineCameras(bool refresh = false)
+    {
+        if (refresh || cinemachineCameras == null || cinemachineCameras.Length == 0)
+        {
+            CacheCinemachineCameras();
+        }
+
+        return cinemachineCameras;
+    }
+
     /// <summary>
     /// Updates all Cinemachine cameras to target the specified player transform.
     /// Call this after spawning a new player at runtime.

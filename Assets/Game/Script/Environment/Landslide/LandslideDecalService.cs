@@ -21,7 +21,7 @@ namespace Game.Environment.Landslide
             }
         }
 
-        private readonly List<ActiveDecalEntry> _activeDecals = new List<ActiveDecalEntry>();
+        private readonly Queue<ActiveDecalEntry> _activeDecals = new Queue<ActiveDecalEntry>();
         private readonly Dictionary<GameObject, Queue<GameObject>> _decalPoolByPrefab = new Dictionary<GameObject, Queue<GameObject>>();
         private readonly Dictionary<GameObject, GameObject> _decalInstanceToPrefab = new Dictionary<GameObject, GameObject>();
 
@@ -65,7 +65,7 @@ namespace Game.Environment.Landslide
                 return;
             }
 
-            _activeDecals.Add(new ActiveDecalEntry(decal, Mathf.Max(0.01f, fadeDuration)));
+            _activeDecals.Enqueue(new ActiveDecalEntry(decal, Mathf.Max(0.01f, fadeDuration)));
         }
 
         public GameObject RentDecal(GameObject prefab, Vector3 position, Quaternion rotation)
@@ -156,16 +156,14 @@ namespace Game.Environment.Landslide
 
         public void DestroyAllDecalsImmediate()
         {
-            for (int i = _activeDecals.Count - 1; i >= 0; i--)
+            while (_activeDecals.Count > 0)
             {
-                GameObject decal = _activeDecals[i].Decal;
+                GameObject decal = _activeDecals.Dequeue().Decal;
                 if (decal != null)
                 {
                     ReturnDecal(decal);
                 }
             }
-
-            _activeDecals.Clear();
             _decalCleanupRoutine = null;
             _isFadingAllDecals = false;
         }
@@ -174,9 +172,7 @@ namespace Game.Environment.Landslide
         {
             while (_activeDecals.Count > 0)
             {
-                ActiveDecalEntry entry = _activeDecals[0];
-                _activeDecals.RemoveAt(0);
-
+                ActiveDecalEntry entry = _activeDecals.Dequeue();
                 GameObject decal = entry.Decal;
                 if (decal == null)
                 {

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using DG.Tweening;
+using Game.Core.DI;
 using Unity.Cinemachine;
 using UnityEngine;
 
@@ -8,28 +9,19 @@ namespace Game.Environment.Landslide
     [DisallowMultipleComponent]
     public class LandslideShakeController : MonoBehaviour
     {
+        private CinemachinePlayerCamera _playerCamera;
         private CinemachineBasicMultiChannelPerlin[] _perlinComponents;
         private Tween _shakeTween;
         private float _currentShakeAmplitude;
 
         public void CachePerlinComponents()
         {
-            CinemachineCamera[] cameras = FindObjectsByType<CinemachineCamera>(FindObjectsSortMode.None);
-            List<CinemachineBasicMultiChannelPerlin> found = new List<CinemachineBasicMultiChannelPerlin>();
-            for (int i = 0; i < cameras.Length; i++)
-            {
-                CinemachineBasicMultiChannelPerlin perlin = cameras[i].GetComponent<CinemachineBasicMultiChannelPerlin>();
-                if (perlin != null)
-                {
-                    found.Add(perlin);
-                }
-            }
-
-            _perlinComponents = found.ToArray();
+            ResolvePerlinComponents(forceRefresh: true);
         }
 
         public void TransitionShake(float targetAmplitude, float duration)
         {
+            ResolvePerlinComponents(forceRefresh: true);
             if (_perlinComponents == null || _perlinComponents.Length == 0)
             {
                 return;
@@ -64,6 +56,41 @@ namespace Game.Environment.Landslide
             _shakeTween = null;
             _currentShakeAmplitude = 0f;
             SetAllShakeAmplitudes(0f);
+        }
+
+        private void ResolvePerlinComponents(bool forceRefresh)
+        {
+            _playerCamera ??= ServiceContainer.Instance?.TryGet<CinemachinePlayerCamera>();
+            if (_playerCamera == null)
+            {
+                _perlinComponents = null;
+                return;
+            }
+
+            CinemachineCamera[] cameras = _playerCamera.GetCinemachineCameras(forceRefresh);
+            if (cameras == null || cameras.Length == 0)
+            {
+                _perlinComponents = null;
+                return;
+            }
+
+            List<CinemachineBasicMultiChannelPerlin> found = new List<CinemachineBasicMultiChannelPerlin>();
+            for (int i = 0; i < cameras.Length; i++)
+            {
+                CinemachineCamera camera = cameras[i];
+                if (camera == null)
+                {
+                    continue;
+                }
+
+                CinemachineBasicMultiChannelPerlin perlin = camera.GetComponent<CinemachineBasicMultiChannelPerlin>();
+                if (perlin != null)
+                {
+                    found.Add(perlin);
+                }
+            }
+
+            _perlinComponents = found.Count > 0 ? found.ToArray() : null;
         }
 
         private void SetAllShakeAmplitudes(float amplitude)

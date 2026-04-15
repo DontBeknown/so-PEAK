@@ -157,11 +157,6 @@ namespace Game.Environment.Landslide
                 decalService.Configure(transform, maxDecalPoolSizePerPrefab, delayBetweenDecalCleanup);
                 decalService.PrewarmDecalPool(impactDecalProjectorPrefab, decalPoolPrewarmCount);
             }
-
-            if (shakeController != null)
-            {
-                shakeController.CachePerlinComponents();
-            }
         }
 
         private void OnDisable()
@@ -270,7 +265,7 @@ namespace Game.Environment.Landslide
             temporaryAnchor.SetPositionAndRotation(position, Quaternion.identity);
             temporaryAnchor.SetParent(transform);
             PlayPhaseOneAnchorSounds(temporaryAnchor.position);
-            StartCoroutine(SpawnRoutineWithCleanup(new[] { temporaryAnchor }));
+            StartCoroutine(SpawnRoutineWithCleanup(new[] { temporaryAnchor }, destroyAnchorsAfterSpawn: true));
         }
 
         public void RecycleRock(LandslideRockBehavior rock)
@@ -385,17 +380,19 @@ namespace Game.Environment.Landslide
 
         }
 
-        private IEnumerator SpawnRoutineWithCleanup(IReadOnlyList<Transform> anchors)
+        private IEnumerator SpawnRoutineWithCleanup(IReadOnlyList<Transform> anchors, bool destroyAnchorsAfterSpawn)
         {
             yield return StartCoroutine(SpawnRoutine(anchors));
             
-            // Clean up temporary anchors after spawning completes
-            for (int i = 0; i < anchors.Count; i++)
+            if (destroyAnchorsAfterSpawn)
             {
-                Transform anchor = anchors[i];
-                if (anchor != null && (anchor.name.Contains("Temporary") || anchor.name.Contains("Position")))
+                for (int i = 0; i < anchors.Count; i++)
                 {
-                    Destroy(anchor.gameObject);
+                    Transform anchor = anchors[i];
+                    if (anchor != null)
+                    {
+                        Destroy(anchor.gameObject);
+                    }
                 }
             }
 
