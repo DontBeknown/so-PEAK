@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2be43878c21de36479870e31aff9b1d9, type: 3}
+  m_Name: LevelBonusCollectableConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Progression.LevelBonusCollectableConfig
+  rules:
+  - level: 1
+    requiredCollectedAfterStarter: 4
+    bonusCollectable: {fileID: 11400000, guid: e39472b6f5bad274687c48f58c30406a, type: 2}
+  - level: 2
+    requiredCollectedAfterStarter: 5
+    bonusCollectable: {fileID: 11400000, guid: 95343b9c18960f245b015bbd6d1106f6, type: 2}

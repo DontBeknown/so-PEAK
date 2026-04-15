@@ -131,11 +131,6 @@ public class PlayerSpawner : MonoBehaviour
         // 5. INSTANTIATE PLAYER PREFAB AT FINAL POSITION
         GameObject spawnedPlayerObj = Instantiate(playerPrefab, finalSpawnPosition, Quaternion.identity);
         SpawnedPlayer = spawnedPlayerObj.transform;
-
-        if (isFreshLevelEntry && SaveLoadService.Instance != null)
-        {
-            SaveLoadService.Instance.PerformAutoSave(SpawnedPlayer);
-        }
         
         //FootIKControllerRefactored footIK = spawnedPlayerObj.GetComponentInChildren<FootIKControllerRefactored>();
        Debug.Log($"[PlayerSpawner] Player instantiated at {finalSpawnPosition}");

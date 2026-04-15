@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Game.Core.DI;
 using Game.Core.Events;
+
 using Game.Collectable;
 using Game.UI;
 
@@ -9,8 +10,13 @@ namespace Game.Interaction
 {
     public class RandomCollectableUnlockInteractable : MonoBehaviour, IInteractable
     {
-        [Header("Collectable Pool")]
-        [SerializeField] private CollectableItem[] collectablePool;
+        [Header("Collectable Pools by Biome")]
+        [SerializeField] private CollectableItem[] forestPool;
+        [SerializeField] private CollectableItem[] desertPool;
+        [SerializeField] private CollectableItem[] snowPool;
+        [SerializeField] private CollectableBiome selectedBiome = CollectableBiome.Forest;
+        
+        [Header("Behavior")]
         [SerializeField] private bool destroyAfterSuccessfulUnlock = true;
         [SerializeField] private bool destroyOnExhaustion = true;
         [SerializeField] private string alreadyUnlockedMessage = "Already unlocked";
@@ -28,12 +34,70 @@ namespace Game.Interaction
 
         public Transform GetTransform() => transform;
 
+        /// <summary>
+        /// Gets the collectable pool for the currently selected biome.
+        /// </summary>
+        private CollectableItem[] GetCurrentPool()
+        {
+            return selectedBiome switch
+            {
+                CollectableBiome.Forest => forestPool,
+                CollectableBiome.Desert => desertPool,
+                CollectableBiome.Snow => snowPool,
+                _ => forestPool
+            };
+        }
+
+        public void SetBiome(CollectableBiome biome)
+        {
+            selectedBiome = biome;
+        }
+        private bool RefreshBiomeAndCleanupIfInvalid()
+        {
+            var saveLoadService = ServiceContainer.Instance.TryGet<ISaveLoadService>();
+            if (saveLoadService != null)
+            {
+                int currentLevel = saveLoadService.GetCurrentLevel();
+                selectedBiome = GetBiomeFromLevel(currentLevel);
+            }
+
+            if (!HasValidCollectablePool())
+            {
+                PersistSpawnDestroyedState();
+                Destroy(gameObject);
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Maps level number to CollectableBiome using WorldLevel enum for extensibility.
+        /// If new levels are added to WorldLevel, simply add a new case here.
+        /// </summary>
+        private static CollectableBiome GetBiomeFromLevel(int level)
+        {
+            // WorldLevel enum: Forest = 1, Desert = 2, Tundra = 3
+            return (WorldLevel)level switch
+            {
+                WorldLevel.Forest => CollectableBiome.Forest,
+                WorldLevel.Desert => CollectableBiome.Desert,
+                WorldLevel.Tundra => CollectableBiome.Snow,
+                _ => CollectableBiome.Forest  // Fallback to Forest
+            };
+        }
+
         public void OnHighlighted(bool highlighted)
         {
         }
 
         public void Interact(Game.Player.PlayerControllerRefactored player)
         {
+            if (!RefreshBiomeAndCleanupIfInvalid())
+            {
+                return;
+            }
+
             var collectableManager = ServiceContainer.Instance.TryGet<ICollectableManager>();
             if (collectableManager == null)
             {
@@ -74,14 +138,15 @@ namespace Game.Interaction
 
         private bool HasValidCollectablePool()
         {
-            if (collectablePool == null || collectablePool.Length == 0)
+            var pool = GetCurrentPool();
+            if (pool == null || pool.Length == 0)
             {
                 return false;
             }
 
-            for (int i = 0; i < collectablePool.Length; i++)
+            for (int i = 0; i < pool.Length; i++)
             {
-                if (IsValidCollectable(collectablePool[i]))
+                if (IsValidCollectable(pool[i]))
                 {
                     return true;
                 }
@@ -95,14 +160,15 @@ namespace Game.Interaction
             var lockedCollectables = new List<CollectableItem>();
             var seenIds = new HashSet<string>();
 
-            if (collectablePool == null)
+            var pool = GetCurrentPool();
+            if (pool == null)
             {
                 return lockedCollectables;
             }
 
-            for (int i = 0; i < collectablePool.Length; i++)
+            for (int i = 0; i < pool.Length; i++)
             {
-                var collectable = collectablePool[i];
+                var collectable = pool[i];
                 if (!IsValidCollectable(collectable))
                 {
                     continue;
@@ -129,9 +195,10 @@ namespace Game.Interaction
                 return false;
             }
 
-            for (int i = 0; i < collectablePool.Length; i++)
+            var pool = GetCurrentPool();
+            for (int i = 0; i < pool.Length; i++)
             {
-                var collectable = collectablePool[i];
+                var collectable = pool[i];
                 if (!IsValidCollectable(collectable))
                 {
                     continue;

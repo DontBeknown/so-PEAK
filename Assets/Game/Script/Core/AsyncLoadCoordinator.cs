@@ -34,6 +34,7 @@ namespace Game.Core
 
         [Header("Options")]
         [SerializeField] private bool enableAsyncLoadFlow = true;
+        [SerializeField] private bool enableCoordinatorLogs = true;
 
         private IEnumerator Start()
         {
@@ -43,7 +44,8 @@ namespace Game.Core
 
             if (!shouldUseAsyncLoadFlow)
             {
-                Debug.Log("[AsyncLoadCoordinator] Async loading flow disabled. Waiting for chunks then spawning.");
+                if (enableCoordinatorLogs)
+                    Debug.Log("[AsyncLoadCoordinator] Async loading flow disabled. Waiting for chunks then spawning.");
 
                 if (loadingState != null)
                     yield return new WaitUntil(() => loadingState.isChunksReady);
@@ -72,13 +74,15 @@ namespace Game.Core
                 loadingState.statusMessage = "Press Y to enter world";
             }
 
-            Debug.Log("[AsyncLoadCoordinator] Gate 1 passed — all chunks ready. Waiting for player confirmation.");
+            if (enableCoordinatorLogs)
+                Debug.Log("[AsyncLoadCoordinator] Gate 1 passed — all chunks ready. Waiting for player confirmation.");
 
             // --- Gate 2: Wait for player to press Y in Scene_Debug_Gameplay ---
             yield return new WaitUntil(() =>
                 loadingState != null && loadingState.playerConfirmed);
 
-            Debug.Log("[AsyncLoadCoordinator] Gate 2 passed — player confirmed. Transitioning.");
+            if (enableCoordinatorLogs)
+                Debug.Log("[AsyncLoadCoordinator] Gate 2 passed — player confirmed. Transitioning.");
 
             // --- Step 3: Unload the waiting-room scene ---
             yield return SceneManager.UnloadSceneAsync(debugGameplaySceneName);
@@ -101,12 +105,16 @@ namespace Game.Core
             if (renderController != null)
                 renderController.SpawnPlayerNow();
             else
-                Debug.LogError("[AsyncLoadCoordinator] RenderController not assigned! Cannot spawn player.");
+            {
+                if (enableCoordinatorLogs)
+                    Debug.LogError("[AsyncLoadCoordinator] RenderController not assigned! Cannot spawn player.");
+            }
 
             if (loadingState != null)
                 loadingState.isComplete = true;
 
-            Debug.Log("[AsyncLoadCoordinator] Transition complete. Player spawning.");
+            if (enableCoordinatorLogs)
+                Debug.Log("[AsyncLoadCoordinator] Transition complete. Player spawning.");
         }
 
         private bool ShouldUseAsyncLoadFlow()
@@ -119,14 +127,16 @@ namespace Game.Core
             SaveLoadService saveLoadService = SaveLoadService.Instance;
             if (saveLoadService == null)
             {
-                Debug.LogWarning("[AsyncLoadCoordinator] SaveLoadService not available. Async flow will be skipped.");
+                if (enableCoordinatorLogs)
+                    Debug.LogWarning("[AsyncLoadCoordinator] SaveLoadService not available. Async flow will be skipped.");
                 return false;
             }
 
             WorldSaveData currentSave = saveLoadService.CurrentWorldSave;
             if (currentSave == null)
             {
-                Debug.LogWarning("[AsyncLoadCoordinator] CurrentWorldSave is null. Async flow will be skipped.");
+                if (enableCoordinatorLogs)
+                    Debug.LogWarning("[AsyncLoadCoordinator] CurrentWorldSave is null. Async flow will be skipped.");
                 return false;
             }
 

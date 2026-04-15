@@ -27,6 +27,9 @@ public interface ISaveLoadService
     // Level progression
     void ProgressToNextLevel();
     int GetCurrentLevel();
+    bool IsNewWorld();
+    bool IsFreshLevelEntry();
+    void ResetFreshLevelEntryFlag();
     
     // Validation
     bool ValidateSaveFile(string worldGuid);

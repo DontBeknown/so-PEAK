@@ -152,6 +152,11 @@ namespace Game.UI.Collectable
             SetListVisibilityImmediate(true);
         }
 
+        public CollectableItem[] GetConfiguredCollectables()
+        {
+            return allCollectables;
+        }
+
         private void RebuildEntries()
         {
             ClearEntries();

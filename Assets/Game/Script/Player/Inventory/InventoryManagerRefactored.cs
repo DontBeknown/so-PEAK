@@ -164,6 +164,11 @@ namespace Game.Player.Inventory
                 return;
             }
 
+            if(SaveLoadService.Instance != null && SaveLoadService.Instance.IsNewWorld())
+            {
+                return;
+            }
+
             foreach (var entry in startingItems)
             {
                 if (entry == null || entry.item == null || entry.quantity <= 0)

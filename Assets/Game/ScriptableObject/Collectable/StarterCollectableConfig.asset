@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5421c4388f773c4891ca1fbee500c2f, type: 3}
+  m_Name: StarterCollectableConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Progression.StarterCollectableConfig
+  startersByLevel:
+  - level: 1
+    starterCollectables:
+    - {fileID: 11400000, guid: 250fba82954fae04daa122a5891a2eac, type: 2}
+    - {fileID: 11400000, guid: a3964586d70c90d459c9b70e638a71f3, type: 2}
+  - level: 2
+    starterCollectables:
+    - {fileID: 11400000, guid: 8bc56b6c4e5eed04590760bf14769a7c, type: 2}
+    - {fileID: 11400000, guid: de5d81105c8d64742850c8926765aae1, type: 2}
+  - level: 3
+    starterCollectables:
+    - {fileID: 11400000, guid: 158ed22d1b4d5f44d851834980d104c1, type: 2}
+    - {fileID: 11400000, guid: c8e3b745c0fdb634ba52c9404e8c46a8, type: 2}
