@@ -48,6 +48,9 @@ namespace Game.Environment.DayNight
         // Torch fog override state
         private bool _isTorchEquipped;
         private TorchItem _equippedTorchItem;
+
+        // Tornado state
+        private bool _isTornadoActive = false;
         
         #region IDayNightCycleService Implementation
         
@@ -260,6 +263,13 @@ namespace Game.Environment.DayNight
         
         private void UpdateTimeOfDay()
         {
+            // Skip lighting transitions while tornado is active
+            // (time still updates internally, just no visual changes)
+            if (_isTornadoActive)
+            {
+                return;
+            }
+
             TimeOfDay newTimeOfDay = config.GetTimeOfDay(_currentTime);
             
             if (newTimeOfDay != _currentTimeOfDay)
@@ -399,6 +409,8 @@ namespace Game.Environment.DayNight
             eventBus.Subscribe<ItemEquippedEvent>(OnItemEquipped);
             eventBus.Subscribe<ItemUnequippedEvent>(OnItemUnequipped);
             eventBus.Subscribe<TimeOfDayChangedEvent>(OnTimeOfDayChanged);
+            eventBus.Subscribe<TornadoStartedEvent>(OnTornadoStarted);
+            eventBus.Subscribe<TornadoEndedEvent>(OnTornadoEnded);
         }
 
         private void UnsubscribeFromEvents()
@@ -416,6 +428,8 @@ namespace Game.Environment.DayNight
             eventBus.Unsubscribe<ItemEquippedEvent>(OnItemEquipped);
             eventBus.Unsubscribe<ItemUnequippedEvent>(OnItemUnequipped);
             eventBus.Unsubscribe<TimeOfDayChangedEvent>(OnTimeOfDayChanged);
+            eventBus.Unsubscribe<TornadoStartedEvent>(OnTornadoStarted);
+            eventBus.Unsubscribe<TornadoEndedEvent>(OnTornadoEnded);
         }
 
         private void OnItemEquipped(ItemEquippedEvent evt)
@@ -441,6 +455,28 @@ namespace Game.Environment.DayNight
         private void OnTimeOfDayChanged(TimeOfDayChangedEvent evt)
         {
             EvaluateTorchNightFogOverride();
+        }
+
+        private void OnTornadoStarted(TornadoStartedEvent evt)
+        {
+            _isTornadoActive = true;
+            if (showDebugInfo)
+            {
+                Debug.Log("[DayNightCycle] Tornado started - pausing day/night transitions");
+            }
+        }
+
+        private void OnTornadoEnded(TornadoEndedEvent evt)
+        {
+            _isTornadoActive = false;
+            
+            // Re-evaluate lighting in case time changed during tornado
+            UpdateTimeOfDay();
+            
+            if (showDebugInfo)
+            {
+                Debug.Log("[DayNightCycle] Tornado ended - resuming day/night transitions");
+            }
         }
 
         private void RefreshTorchEquippedState()

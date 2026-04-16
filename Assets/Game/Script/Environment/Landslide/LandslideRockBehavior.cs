@@ -48,7 +48,6 @@ namespace Game.Environment.Landslide
         private Tween _recycleTween;
         private bool _isRecycling;
         private IEventBus _eventBus;
-        private PlayerStatsTrackerService _statsTracker;
 
         private void Awake()
         {
@@ -402,20 +401,9 @@ namespace Game.Environment.Landslide
             _eventBus ??= ServiceContainer.Instance?.TryGet<IEventBus>();
         }
 
-        private void ResolveStatsTracker()
-        {
-            _statsTracker ??= ServiceContainer.Instance?.TryGet<PlayerStatsTrackerService>();
-        }
-
         private void RegisterEncounteredRiskEvent(Collision collision, float impactDamage)
         {
-            ResolveStatsTracker();
-            if (_statsTracker == null)
-            {
-                return;
-            }
-
-            if (_owner != null && !_owner.TryReserveRockfallEncounterEvent())
+            if (_owner == null)
             {
                 return;
             }
@@ -424,16 +412,7 @@ namespace Game.Environment.Landslide
                 ? collision.GetContact(0).point
                 : collision.transform.position;
 
-            RiskEvent riskEvent = new RiskEvent
-            {
-                riskType = RiskType.Rockfall,
-                location = eventPosition,
-                timestamp = Time.time,
-                wasEncountered = true,
-                severity = EvaluateEncounterSeverity(impactDamage)
-            };
-
-            _statsTracker.RegisterRiskEvent(riskEvent);
+            _owner.RegisterRockfallEncounter(eventPosition, EvaluateEncounterSeverity(impactDamage));
         }
 
         private float EvaluateEncounterSeverity(float impactDamage)

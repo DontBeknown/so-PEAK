@@ -135,6 +135,15 @@ namespace Game.Environment.Landslide
         private Coroutine _phaseTwoHardRumbleLoopRoutine;
         private bool _isPhaseTwoHardRumbleLoopActive;
         private bool _hasRegisteredRockfallEncounterEvent;
+        private bool _isRockfallRiskTrackingActive;
+        private bool _wasRockfallEncountered;
+        private bool _hasSubmittedRockfallRiskEvent;
+        private Vector3 _rockfallRiskStartPosition;
+        private float _rockfallRiskStartTime;
+        private Vector3 _rockfallEncounterPosition;
+        private float _rockfallEncounterTimestamp;
+        private float _rockfallEncounterSeverity;
+        private PlayerStatsTrackerService _statsTracker;
         #endregion
 
         #region Unity Lifecycle
@@ -161,6 +170,7 @@ namespace Game.Environment.Landslide
 
         private void OnDisable()
         {
+            FinalizeRockfallRiskEvent();
             StopPhaseTwoHardRumbleLoop();
 
             if (decalService != null)
@@ -226,6 +236,7 @@ namespace Game.Environment.Landslide
             }
 
             _hasRegisteredRockfallEncounterEvent = false;
+            BeginRockfallRiskTracking(ResolveAudioPosition(spawnAnchors));
 
             PlayPhaseOneAnchorSounds(ResolveAudioPosition(spawnAnchors));
             StartCoroutine(SpawnRoutine(spawnAnchors));
@@ -240,6 +251,7 @@ namespace Game.Environment.Landslide
             }
 
             _hasRegisteredRockfallEncounterEvent = false;
+            BeginRockfallRiskTracking(anchor.position);
 
             PlayPhaseOneAnchorSounds(anchor.position);
             StartCoroutine(SpawnRoutine(new[] { anchor }));
@@ -259,6 +271,7 @@ namespace Game.Environment.Landslide
             }
 
             _hasRegisteredRockfallEncounterEvent = false;
+            BeginRockfallRiskTracking(position);
 
             // Otherwise, create a temporary anchor at the position
             Transform temporaryAnchor = new GameObject($"LandslideAnchor_Temporary").transform;
@@ -282,6 +295,24 @@ namespace Game.Environment.Landslide
 
             _hasRegisteredRockfallEncounterEvent = true;
             return true;
+        }
+
+        public void RegisterRockfallEncounter(Vector3 eventPosition, float severity)
+        {
+            if (!_isRockfallRiskTrackingActive)
+            {
+                return;
+            }
+
+            if (!_wasRockfallEncountered)
+            {
+                _rockfallEncounterPosition = eventPosition;
+                _rockfallEncounterTimestamp = Time.time;
+            }
+
+            _wasRockfallEncountered = true;
+            _rockfallEncounterSeverity = Mathf.Max(_rockfallEncounterSeverity, Mathf.Clamp01(severity));
+            _hasRegisteredRockfallEncounterEvent = true;
         }
         #endregion
 
@@ -320,6 +351,7 @@ namespace Game.Environment.Landslide
 
             if (_activeRocks.Count == 0)
             {
+                FinalizeRockfallRiskEvent();
                 StopPhaseTwoHardRumbleLoop();
                 shakeController?.TransitionShake(0f, shakeFadeOutDuration);
                 decalService?.FadeAndDestroyAllDecals();
@@ -398,6 +430,7 @@ namespace Game.Environment.Landslide
 
             if (_activeRocks.Count == 0)
             {
+                FinalizeRockfallRiskEvent();
                 StopPhaseTwoHardRumbleLoop();
                 shakeController?.TransitionShake(0f, shakeFadeOutDuration);
                 decalService?.FadeAndDestroyAllDecals();
@@ -894,6 +927,51 @@ namespace Game.Environment.Landslide
         private void ResolveEventBus()
         {
             _eventBus ??= ServiceContainer.Instance?.TryGet<IEventBus>();
+        }
+
+        private void ResolveStatsTracker()
+        {
+            _statsTracker ??= ServiceContainer.Instance?.TryGet<PlayerStatsTrackerService>();
+        }
+
+        private void BeginRockfallRiskTracking(Vector3 eventPosition)
+        {
+            FinalizeRockfallRiskEvent();
+
+            _isRockfallRiskTrackingActive = true;
+            _wasRockfallEncountered = false;
+            _hasSubmittedRockfallRiskEvent = false;
+            _rockfallRiskStartPosition = eventPosition;
+            _rockfallRiskStartTime = Time.time;
+            _rockfallEncounterPosition = eventPosition;
+            _rockfallEncounterTimestamp = _rockfallRiskStartTime;
+            _rockfallEncounterSeverity = 0f;
+        }
+
+        private void FinalizeRockfallRiskEvent()
+        {
+            if (!_isRockfallRiskTrackingActive || _hasSubmittedRockfallRiskEvent)
+            {
+                return;
+            }
+
+            ResolveStatsTracker();
+            if (_statsTracker != null)
+            {
+                RiskEvent riskEvent = new RiskEvent
+                {
+                    riskType = RiskType.Rockfall,
+                    location = _wasRockfallEncountered ? _rockfallEncounterPosition : _rockfallRiskStartPosition,
+                    timestamp = _wasRockfallEncountered ? _rockfallEncounterTimestamp : Time.time,
+                    wasEncountered = _wasRockfallEncountered,
+                    severity = _wasRockfallEncountered ? _rockfallEncounterSeverity : 0f
+                };
+
+                _statsTracker.RegisterRiskEvent(riskEvent);
+            }
+
+            _hasSubmittedRockfallRiskEvent = true;
+            _isRockfallRiskTrackingActive = false;
         }
 
         private bool IsCleanupComplete()

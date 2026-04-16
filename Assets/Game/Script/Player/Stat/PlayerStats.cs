@@ -286,7 +286,7 @@ public class PlayerStats : MonoBehaviour
         health.Damage(dmg);
 
         // Reuse fall-impact feedback for heavy impact-like causes.
-        if (cause == DeathCause.Falling || cause == DeathCause.LandslideRock)
+        if (cause == DeathCause.Falling || cause == DeathCause.LandslideRock || cause == DeathCause.Tornado)
         {
             OnFallDamaged?.Invoke(dmg);
         }

@@ -79,8 +79,10 @@ public class FallingState : IPlayerState
         if (downSpeed > _peakFallSpeed)
             _peakFallSpeed = downSpeed;
 
+        Vector3 externalVelocity = model.ConsumeExternalVelocity();
+
         // Combine horizontal momentum with vertical velocity (gravity)
-        Vector3 motion = new Vector3(_horizontalVelocity.x, model.Velocity.y, _horizontalVelocity.z);
+        Vector3 motion = new Vector3(_horizontalVelocity.x, model.Velocity.y, _horizontalVelocity.z) + externalVelocity;
         model.Move(motion);
         model.ApplyGravity(-9.81f);
     }

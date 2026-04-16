@@ -33,6 +33,8 @@ public class PlayerModelRefactored
         set => _movementContext.Velocity = value;
     }
 
+    private Vector3 _externalVelocity;
+
     /// <summary>
     /// Constructor using Dependency Injection
     /// </summary>
@@ -113,6 +115,18 @@ public class PlayerModelRefactored
     public bool IsGrounded() => _physicsService.IsGrounded();
     
     public void Move(Vector3 motion) => _movementContext.Move(motion);
+
+    public void AddExternalVelocity(Vector3 velocity)
+    {
+        _externalVelocity += velocity;
+    }
+
+    public Vector3 ConsumeExternalVelocity()
+    {
+        Vector3 externalVelocity = _externalVelocity;
+        _externalVelocity = Vector3.zero;
+        return externalVelocity;
+    }
     
     public void ApplyGravity(float gravity) => _movementContext.ApplyGravity(gravity);
 

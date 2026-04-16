@@ -379,6 +379,14 @@ namespace Game.Player
         }
 
         /// <summary>
+        /// Adds an external movement contribution that will be merged into the next player state update.
+        /// </summary>
+        public void AddExternalVelocity(Vector3 velocity)
+        {
+            _model?.AddExternalVelocity(velocity);
+        }
+
+        /// <summary>
         /// Exits tied state and returns the player to walking state.
         /// </summary>
         public void ExitTiedState()

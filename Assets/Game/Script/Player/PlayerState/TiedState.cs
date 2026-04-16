@@ -54,9 +54,10 @@ public class TiedState : IPlayerState
         Vector3 moveDir = cameraProvider.GetWorldDirection(input);
         float tiedSpeed = model.WalkSpeed * _speedMultiplier;
         Vector3 velocity = moveDir * tiedSpeed;
+        Vector3 externalVelocity = model.ConsumeExternalVelocity();
 
         model.ApplyGravity(-9.81f);
-        model.Move(new Vector3(velocity.x, model.Velocity.y, velocity.z));
+        model.Move(new Vector3(velocity.x, model.Velocity.y, velocity.z) + externalVelocity);
 
         ClampToAnchorRadius(model);
 

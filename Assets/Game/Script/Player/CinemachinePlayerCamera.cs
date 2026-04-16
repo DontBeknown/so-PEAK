@@ -1,11 +1,14 @@
 using UnityEngine;
 using Unity.Cinemachine;
 using Game.UI;
+using DG.Tweening;
 
 public class CinemachinePlayerCamera : MonoBehaviour, ICameraInputController
 {
     private CinemachineCamera[] cinemachineCameras;
-    //private bool originalCameraEnabled = true;
+    private CinemachineBasicMultiChannelPerlin[] _perlinComponents;
+    private Tween _shakeTween;
+    private float _currentShakeAmplitude;
 
     private void Start()
     {
@@ -26,6 +29,100 @@ public class CinemachinePlayerCamera : MonoBehaviour, ICameraInputController
         }
 
         return cinemachineCameras;
+    }
+
+    /// <summary>
+    /// Transitions camera shake to a target amplitude over a specified duration.
+    /// Useful for environmental effects like tornados or earthquakes.
+    /// </summary>
+    public void TransitionShake(float targetAmplitude, float duration)
+    {
+        ResolvePerlinComponents(forceRefresh: true);
+        if (_perlinComponents == null || _perlinComponents.Length == 0)
+        {
+            return;
+        }
+
+        _shakeTween?.Kill();
+
+        float target = Mathf.Max(0f, targetAmplitude);
+        if (duration <= 0f)
+        {
+            _currentShakeAmplitude = target;
+            SetAllShakeAmplitudes(target);
+            return;
+        }
+
+        _shakeTween = DOTween.To(
+            () => _currentShakeAmplitude,
+            value =>
+            {
+                _currentShakeAmplitude = value;
+                SetAllShakeAmplitudes(value);
+            },
+            target,
+            duration)
+            .SetEase(Ease.OutCubic)
+            .SetUpdate(true);
+    }
+
+    /// <summary>
+    /// Immediately stops camera shake and resets to zero amplitude.
+    /// </summary>
+    public void StopAndReset()
+    {
+        _shakeTween?.Kill();
+        _shakeTween = null;
+        _currentShakeAmplitude = 0f;
+        SetAllShakeAmplitudes(0f);
+    }
+
+    private void ResolvePerlinComponents(bool forceRefresh)
+    {
+        if (forceRefresh || _perlinComponents == null)
+        {
+            CinemachineCamera[] cameras = GetCinemachineCameras(forceRefresh);
+            if (cameras == null || cameras.Length == 0)
+            {
+                _perlinComponents = null;
+                return;
+            }
+
+            System.Collections.Generic.List<CinemachineBasicMultiChannelPerlin> found = new System.Collections.Generic.List<CinemachineBasicMultiChannelPerlin>();
+            for (int i = 0; i < cameras.Length; i++)
+            {
+                CinemachineCamera camera = cameras[i];
+                if (camera == null)
+                {
+                    continue;
+                }
+
+                CinemachineBasicMultiChannelPerlin perlin = camera.GetComponent<CinemachineBasicMultiChannelPerlin>();
+                if (perlin != null)
+                {
+                    found.Add(perlin);
+                }
+            }
+
+            _perlinComponents = found.Count > 0 ? found.ToArray() : null;
+        }
+    }
+
+    private void SetAllShakeAmplitudes(float amplitude)
+    {
+        if (_perlinComponents == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < _perlinComponents.Length; i++)
+        {
+            CinemachineBasicMultiChannelPerlin perlin = _perlinComponents[i];
+            if (perlin != null)
+            {
+                perlin.AmplitudeGain = amplitude;
+            }
+        }
     }
 
     /// <summary>

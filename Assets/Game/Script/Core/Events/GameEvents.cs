@@ -293,4 +293,13 @@ namespace Game.Core.Events
     public class ContextMenuOpenedEvent
     {
     }
+
+    // Tornado Events
+    public class TornadoStartedEvent
+    {
+    }
+
+    public class TornadoEndedEvent
+    {
+    }
 }

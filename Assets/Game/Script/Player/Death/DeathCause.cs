@@ -7,5 +7,6 @@ public enum DeathCause
     Dehydration,
     Falling,
     Freezing,
-    Heatstroke
+    Heatstroke,
+    Tornado
 }
