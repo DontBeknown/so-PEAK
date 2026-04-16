@@ -10,20 +10,20 @@ public class NoiseTranslatorEditor : Editor
 
         //unused will delete later
 
-        //NoiseTranslator nt = (NoiseTranslator)target;
+        NoiseTranslator nt = (NoiseTranslator)target;
 
-        //if (GUILayout.Button("Generate Depth Map"))
-        //{
-            
+        if (GUILayout.Button("Generate Depth Map Seed 1234"))
+        {
 
-        //    if (nt.ContinentalNoise == null || nt.ErosionNoise_1 == null || nt.WeirdnessNoise == null)
-        //    {
-        //        Debug.LogError("Assign all 3 noise maps first!");
-        //        return;
-        //    }
 
-        //    nt.TerrainDrawing();
-        //    Debug.Log("Depth map generated!");
-        //}
+            if (nt.ContinentalNoise == null || nt.ErosionNoise_1 == null || nt.WeirdnessNoise == null)
+            {
+                Debug.LogError("Assign all 3 noise maps first!");
+                return;
+            }
+
+            nt.TerrainDrawing(12345);
+            Debug.Log("Depth map generated!");
+        }
     }
 }

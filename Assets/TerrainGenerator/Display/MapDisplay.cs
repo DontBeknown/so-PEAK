@@ -8,6 +8,9 @@ public class MapDisplay : MonoBehaviour
     public MeshRenderer meshRenderer;
     public Renderer textureRender;
 
+    [Header("Shader Setup")]
+    public Material baseTerrainMaterial; // Drag your Shader Graph material here
+
     public void DrawNoiseMap(float[,] noiseMap, bool isZeroOneRange)
     {
         if (textureRender == null) return;
@@ -44,26 +47,21 @@ public class MapDisplay : MonoBehaviour
         textureRender.transform.localScale = new Vector3(width, 1, height);
     }
 
-    public void DrawMesh(MeshData meshData)
+    public void DrawMesh(MeshData meshData, NoiseTranslator generatorSettings)
     {
-        if (meshFilter == null) return;
+        meshFilter.sharedMesh = meshData.CreateMesh();
+        Material editorMaterial = new Material(baseTerrainMaterial);
 
-        // Create the mesh and store it in a variable
-        Mesh mesh = meshData.CreateMesh();
+        // Your existing color setup
+        editorMaterial.SetColor("_Field_Color", generatorSettings.fieldColor);
+        editorMaterial.SetColor("_Side_Rock_Color", generatorSettings.sideRockColor);
+        editorMaterial.SetColor("_Road_Color", generatorSettings.roadColor);
 
-        // Assign to MeshFilter
-        meshFilter.mesh = mesh;
+        // --- ADD THIS LINE ---
+        // This passes a pure black image to the shader, meaning "There are 0 roads here."
+        editorMaterial.SetTexture("_Road_Mask", Texture2D.blackTexture);
 
-        // Try to get a MeshCollider on the same object
-        MeshCollider meshCollider = meshFilter.GetComponent<MeshCollider>();
-
-        // If none exists, automatically add one
-        if (meshCollider == null)
-            meshCollider = meshFilter.gameObject.AddComponent<MeshCollider>();
-
-        // Force Unity to refresh the collider
-        meshCollider.sharedMesh = null;
-        meshCollider.sharedMesh = mesh;
+        meshRenderer.sharedMaterial = editorMaterial;
     }
 
 }

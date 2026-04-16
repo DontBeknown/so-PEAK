@@ -165,10 +165,12 @@ public class NoiseTranslator : MonoBehaviour
                         }
                         else if (drawMode == DrawMode.Mesh)
                         {
-                            display.DrawMesh(PerlinTerrainMeshGenerator.GenerateTerrainMesh(
-                                completeMap, meshHeightMultiplier, levelOfDetail));
+                                display.DrawMesh(
+                                PerlinTerrainMeshGenerator.GenerateTerrainMesh(completeMap, meshHeightMultiplier, levelOfDetail),
+                                this // <--- Here is the missing argument!
+                                );
 
-                        }
+                }
 
                     }
                 }

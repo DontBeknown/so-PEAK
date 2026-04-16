@@ -74,21 +74,36 @@ public class PondGenerator : MonoBehaviour
         new PuddleSubEllipse { offset = new Vector2(-0.065364f, 0.8334f), radii = new Vector2(1.540f, 1.540f), rotationAngle = 0f }
     };
 
-    void Awake()
+    private void InitializeDatabase()
     {
-        pondDatabase = new List<List<PuddleSubEllipse>> {
-            myFirstPuddle, mySecondPuddle, myThirdPuddle, myFourthPuddle
-        };
+        // Only build the list if it hasn't been built yet
+        if (pondDatabase == null || pondDatabase.Count == 0)
+        {
+            pondDatabase = new List<List<PuddleSubEllipse>> {
+                myFirstPuddle, mySecondPuddle, myThirdPuddle, myFourthPuddle
+            };
+        }
     }
 
     public void MassSpawnPonds(float[,] heightmap, float[,] roadMask, bool[,] waterMask, int globalSeed, float terrainMaxHeight, int bufferOffset)
     {
+        InitializeDatabase();
+
         for (int i = transform.childCount - 1; i >= 0; i--)
         {
             Transform child = transform.GetChild(i);
             if (child.name == "Pond_Water_Skirted" || child.name == "Pond Debug Marker")
             {
-                Destroy(child.gameObject);
+                // If the game is running, use normal Destroy
+                if (Application.isPlaying)
+                {
+                    Destroy(child.gameObject);
+                }
+                // If we are just clicking the button in the Editor, use DestroyImmediate
+                else
+                {
+                    DestroyImmediate(child.gameObject);
+                }
             }
         }
 
