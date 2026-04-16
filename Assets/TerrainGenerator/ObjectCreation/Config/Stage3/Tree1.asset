@@ -18,12 +18,12 @@ MonoBehaviour:
   TreePrototypeIndex: 0
   BaseRadius: 0.5
   BaseHeight: 2
-  MinScale: 2
-  MaxScale: 10
+  MinScale: 0.25
+  MaxScale: 2
   BaseRotation: {x: 0, y: 0, z: 0}
   PositionOffset: {x: 0, y: 0, z: 0}
   RoadRule: 0
-  MinSpacing: 3
+  MinSpacing: 10
   Density: 0.1
   MaxSlopeDiff: 0.5
   RequiredNoiseMap: 0
