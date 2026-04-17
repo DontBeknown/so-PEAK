@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Campfire
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
   ObjectName: Campfire
-  Prefab: {fileID: 6416393420368611573, guid: e6c2aedcde0f1ad47aa493247d53a68a, type: 3}
+  Prefab: {fileID: 7677052783307640898, guid: 53310e0ca1606004899bc42b62c57710, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
   BaseRadius: 2
@@ -22,8 +22,6 @@ MonoBehaviour:
   MaxScale: 1
   BaseRotation: {x: 0, y: 0, z: 0}
   PositionOffset: {x: 0, y: 0, z: 0}
-  AlignToTerrainNormal: 0
-  MaxAlignAngle: 20
   RoadRule: 1
   MinSpacing: 70
   Density: 1

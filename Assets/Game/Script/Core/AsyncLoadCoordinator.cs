@@ -35,9 +35,11 @@ namespace Game.Core
         [Header("Shared State")]
         [SerializeField] private SharedLoadingState loadingState;
 
+
         [Header("Options")]
         [SerializeField] private bool enableAsyncLoadFlow = true;
         [SerializeField] private bool enableCoordinatorLogs = true;
+        [SerializeField] private bool enableHJBPathCalculation = true;
 
         private IEnumerator Start()
         {
@@ -71,20 +73,23 @@ namespace Game.Core
             yield return new WaitUntil(() =>
                 loadingState != null && loadingState.isChunksReady);
 
-            // --- Gate 1.5: Trigger HJB path calculation and wait for completion ---
-            if (hjbClickPathController != null && worldDataManager != null)
+            // --- Gate 1.5: Trigger HJB path calculation and wait for completion (optional) ---
+            if (enableHJBPathCalculation)
             {
-                if (enableCoordinatorLogs)
-                    Debug.Log("[AsyncLoadCoordinator] Triggering HJB path calculation from spawn coord...");
-                if (loadingState != null)
+                if (hjbClickPathController != null && worldDataManager != null)
                 {
-                    loadingState.statusMessage = "Calculating optimal path to peak...";
+                    if (enableCoordinatorLogs)
+                        Debug.Log("[AsyncLoadCoordinator] Triggering HJB path calculation from spawn coord...");
+                    if (loadingState != null)
+                    {
+                        loadingState.statusMessage = "Calculating optimal path to peak...";
+                    }
+                    yield return hjbClickPathController.CalculatePathFromSpawnToPeak(worldDataManager.completeSpawnCoord);
                 }
-                yield return hjbClickPathController.CalculatePathFromSpawnToPeak(worldDataManager.completeSpawnCoord);
-            }
-            else if (enableCoordinatorLogs)
-            {
-                Debug.LogWarning("[AsyncLoadCoordinator] HJBClickPathController or WorldDataManager not assigned. Skipping HJB path calculation.");
+                else if (enableCoordinatorLogs)
+                {
+                    Debug.LogWarning("[AsyncLoadCoordinator] HJBClickPathController or WorldDataManager not assigned. Skipping HJB path calculation.");
+                }
             }
 
             // Snap progress to 100% and show confirm prompt message

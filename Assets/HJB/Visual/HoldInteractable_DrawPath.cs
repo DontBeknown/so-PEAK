@@ -10,7 +10,7 @@ public class HoldInteractable_DrawPath : HoldInteractableBase
     [SerializeField] private HJBClickPathController hjbClickPathController;
 
     public override string InteractionPrompt => "Draw Path to Peak";
-    public override bool CanInteract => hjbClickPathController != null;
+    public override bool CanInteract => true;
 
     protected override void OnHoldComplete()
     {
