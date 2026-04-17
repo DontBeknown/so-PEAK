@@ -25,9 +25,12 @@ namespace Game.Core
         [Header("Scene")]
         [SerializeField] private string debugGameplaySceneName = "Scene_Debug_Gameplay";
 
+
         [Header("References")]
         [SerializeField] private RenderController renderController;
         [SerializeField] private Camera terrainCamera;
+        [SerializeField] private HJBClickPathController hjbClickPathController;
+        [SerializeField] private WorldDataManager worldDataManager;
 
         [Header("Shared State")]
         [SerializeField] private SharedLoadingState loadingState;
@@ -63,9 +66,26 @@ namespace Game.Core
                 debugGameplaySceneName, LoadSceneMode.Additive);
             yield return loadOp;
 
+
             // --- Gate 1: Wait until all terrain chunks are finalized ---
             yield return new WaitUntil(() =>
                 loadingState != null && loadingState.isChunksReady);
+
+            // --- Gate 1.5: Trigger HJB path calculation and wait for completion ---
+            if (hjbClickPathController != null && worldDataManager != null)
+            {
+                if (enableCoordinatorLogs)
+                    Debug.Log("[AsyncLoadCoordinator] Triggering HJB path calculation from spawn coord...");
+                if (loadingState != null)
+                {
+                    loadingState.statusMessage = "Calculating optimal path to peak...";
+                }
+                yield return hjbClickPathController.CalculatePathFromSpawnToPeak(worldDataManager.completeSpawnCoord);
+            }
+            else if (enableCoordinatorLogs)
+            {
+                Debug.LogWarning("[AsyncLoadCoordinator] HJBClickPathController or WorldDataManager not assigned. Skipping HJB path calculation.");
+            }
 
             // Snap progress to 100% and show confirm prompt message
             if (loadingState != null)
@@ -75,7 +95,7 @@ namespace Game.Core
             }
 
             if (enableCoordinatorLogs)
-                Debug.Log("[AsyncLoadCoordinator] Gate 1 passed — all chunks ready. Waiting for player confirmation.");
+                Debug.Log("[AsyncLoadCoordinator] Gate 1 passed  all chunks ready and HJB path calculated. Waiting for player confirmation.");
 
             // --- Gate 2: Wait for player to press Y in Scene_Debug_Gameplay ---
             yield return new WaitUntil(() =>
