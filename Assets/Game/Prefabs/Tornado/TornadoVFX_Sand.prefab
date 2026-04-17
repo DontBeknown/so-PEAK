@@ -15056,8 +15056,8 @@ ParticleSystem:
     startColor:
       serializedVersion: 2
       minMaxState: 2
-      minColor: {r: 0.3207547, g: 0.3207547, b: 0.3207547, a: 1}
-      maxColor: {r: 0.9339623, g: 0.61889637, b: 0.44495374, a: 1}
+      minColor: {r: 0.6792453, g: 0.6792453, b: 0.6792453, a: 1}
+      maxColor: {r: 0.9716981, g: 0.7996092, b: 0.70127267, a: 1}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -18896,7 +18896,7 @@ ParticleSystem:
         atime6: 0
         atime7: 0
         m_Mode: 0
-        m_ColorSpace: -1
+        m_ColorSpace: 0
         m_NumColorKeys: 2
         m_NumAlphaKeys: 2
       minGradient:
@@ -19643,8 +19643,8 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 2100000, guid: 9452ae1262a74094f8a68013fbcd1834, type: 2}
+  - {fileID: 2100000, guid: 9452ae1262a74094f8a68013fbcd1834, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -34544,7 +34544,7 @@ GameObject:
   - component: {fileID: 1559971756223903731}
   - component: {fileID: 2396051868325519380}
   m_Layer: 0
-  m_Name: TornadoVFX
+  m_Name: TornadoVFX_Sand
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -59010,7 +59010,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 8360d6b86928c5e4ebe54e71cba990d8, type: 2}
+  - {fileID: 2100000, guid: 333a8a97dab3cd14bb7c82da17593dc9, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -78641,7 +78641,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 8360d6b86928c5e4ebe54e71cba990d8, type: 2}
+  - {fileID: 2100000, guid: 333a8a97dab3cd14bb7c82da17593dc9, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

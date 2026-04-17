@@ -29,6 +29,7 @@ namespace Game.Environment.Tornado
         [SerializeField, Min(0.1f)] private float phase1DurationSeconds = 5f;
         [SerializeField, Min(0.1f)] private float phase2DurationSeconds = 6f;
         [SerializeField, Min(0f)] private float delayBeforeDestroy = 2f;
+        [SerializeField] private bool destroyOnEnd = true;
 
         [Header("Phase 1 & 2 GameObjects")]
         [SerializeField] private GameObject tornadoVisuals;
@@ -191,6 +192,13 @@ namespace Game.Environment.Tornado
             _isActionShakeActive = false;
             BeginRiskTracking();
 
+            // EndTornado disables the collider; re-enable it for re-use.
+            Collider collider = GetComponent<Collider>();
+            if (collider != null)
+            {
+                collider.enabled = true;
+            }
+
             tornadoVisuals.SetActive(true);
             
             // Toggle GameObjects to inactive during warning phase
@@ -316,7 +324,7 @@ namespace Game.Environment.Tornado
             StartCoroutine(DestroyAfterDelay());
         }
 
-        public void RegisterDamageEncounter(Vector3 position, float severity)
+        public void RegisterHazardEncounter(Vector3 position, float severity)
         {
             if (!_isRiskTrackingActive)
             {
@@ -375,7 +383,14 @@ namespace Game.Environment.Tornado
         private IEnumerator DestroyAfterDelay()
         {
             yield return new WaitForSeconds(delayBeforeDestroy);
-            Destroy(gameObject);
+            if (destroyOnEnd)
+            {
+                Destroy(gameObject);
+            }
+            else
+            {
+                tornadoVisuals.SetActive(false);
+            }
         }
 
         #endregion

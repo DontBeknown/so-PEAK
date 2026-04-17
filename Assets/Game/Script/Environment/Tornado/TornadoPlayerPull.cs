@@ -5,9 +5,15 @@ using UnityEngine;
 namespace Game.Environment.Tornado
 {
     /// <summary>
-    /// Handles pulling players toward the tornado center and applying distance-based damage.
+    /// Handles pulling players toward the tornado center and applying distance-based sand damage or snow cold.
     /// Requires a TornadoPhaseController on the same GameObject to manage phase transitions.
     /// </summary>
+    public enum TornadoEffectMode
+    {
+        Sand,
+        Snow
+    }
+
     [RequireComponent(typeof(Collider))]
     [RequireComponent(typeof(TornadoPhaseController))]
     public class TornadoPlayerPull : MonoBehaviour
@@ -22,12 +28,14 @@ namespace Game.Environment.Tornado
         [SerializeField, Min(0f)] private float maxInfluenceDistance = 15f;
         #endregion
 
-        #region Serialized Fields - Damage
-        [Header("Damage Settings")]
+        #region Serialized Fields - Hazard
+        [Header("Hazard Settings")]
+        [SerializeField] private TornadoEffectMode tornadoEffectMode = TornadoEffectMode.Sand;
         [SerializeField, Min(0.1f)] private float damageIntervalSeconds = 2.5f;
         [SerializeField, Min(0f)] private float damageRangeMin = 1f;
         [SerializeField, Min(0f)] private float damageRangeMax = 10f;
         [SerializeField, Range(0f, 1f)] private float tiedStateDamageMultiplier = 0.5f;
+        [SerializeField, Min(0f)] private float maxColdTemperatureOffset = 12f;
         #endregion
 
         #region Runtime State
@@ -102,10 +110,20 @@ namespace Game.Environment.Tornado
             if (_playersInRange.Count == 0)
             {
                 _phaseController?.SetActionShakeActive(false);
+                ClearPlayerTemperatureOffset();
             }
 
-            TornadoProximityFeedback tornadoFeedback = playerController.GetComponentInChildren<TornadoProximityFeedback>();
-            tornadoFeedback?.ClearTornadoDistance();
+            if (ShouldUseProximityFeedback())
+            {
+                TornadoProximityFeedback tornadoFeedback = playerController.GetComponentInChildren<TornadoProximityFeedback>();
+                tornadoFeedback?.ClearTornadoDistance();
+            }
+        }
+
+        private void OnDisable()
+        {
+            ClearTrackedPlayersFeedback();
+            ClearPlayerTemperatureOffset();
         }
 
         private void FixedUpdate()
@@ -115,6 +133,7 @@ namespace Game.Environment.Tornado
             {
                 _phaseController?.SetActionShakeActive(false);
                 ClearTrackedPlayersFeedback();
+                ClearPlayerTemperatureOffset();
                 return;
             }
 
@@ -137,26 +156,30 @@ namespace Game.Environment.Tornado
                 }
 
                 PullTowardsTornado(playerController);
-                ApplyDamage(playerController);
+                ApplyHazardEffect(playerController);
             }
         }
 
         private void ClearTrackedPlayersFeedback()
         {
-            for (int i = _playersInRange.Count - 1; i >= 0; i--)
+            if (ShouldUseProximityFeedback())
             {
-                Game.Player.PlayerControllerRefactored playerController = _playersInRange[i];
-                if (playerController == null)
+                for (int i = _playersInRange.Count - 1; i >= 0; i--)
                 {
-                    continue;
-                }
+                    Game.Player.PlayerControllerRefactored playerController = _playersInRange[i];
+                    if (playerController == null)
+                    {
+                        continue;
+                    }
 
-                TornadoProximityFeedback tornadoFeedback = playerController.GetComponentInChildren<TornadoProximityFeedback>();
-                tornadoFeedback?.ClearTornadoDistance();
+                    TornadoProximityFeedback tornadoFeedback = playerController.GetComponentInChildren<TornadoProximityFeedback>();
+                    tornadoFeedback?.ClearTornadoDistance();
+                }
             }
 
             _playersInRange.Clear();
             _lastDamageTime.Clear();
+            ClearPlayerTemperatureOffset();
         }
 
         private void TryRegisterPlayer(Collider other)
@@ -187,7 +210,12 @@ namespace Game.Environment.Tornado
 
         private void PullTowardsTornado(Game.Player.PlayerControllerRefactored playerController)
         {
-            TornadoProximityFeedback tornadoFeedback = playerController.GetComponentInChildren<TornadoProximityFeedback>();
+            TornadoProximityFeedback tornadoFeedback = null;
+            if (ShouldUseProximityFeedback())
+            {
+                tornadoFeedback = playerController.GetComponentInChildren<TornadoProximityFeedback>();
+            }
+
             CharacterController controller = playerController.GetComponent<CharacterController>();
             if (controller == null || !controller.enabled)
             {
@@ -202,6 +230,7 @@ namespace Game.Environment.Tornado
             if (horizontalDistance > maxInfluenceDistance)
             {
                 tornadoFeedback?.ClearTornadoDistance();
+                ClearPlayerTemperatureOffset();
                 return;
             }
 
@@ -226,9 +255,9 @@ namespace Game.Environment.Tornado
 
         #endregion
 
-        #region Damage Logic
+        #region Hazard Logic
 
-        private void ApplyDamage(Game.Player.PlayerControllerRefactored playerController)
+        private void ApplyHazardEffect(Game.Player.PlayerControllerRefactored playerController)
         {
             PlayerStats resolvedPlayerStats = PlayerStats;
             if (resolvedPlayerStats == null || playerController == null)
@@ -250,7 +279,6 @@ namespace Game.Environment.Tornado
                 return;
             }
 
-            // Calculate distance-based damage
             CharacterController controller = playerController.GetComponent<CharacterController>();
             if (controller == null)
             {
@@ -260,9 +288,17 @@ namespace Game.Environment.Tornado
             Vector3 controllerCenter = controller.transform.TransformPoint(controller.center);
             Vector3 tornadoCenter = transform.position;
             float horizontalDistance = new Vector2(tornadoCenter.x - controllerCenter.x, tornadoCenter.z - controllerCenter.z).magnitude;
+            float effectRange = Mathf.Max(maxInfluenceDistance - stopDistance, 0.0001f);
+            float normalizedDistance = Mathf.Clamp01((horizontalDistance - stopDistance) / effectRange);
+
+            if (tornadoEffectMode == TornadoEffectMode.Snow)
+            {
+                ApplySnowCold(resolvedPlayerStats, controllerCenter, normalizedDistance);
+                _lastDamageTime[playerController] = Time.time;
+                return;
+            }
 
             // Map distance to damage: far (maxInfluenceDistance) = damageRangeMin, close (stopDistance) = damageRangeMax
-            float normalizedDistance = Mathf.Clamp01((horizontalDistance - stopDistance) / (maxInfluenceDistance - stopDistance));
             float damage = Mathf.Lerp(damageRangeMax, damageRangeMin, normalizedDistance);
 
             // Reduce damage if player is tied
@@ -274,10 +310,36 @@ namespace Game.Environment.Tornado
             // Apply damage to player
             resolvedPlayerStats.TakeDamage(damage, DeathCause.Tornado);
             float severity = damageRangeMax > 0f ? Mathf.Clamp01(damage / damageRangeMax) : 0f;
-            _phaseController?.RegisterDamageEncounter(controllerCenter, severity);
+            _phaseController?.RegisterHazardEncounter(controllerCenter, severity);
 
             // Update last damage time
             _lastDamageTime[playerController] = Time.time;
+        }
+
+        private void ApplySnowCold(PlayerStats resolvedPlayerStats, Vector3 controllerCenter, float normalizedDistance)
+        {
+            float coldStrength = Mathf.Lerp(maxColdTemperatureOffset, 0f, normalizedDistance);
+            float weatherOffset = -coldStrength;
+            resolvedPlayerStats.SetWeatherTemperatureOffset(weatherOffset);
+
+            float severity = maxColdTemperatureOffset > 0f
+                ? Mathf.Clamp01(coldStrength / maxColdTemperatureOffset)
+                : 0f;
+
+            if (severity > 0f)
+            {
+                _phaseController?.RegisterHazardEncounter(controllerCenter, severity);
+            }
+        }
+
+        private void ClearPlayerTemperatureOffset()
+        {
+            PlayerStats?.SetWeatherTemperatureOffset(0f);
+        }
+
+        private bool ShouldUseProximityFeedback()
+        {
+            return tornadoEffectMode == TornadoEffectMode.Sand;
         }
 
         #endregion

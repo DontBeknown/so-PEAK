@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Tornado_Smoke
+  m_Name: Tornado_Snow_Main
   m_Shader: {fileID: -6465566751694194690, guid: 0b41383399eef194eb9873d151618b23, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -51,19 +51,19 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Disslove: 0.186
-    - _NoisePower: 1.23
-    - _NoiseScale: 19.94
+    - _Disslove: 0.339
+    - _NoisePower: 0.72
+    - _NoiseScale: 20
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _TwirlSpeed: 0.49
+    - _TwirlSpeed: 0.39
     - _TwirlStrength: 9.11
     - _WobbleAmount: 1
     - _WobbleFrequency: 1.2
     - _WobbleIntensity: 15
     - _WobbleSpeed: 5.07
     m_Colors:
-    - _Color: {r: 7.1421514, g: 3.5314558, b: 1.5160229, a: 1}
+    - _Color: {r: 11.252982, g: 12.234011, b: 11.804122, a: 1}
     - _EmissonColor: {r: 0, g: 0, b: 0, a: 1}
     - _NoiseSpeed: {r: 0.48, g: 0.54, b: 0, a: 0}
     - _TwirlCenter: {r: 0.5, g: 0.5, b: 0, a: 0}
