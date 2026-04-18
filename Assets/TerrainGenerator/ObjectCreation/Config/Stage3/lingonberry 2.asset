@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: lingonberry 2
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
   ObjectName: Berry 2
-  Prefab: {fileID: 919132149155446097, guid: 00cce870f04eb0346b7d294621ec6cd0, type: 3}
+  Prefab: {fileID: 5464924296368044346, guid: c8cc87dd855b0294b9289242bafb8e71, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
   BaseRadius: 1

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: crowberry 1
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
   ObjectName: Berry 1
-  Prefab: {fileID: 919132149155446097, guid: 4977c350741c70148a081a40ac2c062b, type: 3}
+  Prefab: {fileID: 2416254474760525413, guid: 66635d8140fb3c5419724eee004f3dd5, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
   BaseRadius: 1
