@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef2d90a04a1ac964eb7541aea0613cd4, type: 3}
+  m_Name: TitleConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Environment.DayNight.DayNightConfig
+  dayDurationInSeconds: 1200
+  startTime: 8
+  morningStartHour: 6
+  dayStartHour: 9
+  eveningStartHour: 15
+  nightStartHour: 19
+  morningSkybox: {fileID: 2100000, guid: 5f2931665ca992f43b57b1b5f2a14eb2, type: 2}
+  daySkybox: {fileID: 2100000, guid: 9213190600a26be41ade517605fe819a, type: 2}
+  eveningSkybox: {fileID: 2100000, guid: 8177f18fe89e8344f859cdf7a31b4142, type: 2}
+  nightSkybox: {fileID: 2100000, guid: 1eac11504ff8feb4189bb31f405a138f, type: 2}
+  skyboxTransitionDuration: 10
+  morningLightColor: {r: 1, g: 0.6565855, b: 0.08962262, a: 1}
+  morningLightIntensity: 1.439
+  morningAmbientColor: {r: 0.6226415, g: 0.41699928, b: 0.15389816, a: 1}
+  morningAmbientIntensity: 1.114
+  morningSunRotation: {x: 30, y: 0, z: 0}
+  dayLightColor: {r: 0.9338989, g: 1, b: 0.17924517, a: 1}
+  dayLightIntensity: 1.225
+  dayAmbientColor: {r: 0.6862745, g: 0.7753886, b: 1, a: 1}
+  dayAmbientIntensity: 1.055
+  daySunRotation: {x: 90, y: 0, z: 0}
+  eveningLightColor: {r: 1, g: 0.43504554, b: 0.1566037, a: 1}
+  eveningLightIntensity: 1.86
+  eveningAmbientColor: {r: 0.86415094, g: 0.4218796, b: 0.18750434, a: 1}
+  eveningAmbientIntensity: 1.048
+  eveningSunRotation: {x: 14.09, y: 0, z: 0}
+  nightLightColor: {r: 0.58892846, g: 0.6834502, b: 0.8792453, a: 1}
+  nightLightIntensity: 1.328
+  nightAmbientColor: {r: 0.03529412, g: 0.20392159, b: 0.4156863, a: 1}
+  nightAmbientIntensity: 1.911
+  nightMoonRotation: {x: 146.9, y: 0, z: 0}
+  useFog: 1
+  morningFogColor: {r: 0.81960785, g: 0.56078434, b: 0.34509805, a: 1}
+  morningFogDensity: 0.0129
+  dayFogColor: {r: 0.36677104, g: 0.8415094, b: 0.803304, a: 1}
+  dayFogDensity: 0.0092
+  eveningFogColor: {r: 0.68235296, g: 0.22640844, b: 0.15686274, a: 1}
+  eveningFogDensity: 0.0144
+  nightFogColor: {r: 0.035208225, g: 0.23261121, b: 0.4339623, a: 1}
+  nightFogDensity: 0.026
+  morningAmbientClipId: ambient_morning
+  dayAmbientClipId: ambient_day
+  eveningAmbientClipId: ambient_evening
+  nightAmbientClipId: ambient_night

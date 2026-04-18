@@ -224,5 +224,28 @@ namespace Game.Environment.DayNight
                     return daySkybox;
             }
         }
+
+        //////////////Only for title light config Can Safely Remove this
+#if UNITY_EDITOR
+        // This fires anytime you change a value inside the ScriptableObject Inspector
+        private void OnValidate()
+        {
+            // Delay call ensures Unity finishes saving the data before we try to render it
+            UnityEditor.EditorApplication.delayCall += () =>
+            {
+                if (this == null) return;
+
+                // UPDATED: Using the new, faster API
+                var environmentManager = FindAnyObjectByType<TitleDynamicEnvironment>();
+
+                if (environmentManager != null && environmentManager.useTestTime)
+                {
+                    environmentManager.ApplyEnvironment();
+                }
+            };
+        }
+#endif
+
+
     }
 }
