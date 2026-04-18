@@ -86,7 +86,7 @@ All events live in `Game.Sound.Events`. They are plain data classes — no Unity
 
 | Event class | When to publish |
 |-------------|----------------|
-| `PlayPositionalSFXEvent(clipId, position, volumeScale)` | World-space one-shot SFX (footsteps, impacts, explosions) |
+| `PlayPositionalSFXEvent(clipId, position, volumeScale, minDistanceOverride?, maxDistanceOverride?)` | World-space one-shot SFX (footsteps, impacts, explosions). The two distance overrides are optional — pass them to widen/narrow a single clip's 3-D rolloff without mutating the `SoundConfig` defaults. |
 | `PlayUISoundEvent(clipId, volumeScale)` | 2-D UI sounds (button clicks, notifications) |
 | `PlayMusicEvent(clipId, loop)` | Start or crossfade to a new music track |
 | `StopMusicEvent()` | Fade out current music |
@@ -120,7 +120,7 @@ eventBus.Publish(new StopMusicEvent());
 The `SoundService` `MonoBehaviour` should be placed in your bootstrapper scene and registered with the `ServiceContainer`.
 
 **SFX Pool**  
-At `Awake` it creates `PoolSize` child `GameObject`s each with an `AudioSource`. `PlayPositionalSFX` rents one, positions it, plays the clip, and `Update` returns it to the pool when playback finishes. The pool grows automatically if all sources are in use.
+At `Awake` it creates `PoolSize` child `GameObject`s each with an `AudioSource`. `PlayPositionalSFX(clipId, position, volumeScale, minDistanceOverride?, maxDistanceOverride?)` rents one, positions it, plays the clip, and `Update` returns it to the pool when playback finishes. The pool grows automatically if all sources are in use. The two override parameters let a single clip temporarily widen or narrow its 3-D rolloff (e.g. a huge explosion vs a quiet footstep) without touching the shared `SoundConfig` defaults.
 
 **Music & Ambient — Double-buffered Crossfade**  
 Two `AudioSource`s per stream (`Music_A / Music_B`, `Ambient_A / Ambient_B`). When you switch tracks, the new clip fades in on B while A fades out. After the fade, references are swapped so A is always "active". Each stream has its own `Coroutine` so stopping music never cancels an ambient fade and vice versa.

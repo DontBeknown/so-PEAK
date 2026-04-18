@@ -1,6 +1,6 @@
 # Codebase Mermaid Diagrams - "This is so PEAK"
 
-**Last Updated:** March 7, 2026  
+**Last Updated:** April 18, 2026  
 **Purpose:** Visual architecture diagrams using Mermaid for quick understanding
 
 ---
@@ -37,11 +37,16 @@ graph TB
     end
 
     subgraph Domain["Domain Layer"]
-        PlayerStats[PlayerStats - Health / Hunger / Thirst / Stamina / Fatigue]
+        PlayerStats[PlayerStats - Health / Hunger / Thirst / Stamina / Fatigue / Temperature]
         InventoryMgr[InventoryManagerRefactored]
         EquipmentMgr[EquipmentManager]
         CraftingMgr[CraftingManager]
         DayNight[DayNightCycleManager]
+        SoundSvc[SoundService]
+        CollectMgr[CollectableManager]
+        DialogMgr[DialogManager]
+        TutMgr[TutorialManager]
+        Progression[StarterCollectableService / LevelBonusCollectableService]
         Items[InventoryItem ScriptableObject]
     end
 
@@ -411,6 +416,7 @@ stateDiagram-v2
     Walking --> Running: Sprint input held\n+ stamina > 0
     Walking --> Climbing: Climbable in front\n+ forward input
     Walking --> Falling: Not grounded\n(coyote time expired)
+    Walking --> Tied: TiedInteractable.Interact()
 
     Running --> Walking: Sprint released\nOR stamina depleted
     Running --> Falling: Not grounded
@@ -422,6 +428,8 @@ stateDiagram-v2
 
     Falling --> Walking: Land on ground
     Falling --> Climbing: Touch climbable\nwhile airborne
+
+    Tied --> Walking: Rope released / untied
 
     note right of Running
         Speed ramps walk→run
@@ -640,11 +648,15 @@ graph TB
 
     subgraph Interactables["IInteractable Implementations"]
         ItemInteract[ItemInteractable\ninstant - picks up InventoryItem]
-        GatherRef[GatheringInteractable Refactored\nhold - adds ResourceType to inventory]
-        WaterRef[WaterSourceInteractable Refactored\nhold - refills canteen]
+        GatherRef[GatheringInteractable Refactored\nhold - adds resource + fires discovery dialog]
+        CollectInter[CollectableInteractable\ninstant - CollectableManager.Unlock]
+        WaterRef[WaterSourceInteractable\nhold - refills canteen]
         ResCollect[ResourceCollectorInteractable\nhold - collects resource node]
         Assessment[AssessmentTerminalInteractable\ninstant - opens learning terminal]
         CraftBench[CraftingBenchInteractable\ninstant - opens crafting UI]
+        TiedInter[TiedInteractable\ninstant - transitions player to TiedState]
+        RandEquip[RandomEquipmentRewardInteractable\ninstant - grants random equipment]
+        RandCollect[RandomCollectableUnlockInteractable\ninstant - unlocks random collectable]
     end
 
     subgraph Prompt["UI Feedback"]
@@ -748,6 +760,8 @@ graph LR
         Detector[InteractionDetector]
         DayNight[DayNightCycleManager]
         SaveSvc[SaveLoadService]
+        CollectMgr[CollectableManager]
+        SoundEvts[Game code → SoundEvents]
     end
 
     subgraph EventBus["IEventBus\nEventBus"]
@@ -756,9 +770,11 @@ graph LR
 
     subgraph Events["Event Types"]
         IE[ItemAddedEvent\nItemRemovedEvent\nItemConsumedEvent\nInventoryChangedEvent]
-        GE[ItemEquippedEvent\nItemUnequippedEvent\nCraftingStartedEvent\nCraftingCompletedEvent\nCraftingFailedEvent]
+        GE[ItemEquippedEvent\nItemUnequippedEvent\nCraftingStartedEvent\nCraftingCompletedEvent]
         DE[NearestItemChangedEvent]
-        DNE[DayNightEvents\nSunrise / Sunset / etc]
+        DNE[DayNightEvents\nTimeOfDayChangedEvent / DayCompletedEvent]
+        CE[CollectableUnlockedEvent]
+        SE[PlaySoundEvent / PlayMusicEvent\nStopSoundEvent / PlayAmbientEvent]
     end
 
     subgraph Subscribers["Subscribers"]
@@ -766,7 +782,9 @@ graph LR
         EquipUI[EquipmentUI]
         CraftUI[CraftingUI]
         StatsUI[PlayerStats HUD]
-        SaveSystem[SaveLoadService]
+        CollectUI[CollectablesHubUI]
+        SoundListener[SoundEventListener → SoundService]
+        TutMgr[TutorialManager]
     end
 
     InvSvc -->|Publish| Bus
@@ -774,16 +792,22 @@ graph LR
     CraftMgr -->|Publish| Bus
     Detector -->|Publish| Bus
     DayNight -->|Publish| Bus
+    CollectMgr -->|Publish| Bus
+    SoundEvts -->|Publish| Bus
 
     Bus --> IE
     Bus --> GE
     Bus --> DE
     Bus --> DNE
+    Bus --> CE
+    Bus --> SE
 
     IE --> InvUI
     GE --> EquipUI
     GE --> CraftUI
     DNE --> StatsUI
+    CE --> CollectUI
+    SE --> SoundListener
 ```
 
 ### Equipment Change Event Flow
@@ -877,12 +901,21 @@ graph TB
     subgraph Bootstrap["GameServiceBootstrapper\nExecutionOrder -100\nAwake"]
         direction TB
         B1[Register IEventBus → new EventBus]
-        B2[Register PlayerControllerRefactored\nFindFirstObjectByType]
-        B3[Register PlayerStats\nFindFirstObjectByType]
+        B2[Register PlayerControllerRefactored]
+        B3[Register PlayerStats]
         B4[Register CraftingManager]
         B5[Register TabbedInventoryUI]
         B6[Register CinemachinePlayerCamera]
-        B7[Register DayNightCycleManager]
+        B7[Register IDayNightCycleService + DayNightCycleManager]
+        B8[Register SoundService\nInitialize first]
+        B9[Register ISaveLoadService + SaveLoadService]
+        B10[Register ICollectableManager + CollectableManager]
+        B11[Register IDialogManager + DialogManager]
+        B12[Register ITutorialManager + TutorialManager]
+        B13[Register UIServiceProvider]
+        B14[Register StarterCollectableService]
+        B15[Register LevelBonusCollectableService]
+        B16[Register AssessmentReportUI / LearningAssessmentService\nPlayerStatsTrackerService / EndingScreenUI]
     end
 
     subgraph InvMgrAwake["InventoryManagerRefactored\nAwake - self-registers"]
@@ -960,6 +993,7 @@ sequenceDiagram
     participant Container as ServiceContainer
     participant InvMgr as InventoryManagerRefactored\nOrder 0
     participant SaveSvc as SaveLoadService\nDontDestroyOnLoad
+    participant AsyncCoord as AsyncLoadCoordinator
     participant GSI as GameplaySceneInitializer
     participant Player as PlayerControllerRefactored
 
@@ -968,21 +1002,23 @@ sequenceDiagram
     Unity->>Bootstrap: Awake() [Order -100]
     activate Bootstrap
     Bootstrap->>Container: Register IEventBus → new EventBus()
-    Bootstrap->>Container: Register PlayerControllerRefactored
-    Bootstrap->>Container: Register PlayerStats
-    Bootstrap->>Container: Register CraftingManager
-    Bootstrap->>Container: Register TabbedInventoryUI
-    Bootstrap->>Container: Register CinemachinePlayerCamera
-    Bootstrap->>Container: Register DayNightCycleManager
+    Bootstrap->>Container: Register PlayerControllerRefactored / PlayerStats
+    Bootstrap->>Container: Register CraftingManager / TabbedInventoryUI / CinemachinePlayerCamera
+    Bootstrap->>Container: Register SoundService (Initialize first)
+    Bootstrap->>Container: Register IDayNightCycleService + DayNightCycleManager (Initialize)
+    Bootstrap->>Container: Register ISaveLoadService + SaveLoadService (Initialize)
+    Bootstrap->>Container: Register ICollectableManager + CollectableManager (Initialize)
+    Bootstrap->>Container: Register IDialogManager + DialogManager (Initialize)
+    Bootstrap->>Container: Register ITutorialManager + TutorialManager (Initialize)
+    Bootstrap->>Container: Register UIServiceProvider (EnsureInitialized)
+    Bootstrap->>Container: Register StarterCollectableService
+    Bootstrap->>Container: Register LevelBonusCollectableService (Initialize)
+    Bootstrap->>Container: Register Assessment / Tracking services
     deactivate Bootstrap
 
     Unity->>InvMgr: Awake()
     activate InvMgr
-    InvMgr->>Container: Register IInventoryService
-    InvMgr->>Container: Register IInventoryStorage
-    InvMgr->>Container: Register IConsumableEffectSystem
-    InvMgr->>Container: Register InventoryManagerRefactored
-    InvMgr->>Container: Register EquipmentManager
+    InvMgr->>Container: Register IInventoryService / IInventoryStorage\nIConsumableEffectSystem / InventoryManagerRefactored\nEquipmentManager
     deactivate InvMgr
 
     Unity->>Player: Awake()
@@ -992,11 +1028,16 @@ sequenceDiagram
     Player->>Player: InitializeInventory (PlayerInventoryFacade via DI)
     deactivate Player
 
-    Unity->>GSI: Start()
+    Unity->>AsyncCoord: Start() — Two-gate loading flow
+    activate AsyncCoord
+    AsyncCoord->>AsyncCoord: Gate 1: WaitUntil isChunksReady\nGate 1.5: HJB path calculation\nGate 2: WaitUntil playerConfirmed
+    AsyncCoord->>Player: RenderController.SpawnPlayerNow()
+    deactivate AsyncCoord
+
+    Unity->>GSI: Start() — waits on PlayerSpawnComplete
     activate GSI
-    GSI->>SaveSvc: LoadWorld(worldGuid) OR already loaded
-    GSI->>GSI: InitializeWorld (new or existing)
-    GSI->>GSI: Spawn/restore player position
+    GSI->>SaveSvc: LoadWorld already in memory
+    GSI->>GSI: Restore player stats / inventory / world state
     GSI->>Player: TransitionTo(WalkingState)
     GSI->>SaveSvc: EnableAutoSave(300f)
     deactivate GSI
@@ -1053,17 +1094,17 @@ flowchart LR
 ## Summary
 
 Diagrams in this file cover:
-- ✅ Full layer architecture and scene flow
+- ✅ Full layer architecture and scene flow (domain layer expanded with Sound, Collectable, Dialog, Tutorial, Progression)
 - ✅ Save/Load system — architecture, save sequence, load/spawn decision, class diagram
-- ✅ Player system — controller, services, state machine (5 states), PlayerStats
+- ✅ Player system — controller, services, state machine (6 states: Walking/Running/Climbing/Mantling/Falling/Tied), PlayerStats
 - ✅ Inventory system — UI → Facade → Commands → Services → Grid storage
-- ✅ Interaction system — detector, hold-template hierarchy, all interactable types
-- ✅ Event bus — all event types, equipment flow, auto-save flow
-- ✅ Service container — registration sources, resolution logic
-- ✅ Full initialization sequence and gameplay loop
+- ✅ Interaction system — detector, hold-template hierarchy, all 10 interactable types
+- ✅ Event bus — all event types including CollectableUnlockedEvent and SoundEvents, equipment flow, auto-save flow
+- ✅ Service container — full registration map (33+ services), resolution logic
+- ✅ Full initialization sequence (two-gate loading, HJB calculation) and gameplay loop
 
 **All diagrams use Mermaid syntax** and render in GitHub, GitLab, VS Code (Mermaid extension), and most modern markdown viewers.
 
 ---
 
-**Last Updated:** March 7, 2026
+**Last Updated:** April 18, 2026

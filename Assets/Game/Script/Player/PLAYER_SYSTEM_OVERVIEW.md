@@ -37,11 +37,14 @@ This is a well-architected system following SOLID principles with dependency inj
 
 **Public Methods:**
 ```csharp
-public void TransitionToState(IPlayerState newState)
+public void TransitionTo(IPlayerState newState)                          // explicit instance
+public void TransitionTo<TState>() where TState : IPlayerState, new()    // generic — default-constructs the state
 public void HandleJump()
 public void HandleInteraction()
 public void ToggleInventoryUI()
 ```
+
+> **Naming note:** earlier revisions of this doc referred to `TransitionToState(...)`. The actual method on `PlayerControllerRefactored` is `TransitionTo` (with both an instance and generic overload).
 
 ### 2. PlayerModelRefactored
 
@@ -77,11 +80,15 @@ public interface IPlayerState
 }
 ```
 
-**States:**
-- **WalkingState** - Ground movement, jumping, sprinting. Now features steep slope sliding functionality.
-- **ClimbingState** - Wall climbing, stamina consumption
-- **FallingState** - Air control, landing detection
-- **DeathState/Death Screen** - State handling when Player Stats reach 0, controlled through `DeathCause`.
+**States** (all six live under `Player/PlayerState/`):
+- **WalkingState** — Ground movement, jumping, steep-slope auto-slide.
+- **RunningState** — Sprint movement (separate state, not a `WalkingState` sub-mode). Drains stamina.
+- **ClimbingState** — Wall/rope climbing; stamina consumption; release or depletion transitions to `FallingState`.
+- **FallingState** — Air control, landing detection; transitions to `WalkingState` on ground contact.
+- **MantlingState** — Ledge-pull / vault over the top of a climb. Owns a scripted transform movement before handing off to `WalkingState`.
+- **TiedState** — Player is immobilised by a `TiedInteractable`. Input-blocked; movement/jump/interaction are suppressed until the player is freed.
+
+> Death is **not** a state. When a stat hits a fatal threshold (see `DeathCause`) `PlayerStats` raises the death event and the death-screen UI reacts; the state machine does not transition to a "DeathState" — any remaining state simply stops receiving input while the death flow plays out.
 
 ### 4. Player Services
 
@@ -151,8 +158,9 @@ public void Redo()
 **Stats:**
 - Health (current/max)
 - Hunger (current/max)
+- Thirst (current/max)
 - Stamina (current/max)
-- Temperature
+- Temperature (body °C, with environment + heat-source + weather inputs — see `Stat/Stat/Temperature.md`)
 
 **Methods:**
 ```csharp
@@ -217,20 +225,20 @@ public float groundCheckRadius = 0.3f;
 ```
 WalkingState (Grounded):
 ├─► Jump Input → Stay in WalkingState (handle jump)
-├─► Detect Climbable + Forward → TransitionToState(ClimbingState)
-├─► Not Grounded + Not Jumping → TransitionToState(FallingState)
+├─► Detect Climbable + Forward → TransitionTo(ClimbingState)
+├─► Not Grounded + Not Jumping → TransitionTo(FallingState)
 ├─► Steep Slope Detected → Auto-slide down instead of walking
 └─► Movement Input → Move player
 
 ClimbingState:
-├─► Release Climb Input → TransitionToState(FallingState)
-├─► Stamina Depleted → TransitionToState(FallingState)
-├─► Reach Top/Bottom → TransitionToState(WalkingState)
+├─► Release Climb Input → TransitionTo(FallingState)
+├─► Stamina Depleted → TransitionTo(FallingState)
+├─► Reach Top/Bottom → TransitionTo(WalkingState)
 └─► Climb Input → Move up/down
 
 FallingState:
-├─► Land on Ground → TransitionToState(WalkingState)
-├─► Detect Climbable + Grab → TransitionToState(ClimbingState)
+├─► Land on Ground → TransitionTo(WalkingState)
+├─► Detect Climbable + Grab → TransitionTo(ClimbingState)
 └─► Air control → Adjust trajectory
 ```
 
@@ -244,7 +252,7 @@ FallingState:
 5. State executes logic (movement, jumping, etc.)
 6. Physics/Animation services called
 7. State checks transition conditions
-8. If needed: TransitionToState(newState)
+8. If needed: TransitionTo(newState)
 ```
 
 ### Stamina System Flow
@@ -325,7 +333,7 @@ public class SwimmingState : IPlayerState
         // Check transitions
         if (!IsInWater())
         {
-            model.Controller.TransitionToState(new FallingState(model));
+            model.Controller.TransitionTo(new FallingState(model));
         }
     }
     
@@ -353,7 +361,7 @@ public class SwimmingState : IPlayerState
 // In WalkingState.Update()
 if (IsInWater())
 {
-    model.Controller.TransitionToState(new SwimmingState(model));
+    model.Controller.TransitionTo(new SwimmingState(model));
 }
 ```
 
@@ -566,8 +574,11 @@ private void Start()
 ```
 IPlayerState (interface)
     ├─► WalkingState
+    ├─► RunningState
     ├─► ClimbingState
     ├─► FallingState
+    ├─► MantlingState
+    ├─► TiedState
     └─► [Your New State]
 
 PlayerController maintains currentState
@@ -706,7 +717,7 @@ public class MyComponent : MonoBehaviour
 
 **Check:**
 1. Transition conditions in current state's Update()
-2. TransitionToState() being called?
+2. TransitionTo() being called?
 3. Previous state's Exit() being called?
 4. New state's Enter() being called?
 5. Add debug logs in Enter/Exit/Update
@@ -760,9 +771,12 @@ Player/
 │
 ├── PlayerState/
 │   ├── IPlayerState.cs                # State interface
-│   ├── WalkingState.cs                # Ground movement
-│   ├── ClimbingState.cs               # Wall climbing
-│   └── FallingState.cs                # Air movement
+│   ├── WalkingState.cs                # Ground movement (walk + jump + steep-slope slide)
+│   ├── RunningState.cs                # Sprint movement (separate state)
+│   ├── ClimbingState.cs               # Wall/rope climbing
+│   ├── FallingState.cs                # Air control / landing
+│   ├── MantlingState.cs               # Ledge pull-up after a climb
+│   └── TiedState.cs                   # Immobilised by a TiedInteractable
 │
 ├── Services/
 │   ├── IPhysicsService.cs             # Physics interface

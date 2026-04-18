@@ -1,5 +1,5 @@
 # Codebase Dependency Map - "This is so PEAK"
-**Last Updated:** February 4, 2026  
+**Last Updated:** April 18, 2026  
 **Purpose:** Complete dependency visualization for architecture analysis
 
 ---
@@ -14,9 +14,15 @@
 7. [Interaction System Dependencies](#interaction-system-dependencies)
 8. [New Systems: Torch & Canteen](#new-systems-torch--canteen)
 9. [Day/Night Cycle System](#daynight-cycle-system)
-10. [Service Container Registry](#service-container-registry)
-11. [Event Flow](#event-flow)
-12. [Dependency Matrix](#dependency-matrix)
+10. [Sound System](#sound-system)
+11. [Collectable System](#collectable-system)
+12. [Dialog System](#dialog-system)
+13. [Tutorial System](#tutorial-system)
+14. [Progression System](#progression-system)
+15. [Environment Systems](#environment-systems)
+16. [Service Container Registry](#service-container-registry)
+17. [Event Flow](#event-flow)
+18. [Dependency Matrix](#dependency-matrix)
 
 ---
 
@@ -264,8 +270,11 @@
 │  ┌────────────────────────────────────────────────┐        │
 │  │  IPlayerState                                  │        │
 │  │    ├─► WalkingState                           │        │
+│  │    ├─► RunningState                           │        │
 │  │    ├─► ClimbingState                          │        │
-│  │    └─► FallingState                           │        │
+│  │    ├─► MantlingState                          │        │
+│  │    ├─► FallingState                           │        │
+│  │    └─► TiedState (anchor-radius movement)     │        │
 │  └────────────────────────────────────────────────┘        │
 └─────────────────────────────────────────────────────────────┘
            │                    │                    │
@@ -1086,54 +1095,286 @@ DayNightCycleManagerEditor (Custom Inspector)
 
 ---
 
+---
+
+## Sound System
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│         SoundService (MonoBehaviour)                         │
+│            [Audio Mixer + Object Pool]                       │
+└───┬──────────────────────────────────────────────────────────┘
+    │
+    ├─► Depends On:
+    │   ├─► AudioMixer (Unity Audio)
+    │   ├─► SoundLibrary (ScriptableObject)
+    │   └─► SoundConfig (ScriptableObject)
+    │
+    ├─► AudioMixer Groups:
+    │   ├─► SFX
+    │   ├─► UI
+    │   ├─► Music
+    │   └─► Ambient
+    │
+    ├─► Dedicated Continuous Sources:
+    │   ├─► _musicSource / _musicSourceB    (crossfade double-buffer)
+    │   ├─► _ambientSource / _ambientSourceB
+    │   └─► _uiSource
+    │
+    ├─► SFX Pool: Queue<AudioSource>
+    │   └─► One-shot SFX played from pool; returned on clip end
+    │
+    ├─► Rapid-trigger pitch escalation for UI sounds
+    │
+    └─► Initialized by: GameServiceBootstrapper
+        └─► soundService.Initialize() before Register(soundService)
+
+SoundEventListener (MonoBehaviour)
+└─► Subscribes to SoundEvents via IEventBus
+    └─► Forwards to SoundService
+
+SoundSettingsManager
+└─► Reads/writes AudioMixer volume parameters
+    └─► Persisted via SaveLoadService (optional)
+```
+
+### How to Trigger Sounds
+
+```
+// CORRECT — event-driven
+_eventBus.Publish(new PlaySoundEvent("pickup_berry", SoundCategory.SFX));
+
+// WRONG — never do this in game code
+GetComponent<AudioSource>().Play();
+```
+
+---
+
+## Collectable System
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│         CollectableManager : ICollectableManager             │
+│            [Unlock Registry]                                  │
+└───┬──────────────────────────────────────────────────────────┘
+    │
+    ├─► Internal: HashSet<string> _unlocked
+    │
+    ├─► Depends On: IEventBus
+    │
+    ├─► Initialized by: GameServiceBootstrapper
+    │   └─► cm.Initialize(eventBus)
+    │
+    ├─► Methods:
+    │   ├─► Unlock(CollectableItem) → publishes CollectableUnlockedEvent
+    │   ├─► IsUnlocked(id) → bool
+    │   ├─► GetUnlockedIds() → IReadOnlyCollection<string>
+    │   └─► LoadState(List<string>) — called by GameplaySceneInitializer
+    │
+    └─► Consumed By:
+        ├─► CollectableInteractable.Interact() → cm.Unlock()
+        ├─► CollectableZoneUnlockTrigger.OnTriggerEnter() → cm.Unlock()
+        ├─► LevelBonusCollectableService → cm.Unlock()
+        ├─► StarterCollectableService → cm.Unlock()
+        └─► CollectablesHubUI → cm.GetUnlockedIds()
+
+CollectableItem (ScriptableObject)
+├─► string id (unique)
+├─► string displayName
+├─► string description
+├─► Sprite icon
+├─► CollectableType type
+└─► DocumentPageUI[] pages (optional lore pages)
+```
+
+---
+
+## Dialog System
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│         DialogManager : IDialogManager                       │
+│            [Dialog Sequencer]                                 │
+└───┬──────────────────────────────────────────────────────────┘
+    │
+    ├─► Depends On: IEventBus
+    │
+    ├─► Initialized by: GameServiceBootstrapper
+    │   └─► dm.Initialize(eventBus)
+    │
+    ├─► Queues DialogData and feeds lines to DialogUI
+    │
+    └─► Triggered By:
+        ├─► DialogOnStart.Start() → dm.PlayDialog(data)
+        ├─► GatheringDiscoveryDialogTrigger — fires on first gather of a resource type
+        └─► WorldDialogTrigger — fires on world-condition events
+
+DialogData (ScriptableObject)
+├─► DialogLine[] lines
+└─► bool autoAdvance
+
+DialogLine
+├─► string speakerName
+├─► string text
+└─► Sprite portrait (optional)
+```
+
+---
+
+## Tutorial System
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│         TutorialManager : ITutorialManager                   │
+│            [Step-by-step Tutorial Driver]                    │
+└───┬──────────────────────────────────────────────────────────┘
+    │
+    ├─► Depends On:
+    │   ├─► IEventBus
+    │   ├─► ISaveLoadService (track which steps completed)
+    │   ├─► PlayerControllerRefactored
+    │   └─► CinemachinePlayerCamera
+    │
+    ├─► Initialized by: GameServiceBootstrapper
+    │   └─► tm.Initialize(eventBus, saveLoadService, player, camera)
+    │
+    ├─► Reads: TutorialData ScriptableObject (array of TutorialStepData)
+    │
+    └─► Publishes: step-completion events to EventBus
+        └─► Consumed By: TutorialUI
+
+TutorialStepData
+├─► TutorialStepType type (enum)
+├─► string instructionText
+├─► Transform targetHighlight (optional)
+└─► Completion condition (depends on step type)
+```
+
+---
+
+## Progression System
+
+```
+StarterCollectableService
+├─► Registered By: GameServiceBootstrapper
+├─► Depends On: ICollectableManager
+├─► Config: StarterCollectableConfig (ScriptableObject)
+└─► Called By: GameplaySceneInitializer on first world load
+    └─► Unlocks starter collectables for new players
+
+LevelBonusCollectableService
+├─► Registered By: GameServiceBootstrapper
+├─► Initialized By: levelBonusService.Initialize(eventBus, cm, saveLoadService, starterService)
+├─► Depends On:
+│   ├─► IEventBus (subscribes to level-up events)
+│   ├─► ICollectableManager
+│   ├─► ISaveLoadService
+│   └─► StarterCollectableService
+├─► Config: LevelBonusCollectableConfig (ScriptableObject)
+└─► On level-up event → unlocks bonus collectables for that level
+```
+
+---
+
+## Environment Systems
+
+### Landslide System
+
+```
+LandslideRockSpawner
+├─► Triggered by: DebugLandslideHoldInteractable (dev) or event
+├─► Spawns LandslideRockBehavior prefabs
+└─► Depends On: LandslideRockBehaviorConfig (ScriptableObject)
+
+LandslideRockBehavior
+├─► Per-rock physics behaviour (bounce, tumble, destroy on settle)
+└─► On land: LandslideDecalService.PlaceDecal(position)
+
+LandslideShakeController
+└─► Subscribes to landslide events → camera shake
+```
+
+### Tornado System
+
+```
+TornadoPhaseController
+├─► Manages tornado lifecycle phases
+└─► Depends On: TornadoConfig (ScriptableObject)
+
+TornadoMovement → moves tornado along path
+TornadoPlayerPull → pulls player toward tornado within radius
+TornadoProximityFeedback → screen/audio feedback as player nears tornado
+```
+
+---
+
 ## Service Container Registry
 
-### Complete Registration Map
+### Complete Registration Map (April 2026)
 
 ```
 ServiceContainer.Instance
 │
-├─► IEventBus
-│   └─► Implementation: EventBus (singleton)
-│       └─► Used By: ALL systems for event pub/sub
+├─► IEventBus → EventBus (new instance)
+│   └─► Registered first; all others depend on it
 │
-├─► IInventoryService
-│   └─► Implementation: InventoryService
-│       └─► Delegates To: InventoryManagerRefactored
+├─► PlayerControllerRefactored (scene component)
+├─► PlayerStats (scene component)
+├─► CraftingManager (scene component)
+├─► TabbedInventoryUI (scene component)
+├─► CinemachinePlayerCamera (scene component)
+├─► EquipmentManager (scene component)
+├─► InventoryUI (scene component — legacy fallback)
+├─► TooltipUI (scene component)
+├─► ContextMenuUI (scene component)
+├─► InteractionDetector (scene component)
+├─► InteractionPromptUI (scene component)
+├─► ItemNotificationUI (scene component)
+├─► SimpleStatsHUD (scene component)
 │
-├─► IInventoryStorage
-│   └─► Implementation: InventoryStorage
-│       └─► Manages: InventorySlot array
+├─► SoundService (scene component)
+│   └─► Initialize() called before registration
 │
-├─► IConsumableEffectSystem
-│   └─► Implementation: ConsumableEffectSystem
-│       └─► Applies: ConsumableEffectBase effects
+├─► IDayNightCycleService → DayNightCycleManager
+├─► DayNightCycleManager (scene component)
+│   └─► Initialize(eventBus, soundService, equipment) called
 │
-├─► InventoryManager (component instance)
-│   └─► Registered By: GameServiceBootstrapper
+├─► PlayerStatsTrackerUI (scene component)
+├─► AssessmentReportUI (scene component)
+├─► EndingScreenUI (scene component)
+├─► LearningAssessmentService (scene component)
+├─► PlayerStatsTrackerService (scene component)
 │
-├─► EquipmentManager (component instance)
-│   └─► Registered By: GameServiceBootstrapper
+├─► ISaveLoadService → SaveLoadService (DontDestroyOnLoad)
+├─► SaveLoadService (DontDestroyOnLoad)
+│   └─► Initialize() called
 │
-├─► CraftingManager (component instance)
-│   └─► Registered By: GameServiceBootstrapper
+├─► ICollectableManager → CollectableManager
+├─► CollectableManager (scene component)
+│   └─► Initialize(eventBus) called
 │
-├─► PlayerStats (component instance)
-│   └─► Registered By: GameServiceBootstrapper
+├─► IDialogManager → DialogManager
+├─► DialogManager (scene component)
+│   └─► Initialize(eventBus) called
 │
-├─► UIServiceProvider (component instance)
-│   ├─► Registered By: GameServiceBootstrapper
-│   └─► Provides Access To: All UI panels
+├─► ITutorialManager → TutorialManager
+├─► TutorialManager (scene component)
+│   └─► Initialize(eventBus, saveLoadService, player, camera) called
 │
-├─► PlayerControllerRefactored (component instance)
-│   └─► Registered By: GameServiceBootstrapper
+├─► UIServiceProvider (scene component)
+│   └─► EnsureInitialized() called
 │
-├─► InteractionPromptUI (component instance)
-│   ├─► Registered By: GameServiceBootstrapper (optional)
-│   └─► Used By: All hold-to-interact interactables
+├─► StarterCollectableService (scene component)
 │
-└─► CinemachinePlayerCamera (component instance)
-    └─► Registered By: GameServiceBootstrapper
+└─► LevelBonusCollectableService (scene component)
+    └─► Initialize(eventBus, cm, saveLoadService, starterService) called
+
+Self-registered by InventoryManagerRefactored.Awake():
+├─► IInventoryService → InventoryService
+├─► IInventoryStorage → GridStorageAdapter (wraps GridInventoryStorage)
+├─► IConsumableEffectSystem → ConsumableEffectSystem
+├─► InventoryManagerRefactored (self)
+└─► EquipmentManager (scene component)
 ```
 
 ---
@@ -1321,8 +1562,18 @@ TorchBehavior.UpdateBehavior()
 | **CanteenItem** | HeldItemStateManager, PlayerStats | EquipmentManager, ContextMenuUI | None | None |
 | **CanteenBehavior** | CanteenItem | HeldItemBehaviorMgr | None | None |
 | **HeldItemStateManager** | None | TorchItem, CanteenItem | None | None |
-| **DayNightCycleManager** | ServiceContainer, EventBus, DayNightConfig, Light, SkyboxBlender | PlayerStats, Torch system | TimeOfDayChangedEvent, DayCompletedEvent | None |
+| **DayNightCycleManager** | ServiceContainer, EventBus, DayNightConfig, Light, SkyboxBlender, SoundService | PlayerStats, Torch system | TimeOfDayChangedEvent, DayCompletedEvent | None |
 | **SkyboxBlender** | Custom/BlendedSkybox shader | DayNightCycleManager | None | None |
+| **SoundService** | AudioMixer, SoundLibrary, SoundConfig | DayNightCycleManager, SoundEventListener | None | None |
+| **SoundEventListener** | SoundService, IEventBus | Scene | None | PlaySoundEvent, PlayMusicEvent, etc. |
+| **CollectableManager** | IEventBus | CollectableInteractable, CollectableZoneUnlockTrigger, LevelBonusService, StarterService, UI | CollectableUnlockedEvent | None |
+| **CollectableInteractable** | CollectableManager | InteractionDetector | None | None |
+| **DialogManager** | IEventBus, DialogUI | DialogOnStart, GatheringDiscoveryDialogTrigger, WorldDialogTrigger | None | None |
+| **TutorialManager** | IEventBus, SaveLoadService, PlayerController, CinemachinePlayerCamera | TutorialUI | None | Various game events |
+| **StarterCollectableService** | CollectableManager, StarterCollectableConfig | GameplaySceneInitializer, LevelBonusService | None | None |
+| **LevelBonusCollectableService** | EventBus, CollectableManager, SaveLoadService, StarterCollectableService, LevelBonusCollectableConfig | None | None | LevelUpEvent |
+| **LandslideRockSpawner** | LandslideRockBehaviorConfig | DebugLandslideHoldInteractable | None | None |
+| **TornadoPhaseController** | TornadoConfig, EventBus | TornadoMovement, TornadoPlayerPull | None | None |
 
 ### Circular Dependency Detection
 

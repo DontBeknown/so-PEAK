@@ -73,10 +73,10 @@ public void ShowMainMenu()
 
 **Key Methods:**
 ```csharp
-public void ShowWorldSelection(bool show)
+public void ShowWorldSelection(bool isShow = true)
 {
-    worldSelectionPanel.SetActive(show);
-    if (show) RefreshWorldList();
+    worldSelectionPanel.SetActive(isShow);
+    if (isShow) RefreshWorldList();
 }
 
 public void RefreshWorldList()
@@ -95,7 +95,7 @@ public void RefreshWorldList()
 private void CreateWorldEntry(SaveMetadata metadata)
 {
     var entry = Instantiate(worldEntryPrefab, worldListContainer);
-    var entryUI = entry.GetComponent<WorldEntryUI>();
+    var entryUI = entry.GetComponent<WorldSlotUI>();
     entryUI.Setup(metadata, this);
 }
 
@@ -133,9 +133,9 @@ public void OnDeleteWorld(string worldGuid)
 }
 ```
 
-### 3. WorldEntryUI
+### 3. WorldSlotUI
 
-**File:** `Menu/WorldEntryUI.cs`
+**File:** `Menu/WorldSlotUI.cs`
 
 **Purpose:** Individual world entry in the list.
 
@@ -170,9 +170,9 @@ public void Setup(SaveMetadata metadata, WorldSelectionUI parent)
 }
 ```
 
-### 4. WorldCreationPanel
+### 4. WorldCreateUI
 
-**File:** `Menu/WorldCreationPanel.cs`
+**File:** `Menu/WorldCreateUI.cs`
 
 **Purpose:** Create new world with custom name and seed.
 
@@ -243,7 +243,7 @@ public void OnRandomSeedClicked()
 
 ### 5. WorldPersistenceManager
 
-**File:** `Menu/WorldPersistenceManager.cs`
+**File:** `Core/WorldPersistenceManager.cs` _(lives under `Core/`, not `Menu/`)_
 
 **Purpose:** Carries world data between Menu and Gameplay scenes.
 
@@ -301,41 +301,16 @@ public class WorldPersistenceManager : MonoBehaviour
 }
 ```
 
-### 6. SeedGenerator
+### 6. Seed handling (no dedicated `SeedGenerator` class)
 
-**File:** `Menu/SeedGenerator.cs`
-
-**Purpose:** Generate random seeds for world creation.
-
-**Implementation:**
-```csharp
-public static class SeedGenerator
-{
-    private static readonly string[] wordList = new string[]
-    {
-        "Mountain", "Forest", "Ocean", "Desert", "Valley",
-        "Peak", "River", "Lake", "Canyon", "Glacier",
-        "Storm", "Sunset", "Dawn", "Frost", "Ember",
-        "Crystal", "Shadow", "Light", "Wind", "Thunder"
-        // ... more words ...
-    };
-    
-    public static SeedData GenerateRandomSeed()
-    {
-        string seed1 = GenerateRandomWord();
-        string seed2 = GenerateRandomWord();
-        string seed3 = GenerateRandomWord();
-        
-        return new SeedData(seed1, seed2, seed3);
-    }
-    
-    public static string GenerateRandomWord()
-    {
-        int index = Random.Range(0, wordList.Length);
-        return wordList[index];
-    }
-}
-```
+> **NOTE:** An earlier revision of this doc described a standalone `Menu/SeedGenerator.cs` class. That file does not exist. Seed data and randomization now live in:
+>
+> - `Core/SaveSystem/SeedData.cs` — struct holding the three word parts
+> - `Core/SaveSystem/SeedConfig.cs` — ScriptableObject with word pools
+> - `Core/SaveSystem/WorldSeedLoader.cs` — applies a selected `SeedData` to the loaded world
+> - `Menu/WorldCreateUI.cs` — UI-level flow: reads input fields, falls back to random picks from `SeedConfig`, and hands the result off when the player confirms
+>
+> When adding seed-related functionality, extend one of those files instead of creating a new `SeedGenerator` class.
 
 ---
 
@@ -353,14 +328,14 @@ public static class SeedGenerator
 3. Player clicks "Create New World"
    │
    ▼
-4. WorldCreationPanel opens
+4. WorldCreateUI opens
    │
    ├─► Player enters world name
    ├─► Player enters seed (or randomize)
    └─► Player clicks "Create"
    │
    ▼
-5. WorldCreationPanel.OnCreateButtonClicked()
+5. WorldCreateUI.OnCreateButtonClicked()
    │
    ├─► SaveLoadService.CreateNewWorld(name, seed)
    │   ├─► Create WorldSaveData with GUID
@@ -484,7 +459,7 @@ MenuScene
 │   │   ├── CreateNewWorldButton
 │   │   └── BackButton
 │   │
-│   └── WorldCreationPanel
+│   └── WorldCreateUI
 │       ├── WorldNameInputField
 │       ├── Seed1InputField
 │       ├── Seed2InputField
@@ -560,7 +535,7 @@ private void UpdateMetadata(WorldSaveData saveData)
 }
 ```
 
-3. **Display in WorldEntryUI:**
+3. **Display in WorldSlotUI:**
 ```csharp
 public void Setup(SaveMetadata metadata, WorldSelectionUI parent)
 {
@@ -631,7 +606,7 @@ public void CaptureWorldThumbnail(string worldGuid)
 }
 ```
 
-2. **Display in WorldEntryUI:**
+2. **Display in WorldSlotUI:**
 ```csharp
 public void Setup(SaveMetadata metadata, WorldSelectionUI parent)
 {
@@ -806,13 +781,20 @@ foreach (var world in worlds)
 ```
 Menu/
 ├── MainMenuUI.cs                   # Main menu controller
-├── WorldSelectionUI.cs             # World list display
-├── WorldEntryUI.cs                 # Individual world entry
-├── WorldCreationPanel.cs           # New world creation
-├── WorldPersistenceManager.cs      # Scene data transfer
-├── SeedGenerator.cs                # Random seed generation
-└── ConfirmationDialog.cs           # Delete confirmation
+├── WorldSelectionUI.cs             # World list display + selection state
+├── WorldSlotUI.cs                  # Individual world entry (selectable, hover/selected color states)
+├── WorldCreateUI.cs                # New world creation panel
+├── WorldData.cs                    # Lightweight world record used by menu UI
+├── LoadingPanelUI.cs               # Loading overlay shown while menu→gameplay scene switches
+├── ConfirmationDialogUI.cs         # Reusable yes/no confirm dialog (delete world, etc.)
+├── MenuPanelAnimator.cs            # Fade/slide panel animations
+├── ButtonHoverScale.cs             # Hover grow-shrink tween for buttons
+└── ButtonUnderlineAnimator.cs      # Underline fade/scale for selected buttons
 ```
+
+Related files outside `Menu/`:
+- `Core/WorldPersistenceManager.cs` — singleton that carries world GUID/name/seed into the Gameplay scene (it is **not** in `Menu/`, despite the older sections of this doc implying otherwise).
+- `Core/SaveSystem/SeedConfig.cs` + `SeedData.cs` + `WorldSeedLoader.cs` — seed generation and loading. There is no dedicated `SeedGenerator.cs`; the randomization lives inside `WorldCreateUI` / `SeedConfig`.
 
 ---
 
