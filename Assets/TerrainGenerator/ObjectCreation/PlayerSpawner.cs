@@ -35,12 +35,12 @@ public class PlayerSpawner : MonoBehaviour
     // Stores the spawned player reference after successful spawn
     public Transform SpawnedPlayer { get; private set; }
     
-    public IEnumerator SpawnPlayer()
+    public IEnumerator SpawnPlayer(Vector3 proceduralSpawnPosition)
     {
-        return SpawnPlayerDelayed();
+        return SpawnPlayerDelayed(proceduralSpawnPosition);
     }
     
-    private System.Collections.IEnumerator SpawnPlayerDelayed()
+    private System.Collections.IEnumerator SpawnPlayerDelayed(Vector3 proceduralSpawnPosition)
     {
         if (playerPrefab == null)
         {
@@ -61,24 +61,26 @@ public class PlayerSpawner : MonoBehaviour
 
         // 1. DETERMINE TARGET XZ POSITION (without proper Y yet)
         Vector3 targetXZ;
-        bool usingSavedPosition = !SaveLoadService.Instance.IsNewWorld() && loadFromSave;
+        // Use proceduralSpawnPosition if it's a fresh level entry, otherwise use saved position
+        bool isFreshLevelEntry = SaveLoadService.Instance.IsFreshLevelEntry();
+        bool usingSavedPosition = !isFreshLevelEntry && !SaveLoadService.Instance.IsNewWorld() && loadFromSave;
         
-        //Debug.Log($"[PlayerSpawner] {SaveLoadService.Instance.IsNewWorld()} and loadFromSave={loadFromSave}");
+        //Debug.Log($"[PlayerSpawner] FreshLevelEntry={isFreshLevelEntry}, IsNewWorld={SaveLoadService.Instance.IsNewWorld()}, loadFromSave={loadFromSave}");
         if(usingSavedPosition)
         {
            WorldSaveData saveData = SaveLoadService.Instance.CurrentWorldSave;
            targetXZ = new Vector3(saveData.playerData.position[0], saveData.playerData.position[1], saveData.playerData.position[2]);
-           //Debug.Log($"[PlayerSpawner] Using saved position: {targetXZ}");
+           Debug.Log($"[PlayerSpawner] Using saved position: {targetXZ}");
         }
         else
         {
-            targetXZ = targetSpawnPosition;
-            //Debug.Log($"[PlayerSpawner] Using default spawn position: {targetXZ}");
+            targetXZ = proceduralSpawnPosition;
+            Debug.Log($"[PlayerSpawner] Using procedural spawn position: {targetXZ}");
         }
 
         // 2. MOVE SPAWN MARKER TO TARGET POSITION (to trigger chunk generation)
         spawnMarkerTransform.position = targetXZ;
-        //Debug.Log($"[PlayerSpawner] Moved spawn marker to {targetXZ} to trigger chunk generation");
+        Debug.Log($"[PlayerSpawner] Moved spawn marker to {targetXZ} to trigger chunk generation");
 
         // 3. WAIT FOR CHUNKS TO GENERATE AND MESH COLLIDERS TO BAKE
         yield return new WaitForSeconds(spawnDelay);
@@ -131,7 +133,7 @@ public class PlayerSpawner : MonoBehaviour
         SpawnedPlayer = spawnedPlayerObj.transform;
         
         //FootIKControllerRefactored footIK = spawnedPlayerObj.GetComponentInChildren<FootIKControllerRefactored>();
-       //Debug.Log($"[PlayerSpawner] Player instantiated at {finalSpawnPosition}");
+       Debug.Log($"[PlayerSpawner] Player instantiated at {finalSpawnPosition}");
         
         // 5.5. UPDATE UI SERVICE PROVIDER WITH NEW PLAYER REFERENCE
         UIServiceProvider uiService = ServiceContainer.Instance.TryGet<UIServiceProvider>();

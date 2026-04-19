@@ -193,20 +193,22 @@ public class EventBus : IEventBus
 
 **Location:** `Assets/Game/Script/Player/Inventory/Commands/`
 
-**Commands:**
-- `AddItemCommand.cs`
-- `RemoveItemCommand.cs`
+**Commands:** (the four shipped under `Player/Inventory/Commands/`)
+- `PickupItemCommand.cs`
 - `DropItemCommand.cs`
-- `ConsumeItemCommand.cs`
-- `EquipItemCommand.cs`
-- `UnequipItemCommand.cs`
+- `CraftItemCommand.cs`
+- `UseItemCommand.cs` (non-undoable — stat changes are permanent)
+
+**Invoker:** `InventoryCommandInvoker.cs`
 
 **Interface:** `IInventoryCommand`
 ```csharp
 public interface IInventoryCommand
 {
-    bool Execute();
-    void Undo();
+    bool   Execute();
+    bool   Undo();
+    bool   CanUndo     { get; }
+    string Description { get; }
 }
 ```
 

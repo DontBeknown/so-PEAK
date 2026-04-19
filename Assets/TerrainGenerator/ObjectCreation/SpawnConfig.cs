@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // 1. Define the Enum right here, above the class, so your whole game knows what a NoiseType is!
-public enum NoiseType { None, TreeNoise, PuddleNoise, OreNoise }
+public enum NoiseType { None, TreeNoise, PuddleNoise }
 public enum RoadSpawnRule { AvoidRoads, AllowEverywhere, OnlyOnRoads }
 
 [CreateAssetMenu(fileName = "New Spawn Config", menuName = "World Generation/Spawn Config")]

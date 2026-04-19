@@ -65,8 +65,8 @@ Body temperature then drifts toward `effectiveTarget` at `tempDriftRate` °C/s.
 
 | File | Role |
 |------|------|
-| `TemperatureStat.cs` | All stat logic, heat-source scanning, penalty queries |
-| `ITemperatureSource.cs` | Interface for heat-emitting scene objects |
+| `Player/Stat/Stat/TemperatureStat.cs` | All stat logic, heat-source scanning, penalty queries |
+| `Environment/Temperature/ITemperatureSource.cs` | Interface for heat-emitting scene objects (lives under `Environment/`, not `Player/`) |
 | `PlayerConfig.cs` | All designer-tunable config fields |
 | `PlayerStats.cs` | Orchestration, damage application, public API |
 | `WalkingState.cs` / `RunningState.cs` | Reads `GetColdSpeedPenalty()` in multiplier stack |

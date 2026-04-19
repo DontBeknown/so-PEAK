@@ -17,19 +17,20 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: ba72e8c4a7b428b439f98fcdb892bf71, type: 3}
   maxStackSize: 1
   itemType: 3
-  category: 0
   gridSize: {x: 1, y: 3}
   worldPrefab: {fileID: 8829627052673951121, guid: 5f6060573f1719047ba50918ebfbd7d9, type: 3}
   isConsumable: 0
   consumableEffects: []
-  isCraftingMaterial: 0
-  isCraftedItem: 1
   equipmentSlot: 4
+  playerModelIndex: -1
   statModifiers: []
+  isRuntimeGenerated: 0
+  runtimeInstanceId: 
+  runtimeTemplateItemId: 
   heldItemPrefab: {fileID: 8608300581815050142, guid: 27caf45872e39e44d8de82692c167162, type: 3}
   maxDurabilitySeconds: 300
   durabilityDrainRate: 1
-  warmthBonus: 10
+  warmthBonus: 15
   lightRadius: 10
   lightIntensity: 25
   lightColor: {r: 1, g: 0.6, b: 0.2, a: 1}

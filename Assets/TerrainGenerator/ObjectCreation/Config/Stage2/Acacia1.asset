@@ -21,10 +21,10 @@ MonoBehaviour:
   MinScale: 0.5
   MaxScale: 1
   BaseRotation: {x: 0, y: 0, z: 0}
-  PositionOffset: {x: 0, y: 0, z: 0}
+  PositionOffset: {x: 0, y: 0.25, z: 0}
   RoadRule: 1
   MinSpacing: 50
   Density: 0.2
-  MaxSlopeDiff: 0.5
+  MaxSlopeDiff: 0.7
   RequiredNoiseMap: 0
   NoiseThreshold: 0.5

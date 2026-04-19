@@ -137,6 +137,14 @@ public class PlayerConfig : ScriptableObject
     [Range(1f, 3f)]
     public float tempThirstHotMaxMultiplier = 1.5f;
 
+    [Header("Temperature - UI Warning Feedback")]
+    [Tooltip("How many degrees before hot penalty feedback should start. Example: hot penalty 40 and offset 2 starts feedback at 38.")]
+    [Min(0f)]
+    public float tempHotWarningOffset = 2f;
+    [Tooltip("How many degrees before cold penalty feedback should start. Example: cold penalty 18 and offset 6 starts feedback at 24.")]
+    [Min(0f)]
+    public float tempColdWarningOffset = 6f;
+
     [Header("Temperature — Heat Sources")]
     [Tooltip("Radius in which the player detects ITemperatureSource objects (campfires, hot springs, etc.)")]
     public float tempHeatSourceRadius = 5f;

@@ -95,3 +95,7 @@ Assets/Snowy_Low_Poly_Trees
 Assets/Tiny Teacup Studio
 
 .github/
+.vscode/mcp.json
+.agent/
+.claude/
+CLAUDE.md

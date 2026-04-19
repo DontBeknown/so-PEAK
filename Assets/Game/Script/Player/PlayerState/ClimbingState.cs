@@ -71,6 +71,8 @@ public class ClimbingState : IPlayerState
             // Move on the wall: x=strafe, y=up/down
             Vector3 climbLocal = new Vector3(input.x, input.y, 0f);
             Vector3 climbMotion = model.Transform.TransformDirection(climbLocal) * model.ClimbSpeed;
+            Vector3 externalVelocity = model.ConsumeExternalVelocity();
+            climbMotion += externalVelocity;
             model.Move(climbMotion);
 
             // Climbing footstep sounds

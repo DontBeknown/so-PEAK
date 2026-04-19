@@ -151,10 +151,13 @@ public class InventoryItem : ScriptableObject
     public string description;
     public int maxStackSize = 1; // Grid items do not stack natively
     public Vector2Int gridSize = Vector2Int.one; // Dimensions in the grid
+    public GameObject worldPrefab;               // Prefab spawned when item is dropped
     public bool isConsumable;
-    public ConsumableEffectBase[] effects;
+    public ConsumableEffect[] consumableEffects; // Serializable struct array, NOT ScriptableObject subclasses
 }
 ```
+
+> **Naming note:** the field on `InventoryItem` is `consumableEffects` (plural) and its element type is the serializable struct `ConsumableEffect { ConsumableEffectKind effectKind; StatType statType; float value; }` — it is not `ConsumableEffectBase[] effects`. `ConsumableEffectBase` is a separate abstract class under `Player/Inventory/Effects/` used by the effect-strategy pipeline (`IConsumableEffect`, `ConsumableEffectFactory`, `ConsumableEffectSystem`, `ThirstEffectStrategy`, etc.) that translates each struct entry into a strategy object at consume-time. See "Consumable Effect System" below.
 
 **Item Hierarchy:**
 ```
@@ -194,96 +197,57 @@ public interface IEquippable
 
 **Purpose:** Reversible inventory operations.
 
-**Interface:**
+**Interface:** (`Assets/Game/Script/Player/Inventory/Commands/IInventoryCommand.cs`, namespace `Game.Player.Inventory.Commands`)
 ```csharp
-public interface ICommand
+public interface IInventoryCommand
 {
-    void Execute();
-    void Undo();
+    bool Execute();            // returns whether the operation succeeded
+    bool Undo();               // returns whether the reverse succeeded
+    bool CanUndo { get; }      // some commands (UseItemCommand) are intentionally non-undoable
+    string Description { get; }// for logging / debugging
 }
 ```
 
-**Commands:**
-- **AddItemCommand** - Add item with undo (remove)
-- **RemoveItemCommand** - Remove item with undo (add back)
-- **DropItemCommand** - Spawns item in the world and removes from grid
-- **TransferItemCommand** - Move item between slots/grid
-- **EquipItemCommand** - Equip with undo (unequip)
-- **ConsumeItemCommand** - Consume with undo (add back + restore stats)
+**Shipped commands** (in `Player/Inventory/Commands/`):
+- **PickupItemCommand** — place a world-space `ItemInteractable` into the grid; undo drops it back.
+- **DropItemCommand** — remove from the grid and spawn the item's `worldPrefab` at a target position; undo repopulates the cell.
+- **CraftItemCommand** — consume recipe ingredients and add the result item; undo restores ingredients and removes the result.
+- **UseItemCommand** — consume the item via `InventoryManagerRefactored.ConsumeItem`. `CanUndo = false` because stat changes are intentionally permanent.
 
-**Usage:**
-```csharp
-public class CommandInvoker
-{
-    private Stack<ICommand> undoStack = new Stack<ICommand>();
-    private Stack<ICommand> redoStack = new Stack<ICommand>();
-    
-    public void ExecuteCommand(ICommand command)
-    {
-        command.Execute();
-        undoStack.Push(command);
-        redoStack.Clear();
-    }
-    
-    public void Undo()
-    {
-        if (undoStack.Count > 0)
-        {
-            ICommand command = undoStack.Pop();
-            command.Undo();
-            redoStack.Push(command);
-        }
-    }
-    
-    public void Redo()
-    {
-        if (redoStack.Count > 0)
-        {
-            ICommand command = redoStack.Pop();
-            command.Execute();
-            undoStack.Push(command);
-        }
-    }
-}
-```
+**Invoker:** `InventoryCommandInvoker` (same folder) — the only class that should push commands onto the undo/redo stacks.
+
+> **Naming note:** earlier revisions of this doc referred to `ICommand` plus a set of AddItem/RemoveItem/Transfer/Equip/Consume commands. Those names are historical — the current interface is `IInventoryCommand` and the shipped commands are exactly the four above.
 
 ### 8. Consumable Effect System
 
-**Location:** `Player/Inventory/ConsumableEffects/`
+**Location:** `Player/Inventory/Effects/`
 
-**Purpose:** Strategy pattern for consumable effects.
+**Purpose:** Bridges the serializable `ConsumableEffect` structs stored on `InventoryItem` to runtime strategy objects implementing `IConsumableEffect`.
 
-**Base Class:**
+**Data side** — declared on the item (already shown above):
 ```csharp
-[CreateAssetMenu(menuName = "Items/Effects/...")]
-public abstract class ConsumableEffectBase : ScriptableObject
+public enum ConsumableEffectKind { InstantStat = 0, ThirstDrainReductionBuff = 1 }
+
+[Serializable]
+public class ConsumableEffect
 {
-    public abstract void ApplyEffect(PlayerStats target);
+    public ConsumableEffectKind effectKind;
+    public StatType             statType;  // only used for InstantStat
+    public float                value;     // gain amount, or 0..100 % for buffs
 }
 ```
 
-**Effect Types:**
-- **HealthEffect** - Restore/damage health
-- **HungerEffect** - Restore/reduce hunger
-- **ThirstEffect** - Restore/reduce thirst (Canteen)
-- **StaminaEffect** - Restore/reduce stamina
-- **TemperatureEffect** - Modify temperature
+**Runtime side** — a strategy pipeline in `Effects/`:
+- `IConsumableEffect` — strategy interface (`ApplyEffect(PlayerStats)` or similar).
+- `ConsumableEffectBase` — abstract helper for writing strategies.
+- `ConsumableEffectFactory` — converts each serialized `ConsumableEffect` into the matching strategy (`InstantStat` → an `InstantStatEffectStrategy`, `ThirstDrainReductionBuff` → `ThirstEffectStrategy`, etc.).
+- `ConsumableEffectSystem` (implements `IConsumableEffectSystem`) — takes the list of strategies produced by the factory and applies them to `PlayerStats`.
 
-**Example:**
-```csharp
-public class HealthEffect : ConsumableEffectBase
-{
-    public float healthAmount;
-    
-    public override void ApplyEffect(PlayerStats target)
-    {
-        if (healthAmount > 0)
-            target.Heal(healthAmount);
-        else
-            target.TakeDamage(-healthAmount);
-    }
-}
-```
+**Adding a new effect kind:**
+1. Add a value to `ConsumableEffectKind` in `InventoryItem.cs`.
+2. Add a new strategy class in `Effects/` implementing `IConsumableEffect` (or extending `ConsumableEffectBase`).
+3. Extend `ConsumableEffectFactory` so the new enum value maps to your strategy.
+4. Authors configure items in the Inspector — no ScriptableObject asset per effect required.
 
 ### 9. Held Item System
 
@@ -601,23 +565,22 @@ public class CustomHelmet : InventoryItem, IEquippable
 
 ### Creating Consumable Effect
 
-1. **Create effect class:**
-```csharp
-[CreateAssetMenu(menuName = "Items/Effects/Custom Effect")]
-public class CustomEffect : ConsumableEffectBase
-{
-    public float effectStrength;
-    
-    public override void ApplyEffect(PlayerStats target)
-    {
-        // Custom logic here
-        target.ModifyCustomStat(effectStrength);
-    }
-}
-```
+Effects are **not** separate ScriptableObject assets. They are serialized struct entries authored directly on each `InventoryItem`. To introduce a genuinely new kind of effect (not just new stat values):
 
-2. **Add to consumable item:**
-   - In Inspector: Add effect to item's `effects` array
+1. **Add a new kind** in `InventoryItem.cs`:
+   ```csharp
+   public enum ConsumableEffectKind
+   {
+       InstantStat = 0,
+       ThirstDrainReductionBuff = 1,
+       Regen = 2, // NEW
+   }
+   ```
+2. **Write a strategy** in `Player/Inventory/Effects/` implementing `IConsumableEffect` (or extending `ConsumableEffectBase`).
+3. **Map the kind to the strategy** in `ConsumableEffectFactory`.
+4. **Author the item** in the Inspector: set `consumableEffects[i].effectKind = Regen`, pick a `statType` (if relevant), and a `value`.
+
+No `[CreateAssetMenu]` asset is needed for per-effect data — the struct fields on the item are the data.
 
 ### Using Inventory API
 
@@ -866,10 +829,10 @@ void UpdateSlot(InventorySlot slot)
 
 ### Command Pattern
 
-**ICommand** implementations:
+**`IInventoryCommand`** implementations (`Game.Player.Inventory.Commands`):
 - Encapsulate operations as objects
-- Support undo/redo
-- Enable operation queuing
+- Support undo/redo via `Execute()` / `Undo()` returning `bool`, with a `CanUndo` flag
+- Enable operation queuing through `InventoryCommandInvoker`
 
 **Benefits:**
 - Full undo/redo support
@@ -1106,21 +1069,22 @@ Player/Inventory/
 ├── CraftingRecipe.cs                   # Recipe ScriptableObject
 │
 ├── Commands/
-│   ├── ICommand.cs                     # Command interface
-│   ├── AddItemCommand.cs               # Add with undo
-│   ├── RemoveItemCommand.cs            # Remove with undo
-│   ├── TransferItemCommand.cs          # Move between slots
-│   ├── EquipItemCommand.cs             # Equip with undo
-│   ├── ConsumeItemCommand.cs           # Consume with undo
-│   └── CommandInvoker.cs               # Undo/redo manager
+│   ├── IInventoryCommand.cs            # Command interface (bool Execute/Undo, CanUndo, Description)
+│   ├── PickupItemCommand.cs            # Pick up a world ItemInteractable
+│   ├── DropItemCommand.cs              # Drop grid item into world via worldPrefab
+│   ├── CraftItemCommand.cs             # Spend ingredients, add result
+│   ├── UseItemCommand.cs               # Consume item (non-undoable)
+│   └── InventoryCommandInvoker.cs      # Undo/redo stack manager
 │
-├── ConsumableEffects/
-│   ├── ConsumableEffectBase.cs         # Base effect class
-│   ├── HealthEffect.cs                 # HP modification
-│   ├── HungerEffect.cs                 # Hunger modification
-│   ├── ThirstEffect.cs                 # Thirst modification
-│   ├── StaminaEffect.cs                # Stamina modification
-│   └── TemperatureEffect.cs            # Temperature modification
+├── Effects/                            # (folder is `Effects/`, NOT `ConsumableEffects/`)
+│   ├── ConsumableEffectBase.cs         # Abstract base for strategy effects
+│   ├── IConsumableEffect.cs            # Strategy interface (ApplyEffect(PlayerStats))
+│   ├── IConsumableEffectSystem.cs      # Service contract for the effect pipeline
+│   ├── ConsumableEffectSystem.cs       # Default implementation of the pipeline
+│   ├── ConsumableEffectFactory.cs      # Translates ConsumableEffect struct → strategy
+│   ├── ConsumableEffects.cs            # Concrete strategies (InstantStat, etc.)
+│   ├── EffectStrategies.cs             # Misc strategy helpers
+│   └── ThirstEffectStrategy.cs         # Thirst-drain-reduction buff strategy
 │
 ├── HeldItems/
 │   ├── HeldEquipmentItem.cs            # Base held item

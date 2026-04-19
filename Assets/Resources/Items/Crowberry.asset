@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea3096b336b613b41956ebde60ce7616, type: 3}
+  m_Name: Crowberry
+  m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
+  itemName: Crowberry
+  description: Uhmmm Tasty!!! Does it safe to eat ???
+  icon: {fileID: 21300000, guid: c7c46bf4bf7bf954d8923d7aef38cfda, type: 3}
+  maxStackSize: 1
+  itemType: 1
+  gridSize: {x: 1, y: 1}
+  worldPrefab: {fileID: 4181080806535722212, guid: b794f50ba8c07ac48b03fe135e56066b, type: 3}
+  isConsumable: 1
+  consumableEffects:
+  - effectKind: 0
+    statType: 1
+    value: 5
+  - effectKind: 0
+    statType: 2
+    value: 10

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Acacia4
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
   ObjectName: acacia4
-  Prefab: {fileID: 100718, guid: 9a61c17de674a9a4395a6c9d2d0d1b41, type: 3}
+  Prefab: {fileID: 150802, guid: 0405ebfc7e06970458f743e73c6a8e1f, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
   BaseRadius: 0.5
@@ -21,10 +21,10 @@ MonoBehaviour:
   MinScale: 2
   MaxScale: 4
   BaseRotation: {x: 0, y: 0, z: 0}
-  PositionOffset: {x: 0, y: 0, z: 0}
+  PositionOffset: {x: 0, y: 0.25, z: 0}
   RoadRule: 1
   MinSpacing: 50
   Density: 0.2
-  MaxSlopeDiff: 0.5
+  MaxSlopeDiff: 0.7
   RequiredNoiseMap: 0
   NoiseThreshold: 0.5

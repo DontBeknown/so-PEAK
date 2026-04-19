@@ -41,7 +41,7 @@ namespace Game.Sound
         }
 
         private void OnPlayPositionalSFX(PlayPositionalSFXEvent e) =>
-            _sound.PlayPositionalSFX(e.ClipId, e.Position, e.VolumeScale);
+            _sound.PlayPositionalSFX(e.ClipId, e.Position, e.VolumeScale, e.MinDistanceOverride, e.MaxDistanceOverride);
 
         private void OnPlayUISound(PlayUISoundEvent e) =>
             _sound.PlayUISound(e.ClipId, e.VolumeScale);

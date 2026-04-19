@@ -12,11 +12,21 @@ namespace Game.UI.Collectable
 {
     public class CollectablesHubUI : MonoBehaviour
     {
+        private static readonly CollectableBiome[] BiomeCycle =
+        {
+            CollectableBiome.Forest,
+            CollectableBiome.Desert,
+            CollectableBiome.Snow
+        };
+
         [SerializeField] private GameObject hubRoot;
         [SerializeField] private Transform listContainer;
         [SerializeField] private GameObject entryPrefab;
         [SerializeField] private DocumentPageUI documentPageUI;
         [SerializeField] private CollectableItem[] allCollectables;
+        [SerializeField] private Button previousBiomeButton;
+        [SerializeField] private Button nextBiomeButton;
+        [SerializeField] private TMP_Text biomeLabel;
 
         [Header("Transition Targets")]
         [SerializeField] private CanvasGroup dimBackgroundCanvasGroup;
@@ -32,6 +42,7 @@ namespace Game.UI.Collectable
         private ICollectableManager _collectableManager;
         private IEventBus _eventBus;
         private string _selectedCollectableId;
+        private CollectableBiome _activeBiome = CollectableBiome.Forest;
         private CanvasGroup _menuCanvasGroup;
         private RectTransform _menuRect;
         private Vector2 _menuShownPosition;
@@ -42,10 +53,15 @@ namespace Game.UI.Collectable
         private bool _suppressRestoreOnDocumentHide;
         private Tween _openTween;
         private Tween _menuDocumentTween;
+        private Tween _listFadeTween;
+        private CanvasGroup _listCanvasGroup;
 
         private void Awake()
         {
+            HookBiomeButtons();
+            CacheListAnimationReferences();
             CacheAnimationReferences();
+            UpdateBiomeLabel();
             HideHubPanel();
         }
 
@@ -68,6 +84,7 @@ namespace Game.UI.Collectable
 
             _openTween?.Kill();
             _menuDocumentTween?.Kill();
+            _listFadeTween?.Kill();
         }
 
         public void ShowHubPanel()
@@ -75,6 +92,7 @@ namespace Game.UI.Collectable
             if (hubRoot != null)
                 hubRoot.SetActive(true);
 
+            SetBiomeControlsInteractable(true);
             PrepareHubAndSharedBackgroundForOpen();
             RefreshEntries();
             PlayHubOpenAnimation();
@@ -92,6 +110,8 @@ namespace Game.UI.Collectable
 
             if (hubRoot != null)
                 hubRoot.SetActive(false);
+
+            SetBiomeControlsInteractable(false);
 
             if (_menuCanvasGroup != null)
             {
@@ -116,13 +136,32 @@ namespace Game.UI.Collectable
 
         public void RefreshEntries()
         {
-            ClearEntries();
             if (entryPrefab == null || listContainer == null || allCollectables == null)
                 return;
 
             _collectableManager ??= ServiceContainer.Instance.TryGet<ICollectableManager>();
 
-            foreach (var collectable in allCollectables.Where(c => c != null))
+            var canAnimate = hubRoot != null && hubRoot.activeSelf && _listCanvasGroup != null;
+            if (canAnimate)
+            {
+                PlayListFadeRefreshAnimation();
+                return;
+            }
+
+            RebuildEntries();
+            SetListVisibilityImmediate(true);
+        }
+
+        public CollectableItem[] GetConfiguredCollectables()
+        {
+            return allCollectables;
+        }
+
+        private void RebuildEntries()
+        {
+            ClearEntries();
+
+            foreach (var collectable in GetCollectablesForActiveBiome())
             {
                 var entryObject = Instantiate(entryPrefab, listContainer);
                 _spawnedEntries.Add(entryObject);
@@ -131,6 +170,34 @@ namespace Game.UI.Collectable
                 var isSelected = !string.IsNullOrWhiteSpace(_selectedCollectableId) && _selectedCollectableId == collectable.id;
                 BindEntry(entryObject, collectable, isUnlocked, isSelected);
             }
+        }
+
+        private void PlayListFadeRefreshAnimation()
+        {
+            if (_listCanvasGroup == null)
+            {
+                RebuildEntries();
+                return;
+            }
+
+            _listFadeTween?.Kill();
+
+            _listCanvasGroup.interactable = false;
+            _listCanvasGroup.blocksRaycasts = false;
+
+            var fadeSegmentDuration = Mathf.Max(0.05f, fadeDuration * 0.5f);
+            var sequence = DOTween.Sequence().SetUpdate(true).SetLink(gameObject);
+            sequence.Append(_listCanvasGroup.DOFade(0f, fadeSegmentDuration).SetEase(Ease.InOutQuad));
+            sequence.AppendCallback(RebuildEntries);
+            sequence.Append(_listCanvasGroup.DOFade(1f, fadeSegmentDuration).SetEase(Ease.InOutQuad));
+            sequence.OnComplete(() =>
+            {
+                _listCanvasGroup.interactable = true;
+                _listCanvasGroup.blocksRaycasts = true;
+                _listFadeTween = null;
+            });
+
+            _listFadeTween = sequence;
         }
 
         private void BindEntry(GameObject entryObject, CollectableItem collectable, bool unlocked, bool isSelected)
@@ -188,17 +255,85 @@ namespace Game.UI.Collectable
                 return;
 
             _selectedCollectableId = evt.CollectableId;
-            ShowHubPanel();
 
             var focusedCollectable = allCollectables?.FirstOrDefault(c => c != null && c.id == evt.CollectableId);
             if (focusedCollectable == null)
+            {
+                ShowHubPanel();
                 return;
+            }
+
+            SetActiveBiome(focusedCollectable.biome, refresh: false);
+            ShowHubPanel();
 
             if (focusedCollectable.type == CollectableType.TextDocument)
             {
                 SetMenuVisibilityImmediate(false);
                 OpenCollectableFromMenu(focusedCollectable);
             }
+        }
+
+        private void HookBiomeButtons()
+        {
+            if (previousBiomeButton != null)
+            {
+                previousBiomeButton.onClick.RemoveAllListeners();
+                previousBiomeButton.onClick.AddListener(() => CycleBiome(-1));
+            }
+
+            if (nextBiomeButton != null)
+            {
+                nextBiomeButton.onClick.RemoveAllListeners();
+                nextBiomeButton.onClick.AddListener(() => CycleBiome(1));
+            }
+        }
+
+        private void CycleBiome(int direction)
+        {
+            var index = System.Array.IndexOf(BiomeCycle, _activeBiome);
+            if (index < 0)
+                index = 0;
+
+            index = (index + direction) % BiomeCycle.Length;
+            if (index < 0)
+                index += BiomeCycle.Length;
+
+            SetActiveBiome(BiomeCycle[index]);
+        }
+
+        private void SetActiveBiome(CollectableBiome biome, bool refresh = true)
+        {
+            _activeBiome = biome;
+            UpdateBiomeLabel();
+
+            if (refresh && isActiveAndEnabled && (hubRoot == null || hubRoot.activeSelf))
+                RefreshEntries();
+        }
+
+        private void UpdateBiomeLabel()
+        {
+            if (biomeLabel != null)
+                biomeLabel.text = _activeBiome.ToString();
+        }
+
+        private IEnumerable<CollectableItem> GetCollectablesForActiveBiome()
+        {
+            if (allCollectables == null)
+                yield break;
+
+            foreach (var collectable in allCollectables.Where(c => c != null && c.biome == _activeBiome))
+            {
+                yield return collectable;
+            }
+        }
+
+        private void SetBiomeControlsInteractable(bool interactable)
+        {
+            if (previousBiomeButton != null)
+                previousBiomeButton.interactable = interactable;
+
+            if (nextBiomeButton != null)
+                nextBiomeButton.interactable = interactable;
         }
 
         private void OpenCollectableFromMenu(CollectableItem collectable, bool delayed = false)
@@ -347,6 +482,17 @@ namespace Game.UI.Collectable
             }
         }
 
+        private void CacheListAnimationReferences()
+        {
+            if (listContainer == null)
+                return;
+
+            var listRoot = listContainer as RectTransform;
+            var target = listRoot != null ? listRoot.gameObject : listContainer.gameObject;
+            _listCanvasGroup = target.GetComponent<CanvasGroup>() ?? target.AddComponent<CanvasGroup>();
+            SetListVisibilityImmediate(true);
+        }
+
         private void PrepareHubAndSharedBackgroundForOpen()
         {
             CacheAnimationReferences();
@@ -370,6 +516,9 @@ namespace Game.UI.Collectable
 
             if (_hasSharedBackgroundRect)
                 sharedBackgroundRect.anchoredPosition = _sharedBackgroundShownPosition + Vector2.down * sharedBackgroundSlideDistance;
+
+            CacheListAnimationReferences();
+            SetListVisibilityImmediate(false);
         }
 
         private void PlayHubOpenAnimation()
@@ -406,6 +555,16 @@ namespace Game.UI.Collectable
             _menuCanvasGroup.alpha = visible ? 1f : 0f;
             _menuCanvasGroup.interactable = visible;
             _menuCanvasGroup.blocksRaycasts = visible;
+        }
+
+        private void SetListVisibilityImmediate(bool visible)
+        {
+            if (_listCanvasGroup == null)
+                return;
+
+            _listCanvasGroup.alpha = visible ? 1f : 0f;
+            _listCanvasGroup.interactable = visible;
+            _listCanvasGroup.blocksRaycasts = visible;
         }
     }
 }

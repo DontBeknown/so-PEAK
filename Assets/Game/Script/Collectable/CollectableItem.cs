@@ -3,6 +3,13 @@ using Game.Dialog;
 
 namespace Game.Collectable
 {
+    public enum CollectableBiome
+    {
+        Forest,
+        Desert,
+        Snow
+    }
+
     [CreateAssetMenu(fileName = "CollectableItem", menuName = "Game/Collectable/Collectable Item")]
     public class CollectableItem : ScriptableObject
     {
@@ -13,6 +20,7 @@ namespace Game.Collectable
         public string content;
 
         public CollectableType type;
+        public CollectableBiome biome;
         public Sprite icon;
 
         // Used when type is ScriptDialog to support hub replay.

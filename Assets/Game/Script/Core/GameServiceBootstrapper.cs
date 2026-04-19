@@ -11,6 +11,7 @@ using Game.Sound;
 using Game.Collectable;
 using Game.Dialog;
 using Game.Tutorial;
+using Game.Progression;
 
 namespace Game.Core
 {
@@ -37,6 +38,8 @@ namespace Game.Core
         [SerializeField] private CollectableManager collectableManager;
         [SerializeField] private DialogManager dialogManager;
         [SerializeField] private TutorialManager tutorialManager;
+        [SerializeField] private StarterCollectableService starterCollectableService;
+        [SerializeField] private LevelBonusCollectableService levelBonusCollectableService;
 
         
         [Header("Debug")]
@@ -215,6 +218,25 @@ namespace Game.Core
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] UIServiceProvider found and registered");
             }
+
+            // Find and register StarterCollectableService
+            var starterService = starterCollectableService ?? FindFirstObjectByType<StarterCollectableService>();
+            if (starterService != null)
+            {
+                container.Register(starterService);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] StarterCollectableService found and registered");
+            }
+
+            // Find and initialize LevelBonusCollectableService
+            var levelBonusService = levelBonusCollectableService ?? FindFirstObjectByType<LevelBonusCollectableService>();
+            if (levelBonusService != null)
+            {
+                container.Register(levelBonusService);
+                levelBonusService.Initialize(eventBus, cm, saveLoadService, starterService);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] LevelBonusCollectableService found, registered, and initialized");
+            }
         }
         
         private void RegisterManualServices()
@@ -260,6 +282,23 @@ namespace Game.Core
 
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] TutorialManager manually registered");
+            }
+
+            if (starterCollectableService != null)
+            {
+                container.Register(starterCollectableService);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] StarterCollectableService manually registered");
+            }
+
+            if (levelBonusCollectableService != null)
+            {
+                container.Register(levelBonusCollectableService);
+                var cm = container.TryGet<ICollectableManager>();
+                var svc = container.TryGet<ISaveLoadService>();
+                levelBonusCollectableService.Initialize(eventBus, cm, svc, starterCollectableService);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] LevelBonusCollectableService manually registered and initialized");
             }
         }
         

@@ -46,6 +46,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     // Current save
     private WorldSaveData currentWorldSave;
     private float autoSaveTimer;
+    private bool freshLevelEntry = false; // Flag to indicate fresh level progression
     
     // Constants
     private const string SAVE_FILE_EXTENSION = ".sav";
@@ -142,6 +143,8 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             {
                 CreateBackup(saveData.worldGuid);
             }
+
+            ResetFreshLevelEntryFlag();
             
             OnWorldSaved?.Invoke(saveData);
             
@@ -527,26 +530,31 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         // Simple and reliable: new world has 0 play time
         return currentWorldSave.totalPlayTime == 0f;
     }
-    
-    /// <summary>
-    /// Check if player should spawn at default position (new world) or saved position (existing world)
-    /// </summary>
-    public bool ShouldUseDefaultSpawn()
-    {
-        return IsNewWorld();
-    }
 
     /// <summary>
     /// Increments the world level by 1 and immediately saves.
+    /// Marks this as a fresh level entry so spawner uses procedural position.
     /// </summary>
     public void ProgressToNextLevel()
     {
         if (currentWorldSave == null) return;
 
+        if (currentWorldSave.playerData == null)
+            currentWorldSave.playerData = CreateDefaultPlayerData();
+
+        // Snapshot current progression before changing level-specific state.
+        // This captures inventory, equipment, collectables, dialogs and playtime.
+        UpdatePlayerDataFromGame();
+
         if (currentWorldSave.worldState == null)
             currentWorldSave.worldState = CreateDefaultWorldState();
 
         currentWorldSave.worldState.level++;
+        
+        // Reset player position to default for new level
+        ResetPlayerSpawnToDefault();
+        ResetPlayerStatsForNextLevel();
+    
         SpawnedObjectStateRegistry.ClearAllDestroyed();
         bool saved = SaveWorld(currentWorldSave);
 
@@ -556,9 +564,40 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             return;
         }
 
+         // Mark this as a fresh level entry - spawner will use proceduralSpawnPosition
+        freshLevelEntry = true;
+
         ReloadActiveScene();
 
         if (enableDebug) Debug.Log($"[SaveLoadService] Progressed to level {currentWorldSave.worldState.level}");
+    }
+
+    /// <summary>
+    /// Checks if this is a fresh level entry after progression.
+    /// Should be called by spawner to determine spawn position.
+    /// </summary>
+    public bool IsFreshLevelEntry()
+    {
+        return freshLevelEntry;
+    }
+
+    /// <summary>
+    /// Resets fresh-level-entry flag.
+    /// Called when save is performed to avoid carrying one-shot state.
+    /// </summary>
+    public void ResetFreshLevelEntryFlag()
+    {
+        if (!freshLevelEntry)
+        {
+            return;
+        }
+
+        freshLevelEntry = false;
+
+        if (enableDebug)
+        {
+            Debug.Log("[SaveLoadService] Fresh level entry flag reset after save.");
+        }
     }
 
     /// <summary>
@@ -567,6 +606,40 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     public int GetCurrentLevel()
     {
         return currentWorldSave?.worldState?.level ?? 1;
+    }
+
+    /// <summary>
+    /// Resets the player spawn position to default for new level entry.
+    /// Called when progressing to next level.
+    /// </summary>
+    private void ResetPlayerSpawnToDefault()
+    {
+        if (currentWorldSave?.playerData == null)
+            return;
+
+        // Reset position to (0, 10, 0) - will be adjusted by raycast in spawner
+        currentWorldSave.playerData.position = new float[] { 0, 10, 0 };
+        currentWorldSave.playerData.rotation = new float[] { 0, 0, 0, 1 };
+
+        if (enableDebug) Debug.Log("[SaveLoadService] Reset player spawn to default for new level");
+    }
+
+    private void ResetPlayerStatsForNextLevel()
+    {
+        if (currentWorldSave?.playerData == null)
+            return;
+
+        var playerData = currentWorldSave.playerData;
+
+        playerData.health = playerData.maxHealth > 0f ? playerData.maxHealth : 100f;
+        playerData.hunger = playerData.maxHunger > 0f ? playerData.maxHunger : 100f;
+        playerData.stamina = playerData.maxStamina > 0f ? playerData.maxStamina : 100f;
+        playerData.temperature = 20f;
+
+        if (enableDebug)
+        {
+            Debug.Log("[SaveLoadService] Reset player stats for next level entry.");
+        }
     }
     
     #endregion

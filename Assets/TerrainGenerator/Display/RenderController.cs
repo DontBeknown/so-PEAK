@@ -67,9 +67,11 @@ public class RenderController : MonoBehaviour
 
             SetupStageMaterial();
 
-            maxChunkX = (dataManager.globalHeightMap.GetLength(0) - 1) / (chunkSize - 1);
-            maxChunkZ = (dataManager.globalHeightMap.GetLength(1) - 1) / (chunkSize - 1);
+            float xChunks = (float)(dataManager.globalHeightMap.GetLength(0) - 1) / (chunkSize - 1);
+            float zChunks = (float)(dataManager.globalHeightMap.GetLength(1) - 1) / (chunkSize - 1);
 
+            maxChunkX = Mathf.CeilToInt(xChunks);
+            maxChunkZ = Mathf.CeilToInt(zChunks);
             // --- THE DYNAMIC SPAWN FIX (WITHOUT TOUCHING SPAWNER SCRIPT) ---
 
             // 1. Default to the public variable your friend set in the Inspector
@@ -473,7 +475,7 @@ public class RenderController : MonoBehaviour
     private System.Collections.IEnumerator SpawnPlayerSequence()
     {
         // Call PlayerSpawner's coroutine and wait for it to complete
-        yield return StartCoroutine(spawner.SpawnPlayer());
+        yield return StartCoroutine(spawner.SpawnPlayer(dataManager.completeSpawnCoord));
 
         // Get the spawned player reference
         Transform spawnedPlayer = spawner.SpawnedPlayer;

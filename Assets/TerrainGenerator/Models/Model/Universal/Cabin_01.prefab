@@ -1908,6 +1908,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 7303101590565771138}
     m_Modifications:
+    - target: {fileID: 4974884843151094365, guid: 9e4d87ed8442a2a40b13957dd237e343, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 300ee636ab1b3b7429c61eaa1f29b0b8, type: 2}
     - target: {fileID: 6143327382123120946, guid: 9e4d87ed8442a2a40b13957dd237e343, type: 3}
       propertyPath: m_RootOrder
       value: 46
@@ -2698,6 +2702,82 @@ PrefabInstance:
       propertyPath: m_Name
       value: Random Collectable
       objectReference: {fileID: 0}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: snowPool.Array.size
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: desertPool.Array.size
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: forestPool.Array.size
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'snowPool.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: dadd57fea185f9d47b1b0032148281f6, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'snowPool.Array.data[1]'
+      value: 
+      objectReference: {fileID: 11400000, guid: a7ddb86fa30728a4fb41d0b5715c714d, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'snowPool.Array.data[2]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 9734e75b10bb1ce40a6ff4c7f7caa7fa, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'snowPool.Array.data[3]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 752ce89f58e6454448e45f63cad14aff, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'snowPool.Array.data[4]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 2113b680a4cf9f34dbefbd5d79b14406, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'desertPool.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 792c8e9206d1c0a48b12db0babd2c763, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'desertPool.Array.data[1]'
+      value: 
+      objectReference: {fileID: 11400000, guid: d9523dee6b8ee19418662cc2c6ce7a70, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'desertPool.Array.data[2]'
+      value: 
+      objectReference: {fileID: 11400000, guid: a195a7701a6923f4f902f2ec104bf9e0, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'desertPool.Array.data[3]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 812893d0d6eabce40876ea23c57493d5, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'desertPool.Array.data[4]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 67d618e53d50ac947873e808e5af5235, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'desertPool.Array.data[5]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 4d6939ffdb95b6945ac337a1f3e48436, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'forestPool.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 4249389dee52066478cbe1ee1b94752a, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'forestPool.Array.data[1]'
+      value: 
+      objectReference: {fileID: 11400000, guid: b3683205ba2f7cd45886f9e75350e228, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'forestPool.Array.data[2]'
+      value: 
+      objectReference: {fileID: 11400000, guid: ef2eb4fcf1378b34baf8d630347f0f7d, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'forestPool.Array.data[3]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 923bb1ca720e5c447b9fe50a80dfebe4, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'forestPool.Array.data[4]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 4ab2f40d2659baa489612cd1b2a19d1b, type: 2}
     - target: {fileID: 7493584719571517060, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.219
@@ -2963,6 +3043,7 @@ MonoBehaviour:
   healAmountOnUse: 50
   customSaveSpawnPoint: {fileID: 785292937964643490}
   progressNextLevelOnUse: 0
+  saveGameOnUse: 1
 --- !u!1001 &4028500114970844508
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3103,6 +3184,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 7303101590565771138}
     m_Modifications:
+    - target: {fileID: 4974884843151094365, guid: 9e4d87ed8442a2a40b13957dd237e343, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 300ee636ab1b3b7429c61eaa1f29b0b8, type: 2}
     - target: {fileID: 6143327382123120946, guid: 9e4d87ed8442a2a40b13957dd237e343, type: 3}
       propertyPath: m_RootOrder
       value: 61
@@ -4115,6 +4200,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2089504532181794521, guid: 7a92d70f42aca1d40aa5675904d4fb0a, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 300ee636ab1b3b7429c61eaa1f29b0b8, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4181,6 +4270,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2089504532181794521, guid: 7a92d70f42aca1d40aa5675904d4fb0a, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 300ee636ab1b3b7429c61eaa1f29b0b8, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4683,6 +4776,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1829358919635260964, guid: 43a2c776338fcb84ca02d902bbfd0a20, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 300ee636ab1b3b7429c61eaa1f29b0b8, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:

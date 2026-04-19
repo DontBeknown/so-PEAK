@@ -25,15 +25,21 @@ namespace Game.Core
         [Header("Scene")]
         [SerializeField] private string debugGameplaySceneName = "Scene_Debug_Gameplay";
 
+
         [Header("References")]
         [SerializeField] private RenderController renderController;
         [SerializeField] private Camera terrainCamera;
+        [SerializeField] private HJBClickPathController hjbClickPathController;
+        [SerializeField] private WorldDataManager worldDataManager;
 
         [Header("Shared State")]
         [SerializeField] private SharedLoadingState loadingState;
 
+
         [Header("Options")]
         [SerializeField] private bool enableAsyncLoadFlow = true;
+        [SerializeField] private bool enableCoordinatorLogs = true;
+        [SerializeField] private bool enableHJBPathCalculation = true;
 
         private IEnumerator Start()
         {
@@ -43,7 +49,8 @@ namespace Game.Core
 
             if (!shouldUseAsyncLoadFlow)
             {
-                Debug.Log("[AsyncLoadCoordinator] Async loading flow disabled. Waiting for chunks then spawning.");
+                if (enableCoordinatorLogs)
+                    Debug.Log("[AsyncLoadCoordinator] Async loading flow disabled. Waiting for chunks then spawning.");
 
                 if (loadingState != null)
                     yield return new WaitUntil(() => loadingState.isChunksReady);
@@ -61,9 +68,29 @@ namespace Game.Core
                 debugGameplaySceneName, LoadSceneMode.Additive);
             yield return loadOp;
 
+
             // --- Gate 1: Wait until all terrain chunks are finalized ---
             yield return new WaitUntil(() =>
                 loadingState != null && loadingState.isChunksReady);
+
+            // --- Gate 1.5: Trigger HJB path calculation and wait for completion (optional) ---
+            if (enableHJBPathCalculation)
+            {
+                if (hjbClickPathController != null && worldDataManager != null)
+                {
+                    if (enableCoordinatorLogs)
+                        Debug.Log("[AsyncLoadCoordinator] Triggering HJB path calculation from spawn coord...");
+                    if (loadingState != null)
+                    {
+                        loadingState.statusMessage = "Calculating optimal path to peak...";
+                    }
+                    yield return hjbClickPathController.CalculatePathFromSpawnToPeak(worldDataManager.completeSpawnCoord);
+                }
+                else if (enableCoordinatorLogs)
+                {
+                    Debug.LogWarning("[AsyncLoadCoordinator] HJBClickPathController or WorldDataManager not assigned. Skipping HJB path calculation.");
+                }
+            }
 
             // Snap progress to 100% and show confirm prompt message
             if (loadingState != null)
@@ -72,13 +99,15 @@ namespace Game.Core
                 loadingState.statusMessage = "Press Y to enter world";
             }
 
-            Debug.Log("[AsyncLoadCoordinator] Gate 1 passed — all chunks ready. Waiting for player confirmation.");
+            if (enableCoordinatorLogs)
+                Debug.Log("[AsyncLoadCoordinator] Gate 1 passed  all chunks ready and HJB path calculated. Waiting for player confirmation.");
 
             // --- Gate 2: Wait for player to press Y in Scene_Debug_Gameplay ---
             yield return new WaitUntil(() =>
                 loadingState != null && loadingState.playerConfirmed);
 
-            Debug.Log("[AsyncLoadCoordinator] Gate 2 passed — player confirmed. Transitioning.");
+            if (enableCoordinatorLogs)
+                Debug.Log("[AsyncLoadCoordinator] Gate 2 passed — player confirmed. Transitioning.");
 
             // --- Step 3: Unload the waiting-room scene ---
             yield return SceneManager.UnloadSceneAsync(debugGameplaySceneName);
@@ -101,12 +130,16 @@ namespace Game.Core
             if (renderController != null)
                 renderController.SpawnPlayerNow();
             else
-                Debug.LogError("[AsyncLoadCoordinator] RenderController not assigned! Cannot spawn player.");
+            {
+                if (enableCoordinatorLogs)
+                    Debug.LogError("[AsyncLoadCoordinator] RenderController not assigned! Cannot spawn player.");
+            }
 
             if (loadingState != null)
                 loadingState.isComplete = true;
 
-            Debug.Log("[AsyncLoadCoordinator] Transition complete. Player spawning.");
+            if (enableCoordinatorLogs)
+                Debug.Log("[AsyncLoadCoordinator] Transition complete. Player spawning.");
         }
 
         private bool ShouldUseAsyncLoadFlow()
@@ -119,14 +152,16 @@ namespace Game.Core
             SaveLoadService saveLoadService = SaveLoadService.Instance;
             if (saveLoadService == null)
             {
-                Debug.LogWarning("[AsyncLoadCoordinator] SaveLoadService not available. Async flow will be skipped.");
+                if (enableCoordinatorLogs)
+                    Debug.LogWarning("[AsyncLoadCoordinator] SaveLoadService not available. Async flow will be skipped.");
                 return false;
             }
 
             WorldSaveData currentSave = saveLoadService.CurrentWorldSave;
             if (currentSave == null)
             {
-                Debug.LogWarning("[AsyncLoadCoordinator] CurrentWorldSave is null. Async flow will be skipped.");
+                if (enableCoordinatorLogs)
+                    Debug.LogWarning("[AsyncLoadCoordinator] CurrentWorldSave is null. Async flow will be skipped.");
                 return false;
             }
 

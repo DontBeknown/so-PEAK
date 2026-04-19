@@ -1,13 +1,14 @@
 using UnityEngine;
 using Game.Player.Inventory.HeldItems;
 using Game.Core.DI;
+using Game.Environment.Temperature;
 
 /// <summary>
 /// Runtime behavior for torch - manages light, durability depletion, and warmth bonus.
 /// Attached to player when torch is equipped.
 /// Follows Single Responsibility Principle.
 /// </summary>
-public class TorchBehavior : MonoBehaviour, IHeldItemBehavior
+public class TorchBehavior : MonoBehaviour, IHeldItemBehavior, ITemperatureSource
 {
     // Injected by HeldItemBehaviorManager (no Inspector assignment needed)
     [SerializeField] private Transform rightHandBone;
@@ -16,8 +17,10 @@ public class TorchBehavior : MonoBehaviour, IHeldItemBehavior
     private Light torchLight;
     private AudioSource loopingAudio;
     private GameObject visualPrefabInstance;
-    private PlayerStats playerStats;
     private bool isEquipped = false;
+
+    public float TemperatureBonus => torchItem != null ? torchItem.WarmthBonus : 0f;
+    public bool IsActive => isEquipped && torchItem != null && torchItem.HasDurability();
 
     public void Initialize(TorchItem item)
     {
@@ -34,14 +37,8 @@ public class TorchBehavior : MonoBehaviour, IHeldItemBehavior
 
         isEquipped = true;
 
-        // Get player stats for warmth bonus
-        playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
-
         // Create light component
         CreateLight();
-
-        // Apply warmth bonus
-        ApplyWarmthBonus();
 
         // Spawn visual prefab
         SpawnVisualPrefab();
@@ -61,9 +58,6 @@ public class TorchBehavior : MonoBehaviour, IHeldItemBehavior
 
         // Remove light
         DestroyLight();
-
-        // Remove warmth bonus
-        RemoveWarmthBonus();
 
         // Destroy visual prefab
         DestroyVisualPrefab();
@@ -128,24 +122,6 @@ public class TorchBehavior : MonoBehaviour, IHeldItemBehavior
         {
             Destroy(torchLight.gameObject);
             torchLight = null;
-        }
-    }
-
-    private void ApplyWarmthBonus()
-    {
-        if (playerStats != null)
-        {
-            playerStats.ModifyTemperature(torchItem.WarmthBonus);
-            //Debug.Log($"[TorchBehavior] Applied warmth bonus: +{torchItem.WarmthBonus}");
-        }
-    }
-
-    private void RemoveWarmthBonus()
-    {
-        if (playerStats != null)
-        {
-            playerStats.ModifyTemperature(-torchItem.WarmthBonus);
-            //Debug.Log($"[TorchBehavior] Removed warmth bonus: -{torchItem.WarmthBonus}");
         }
     }
 

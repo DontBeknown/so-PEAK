@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e815f49d3bf3ce7448e0d86df2a6040e, type: 3}
+  m_Name: Sand_TornadoConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Environment.Tornado.TornadoConfig
+  transitionDuration: 1.5
+  warningPhaseLightColor: {r: 0.6, g: 0.6, b: 0.65, a: 1}
+  warningPhaseLightIntensity: 0.5
+  warningPhaseAmbientColor: {r: 0.4, g: 0.45, b: 0.5, a: 1}
+  warningPhaseAmbientIntensity: 0.6
+  useFogOverride: 1
+  warningPhaseFogColor: {r: 0.9254902, g: 0.8, b: 0.3882353, a: 1}
+  warningPhaseFogDensity: 0.08

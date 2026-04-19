@@ -8,12 +8,21 @@ namespace Game.Sound.Events
         public string ClipId;        // Key into SoundLibrary
         public Vector3 Position;
         public float VolumeScale;    // Multiplier on top of SoundConfig default (1 = normal)
+        public float? MinDistanceOverride;
+        public float? MaxDistanceOverride;
 
-        public PlayPositionalSFXEvent(string clipId, Vector3 position, float volumeScale = 1f)
+        public PlayPositionalSFXEvent(
+            string clipId,
+            Vector3 position,
+            float volumeScale = 1f,
+            float? minDistanceOverride = null,
+            float? maxDistanceOverride = null)
         {
             ClipId = clipId;
             Position = position;
             VolumeScale = volumeScale;
+            MinDistanceOverride = minDistanceOverride;
+            MaxDistanceOverride = maxDistanceOverride;
         }
     }
 

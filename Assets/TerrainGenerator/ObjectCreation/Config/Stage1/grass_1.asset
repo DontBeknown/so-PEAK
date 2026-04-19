@@ -25,6 +25,6 @@ MonoBehaviour:
   RoadRule: 1
   MinSpacing: 10
   Density: 0.5
-  MaxSlopeDiff: 0.7
+  MaxSlopeDiff: 1
   RequiredNoiseMap: 0
   NoiseThreshold: 0.5

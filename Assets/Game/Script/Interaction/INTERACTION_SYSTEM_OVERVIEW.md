@@ -762,14 +762,33 @@ public class MultiStageInteractable : HoldInteractableBase
 
 ```
 Interaction/
-├── IInteractable.cs                   # Interface
-├── InteractionDetector.cs             # Detection system
-├── HoldInteractableBase.cs            # Template base class
+├── Core/
+│   ├── IInteractable.cs                    # Contract for all interactables
+│   ├── InteractionDetector.cs              # OverlapSphere detection, priority ranking
+│   ├── HoldInteractableBase.cs             # Template Method base for timed interactions
+│   └── InteractionPromptUI.cs              # "Press / Hold E" + progress bar UI
 │
-├── ItemInteractable.cs                # Instant pickup
-├── GatheringInteractable.cs           # Resource gathering
-├── WaterSourceInteractable.cs         # Canteen refill
-└── DoorInteractable.cs                # Door open/close
+├── Interactables/
+│   ├── ItemInteractable.cs                 # Instant item pickup → PickupItemCommand
+│   ├── GatheringInteractable.cs            # Resource gather (legacy)
+│   ├── GatheringInteractable_Refactored.cs # Current gather logic (fires discovery dialog)
+│   ├── CollectableInteractable.cs          # Picks up collectables → CollectableManager
+│   ├── WaterSourceInteractable.cs          # Refills held canteen
+│   ├── ResourceCollectorInteractable.cs    # Multi-resource collector node
+│   ├── RandomEquipmentRewardInteractable.cs # Grants a random piece of equipment on interact
+│   ├── RandomCollectableUnlockInteractable.cs # Unlocks a random collectable
+│   ├── AssessmentTerminalInteractable.cs   # Triggers the learning-assessment terminal flow
+│   ├── DebugLandslideHoldInteractable.cs   # Dev-only: triggers landslide manually
+│   ├── DebugTornadoHoldInteractable.cs     # Dev-only: triggers tornado manually
+│   ├── ScaleDownDestroyAnimation.cs        # Helper: scales an object to zero then destroys it (used on depleted gatherables)
+│   └── Example_CraftingBenchInteractable.cs # Reference example for a workbench interactable
+│
+├── TiedInteractable.cs                     # Triggers TiedState on the player (rope / restraint)
+├── SpawnedObjectState.cs                   # Per-object save-state component tracked by SpawnedObjectStateRegistry
+│
+└── Utilities/
+    ├── InteractableUIMarker.cs             # World-space UI marker above an interactable
+    └── InteractionAudioManager.cs          # Plays sounds on interact/highlight events
 ```
 
 ---

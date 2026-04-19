@@ -116,7 +116,9 @@ public class WalkingState : IPlayerState
         Vector3 slopeSlide = GetSlopeSlide(model);
         horizontal += slopeSlide;
 
-        Vector3 motion = new Vector3(horizontal.x, model.Velocity.y + horizontal.y, horizontal.z);
+        Vector3 externalVelocity = model.ConsumeExternalVelocity();
+
+        Vector3 motion = new Vector3(horizontal.x, model.Velocity.y + horizontal.y, horizontal.z) + externalVelocity;
         model.Move(motion);
 
         // Rotate to face movement direction

@@ -40,7 +40,7 @@ public class DebugGameplayConfirm : MonoBehaviour
             if (confirmPromptObject != null)
                 confirmPromptObject.SetActive(false);
 
-            Debug.Log("[DebugGameplayConfirm] Player confirmed — releasing Gate 2.");
+            //Debug.Log("[DebugGameplayConfirm] Player confirmed — releasing Gate 2.");
         }
     }
 }

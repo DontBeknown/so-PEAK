@@ -67,34 +67,71 @@ public class HJBClickPathController : MonoBehaviour
         }
     }
 
-    void SetStartToPlayer()
+
+    public void SetStartToPlayer(Vector3? overrideWorldPos = null)
     {
-        if (playerTransform == null)
+        Vector3 world;
+        if (overrideWorldPos.HasValue)
         {
-            // Try to find the player if not assigned
-            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-            if (playerObj != null)
-            {
-                playerTransform = playerObj.transform;
-            }
-            else if (provider.renderController != null && provider.renderController.player != null)
-            {
-                playerTransform = provider.renderController.player;
-            }
+            world = overrideWorldPos.Value;
         }
-
-        if (playerTransform == null)
+        else
         {
-            Debug.LogWarning("[HJBClickPath] Cannot find player to set start position.");
-            return;
-        }
+            if (playerTransform == null)
+            {
+                // Try to find the player if not assigned
+                GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+                if (playerObj != null)
+                {
+                    playerTransform = playerObj.transform;
+                }
+                else if (provider.renderController != null && provider.renderController.player != null)
+                {
+                    playerTransform = provider.renderController.player;
+                }
+            }
 
-        Vector3 world = playerTransform.position;
+            if (playerTransform == null)
+            {
+                Debug.LogWarning("[HJBClickPath] Cannot find player to set start position.");
+                return;
+            }
+            world = playerTransform.position;
+        }
         Vector2Int g = provider.WorldToGrid(world);
-
         start = g;
         SpawnMarker(ref startMarker, startMarkerPrefab, world);
-        Debug.Log($"[HJBClickPath] Start set to player at {g}");
+        Debug.Log($"[HJBClickPath] Start set to {(overrideWorldPos.HasValue ? "override position" : "player")} at {g}");
+    }
+    // Coroutine to trigger path calculation and wait until path is ready for the current level
+    public System.Collections.IEnumerator CalculatePathFromSpawnToPeak(Vector3 spawnWorldPos)
+    {
+        // Sync solver height multiplier if needed
+        if (provider.worldDataManager != null && provider.worldDataManager.activeGen != null)
+        {
+            provider.heightMultiplier = provider.worldDataManager.activeGen.meshHeightMultiplier;
+        }
+        SetStartToPlayer(spawnWorldPos);
+        SetGoalToPeak();
+        TrySolvePath();
+
+        // Wait until path is available in savedPathsByLevel for the current level
+        WorldLevel currentLvl = provider.worldDataManager.currentLevel;
+        float timeout = 3600f; // seconds
+        float timer = 0f;
+        while ((!savedPathsByLevel.ContainsKey(currentLvl) || savedPathsByLevel[currentLvl] == null || savedPathsByLevel[currentLvl].Count == 0) && timer < timeout)
+        {
+            timer += Time.deltaTime;
+            yield return null;
+        }
+        if (!savedPathsByLevel.ContainsKey(currentLvl) || savedPathsByLevel[currentLvl] == null || savedPathsByLevel[currentLvl].Count == 0)
+        {
+            Debug.LogWarning($"[HJBClickPath] Path calculation timed out for {currentLvl}!");
+        }
+        else
+        {
+            Debug.Log($"[HJBClickPath] Path calculation complete for {currentLvl}.");
+        }
     }
 
     void SetGoalToPeak()
@@ -157,7 +194,7 @@ public class HJBClickPathController : MonoBehaviour
         }
     }
 
-    void DrawCachedPath()
+    public void DrawCachedPath()
     {
         if (provider.worldDataManager == null) return;
         WorldLevel currentLvl = provider.worldDataManager.currentLevel;

@@ -7,6 +7,7 @@ using Game.Environment.DayNight;
 using Game.Player.Inventory;
 using Game.Interaction;
 using Game.Tutorial;
+using Game.Progression;
 public class GameplaySceneInitializer : MonoBehaviour
 {
     [Header("References")]
@@ -98,7 +99,8 @@ public class GameplaySceneInitializer : MonoBehaviour
             var renderController = FindFirstObjectByType<RenderController>();
             yield return new WaitUntil(() =>
                 renderController != null && renderController.PlayerSpawnComplete);
-
+            
+            
             // Restore player-dependent state
             var playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
             if (playerStats != null && saveData.playerData != null)
@@ -107,7 +109,7 @@ public class GameplaySceneInitializer : MonoBehaviour
             RestoreInventory(saveData.playerData);
             RestoreEquipment(saveData.playerData);
             RestoreResourceNodes(saveData.worldState);
-
+            
             if (enableDebug) Debug.Log("World state restored successfully");
         }
         else
@@ -129,7 +131,24 @@ public class GameplaySceneInitializer : MonoBehaviour
             }
         }
 
+        AwardStarterCollectablesAfterSpawn();
+
         TryStartTutorial(resolvedSaveData);
+    }
+
+    private void AwardStarterCollectablesAfterSpawn()
+    {
+        var starterCollectableService = ServiceContainer.Instance.TryGet<StarterCollectableService>();
+        if (starterCollectableService == null)
+        {
+            if (enableDebug)
+            {
+                Debug.LogWarning("StarterCollectableService not registered. Skipping starter collectable award.");
+            }
+            return;
+        }
+
+        starterCollectableService.AwardStarterCollectables();
     }
 
     private void TryStartTutorial(WorldSaveData saveData)

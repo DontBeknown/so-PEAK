@@ -360,29 +360,22 @@ public void UpdateProgress(float percent)
 public void HideProgressBar()
 ```
 
-### 7. BlurOverlaySystem
+### 7. VolumeBlurController (survival blur)
 
-**File:** `UI/BlurOverlay/BlurOverlaySystem.cs`
+**File:** `UI/BlurOverlay/VolumeBlurController.cs`
 
-**Purpose:** Visual feedback for paused/menu states.
+**Purpose:** URP post-processing blur that intensifies when the player is starving or dehydrated. Uses a `VolumeProfile` (Depth Of Field + Motion Blur overrides) with DOTween-animated `volume.weight`.
 
-**Features:**
-- Gaussian blur shader
-- Fade in/out animations
-- Multiple blur layers support
+> A prior version of this doc described `BlurOverlaySystem.cs` (a Gaussian blur shader on a UI Image). That file no longer exists — the system moved to URP post-processing. See `BlurOverlay/BLUR_OVERLAY_SYSTEM.md` for full details.
 
-**Usage:**
+**Quick usage:**
 ```csharp
-public void ShowBlur(float intensity = 5f, float duration = 0.3f)
-{
-    StartCoroutine(FadeBlur(0f, intensity, duration));
-}
-
-public void HideBlur(float duration = 0.3f)
-{
-    StartCoroutine(FadeBlur(currentIntensity, 0f, duration));
-}
+// Manual override (cutscene, debug)
+volumeBlurController.SetManualIntensity(0.8f, fadeIn: true);
+volumeBlurController.SetManualIntensity(0f,   fadeIn: false);
 ```
+
+The controller self-drives from `PlayerStats` hunger/thirst — no manual calls needed during normal gameplay.
 
 ---
 
@@ -864,48 +857,92 @@ Debug.Log($"Cursor lock state: {Cursor.lockState}");
 
 ## File Structure
 
+> Note: folder names below match the actual project layout. Some are named unusually (e.g. `Inventory&Crafting/`).
+
 ```
 UI/
-├── UIServiceProvider.cs              # Service locator
-├── UIPanelController.cs              # Panel management
-├── IUIPanel.cs                       # Panel interface
-├── CursorManager.cs                  # Cursor control
+├── UIServiceProvider.cs                    # Central service locator for all UI panels
+├── PauseMenuPanel.cs                       # Pause overlay (ESC / settings / quit)
+├── SoundSettingsPanel.cs                   # Audio volume sliders panel
+├── LoadingProgressUI.cs                    # Progress bar shown during AsyncLoadCoordinator flow
+├── DebugGameplayConfirm.cs                 # Dev-only: Y key confirmation gate during load
+├── DisableDuplicateEventSystem.cs          # Destroys extra EventSystem components (multi-scene safety)
+│
+├── Services/
+│   ├── UIPanelController.cs                # Panel open/close lifecycle manager
+│   ├── CursorManager.cs                    # Show/hide cursor based on UI state (implements ICursorManager)
+│   ├── PlayerInputBlocker.cs               # Blocks player input during UI (implements IInputBlocker)
+│   └── ICameraInputController.cs           # Interface for camera-input suppression
+│
+├── Interfaces/
+│   ├── IUIPanel.cs                         # Contract: Show(), Hide(), Refresh(), IsVisible
+│   ├── ICursorManager.cs                   # Contract: ShowCursor(), HideCursor()
+│   └── IInputBlocker.cs                    # Contract: BlockInput(), UnblockInput()
 │
 ├── Adapters/
-│   ├── InventoryUIAdapter.cs         # Inventory bridge
-│   ├── EquipmentUIAdapter.cs         # Equipment bridge
-│   └── CraftingUIAdapter.cs          # Crafting bridge
+│   ├── InventoryUIAdapter.cs               # Bridges IInventoryService events → InventoryUI
+│   ├── EquipmentUIAdapter.cs               # Bridges EquipmentManager events → EquipmentUI
+│   ├── CraftingUIAdapter.cs                # Bridges CraftingManager events → CraftingUI
+│   └── TabbedInventoryUIAdapter.cs         # Bridges tabbed-inventory panel
 │
-├── Inventory/
-│   ├── InventoryUI.cs                # Main inventory panel
-│   ├── InventorySlotUI.cs            # Individual slot
-│   └── TabbedInventoryUI.cs          # Tabbed interface
+├── Inventory&Crafting/                     # (folder name includes ampersand)
+│   ├── InventoryUI.cs                      # Main inventory panel
+│   ├── TabbedInventoryUI.cs                # Tab strip wrapping Inventory + Equipment + Crafting
+│   ├── GridInventoryUI.cs                  # 2-D grid cell renderer
+│   ├── GridItemUI.cs                       # Individual grid item (drag source)
+│   ├── GridCellUI.cs                       # Individual grid cell (drop target)
+│   ├── InventorySlotUI.cs                  # Legacy slot display
+│   ├── EquipmentUI.cs                      # Equipment slot display
+│   ├── EquipmentSlotUI.cs                  # Single equipment slot
+│   ├── CraftingUI.cs                       # Crafting panel
+│   ├── CraftingSlotUI.cs                   # Single crafting ingredient slot
+│   ├── CraftingRequirementDisplayUI.cs     # Displays recipe requirements
+│   ├── ContextMenuUI.cs                    # Right-click context menu
+│   ├── TooltipUI.cs                        # Hover tooltip for items
+│   └── DragDropManager.cs                  # Drag-and-drop between grid cells
 │
-├── Equipment/
-│   ├── EquipmentUI.cs                # Equipment display
-│   └── EquipmentSlotUI.cs            # Equipment slot
+├── HIUD/                                   # Heads-up display
+│   ├── SimpleStatsHUD.cs                   # Health / hunger / thirst / stamina bars
+│   ├── ContextMenuUI.cs                    # (also referenced here as HUD context entry point)
+│   ├── ItemNotificationUI.cs               # Pop-up when an item is picked up
+│   ├── NotificationUI.cs                   # Generic timed notification pop-ups
+│   └── DayCounterHUD.cs                    # Day/night cycle day counter display
 │
-├── Crafting/
-│   ├── CraftingUI.cs                 # Crafting panel
-│   └── CraftingRecipeUI.cs           # Recipe display
+├── Collectable/
+│   ├── CollectablesHubUI.cs                # Collectable gallery / hub panel
+│   └── DocumentPageUI.cs                   # In-game readable document viewer
 │
-├── ContextMenu/
-│   ├── ContextMenuUI.cs              # Right-click menu
-│   └── ContextMenuButton.cs          # Menu action button
+├── Dialog/
+│   └── DialogUI.cs                         # Renders active DialogData lines on screen
 │
-├── Tooltip/
-│   └── TooltipUI.cs                  # Item tooltip
+├── Tutorial/
+│   └── TutorialUI.cs                       # Step-by-step tutorial overlay
 │
-├── HUD/
-│   ├── SimpleStatsHUD.cs             # Health/stamina bars
-│   └── NotificationUI.cs             # Popup notifications
+├── StatTracking/
+│   ├── AssessmentReportUI.cs               # Displays final learning-assessment report
+│   ├── PlayerStatsTrackerUI.cs             # Live stat tracking display
+│   └── StatGraphRenderer.cs               # Renders performance graphs for assessment
 │
-├── Interaction/
-│   └── InteractionPromptUI.cs        # "Press E" prompt
+├── DeathScreen/
+│   └── DeathScreenUI.cs                    # Game-over / death screen
 │
-└── BlurOverlay/
-    ├── BlurOverlaySystem.cs          # Blur controller
-    └── BlurShader.shader             # Gaussian blur
+├── EndingScreen/
+│   └── EndingScreenUI.cs                   # Ending / credits screen
+│
+├── Components/
+│   ├── BillboardText.cs                    # World-space text that faces camera (fades with distance)
+│   └── FloatingNumber.cs                   # Animated floating number (damage, pickup, etc.)
+│
+└── BlurOverlay/                            # Post-process survival blur (see BLUR_OVERLAY_SYSTEM.md)
+    ├── VolumeBlurController.cs             # URP Volume-based orchestrator (main component)
+    ├── SurvivalStatBlurCalculator.cs       # Hunger/thirst → intensity calculator
+    ├── IBlurIntensityCalculator.cs         # Calculator strategy interface
+    ├── IBlurEffect.cs                      # Legacy visual-strategy interface
+    ├── DOTweenBlurEffect.cs                # Alternative UI Image-based effect
+    ├── FallImpactFeedback.cs               # Camera reaction on hard landing
+    ├── LowHealthHeartbeatFeedback.cs       # Pulse overlay at low HP
+    ├── LowStaminaBreathingFeedback.cs      # Breathing overlay at low stamina
+    └── TemperaturePostProcessFeedback.cs   # Temperature tint effect
 ```
 
 ---

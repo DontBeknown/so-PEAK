@@ -49,6 +49,9 @@ namespace Game.Sound
         // SFX object pool
         private readonly Queue<AudioSource> _pool   = new();
         private readonly List<AudioSource>  _active = new();
+        private readonly Dictionary<int, AudioSource> _trackedSources = new();
+        private readonly Dictionary<AudioSource, int> _sourceHandles = new();
+        private int _nextSfxHandle = 1;
 
         // AudioMixer group cache
         private AudioMixerGroup _sfxGroup;
@@ -95,29 +98,114 @@ namespace Game.Sound
 
         // ───────────────────────────── Public API ─────────────────────────────
 
-        public void PlayPositionalSFX(string clipId, Vector3 position, float volumeScale = 1f)
+        public void PlayPositionalSFX(string clipId, Vector3 position, float volumeScale = 1f, float? minDistanceOverride = null, float? maxDistanceOverride = null)
         {
             var clip = library.Get(clipId);
             if (clip == null) { Debug.LogWarning($"[SoundService] Clip not found: {clipId}"); return; }
 
             var source = RentSource();
+            float minDistance = minDistanceOverride ?? config.MinDistance;
+            float maxDistance = maxDistanceOverride ?? config.MaxDistance;
+            if (maxDistance < minDistance)
+            {
+                maxDistance = minDistance;
+            }
+
             source.transform.position = position;
+            source.spatialBlend = config.SpatialBlend;
+            source.minDistance = minDistance;
+            source.maxDistance = maxDistance;
             source.clip   = clip;
             source.volume = config.DefaultSFXVolume * volumeScale;
             source.loop   = false;
             source.Play();
         }
 
-        public void PlayPositionalSFX(AudioClip clip, Vector3 position, float volumeScale = 1f)
+        /// <summary>
+        /// Plays a positional SFX and returns a handle that can be used to stop this exact instance later.
+        /// </summary>
+        public int PlayPositionalSFXTracked(string clipId, Vector3 position, bool loop = false, float volumeScale = 1f, float? minDistanceOverride = null, float? maxDistanceOverride = null)
+        {
+            var clip = library.Get(clipId);
+            if (clip == null)
+            {
+                Debug.LogWarning($"[SoundService] Clip not found: {clipId}");
+                return -1;
+            }
+
+            return PlayPositionalSFXTracked(clip, position, loop, volumeScale, minDistanceOverride, maxDistanceOverride);
+        }
+
+        public void PlayPositionalSFX(AudioClip clip, Vector3 position, float volumeScale = 1f, float? minDistanceOverride = null, float? maxDistanceOverride = null)
         {
             if (clip == null) return;
 
             var source = RentSource();
+            float minDistance = minDistanceOverride ?? config.MinDistance;
+            float maxDistance = maxDistanceOverride ?? config.MaxDistance;
+            if (maxDistance < minDistance)
+            {
+                maxDistance = minDistance;
+            }
+
             source.transform.position = position;
+            source.spatialBlend = config.SpatialBlend;
+            source.minDistance = minDistance;
+            source.maxDistance = maxDistance;
             source.clip   = clip;
             source.volume = config.DefaultSFXVolume * volumeScale;
             source.loop   = false;
             source.Play();
+        }
+
+        /// <summary>
+        /// Plays a positional SFX clip and returns a handle that can be used to stop this exact instance later.
+        /// </summary>
+        public int PlayPositionalSFXTracked(AudioClip clip, Vector3 position, bool loop = false, float volumeScale = 1f, float? minDistanceOverride = null, float? maxDistanceOverride = null)
+        {
+            if (clip == null)
+            {
+                return -1;
+            }
+
+            var source = RentSource();
+            float minDistance = minDistanceOverride ?? config.MinDistance;
+            float maxDistance = maxDistanceOverride ?? config.MaxDistance;
+            if (maxDistance < minDistance)
+            {
+                maxDistance = minDistance;
+            }
+
+            source.transform.position = position;
+            source.spatialBlend = config.SpatialBlend;
+            source.minDistance = minDistance;
+            source.maxDistance = maxDistance;
+            source.clip = clip;
+            source.volume = config.DefaultSFXVolume * volumeScale;
+            source.loop = loop;
+            source.Play();
+
+            int handle = _nextSfxHandle++;
+            _trackedSources[handle] = source;
+            _sourceHandles[source] = handle;
+            return handle;
+        }
+
+        public bool StopPositionalSFX(int handle)
+        {
+            if (handle <= 0)
+            {
+                return false;
+            }
+
+            if (!_trackedSources.TryGetValue(handle, out AudioSource source) || source == null)
+            {
+                _trackedSources.Remove(handle);
+                return false;
+            }
+
+            ReturnSource(source);
+            return true;
         }
 
         public void PlayUISound(AudioClip clip, float volumeScale = 1f)
@@ -170,6 +258,9 @@ namespace Game.Sound
         {
             for (int i = _active.Count - 1; i >= 0; i--)
                 ReturnSource(_active[i]);
+
+            _trackedSources.Clear();
+            _sourceHandles.Clear();
         }
 
         public void PlayAmbient(string clipId)
@@ -259,6 +350,13 @@ namespace Game.Sound
             src.Stop();
             src.clip = null;
             _active.Remove(src);
+
+            if (_sourceHandles.TryGetValue(src, out int handle))
+            {
+                _sourceHandles.Remove(src);
+                _trackedSources.Remove(handle);
+            }
+
             _pool.Enqueue(src);
         }
 

@@ -43,12 +43,12 @@ public class WorldSeedLoader : MonoBehaviour
         // Get full combined seed
         string fullSeed = seedData.FullSeed;
         
-        Debug.Log($"[WorldSeedLoader] Loaded World: {currentWorld.worldName}");
-        Debug.Log($"[WorldSeedLoader] Seed Part 1: {seed1}");
-        Debug.Log($"[WorldSeedLoader] Seed Part 2: {seed2}");
-        Debug.Log($"[WorldSeedLoader] Seed Part 3: {seed3}");
-        Debug.Log($"[WorldSeedLoader] Full Seed: {fullSeed}");
-        Debug.Log($"[WorldSeedLoader] Current Level: {currentLevel}");
+        // Debug.Log($"[WorldSeedLoader] Loaded World: {currentWorld.worldName}");
+        // Debug.Log($"[WorldSeedLoader] Seed Part 1: {seed1}");
+        // Debug.Log($"[WorldSeedLoader] Seed Part 2: {seed2}");
+        // Debug.Log($"[WorldSeedLoader] Seed Part 3: {seed3}");
+        // Debug.Log($"[WorldSeedLoader] Full Seed: {fullSeed}");
+        // Debug.Log($"[WorldSeedLoader] Current Level: {currentLevel}");
         
         // Use the seed for terrain generation
         GenerateTerrainWithSeed(fullSeed);
@@ -59,7 +59,7 @@ public class WorldSeedLoader : MonoBehaviour
         // Example: Convert seed to int for Unity's Random
         int seedValue = seed.GetHashCode();
         
-        Debug.Log($"[WorldSeedLoader] Using seed value: {seedValue} for generation");
+        // Debug.Log($"[WorldSeedLoader] Using seed value: {seedValue} for generation");
         
         // TODO: Pass to your terrain generator
         // terrainGenerator.GenerateTerrain(seedValue);

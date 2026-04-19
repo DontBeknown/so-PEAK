@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Game.Core.DI;
 using Game.Core.Events;
+using Game.Progression;
 
 namespace Game.Collectable
 {
@@ -28,7 +29,7 @@ namespace Game.Collectable
 
             if (!_unlocked.Add(collectable.id))
                 return;
-
+            
             _eventBus?.Publish(new CollectableUnlockedEvent(collectable));
         }
 

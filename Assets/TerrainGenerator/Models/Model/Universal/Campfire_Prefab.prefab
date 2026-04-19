@@ -236,6 +236,78 @@ PrefabInstance:
       propertyPath: m_Name
       value: Random Collectable
       objectReference: {fileID: 0}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: snowPool.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: desertPool.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: forestPool.Array.size
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'snowPool.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: c666cbefef1ab544a93c47c82a6843cd, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'snowPool.Array.data[1]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 28b977c1fea596f4b92536ada306d759, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'snowPool.Array.data[2]'
+      value: 
+      objectReference: {fileID: 11400000, guid: e57e08de102b4ff4499f88e4c236f2e9, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'snowPool.Array.data[3]'
+      value: 
+      objectReference: {fileID: 11400000, guid: d45189a086413e942918fa3b41545c67, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'desertPool.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 5aa946e3c57af374a975514b6f037a7a, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'desertPool.Array.data[1]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 44bb4451d75f56445abc4a268bdf12ed, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'desertPool.Array.data[2]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 0e08976fe9ce8c34aaa7a82f9981c01b, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'desertPool.Array.data[3]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 64baa67d72372e44ea17b185e0f900bd, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'forestPool.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 97c856f7599b4764fa5b9ba7424263c1, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'forestPool.Array.data[1]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 2fc2c12fb479dd64891319d26be065b9, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'forestPool.Array.data[2]'
+      value: 
+      objectReference: {fileID: 11400000, guid: df076338e7069664db438ec13ba21088, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'forestPool.Array.data[3]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 95ee5b3a744b57e4fac9a0ec25b18bc8, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'forestPool.Array.data[4]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 56892be200db4c74aa7d4c0da80842e5, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'forestPool.Array.data[5]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 1b608507b6c5d814abf89f03c680a8ba, type: 2}
+    - target: {fileID: 5213297809077477232, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: 'forestPool.Array.data[6]'
+      value: 
+      objectReference: {fileID: 11400000, guid: e0352bfcc84c80a4f98f6b14f01707da, type: 2}
     - target: {fileID: 7493584719571517060, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.31
@@ -442,6 +514,7 @@ MonoBehaviour:
   healAmountOnUse: 25
   customSaveSpawnPoint: {fileID: 0}
   progressNextLevelOnUse: 0
+  saveGameOnUse: 1
 --- !u!65 &3425832470417675574
 BoxCollider:
   m_ObjectHideFlags: 0
