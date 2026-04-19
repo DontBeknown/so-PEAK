@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.Pool;
 
 [RequireComponent(typeof(LineRenderer))]
 public class HJBPathVisualizer : MonoBehaviour
@@ -13,6 +14,26 @@ public class HJBPathVisualizer : MonoBehaviour
     [Header("Style")]
     public float lineWidth = 2f;
     public Color lineColor = Color.red;
+
+    [Header("Spark VFX")]
+    [SerializeField] GameObject sparkVFXPrefab;
+
+    [Header("Footstep VFX")]
+    [SerializeField] float stepSpacing = 1.5f;
+    [SerializeField] float stepSpacingJitter = 0.25f;
+    [SerializeField] float stepLateralOffset = 0.3f;
+    [SerializeField] Vector2 stepStartSizeRange = new Vector2(0.8f, 1.2f);
+    [SerializeField] bool alignToPathDirection = true;
+    [SerializeField] float groundOffset = 0.05f;
+
+    [Header("Pooling")]
+    [SerializeField] int poolDefaultCapacity = 32;
+    [SerializeField] int poolMaxSize = 256;
+
+    ObjectPool<GameObject> stepPool;
+    Transform stepVFXParent;
+    List<GameObject> activeStepInstances = new List<GameObject>();
+    List<ParticleSystem> activeSparkSystems = new List<ParticleSystem>();
 
     Sequence activeFadeSequence;
     float visibleAlpha = 1f;
@@ -74,6 +95,8 @@ public class HJBPathVisualizer : MonoBehaviour
         {
             line.SetPosition(i, worldPath[i]);
         }
+
+        SpawnSparksAlongPath(worldPath);
     }
 
     public Sequence AnimatePathFadeInOut(float fadeInDuration, float displayDuration, float fadeOutDuration)
@@ -146,6 +169,8 @@ public class HJBPathVisualizer : MonoBehaviour
 
     public Sequence HidePathWithFade(float fadeOutDuration, bool clearAfterFade = true)
     {
+        StopSparkEmission();
+
         if (line == null || line.positionCount == 0)
         {
             return null;
@@ -226,10 +251,142 @@ public class HJBPathVisualizer : MonoBehaviour
     public void Clear()
     {
         line.positionCount = 0;
+        ReleaseActiveSteps();
+    }
+
+    void SpawnSparksAlongPath(List<Vector3> worldPath)
+    {
+        ClearSparkInstances();
+        if (sparkVFXPrefab == null || worldPath == null || worldPath.Count < 2) return;
+
+        int sideFlag = 1;
+        float distToNext = SampleNextStepDistance();
+
+        for (int i = 1; i < worldPath.Count; i++)
+        {
+            Vector3 a = worldPath[i - 1];
+            Vector3 b = worldPath[i];
+            Vector3 delta = b - a;
+            float segLen = delta.magnitude;
+            if (segLen <= Mathf.Epsilon) continue;
+
+            Vector3 segDir = delta / segLen;
+            Vector3 right = Vector3.Cross(Vector3.up, segDir).normalized;
+            Quaternion rot = alignToPathDirection
+                ? Quaternion.LookRotation(segDir, Vector3.up)
+                : Quaternion.Euler(-90f, 0f, 0f);
+
+            float cursor = 0f;
+            while (cursor + distToNext <= segLen)
+            {
+                cursor += distToNext;
+                Vector3 spawnPos = a + segDir * cursor + right * (stepLateralOffset * sideFlag);
+                SpawnStepAt(spawnPos, rot);
+                sideFlag = -sideFlag;
+                distToNext = SampleNextStepDistance();
+            }
+            distToNext -= (segLen - cursor);
+        }
+    }
+
+    float SampleNextStepDistance()
+    {
+        float jitter = Random.Range(-stepSpacingJitter, stepSpacingJitter);
+        return Mathf.Max(0.05f, stepSpacing + jitter);
+    }
+
+    void SpawnStepAt(Vector3 pos, Quaternion rot)
+    {
+        EnsurePool();
+        pos.y += groundOffset;
+
+        var go = stepPool.Get();
+        go.transform.SetPositionAndRotation(pos, rot);
+        activeStepInstances.Add(go);
+
+        var ps = go.GetComponent<ParticleSystem>();
+        if (ps != null)
+        {
+            var main = ps.main;
+            main.startSize = new ParticleSystem.MinMaxCurve(stepStartSizeRange.x, stepStartSizeRange.y);
+            ps.Clear(true);
+            ps.Play(true);
+            activeSparkSystems.Add(ps);
+        }
+    }
+
+    void EnsurePool()
+    {
+        if (stepPool != null) return;
+
+        if (stepVFXParent == null)
+        {
+            var parentGo = new GameObject("StepVFX_Pool");
+            stepVFXParent = parentGo.transform;
+            stepVFXParent.SetParent(transform, false);
+        }
+
+        stepPool = new ObjectPool<GameObject>(
+            createFunc: () =>
+            {
+                var go = Instantiate(sparkVFXPrefab, stepVFXParent);
+                go.SetActive(false);
+                return go;
+            },
+            actionOnGet: go => go.SetActive(true),
+            actionOnRelease: go =>
+            {
+                var ps = go.GetComponent<ParticleSystem>();
+                if (ps != null) ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                go.SetActive(false);
+            },
+            actionOnDestroy: go => { if (go != null) Destroy(go); },
+            collectionCheck: false,
+            defaultCapacity: poolDefaultCapacity,
+            maxSize: poolMaxSize);
+    }
+
+    void StopSparkEmission()
+    {
+        foreach (var ps in activeSparkSystems)
+            if (ps != null) ps.Stop(false, ParticleSystemStopBehavior.StopEmitting);
+    }
+
+    void ClearSparkInstances()
+    {
+        ReleaseActiveSteps();
+    }
+
+    void ReleaseActiveSteps()
+    {
+        if (stepPool == null)
+        {
+            activeStepInstances.Clear();
+            activeSparkSystems.Clear();
+            return;
+        }
+
+        for (int i = 0; i < activeStepInstances.Count; i++)
+        {
+            var go = activeStepInstances[i];
+            if (go != null) stepPool.Release(go);
+        }
+        activeStepInstances.Clear();
+        activeSparkSystems.Clear();
     }
 
     void OnDisable()
     {
         CancelFadeAnimation(false);
+        ClearSparkInstances();
+    }
+
+    void OnDestroy()
+    {
+        if (stepPool != null)
+        {
+            stepPool.Dispose();
+            stepPool = null;
+        }
     }
 }
