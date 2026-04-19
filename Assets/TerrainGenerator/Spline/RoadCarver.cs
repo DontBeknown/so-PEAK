@@ -21,7 +21,6 @@ public static class RoadCarver
             float linearMidY = (startHeight + endHeight) / 2f;
 
             // 2. Randomize the Middle Anchor (The "Photoshop Curve" bend)
-            // Range: +/- 15 meters deviation from the straight line
             float deviation = UnityEngine.Random.Range(-0.07f, 0.07f);
             float targetMidY = linearMidY + deviation;
 

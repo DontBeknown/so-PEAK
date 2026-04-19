@@ -19,6 +19,7 @@ public class NoiseTranslator : MonoBehaviour
     public MapGenerator WeirdnessNoise;
     public MapGenerator RoadNoise;
     public MapGenerator TreeNoise;
+    public MapGenerator RiskNoise;
 
     [Header("Puddle Generator")]
     public PondGenerator pondGenerator;
@@ -66,6 +67,7 @@ public class NoiseTranslator : MonoBehaviour
     [HideInInspector] public float[,] treeNoiseMap;
     [HideInInspector] public float[,] roadRidge;
     [HideInInspector] public bool[,] waterMask;
+    [HideInInspector] public float[,] riskMap;
     [HideInInspector] public Vector2Int spawnCoord;
 
 
@@ -143,11 +145,13 @@ public class NoiseTranslator : MonoBehaviour
         // Flatten the ground AND get the offset spawn coordinate
         mainPeak = CarveLighthouseFoundation(completeMap, mainPeak, completeMap[mainPeak.x, mainPeak.y]);
 
-        //then color map
-        //colorMap = ColorMapping();
+        RiskNoise.GenerateMap(seed);
+        riskMap = RiskNoise.noiseMap;
 
         TreeNoise.GenerateMap(seed);
         treeNoiseMap = TreeNoise.noiseMap;
+
+
 
         ////////////////////DEBUG WILL DELETE THIS LATER ////////////////////////////////
         // This block only exists inside the Unity Editor
