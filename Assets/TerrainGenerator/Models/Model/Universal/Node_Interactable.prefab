@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2747816477698255219}
   - component: {fileID: 5923577257606309583}
   - component: {fileID: 2919880270781610800}
+  - component: {fileID: 1202182677493556524}
   m_Layer: 11
   m_Name: Node_Interactable
   m_TagString: Untagged
@@ -74,6 +75,28 @@ MonoBehaviour:
   holdCompleteSound: {fileID: 0}
   holdCancelSound: {fileID: 0}
   hjbClickPathController: {fileID: 0}
+  fadeInDuration: 0.4
+  displayDuration: 8
+  fadeOutDuration: 0.8
+  destroyAfterUse: 1
+  destroyAnimation: {fileID: 1202182677493556524}
+--- !u!114 &1202182677493556524
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8967057409960288079}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ca34c98dd680c94a9678ee88de1def8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.ScaleDownDestroyAnimation
+  bounceDuration: 0.12
+  bounceScale: 1.4
+  shrinkDuration: 0.25
+  bounceEase: 6
+  shrinkEase: 26
 --- !u!1001 &4454950480818656589
 PrefabInstance:
   m_ObjectHideFlags: 0

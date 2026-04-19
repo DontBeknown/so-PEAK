@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 public class HJBClickPathController : MonoBehaviour
@@ -23,6 +24,14 @@ public class HJBClickPathController : MonoBehaviour
     [Header("Player Reference")]
     public Transform playerTransform; // Assign in inspector or find dynamically
 
+    [Header("Path Fade Settings")]
+    public bool useFadeWhenDrawing = true;
+    [Min(0f)] public float fadeInDuration = 0.4f;
+    [Min(0f)] public float holdDuration = 3f;
+    [Min(0f)] public float fadeOutDuration = 0.8f;
+
+    bool isPathToggledOn;
+
     // Cached path data for manual drawing or exporting to save file (supports up to 3 levels)
     [HideInInspector] public Dictionary<WorldLevel, List<Vector3>> savedPathsByLevel = new Dictionary<WorldLevel, List<Vector3>>();
 
@@ -42,6 +51,13 @@ public class HJBClickPathController : MonoBehaviour
         {
             SaveLoadService.Instance.OnWorldLoaded -= HandleWorldLoaded;
         }
+
+        if (visualizer != null)
+        {
+            visualizer.CancelFadeAnimation(false);
+        }
+
+        isPathToggledOn = false;
     }
 
     void Update()
@@ -63,8 +79,79 @@ public class HJBClickPathController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.O))
         {
-            DrawCachedPath();
+            ToggleCachedPathDisplay(fadeInDuration, 0f, fadeOutDuration);
         }
+    }
+
+    public void ToggleCachedPathDisplay(float fadeInSeconds = -1f, float displaySeconds = -1f, float fadeOutSeconds = -1f)
+    {
+        if (provider == null || provider.worldDataManager == null)
+        {
+            Debug.LogWarning("[HJBClickPath] Cannot toggle path because world data is missing.");
+            return;
+        }
+
+        if (visualizer == null)
+        {
+            Debug.LogWarning("[HJBClickPath] Cannot toggle path because visualizer is missing.");
+            return;
+        }
+
+        float localFadeIn = fadeInSeconds >= 0f ? fadeInSeconds : fadeInDuration;
+        float localDisplay = displaySeconds >= 0f ? displaySeconds : holdDuration;
+        float localFadeOut = fadeOutSeconds >= 0f ? fadeOutSeconds : fadeOutDuration;
+
+        if (isPathToggledOn)
+        {
+            if (useFadeWhenDrawing)
+            {
+                visualizer.HidePathWithFade(localFadeOut, true);
+            }
+            else
+            {
+                visualizer.CancelFadeAnimation(false);
+                visualizer.Clear();
+            }
+
+            isPathToggledOn = false;
+            return;
+        }
+
+        WorldLevel currentLvl = provider.worldDataManager.currentLevel;
+        if (!savedPathsByLevel.TryGetValue(currentLvl, out var calculatedPathData) || calculatedPathData == null || calculatedPathData.Count == 0)
+        {
+            Debug.LogWarning($"[HJBClickPath] No path data cached to draw for {currentLvl}! Press P to calculate first.");
+            return;
+        }
+
+        //Debug.Log($"[HJBClickPath] Toggling path ON for {currentLvl}.");
+        visualizer.DrawPathWorld(calculatedPathData);
+        if (useFadeWhenDrawing)
+        {
+            if (localDisplay > 0f)
+            {
+                var sequence = visualizer.AnimatePathFadeInOut(localFadeIn, localDisplay, localFadeOut);
+                if (sequence != null)
+                {
+                    sequence.OnComplete(() =>
+                    {
+                        visualizer.Clear();
+                        isPathToggledOn = false;
+                    });
+                }
+                else
+                {
+                    visualizer.Clear();
+                    isPathToggledOn = false;
+                }
+
+                return;
+            }
+
+            visualizer.ShowPathWithFade(localFadeIn);
+        }
+
+        isPathToggledOn = true;
     }
 
 
@@ -197,6 +284,12 @@ public class HJBClickPathController : MonoBehaviour
     public void DrawCachedPath()
     {
         if (provider.worldDataManager == null) return;
+        if (visualizer == null)
+        {
+            Debug.LogWarning("[HJBClickPath] Cannot draw path because visualizer is missing.");
+            return;
+        }
+
         WorldLevel currentLvl = provider.worldDataManager.currentLevel;
 
         if (savedPathsByLevel.ContainsKey(currentLvl) && savedPathsByLevel[currentLvl] != null && savedPathsByLevel[currentLvl].Count > 0)
@@ -211,13 +304,44 @@ public class HJBClickPathController : MonoBehaviour
         }
     }
 
+    public void DrawCachedPathWithFade(float fadeInSeconds = -1f, float holdSeconds = -1f, float fadeOutSeconds = -1f)
+    {
+        if (provider.worldDataManager == null)
+        {
+            Debug.LogWarning("[HJBClickPath] Cannot draw path with fade because world data is missing.");
+            return;
+        }
+
+        if (visualizer == null)
+        {
+            Debug.LogWarning("[HJBClickPath] Cannot draw path with fade because visualizer is missing.");
+            return;
+        }
+
+        WorldLevel currentLvl = provider.worldDataManager.currentLevel;
+        if (!savedPathsByLevel.TryGetValue(currentLvl, out var calculatedPathData) || calculatedPathData == null || calculatedPathData.Count == 0)
+        {
+            Debug.LogWarning($"[HJBClickPath] No path data cached to draw for {currentLvl}! Press P to calculate first.");
+            return;
+        }
+
+        Debug.Log($"[HJBClickPath] Drawing cached path for {currentLvl} with fade...");
+        visualizer.DrawPathWorld(calculatedPathData);
+
+        float localFadeIn = fadeInSeconds >= 0f ? fadeInSeconds : fadeInDuration;
+        float localHold = holdSeconds >= 0f ? holdSeconds : holdDuration;
+        float localFadeOut = fadeOutSeconds >= 0f ? fadeOutSeconds : fadeOutDuration;
+
+        visualizer.AnimatePathFadeInOut(localFadeIn, localHold, localFadeOut);
+    }
+
     void SpawnMarker(ref GameObject marker,
                      GameObject prefab,
                      Vector3 pos)
     {
         pos.y += 1f;
 
-        if (marker == null)
+        if (marker == null && prefab != null)
         {
             marker = Instantiate(prefab, pos, Quaternion.identity);
         }
@@ -229,6 +353,7 @@ public class HJBClickPathController : MonoBehaviour
 
     void HandleWorldLoaded(WorldSaveData loadedSave)
     {
+        isPathToggledOn = false;
         LoadPathsFromCurrentSave();
     }
 

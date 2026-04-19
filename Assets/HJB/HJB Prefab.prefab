@@ -58,6 +58,10 @@ MonoBehaviour:
   startMarkerPrefab: {fileID: 8159906806240753859, guid: 65a9f1ef367dc5c4c8848514a9521f58, type: 3}
   goalMarkerPrefab: {fileID: 2909091756990912863, guid: 6e409ae2cfb42de43aa757770aa3f617, type: 3}
   playerTransform: {fileID: 0}
+  useFadeWhenDrawing: 1
+  fadeInDuration: 0.4
+  holdDuration: 3
+  fadeOutDuration: 0.8
 --- !u!114 &4602071003573787837
 MonoBehaviour:
   m_ObjectHideFlags: 0
