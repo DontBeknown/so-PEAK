@@ -19,9 +19,9 @@ public class DefaultMountainGen
         //HARDCODED peaks height for random
         // We want to ensure each range is used exactly once
         List<Vector2> heightRanges = new List<Vector2> {
-        new Vector2(0.4f, 0.59f),
-        new Vector2(0.6f, 0.79f),
-        new Vector2(0.8f, 1.0f)
+        new Vector2(0.7f, 0.79f),
+        new Vector2(0.8f, 0.89f),
+        new Vector2(0.9f, 1.0f)
         };
 
         // Simple Fisher-Yates shuffle to randomize which mountain gets which range

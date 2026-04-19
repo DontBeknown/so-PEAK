@@ -9,33 +9,49 @@ public static class RoadCarver
 
     private class RoadCurveProfile
     {
-        private float p0, p1, p2; // Start, Control(Middle), End heights
+        private float p0, p1, p2;
 
-        public void GenerateWalkableCurve(float startHeight, float endHeight, float tierLength)
+        public void GenerateWalkableCurve(float startHeight, float endHeight, float tierLength, float stageMaxHeight)
         {
             p0 = startHeight;
             p2 = endHeight;
 
-            // 1. Calculate the 'Linear' middle point (straight line)
             float midX = tierLength / 2f;
             float linearMidY = (startHeight + endHeight) / 2f;
 
-            // 2. Randomize the Middle Anchor (The "Photoshop Curve" bend)
-            float deviation = UnityEngine.Random.Range(-0.07f, 0.07f);
-            float targetMidY = linearMidY + deviation;
+            // --- 1. BENDING IN METERS ---
+            float maxBendMeters = 7.0f;
+            float deviationNormalized = UnityEngine.Random.Range(-maxBendMeters, maxBendMeters) / stageMaxHeight;
+            float targetMidY = linearMidY + deviationNormalized;
 
-            // 3. THE WALKABLE GUARANTEE (Slope Check)
-            // Max Slope = 0.75 (Rise / Run)
-            float maxRise = 0.60f * midX;
+            // --- 2. SLOPE CHECK IN METERS ---
+            float maxRiseMeters = 0.60f * midX;
+            float maxRiseNormalized = maxRiseMeters / stageMaxHeight;
 
-            // Clamp the middle point so it's reachable from Start and End without being too steep
-            float minSafeY = Mathf.Max(p0 - maxRise, p2 - maxRise);
-            float maxSafeY = Mathf.Min(p0 + maxRise, p2 + maxRise);
+            // --- 3. THE FAILSAFE CLAMP ---
+            // Calculate the highest and lowest points reachable from BOTH ends
+            float highestAllowedFromP0 = p0 + maxRiseNormalized;
+            float lowestAllowedFromP0 = p0 - maxRiseNormalized;
 
-            p1 = Mathf.Clamp(targetMidY, minSafeY, maxSafeY);
+            float highestAllowedFromP2 = p2 + maxRiseNormalized;
+            float lowestAllowedFromP2 = p2 - maxRiseNormalized;
+
+            // The safe zone is where both ends overlap
+            float maxSafeY = Mathf.Min(highestAllowedFromP0, highestAllowedFromP2);
+            float minSafeY = Mathf.Max(lowestAllowedFromP0, lowestAllowedFromP2);
+
+            // If the drop is physically too steep for the max grade, min will exceed max. 
+            // Fallback to the linear middle to prevent breaking the curve.
+            if (minSafeY > maxSafeY)
+            {
+                p1 = linearMidY;
+            }
+            else
+            {
+                p1 = Mathf.Clamp(targetMidY, minSafeY, maxSafeY);
+            }
         }
 
-        // Quadratic Bezier: (1-t)^2 * P0 + 2(1-t)t * P1 + t^2 * P2
         public float Evaluate(float t)
         {
             float u = 1 - t;
@@ -103,7 +119,8 @@ public static class RoadCarver
             int tierCount = Mathf.CeilToInt(maxDist / ringWidth) + 1;
 
             // 2. Init Dartboard logic (OLD LOGIC RESTORED)
-            RoadCurveProfile[,] dartboard = InitializeDartboard(peakHeights[i], tierCount, ringWidth, seed);
+            // Inside CarveRoad loop:
+            RoadCurveProfile[,] dartboard = InitializeDartboard(peakHeights[i], tierCount, ringWidth, seed, maxHeight);
 
             // 3. Generate the height map for this mountain
             float[,] mountainRoadMap = GenerateHeightMapFromDartboard(dartboard, repPeaks[i], mapWidth, mapLength, ringWidth);
@@ -192,23 +209,29 @@ public static class RoadCarver
     }
 
     // --- 5. INITIALIZE DARTBOARD ---
-    private static RoadCurveProfile[,] InitializeDartboard(float peakHeight, int tierCount, float ringWidth, int seed)
+    private static RoadCurveProfile[,] InitializeDartboard(float peakHeight, int tierCount, float ringWidth, int seed, float maxHeight)
     {
         UnityEngine.Random.InitState(seed);
-
         RoadCurveProfile[,] sectors = new RoadCurveProfile[8, tierCount];
+
+        // 1. Calculate the absolute maximum drop allowed by your slope rules.
+        // Max Slope = 0.60. Total run per tier = ringWidth (100).
+        float maxDropMetersPerTier = 0.60f * ringWidth;
+        float maxDropNormalized = maxDropMetersPerTier / maxHeight;
 
         for (int s = 0; s < 8; s++)
         {
             float currentStartH = peakHeight;
             for (int t = 0; t < tierCount; t++)
             {
-                // OLD LOGIC RESTORED
-                float drop = UnityEngine.Random.Range(0.12f, 0.18f);
-                float nextEndH = Mathf.Max(0, currentStartH - drop);
+                // 2. Drop by a safe, normalized amount (e.g., 50% to 90% of the maximum allowed slope)
+                // This guarantees the drop uses the 0-to-1 multiplier logic but respects physical reality.
+                float safeDropNormalized = maxDropNormalized * UnityEngine.Random.Range(0.5f, 0.9f);
+
+                float nextEndH = Mathf.Max(0, currentStartH - safeDropNormalized);
 
                 sectors[s, t] = new RoadCurveProfile();
-                sectors[s, t].GenerateWalkableCurve(currentStartH, nextEndH, ringWidth);
+                sectors[s, t].GenerateWalkableCurve(currentStartH, nextEndH, ringWidth, maxHeight);
 
                 currentStartH = nextEndH;
             }

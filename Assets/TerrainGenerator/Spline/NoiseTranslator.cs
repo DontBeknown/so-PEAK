@@ -203,10 +203,10 @@ public class NoiseTranslator : MonoBehaviour
         RoadNoise.GenerateMap(seed);
         roadRidge = RoadNoise.noiseMap;
 
-        RoadCarver.CarveRoad(depthMap, roadRidge, peakPointsArray, maxHeight, roadHeightCurve, seed ,out mainPeak, out spawnCoord);
+        RoadCarver.CarveRoad(depthMap, roadRidge, peakPointsArray, meshHeightMultiplier, roadHeightCurve, seed ,out mainPeak, out spawnCoord);
 
+        DetailPreservingEmbankments(depthMap, roadRidge, meshHeightMultiplier, 50);
 
-        
     }
 
     private void GenerateBufferArea()
@@ -256,88 +256,102 @@ public class NoiseTranslator : MonoBehaviour
         return smoothedMap;
     }
 
-   
+    private void DetailPreservingEmbankments(float[,] depthMap, float[,] roadMask, float maxHeightMeters, int searchRadius = 15)
+    {
+        int width = depthMap.GetLength(0);
+        int length = depthMap.GetLength(1);
 
+        // Convert your physical 3-meter rules into the 0.0 to 1.0 map scale
+        float thresholdNorm = 3.0f / maxHeightMeters;
+        float dummySpreadNorm = 8.0f / maxHeightMeters; // The "dummy 3" multiplier
 
-    // would delete Later
-    private Color[,] ColorMapping()
-    { 
-        //init color map size would be like complete heightmap
-        int totalWidth = completeMap.GetLength(0);
-        int totalLength = completeMap.GetLength(1); 
-        Color[,] colorMap = new Color[totalWidth, totalLength];
+        // We need a temp map so we don't read modified values while we are currently calculating
+        float[,] tempMap = new float[width, length];
+        Array.Copy(depthMap, tempMap, depthMap.Length);
 
-        //then for loop filling color logic
-        Parallel.For(0, totalLength, z =>
+        // Parallel processing to handle the heavy double-loops quickly
+        Parallel.For(0, length, z =>
         {
-            for (int x = 0; x < totalWidth; x++)
+            for (int x = 0; x < width; x++)
             {
-                //get ref coord from old version of map
-                Vector2Int refCoord = BufferGen.GetReferenceCoordinate(x, z, roadRidge, bufferLength/2);
+                // Skip if this pixel is the road itself
+                if (roadMask[x, z] < 0.25f) continue;
 
-                //current height that already computed
-                float heightHere = completeMap[x, z];
+                float currentH = tempMap[x, z];
 
-                //then get the ref road mask value from the old
-                float roadValue = roadRidge[refCoord.x, refCoord.y];
+                // --- STEP 3 (Shifted First): Find the nearest road point ---
+                float nearestRoadH = -1f;
+                float minDistSqr = float.MaxValue;
 
+                // Create a local bounding box to search for roads
+                int minRX = Mathf.Max(0, x - searchRadius);
+                int maxRX = Mathf.Min(width - 1, x + searchRadius);
+                int minRZ = Mathf.Max(0, z - searchRadius);
+                int maxRZ = Mathf.Min(length - 1, z + searchRadius);
 
-                Color finalColor;
-
-                float heightLeft = (x > 0) ? completeMap[x - 1, z] : heightHere;
-                float heightRight = (x < totalWidth - 1) ? completeMap[x + 1, z] : heightHere;
-                float heightUp = (z > 0) ? completeMap[x, z - 1] : heightHere;
-                float heightDown = (z < totalLength - 1) ? completeMap[x, z + 1] : heightHere;
-
-                // Divide by 2 because we are measuring across 2 grid cells (Left to Right)
-                float dX = (heightRight - heightLeft) / 2f;
-                float dZ = (heightDown - heightUp) / 2f;
-
-                dX *= meshHeightMultiplier;
-                dZ *= meshHeightMultiplier;
-
-                // 2. Convert to Angle
-                // If your terrain heights are scaled up compared to your X/Z grid, adjust this.
-                // Usually, it's 1.0f if 1 unit of height == 1 unit of grid width.
-                float gridSpacing = 1.0f;
-                Vector3 surfaceNormal = new Vector3(-dX, gridSpacing, -dZ).normalized;
-
-                // Get the angle between straight up (0 degrees) and our slope normal
-                float slopeAngle = Vector3.Angle(Vector3.up, surfaceNormal);
-
-
-
-
-                if (roadValue < 0.25f)
+                for (int rz = minRZ; rz <= maxRZ; rz++)
                 {
-                    finalColor = roadColor;
-                }
-                else
-                {
-                    // Define your transition zone
-                    float minRockAngle = 25f; // Anything below this is 100% fieldColor
-                    float maxRockAngle = 45f; // Anything above this is 100% sideRockColor
-
-                    // InverseLerp outputs a float between 0.0 and 1.0. 
-                    // E.g., if the angle is 35, it outputs 0.5 (50% rock, 50% grass)
-                    float rockBlend = Mathf.InverseLerp(minRockAngle, maxRockAngle, slopeAngle);
-
-                    // Smoothly mix the two colors based on the blend percentage
-                    finalColor = Color.Lerp(fieldColor, sideRockColor, rockBlend);
+                    for (int rx = minRX; rx <= maxRX; rx++)
+                    {
+                        if (roadMask[rx, rz] < 0.25f) // If it is a road
+                        {
+                            // Use Squared Distance (much faster than Mathf.Sqrt)
+                            float distSqr = (rx - x) * (rx - x) + (rz - z) * (rz - z);
+                            if (distSqr < minDistSqr)
+                            {
+                                minDistSqr = distSqr;
+                                nearestRoadH = tempMap[rx, rz];
+                            }
+                        }
+                    }
                 }
 
-                colorMap[x, z] = finalColor;
+                // If no road was found within the search radius, skip this pixel
+                if (nearestRoadH < 0f) continue;
 
+                // --- STEP 0: Check if point is lower than road by 3 meters ---
+                if (nearestRoadH - currentH < thresholdNorm) continue;
 
+                // --- STEP 1: Find Min/Max of local NON-ROAD area ---
+                float localMin = float.MaxValue;
+                float localMax = float.MinValue;
 
+                // Look at a tight 5x5 neighborhood to figure out local details
+                int detailRadius = 2;
+                int minDX = Mathf.Max(0, x - detailRadius);
+                int maxDX = Mathf.Min(width - 1, x + detailRadius);
+                int minDZ = Mathf.Max(0, z - detailRadius);
+                int maxDZ = Mathf.Min(length - 1, z + detailRadius);
+
+                for (int dz = minDZ; dz <= maxDZ; dz++)
+                {
+                    for (int dx = minDX; dx <= maxDX; dx++)
+                    {
+                        if (roadMask[dx, dz] >= 0.25f) // Only look at non-road terrain
+                        {
+                            float h = tempMap[dx, dz];
+                            if (h < localMin) localMin = h;
+                            if (h > localMax) localMax = h;
+                        }
+                    }
+                }
+
+                // --- STEP 2: Calculate ratio (t) between 0.0 and 1.0 ---
+                float t = 0f;
+                if (localMax > localMin) // Prevent divide by zero if terrain is perfectly flat
+                {
+                    t = (currentH - localMin) / (localMax - localMin);
+                }
+
+                // --- STEP 4: Recalculate and push terrain up ---
+                // Base is the road height minus the 3m threshold, then we add back the local detail
+                float newHeight = nearestRoadH - thresholdNorm + (dummySpreadNorm * t);
+
+                // Write the new elevated height back into the real map
+                depthMap[x, z] = newHeight;
             }
-                
         });
-
-        return colorMap;
-
     }
-
 
     public static Vector2Int CarveLighthouseFoundation(float[,] completeMap, Vector2Int shiftedPeak, float peakHeight)
     {
