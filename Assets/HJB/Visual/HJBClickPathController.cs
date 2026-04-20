@@ -399,7 +399,7 @@ public class HJBClickPathController : MonoBehaviour
 
         if (saveToFile)
         {
-            SaveLoadService.Instance.SaveWorld(SaveLoadService.Instance.CurrentWorldSave);
+            SaveLoadService.Instance.SaveWorld(SaveLoadService.Instance.CurrentWorldSave, refreshFreshLevelEntryFlag: false);
         }
     }
 

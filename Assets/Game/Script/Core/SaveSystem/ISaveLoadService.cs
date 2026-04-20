@@ -8,7 +8,7 @@ public interface ISaveLoadService
 
     // World Management
     WorldSaveData CreateNewWorld(string worldName, SeedData seedData, int level = 1);
-    bool SaveWorld(WorldSaveData saveData);
+    bool SaveWorld(WorldSaveData saveData, bool refreshFreshLevelEntryFlag = true);
     WorldSaveData LoadWorld(string worldGuid);
     bool DeleteWorld(string worldGuid);
     List<SaveMetadata> GetAllWorlds();

@@ -116,7 +116,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         return newWorld;
     }
     
-    public bool SaveWorld(WorldSaveData saveData)
+    public bool SaveWorld(WorldSaveData saveData, bool refreshFreshLevelEntryFlag = true)
     {
         try
         {
@@ -144,7 +144,10 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
                 CreateBackup(saveData.worldGuid);
             }
 
-            ResetFreshLevelEntryFlag();
+            if (refreshFreshLevelEntryFlag)
+            {
+                ResetFreshLevelEntryFlag();
+            }
             
             OnWorldSaved?.Invoke(saveData);
             
