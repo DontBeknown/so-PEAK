@@ -1,4 +1,5 @@
 using System.Collections;
+using Game.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -35,6 +36,10 @@ namespace Game.Core
         [Header("Shared State")]
         [SerializeField] private SharedLoadingState loadingState;
 
+        [Header("Loading Screen")]
+        [SerializeField] private NextLevelLoadingScreen nextLevelLoadingScreen;
+        [SerializeField] private bool showLoadOpLoadingScreen = true;
+
 
         [Header("Options")]
         [SerializeField] private bool enableAsyncLoadFlow = true;
@@ -66,7 +71,7 @@ namespace Game.Core
             // --- Step 2: Load the waiting-room scene additively ---
             AsyncOperation loadOp = SceneManager.LoadSceneAsync(
                 debugGameplaySceneName, LoadSceneMode.Additive);
-            yield return loadOp;
+            yield return WaitForLoadOpWithLoadingScreen(loadOp);
 
 
             // --- Gate 1: Wait until all terrain chunks are finalized ---
@@ -192,6 +197,37 @@ namespace Game.Core
             }
 
             return true;
+        }
+
+        private IEnumerator WaitForLoadOpWithLoadingScreen(AsyncOperation loadOp)
+        {
+            if (loadOp == null)
+            {
+                yield break;
+            }
+
+            if (!showLoadOpLoadingScreen || nextLevelLoadingScreen == null)
+            {
+                yield return loadOp;
+                yield break;
+            }
+
+            nextLevelLoadingScreen.Show("Loading transition scene...", true);
+            nextLevelLoadingScreen.SetProgress(0f);
+            nextLevelLoadingScreen.SetStatus("Loading transition scene...");
+
+            while (!loadOp.isDone)
+            {
+                float normalizedProgress = Mathf.Clamp01(loadOp.progress / 0.9f);
+                nextLevelLoadingScreen.SetProgress(normalizedProgress);
+                yield return null;
+            }
+
+            nextLevelLoadingScreen.SetProgress(1f);
+            nextLevelLoadingScreen.SetStatus("Transition scene ready");
+
+            // Requirement: begin fade out right when loadOp finishes.
+            nextLevelLoadingScreen.Hide();
         }
     }
 }

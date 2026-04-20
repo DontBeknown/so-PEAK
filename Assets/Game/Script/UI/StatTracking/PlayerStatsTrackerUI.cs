@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using Game.Player;
@@ -21,6 +22,7 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
     [SerializeField] private PlayerControllerRefactored playerController;
     [SerializeField] private SimpleStatsHUD simpleStatsHUD;
     [SerializeField] private AssessmentReportUI assessmentReportUI;
+    [SerializeField] private NextLevelLoadingScreen nextLevelLoadingScreen;
     
     [Header("UI References")]
     [SerializeField] private GameObject panel;
@@ -86,6 +88,7 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
     private bool _tabStateInitialized;
     private Sequence _panelShowTween;
     private Sequence _tabTransitionTween;
+    private bool _isNextLevelTransitionInProgress;
     
     // IUIPanel implementation
     public bool IsActive => panel != null && panel.activeSelf;
@@ -522,12 +525,15 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
     
     private void OnNextLevelButtonPressed()
     {
-        PrepareForSceneTransition();
-
         var saveService = SaveLoadService.Instance;
         if (saveService == null)
         {
             // Debug.LogWarning("[PlayerStatsTrackerUI] SaveLoadService not found");
+            return;
+        }
+
+        if (_isNextLevelTransitionInProgress)
+        {
             return;
         }
         
@@ -535,18 +541,45 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
         
         if (currentLevel == 3)
         {
+            PrepareForSceneTransition();
+
             // Level 3 reached: show ending screen instead of progressing
             var uiService = ServiceContainer.Instance.TryGet<UIServiceProvider>();
             if (uiService != null)
             {
                 uiService.OpenPanel("EndingScreen");
             }
+
+            return;
         }
-        else
+
+        StartCoroutine(HandleNextLevelTransition(saveService));
+    }
+
+    private IEnumerator HandleNextLevelTransition(SaveLoadService saveService)
+    {
+        _isNextLevelTransitionInProgress = true;
+
+        if (nextLevelLoadingScreen != null)
         {
-            // Progression: increment level, save, and reload current scene
-            saveService.ProgressToNextLevel();
+            bool sequenceCompleted = false;
+            nextLevelLoadingScreen.PlayNextLevelSequence(() => sequenceCompleted = true);
+            yield return new WaitUntil(() => sequenceCompleted);
         }
+
+        PrepareForSceneTransition();
+
+        // Progression: increment level, save, and reload current scene
+        saveService.ProgressToNextLevel();
+
+        // If scene reload did not happen (e.g. save failed), restore UI state.
+        yield return null;
+        if (nextLevelLoadingScreen != null)
+        {
+            nextLevelLoadingScreen.Hide();
+        }
+
+        _isNextLevelTransitionInProgress = false;
     }
 
     private void PrepareForSceneTransition()
@@ -560,9 +593,6 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
         }
 
         DOTween.Kill(gameObject, false);
-
-        // changing scenes, kill all
-        DOTween.KillAll();
     }
 
     private void OnDestroy()
