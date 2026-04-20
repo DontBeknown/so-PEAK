@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Winter Cloth
   m_EditorClassIdentifier: Assembly-CSharp::EquipmentItem
   itemName: Winter cloth
-  description: 
+  description: Insulated clothing made to reduce cold-weather risk.
   icon: {fileID: 21300000, guid: 686161071ef7775448055f798bea6d70, type: 3}
   maxStackSize: 1
   itemType: 3

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Crowberry
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
   itemName: Crowberry
-  description: Uhmmm Tasty!!! Does it safe to eat ???
+  description: Tart crowberries that help with hunger and give a quick stamina lift.
   icon: {fileID: 21300000, guid: c7c46bf4bf7bf954d8923d7aef38cfda, type: 3}
   maxStackSize: 1
   itemType: 1
@@ -23,7 +23,7 @@ MonoBehaviour:
   consumableEffects:
   - effectKind: 0
     statType: 1
-    value: 5
+    value: 9
   - effectKind: 0
-    statType: 2
-    value: 10
+    statType: 4
+    value: 6

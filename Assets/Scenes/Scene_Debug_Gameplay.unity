@@ -18791,10 +18791,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1149081658}
     m_Modifications:
-    - target: {fileID: 1378754122158835280, guid: c8cc87dd855b0294b9289242bafb8e71, type: 3}
-      propertyPath: m_IsTrigger
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 4655771065654141824, guid: c8cc87dd855b0294b9289242bafb8e71, type: 3}
       propertyPath: m_LocalPosition.x
       value: -29.538086
@@ -19024,10 +19020,6 @@ PrefabInstance:
     - target: {fileID: 2113542181549559913, guid: 8bebfadeb07cb3a47b6f9eeabb1e64dd, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8313610055665360825, guid: 8bebfadeb07cb3a47b6f9eeabb1e64dd, type: 3}
-      propertyPath: m_IsTrigger
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -19385,10 +19377,6 @@ PrefabInstance:
     - target: {fileID: 641494436428247879, guid: 180036ef1e41e034daf6d35fc116ad02, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9055863390247749706, guid: 180036ef1e41e034daf6d35fc116ad02, type: 3}
-      propertyPath: m_IsTrigger
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

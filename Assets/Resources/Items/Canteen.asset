@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Canteen
   m_EditorClassIdentifier: Assembly-CSharp::CanteenItem
   itemName: Canteen
-  description: 
+  description: Stores water with multiple uses before needing a refill.
   icon: {fileID: 21300000, guid: 26b5163892ed10c4e9c9b3dc580c4316, type: 3}
   maxStackSize: 1
   itemType: 3
