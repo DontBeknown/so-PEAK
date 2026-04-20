@@ -65,6 +65,16 @@ public class RenderController : MonoBehaviour
         {
             dataManager.GenerateWorldData(chunkSize);
 
+            //we called the map making func here
+            Texture2D generatedMinimap = MinimapGenerator.GenerateTopographicMinimap(
+            dataManager.globalHeightMap,
+            dataManager.expandedRoadRidge,// Your float array
+            dataManager.activeGen.meshHeightMultiplier,      // Your max height
+            true,             // YES, save it to disk!
+            "TerrainGenerator",   // Folder name
+            "Map.png"   // File name
+        );
+
             SetupStageMaterial();
 
             float xChunks = (float)(dataManager.globalHeightMap.GetLength(0) - 1) / (chunkSize - 1);
