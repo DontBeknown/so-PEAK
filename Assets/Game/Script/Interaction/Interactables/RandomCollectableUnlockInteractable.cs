@@ -43,7 +43,7 @@ namespace Game.Interaction
             {
                 CollectableBiome.Forest => forestPool,
                 CollectableBiome.Desert => desertPool,
-                CollectableBiome.Snow => snowPool,
+                CollectableBiome.Tundra => snowPool,
                 _ => forestPool
             };
         }
@@ -82,7 +82,7 @@ namespace Game.Interaction
             {
                 WorldLevel.Forest => CollectableBiome.Forest,
                 WorldLevel.Desert => CollectableBiome.Desert,
-                WorldLevel.Tundra => CollectableBiome.Snow,
+                WorldLevel.Tundra => CollectableBiome.Tundra,
                 _ => CollectableBiome.Forest  // Fallback to Forest
             };
         }

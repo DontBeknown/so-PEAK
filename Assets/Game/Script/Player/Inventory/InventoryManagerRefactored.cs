@@ -164,7 +164,7 @@ namespace Game.Player.Inventory
                 return;
             }
 
-            if(SaveLoadService.Instance != null && SaveLoadService.Instance.IsNewWorld())
+            if(SaveLoadService.Instance != null && !SaveLoadService.Instance.IsNewWorld())
             {
                 return;
             }

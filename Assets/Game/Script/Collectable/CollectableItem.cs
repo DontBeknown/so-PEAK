@@ -7,7 +7,7 @@ namespace Game.Collectable
     {
         Forest,
         Desert,
-        Snow
+        Tundra
     }
 
     [CreateAssetMenu(fileName = "CollectableItem", menuName = "Game/Collectable/Collectable Item")]

@@ -126,6 +126,10 @@ namespace Game.Core.Events
         }
     }
 
+    public class PlayerSpawnCompletedEvent
+    {
+    }
+
     // Collectable/Dialog Events
     public class CollectableUnlockedEvent
     {

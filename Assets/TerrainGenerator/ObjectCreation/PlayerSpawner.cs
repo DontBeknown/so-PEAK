@@ -166,6 +166,9 @@ public class PlayerSpawner : MonoBehaviour
         }
 
         ServiceContainer.Instance.TryGet<IEventBus>()?.Publish(new PlayMusicEvent("music_gameplay"));
+        
+        ServiceContainer.Instance.TryGet<IEventBus>()?.Publish(new PlayerSpawnCompletedEvent());
+        
         FindFirstObjectByType<DayNightCycleManager>()?.PlayAmbientForCurrentTime();
 
         //Debug.Log("[PlayerSpawner] Spawn sequence complete!");

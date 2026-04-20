@@ -134,6 +134,7 @@ public class GameplaySceneInitializer : MonoBehaviour
         AwardStarterCollectablesAfterSpawn();
 
         TryStartTutorial(resolvedSaveData);
+
     }
 
     private void AwardStarterCollectablesAfterSpawn()

@@ -16,7 +16,7 @@ namespace Game.UI.Collectable
         {
             CollectableBiome.Forest,
             CollectableBiome.Desert,
-            CollectableBiome.Snow
+            CollectableBiome.Tundra
         };
 
         [SerializeField] private GameObject hubRoot;

@@ -219,13 +219,13 @@ namespace Game.Progression
             }
         }
 
-        private static CollectableBiome GetBiomeForLevel(int level)
+        public static CollectableBiome GetBiomeForLevel(int level)
         {
             return level switch
             {
                 1 => CollectableBiome.Forest,
                 2 => CollectableBiome.Desert,
-                3 => CollectableBiome.Snow,
+                3 => CollectableBiome.Tundra,
                 _ => CollectableBiome.Forest
             };
         }
