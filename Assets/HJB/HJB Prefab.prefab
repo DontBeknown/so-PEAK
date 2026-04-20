@@ -241,7 +241,16 @@ MonoBehaviour:
   provider: {fileID: 5178631759412326921}
   backtracker: {fileID: 4602071003573787837}
   lineWidth: 2
-  lineColor: {r: 1, g: 0, b: 0, a: 1}
+  lineColor: {r: 1, g: 0.8944021, b: 0.3820755, a: 0.18431373}
+  sparkVFXPrefab: {fileID: 5482414651753157266, guid: 7c4c935a4e9e0cf4386f7185caec0899, type: 3}
+  stepSpacing: 1.5
+  stepSpacingJitter: 0.25
+  stepLateralOffset: 0.3
+  stepStartSizeRange: {x: 0.8, y: 3}
+  alignToPathDirection: 1
+  groundOffset: 0.05
+  poolDefaultCapacity: 32
+  poolMaxSize: 256
 --- !u!114 &7977499104229531954
 MonoBehaviour:
   m_ObjectHideFlags: 0
