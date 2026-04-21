@@ -31,6 +31,10 @@ public interface ISaveLoadService
     bool IsFreshLevelEntry();
     void ResetFreshLevelEntryFlag();
     
+    // Path cache
+    List<Vector3> GetCachedPathForCurrentLevel();
+    List<Vector3> GetCachedPathForLevel(int level);
+
     // Validation
     bool ValidateSaveFile(string worldGuid);
     

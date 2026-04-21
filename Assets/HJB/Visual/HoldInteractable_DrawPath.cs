@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.Interaction;
+using Game.UI;
 
 /// <summary>
 /// Hold interactable that toggles the cached path display on a target HJBClickPathController.
@@ -30,6 +31,7 @@ public class HoldInteractable_DrawPath : HoldInteractableBase
         if (hjbClickPathController != null)
         {
             hjbClickPathController.ToggleCachedPathDisplay(fadeInDuration, displayDuration, fadeOutDuration);
+            MapPathRevealState.Reveal(displayDuration);
 
             if (destroyAfterUse)
             {

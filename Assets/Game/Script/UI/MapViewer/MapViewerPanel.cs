@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using DG.Tweening;
@@ -35,10 +36,26 @@ namespace Game.UI
         [SerializeField] private string closeSoundId = "UI_InventoryClose";
         [SerializeField] private float closeSoundVolumeScale = 0.5f;
 
+        [Header("Path Overlay")]
+        [SerializeField] private Image pathOverlayImage;
+        [SerializeField] private Color lineColor = Color.red;
+        [SerializeField] private Color endpointColor = Color.red;
+        [SerializeField] private int lineThickness = 3;
+        [SerializeField] private int endpointRadius = 3;
+        [SerializeField] private float pathFadeDuration = 0.4f;
+
         private Tween activeTween;
         private IEventBus eventBus;
+        private ISaveLoadService saveLoadService;
 
         private HeldMapData currentMapData;
+        private byte[] baseMapBytes;
+        private Texture2D currentTex;
+        private Sprite currentSprite;
+        private Texture2D pathOverlayTex;
+        private Sprite pathOverlaySprite;
+        private Tween pathFadeTween;
+        private bool pathCurrentlyDrawn;
 
         public string PanelName => "MapViewer";
         public bool BlocksInput => true;
@@ -62,9 +79,34 @@ namespace Game.UI
         private void OnDestroy()
         {
             activeTween?.Kill();
+            pathFadeTween?.Kill();
 
             if (closeButton != null)
                 closeButton.onClick.RemoveListener(HandleCloseClicked);
+
+            ReleaseMapSprite();
+            ReleasePathOverlay();
+        }
+
+        private void Update()
+        {
+            if (!IsActive || baseMapBytes == null || mapImage == null)
+                return;
+
+            bool shouldShow = MapPathRevealState.IsRevealed;
+            if (shouldShow == pathCurrentlyDrawn)
+                return;
+
+            if (pathOverlayImage != null)
+            {
+                FadePathOverlayTo(shouldShow ? 1f : 0f);
+                pathCurrentlyDrawn = shouldShow;
+                return;
+            }
+
+            var rebuilt = BuildMapSprite(shouldShow);
+            mapImage.sprite = rebuilt;
+            mapImage.enabled = rebuilt != null;
         }
 
         private void HandleCloseClicked()
@@ -85,23 +127,29 @@ namespace Game.UI
             if (titleText != null)
                 titleText.text = mapData != null ? mapData.MapTitle : string.Empty;
 
+            ReleaseMapSprite();
+
             Sprite mapSprite = null;
             if (mapData != null && !string.IsNullOrWhiteSpace(mapData.MapSpriteResourcePath))
             {
-                // 1. Get the safe base folder for whoever is playing the game right now
                 string rootPath = Application.persistentDataPath;
-
-                // 2. Glue it to your fixed config string ("SavedMaps/TopographicMap.png")
                 string loadPath = Path.Combine(rootPath, mapData.MapSpriteResourcePath);
 
-                // 3. Load the image from the hard drive!
                 if (File.Exists(loadPath))
                 {
-                    byte[] fileData = File.ReadAllBytes(loadPath);
-                    Texture2D tex = new Texture2D(2, 2);
-                    tex.LoadImage(fileData);
+                    baseMapBytes = File.ReadAllBytes(loadPath);
+                    bool useOverlayImage = pathOverlayImage != null;
+                    bool revealed = MapPathRevealState.IsRevealed;
+                    mapSprite = BuildMapSprite(withPath: !useOverlayImage && revealed);
 
-                    mapSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
+                    if (useOverlayImage && currentTex != null)
+                    {
+                        var overlay = BuildPathOverlaySprite(currentTex.width, currentTex.height);
+                        pathOverlayImage.sprite = overlay;
+                        pathOverlayImage.enabled = overlay != null;
+                        SetPathOverlayAlphaImmediate(revealed ? 1f : 0f);
+                        pathCurrentlyDrawn = revealed;
+                    }
                 }
                 else
                 {
@@ -197,6 +245,172 @@ namespace Game.UI
 
             eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>();
             eventBus?.Publish(new PlayUISoundEvent(clipId, volumeScale));
+        }
+
+        private Sprite BuildMapSprite(bool withPath)
+        {
+            if (baseMapBytes == null)
+                return null;
+
+            ReleaseMapSprite();
+
+            currentTex = new Texture2D(2, 2);
+            currentTex.LoadImage(baseMapBytes);
+
+            if (withPath)
+            {
+                saveLoadService ??= ServiceContainer.Instance.TryGet<ISaveLoadService>();
+                var path = saveLoadService?.GetCachedPathForCurrentLevel();
+                if (path != null && path.Count >= 1)
+                    DrawPathOnTexture(currentTex, path);
+            }
+
+            pathCurrentlyDrawn = withPath;
+            currentSprite = Sprite.Create(currentTex, new Rect(0, 0, currentTex.width, currentTex.height), new Vector2(0.5f, 0.5f), 100f);
+            return currentSprite;
+        }
+
+        private void ReleaseMapSprite()
+        {
+            if (currentSprite != null)
+            {
+                Destroy(currentSprite);
+                currentSprite = null;
+            }
+            if (currentTex != null)
+            {
+                Destroy(currentTex);
+                currentTex = null;
+            }
+            pathCurrentlyDrawn = false;
+        }
+
+        private Sprite BuildPathOverlaySprite(int width, int height)
+        {
+            ReleasePathOverlay();
+
+            pathOverlayTex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            var clearPixels = new Color[width * height];
+            var clear = new Color(0f, 0f, 0f, 0f);
+            for (int i = 0; i < clearPixels.Length; i++) clearPixels[i] = clear;
+            pathOverlayTex.SetPixels(clearPixels);
+
+            saveLoadService ??= ServiceContainer.Instance.TryGet<ISaveLoadService>();
+            var path = saveLoadService?.GetCachedPathForCurrentLevel();
+            if (path != null && path.Count >= 1)
+                DrawPathOnTexture(pathOverlayTex, path);
+            else
+                pathOverlayTex.Apply();
+
+            pathOverlaySprite = Sprite.Create(pathOverlayTex, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f), 100f);
+            return pathOverlaySprite;
+        }
+
+        private void ReleasePathOverlay()
+        {
+            pathFadeTween?.Kill();
+            pathFadeTween = null;
+
+            if (pathOverlaySprite != null)
+            {
+                Destroy(pathOverlaySprite);
+                pathOverlaySprite = null;
+            }
+            if (pathOverlayTex != null)
+            {
+                Destroy(pathOverlayTex);
+                pathOverlayTex = null;
+            }
+        }
+
+        private void SetPathOverlayAlphaImmediate(float alpha)
+        {
+            if (pathOverlayImage == null) return;
+            pathFadeTween?.Kill();
+            pathFadeTween = null;
+            var c = pathOverlayImage.color;
+            c.a = alpha;
+            pathOverlayImage.color = c;
+        }
+
+        private void FadePathOverlayTo(float targetAlpha)
+        {
+            if (pathOverlayImage == null) return;
+            pathFadeTween?.Kill();
+            pathFadeTween = pathOverlayImage
+                .DOFade(targetAlpha, pathFadeDuration)
+                .SetEase(Ease.OutQuad)
+                .SetUpdate(true)
+                .OnComplete(() => pathFadeTween = null);
+        }
+
+        private void DrawPathOnTexture(Texture2D tex, List<Vector3> path)
+        {
+            for (int i = 0; i < path.Count - 1; i++)
+            {
+                int x0 = Mathf.RoundToInt(path[i].x);
+                int y0 = Mathf.RoundToInt(path[i].z);
+                int x1 = Mathf.RoundToInt(path[i + 1].x);
+                int y1 = Mathf.RoundToInt(path[i + 1].z);
+                PlotLine(tex, x0, y0, x1, y1, lineColor, lineThickness);
+            }
+
+            int ex0 = Mathf.RoundToInt(path[0].x);
+            int ey0 = Mathf.RoundToInt(path[0].z);
+            PlotDisc(tex, ex0, ey0, endpointRadius, endpointColor);
+
+            int ex1 = Mathf.RoundToInt(path[path.Count - 1].x);
+            int ey1 = Mathf.RoundToInt(path[path.Count - 1].z);
+            PlotDisc(tex, ex1, ey1, endpointRadius, endpointColor);
+
+            tex.Apply();
+        }
+
+        private static void PlotLine(Texture2D tex, int x0, int y0, int x1, int y1, Color c, int thickness)
+        {
+            int dx = Mathf.Abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+            int dy = -Mathf.Abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+            int err = dx + dy;
+            while (true)
+            {
+                PlotBrush(tex, x0, y0, c, thickness);
+                if (x0 == x1 && y0 == y1) break;
+                int e2 = 2 * err;
+                if (e2 >= dy) { err += dy; x0 += sx; }
+                if (e2 <= dx) { err += dx; y0 += sy; }
+            }
+        }
+
+        private static void PlotBrush(Texture2D tex, int cx, int cy, Color c, int thickness)
+        {
+            int half = thickness / 2;
+            for (int dy = -half; dy <= half; dy++)
+            {
+                for (int dx = -half; dx <= half; dx++)
+                {
+                    int px = cx + dx;
+                    int py = cy + dy;
+                    if (px >= 0 && px < tex.width && py >= 0 && py < tex.height)
+                        tex.SetPixel(px, py, c);
+                }
+            }
+        }
+
+        private static void PlotDisc(Texture2D tex, int cx, int cy, int radius, Color c)
+        {
+            for (int dy = -radius; dy <= radius; dy++)
+            {
+                for (int dx = -radius; dx <= radius; dx++)
+                {
+                    if (dx * dx + dy * dy <= radius * radius)
+                    {
+                        int px = cx + dx;
+                        int py = cy + dy;
+                        if (px >= 0 && px < tex.width && py >= 0 && py < tex.height)
+                            tex.SetPixel(px, py, c);
+                    }
+                }
+            }
         }
     }
 }

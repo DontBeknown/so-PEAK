@@ -26116,6 +26116,10 @@ MonoBehaviour:
   openSoundVolumeScale: 0.5
   closeSoundId: UI_MapClose
   closeSoundVolumeScale: 0.5
+  lineColor: {r: 0.764151, g: 0.40043515, b: 0, a: 1}
+  endpointColor: {r: 1, g: 0.8520256, b: 0.5235849, a: 1}
+  lineThickness: 10
+  endpointRadius: 20
 --- !u!1 &7230369604955167024
 GameObject:
   m_ObjectHideFlags: 0
