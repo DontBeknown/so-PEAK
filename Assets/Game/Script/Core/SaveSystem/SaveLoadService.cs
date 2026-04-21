@@ -612,6 +612,45 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     }
 
     /// <summary>
+    /// Gets the cached HJB path for the current world level, if one exists in the save.
+    /// </summary>
+    public List<Vector3> GetCachedPathForCurrentLevel()
+    {
+        return GetCachedPathForLevel(GetCurrentLevel());
+    }
+
+    /// <summary>
+    /// Gets the cached HJB path for a specific world level, if one exists in the save.
+    /// </summary>
+    public List<Vector3> GetCachedPathForLevel(int level)
+    {
+        var cachedPaths = currentWorldSave?.worldState?.cachedPathsByLevel;
+        if (cachedPaths == null || cachedPaths.Count == 0)
+        {
+            return null;
+        }
+
+        var levelPath = cachedPaths.FirstOrDefault(path => path != null && path.level == level);
+        if (levelPath?.waypoints == null || levelPath.waypoints.Count == 0)
+        {
+            return null;
+        }
+
+        var path = new List<Vector3>(levelPath.waypoints.Count);
+        foreach (var waypoint in levelPath.waypoints)
+        {
+            if (waypoint == null)
+            {
+                continue;
+            }
+
+            path.Add(new Vector3(waypoint.x, waypoint.y, waypoint.z));
+        }
+
+        return path.Count > 0 ? path : null;
+    }
+
+    /// <summary>
     /// Resets the player spawn position to default for new level entry.
     /// Called when progressing to next level.
     /// </summary>

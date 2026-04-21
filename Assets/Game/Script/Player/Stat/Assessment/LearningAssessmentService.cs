@@ -131,8 +131,21 @@ namespace Game.Player.Stat.Assessment
                 Debug.Log("[LearningAssessment] Using externally provided optimal metrics");
                 return cachedOptimalMetrics;
             }
+
+            var saveLoadService = SaveLoadService.Instance;
+            if (saveLoadService != null)
+            {
+                var cachedPath = saveLoadService.GetCachedPathForCurrentLevel();
+                if (cachedPath != null && cachedPath.Count >= 2)
+                {
+                    Debug.Log($"[LearningAssessment] Using cached HJB path from save for level {saveLoadService.GetCurrentLevel()}");
+                    return optimalCalculator.Calculate(cachedPath);
+                }
+
+                Debug.LogWarning($"[LearningAssessment] No cached HJB path found for level {saveLoadService.GetCurrentLevel()}");
+            }
             
-            // Calculate optimal metrics automatically from player's path
+            // Fall back to the tracked player path if the save has no cached HJB path yet.
             if (metrics.pathTaken != null && metrics.pathTaken.Count >= 2)
             {
                 Debug.Log("[LearningAssessment] Calculating optimal metrics from player path");
