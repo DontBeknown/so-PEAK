@@ -340,4 +340,12 @@ public class WorldDataManager : MonoBehaviour
     {
         return masterSpawnGrid;
     }
+
+    public int GetSeedForLevel(WorldLevel level) => level switch
+    {
+        WorldLevel.Forest  => seed1,
+        WorldLevel.Desert  => seed2,
+        WorldLevel.Tundra  => seed3,
+        _                  => seed1
+    };
 }
