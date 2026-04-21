@@ -66,14 +66,19 @@ public class RenderController : MonoBehaviour
             dataManager.GenerateWorldData(chunkSize);
 
             //we called the map making func here
-            Texture2D generatedMinimap = MinimapGenerator.GenerateTopographicMinimap(
+            Sprite generatedMinimap = MinimapGenerator.GenerateTopographicMinimap(
             dataManager.globalHeightMap,
-            dataManager.expandedRoadRidge,// Your float array
-            dataManager.activeGen.meshHeightMultiplier,      // Your max height
-            true,             // YES, save it to disk!
-            "TerrainGenerator",   // Folder name
-            "Map.png"   // File name
-        );
+            dataManager.expandedRoadRidge,
+            dataManager.activeGen.meshHeightMultiplier,
+            true               // File name
+             );
+
+            // 2. Generate the Trail Map!
+            Sprite roadMap = MinimapGenerator.GenerateRoadMinimap(
+                dataManager.expandedRoadRidge,
+                true
+            // It will automatically default to saving at "SavedMaps/RoadMap.png"
+            );
 
             SetupStageMaterial();
 

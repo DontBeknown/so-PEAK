@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Path Map Data
   m_EditorClassIdentifier: Assembly-CSharp::HeldMapData
   mapTitle: Path Map
-  mapSpriteResourcePath: Map/PathMap/Map
+  mapSpriteResourcePath: SavedMaps/RoadMap.png

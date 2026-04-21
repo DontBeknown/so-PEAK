@@ -1,3 +1,4 @@
+using System.IO;
 using TMPro;
 using DG.Tweening;
 using UnityEngine;
@@ -87,7 +88,25 @@ namespace Game.UI
             Sprite mapSprite = null;
             if (mapData != null && !string.IsNullOrWhiteSpace(mapData.MapSpriteResourcePath))
             {
-                mapSprite = Resources.Load<Sprite>(mapData.MapSpriteResourcePath);
+                // 1. Get the safe base folder for whoever is playing the game right now
+                string rootPath = Application.persistentDataPath;
+
+                // 2. Glue it to your fixed config string ("SavedMaps/TopographicMap.png")
+                string loadPath = Path.Combine(rootPath, mapData.MapSpriteResourcePath);
+
+                // 3. Load the image from the hard drive!
+                if (File.Exists(loadPath))
+                {
+                    byte[] fileData = File.ReadAllBytes(loadPath);
+                    Texture2D tex = new Texture2D(2, 2);
+                    tex.LoadImage(fileData);
+
+                    mapSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
+                }
+                else
+                {
+                    Debug.LogError($"Could not find map file at: {loadPath}");
+                }
             }
 
             if (mapImage != null)
@@ -104,7 +123,7 @@ namespace Game.UI
 
             if (mapSprite == null)
             {
-                Debug.LogWarning($"[MapViewerPanel] Could not load map sprite from Resources path '{mapData.MapSpriteResourcePath}'.");
+                Debug.LogWarning($"[MapViewerPanel] Could not load map sprite from AppData path '{mapData.MapSpriteResourcePath}'.");
                 return false;
             }
 

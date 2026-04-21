@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Conture Map Data
   m_EditorClassIdentifier: Assembly-CSharp::HeldMapData
   mapTitle: Contour Map
-  mapSpriteResourcePath: Map/ContureMap/Map
+  mapSpriteResourcePath: SavedMaps/TopographicMap.png
