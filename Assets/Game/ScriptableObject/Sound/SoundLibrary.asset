@@ -178,3 +178,9 @@ MonoBehaviour:
   - Id: tornado_active
     Clips:
     - {fileID: 8300000, guid: 2c438381c7127e44f82764b9f6970522, type: 3}
+  - Id: UI_MapOpen
+    Clips:
+    - {fileID: 8300000, guid: 8cfe3ed3f5f82114f905358fe386bb15, type: 3}
+  - Id: UI_MapClose
+    Clips:
+    - {fileID: 8300000, guid: 80ef2975567916745b5af7d42a101abd, type: 3}

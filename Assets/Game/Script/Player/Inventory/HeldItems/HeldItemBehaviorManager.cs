@@ -253,5 +253,12 @@ public class HeldItemBehaviorManager : MonoBehaviour
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             field?.SetValue(canteenBehavior, rightHandBone);
         }
+        else if (behavior is MapBehavior mapBehavior)
+        {
+            // Use reflection to set the private field
+            var field = typeof(MapBehavior).GetField("rightHandBone", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            field?.SetValue(mapBehavior, rightHandBone);
+        }
     }
 }

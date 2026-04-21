@@ -315,6 +315,12 @@ namespace Game.Player
 
         private void HandleInteractInput()
         {
+            var heldItemBehaviorManager = GetComponent<HeldItemBehaviorManager>();
+            if (heldItemBehaviorManager?.GetActiveBehavior() is MapBehavior)
+            {
+                return;
+            }
+
             // Use new interaction system
             if (interactionDetector != null)
             {
