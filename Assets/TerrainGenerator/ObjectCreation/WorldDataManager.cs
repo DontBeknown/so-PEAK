@@ -108,7 +108,7 @@ public class WorldDataManager : MonoBehaviour
         GetSpawnCoord();
 
         //Debug Roadmask to png for seeing
-        SaveTextureAsPNG(roadRidgeTexture, "TerrainGenerator", "DebugRoadMask.png");
+        //SaveTextureAsPNG(roadRidgeTexture, "TerrainGenerator", "DebugRoadMask.png");
 
         // 4. Generate Resource Noise Maps (Using PROFILE specific list)
         Dictionary<NoiseType, float[,]> availableNoiseMaps = new Dictionary<NoiseType, float[,]>();
@@ -340,4 +340,12 @@ public class WorldDataManager : MonoBehaviour
     {
         return masterSpawnGrid;
     }
+
+    public int GetSeedForLevel(WorldLevel level) => level switch
+    {
+        WorldLevel.Forest  => seed1,
+        WorldLevel.Desert  => seed2,
+        WorldLevel.Tundra  => seed3,
+        _                  => seed1
+    };
 }

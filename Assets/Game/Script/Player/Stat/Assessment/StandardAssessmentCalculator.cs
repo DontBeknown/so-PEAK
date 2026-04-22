@@ -69,11 +69,17 @@ namespace Game.Player.Stat.Assessment
                 optimal.optimalTime,
                 optimal.expectedStamina
             );
+
+            if (optimalCost <= 0f)
+                return 100f;
+
+            if (actualCost <= optimalCost)
+                return 100f;
             
             // Deviation percentage
-            float deviation = Mathf.Abs((actualCost - optimalCost) / optimalCost);
+            float deviation = (actualCost - optimalCost) / optimalCost;
             
-            // Score: 100 - (deviation × 100)
+            // Score: 100 - (excess cost × 100)
             float planningScore = 100f - (deviation * 100f);
             
             return Mathf.Clamp(planningScore, 0f, 100f);

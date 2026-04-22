@@ -57,10 +57,21 @@ namespace Game.Core
                 if (enableCoordinatorLogs)
                     Debug.Log("[AsyncLoadCoordinator] Async loading flow disabled. Waiting for chunks then spawning.");
 
+                nextLevelLoadingScreen.Show("Loading...", false);
                 if (loadingState != null)
                     yield return new WaitUntil(() => loadingState.isChunksReady);
 
                 CompleteTransitionAndSpawnPlayer();
+
+                if (enableHJBPathCalculation && hjbClickPathController != null && HasMissingLevelPaths())
+                {
+                    if (enableCoordinatorLogs)
+                        Debug.Log("[AsyncLoadCoordinator] Missing level paths detected. Pre-loading snapshots and starting background path calculation...");
+                    yield return hjbClickPathController.PreloadLevelSnapshotsCoroutine(nextLevelLoadingScreen);
+                    hjbClickPathController.StartBackgroundPathCalculationForAllLevels();
+                }
+
+                nextLevelLoadingScreen.Hide();
                 yield break;
             }
 
@@ -71,14 +82,26 @@ namespace Game.Core
             // --- Step 2: Load the waiting-room scene additively ---
             AsyncOperation loadOp = SceneManager.LoadSceneAsync(
                 debugGameplaySceneName, LoadSceneMode.Additive);
-            yield return WaitForLoadOpWithLoadingScreen(loadOp);
+            yield return WaitForLoadOpWithLoadingScreen(loadOp, autoHide: false);
 
 
             // --- Gate 1: Wait until all terrain chunks are finalized ---
             yield return new WaitUntil(() =>
                 loadingState != null && loadingState.isChunksReady);
 
-            // --- Gate 1.5: Trigger HJB path calculation and wait for completion (optional) ---
+            // --- Gate 1.5a: Pre-load terrain snapshots for all levels (loading screen still active) ---
+            if (enableHJBPathCalculation && hjbClickPathController != null)
+            {
+                if (enableCoordinatorLogs)
+                    Debug.Log("[AsyncLoadCoordinator] Pre-loading terrain snapshots for all levels...");
+                yield return hjbClickPathController.PreloadLevelSnapshotsCoroutine(nextLevelLoadingScreen);
+            }
+
+            // Hide loading screen now that all terrain data is pre-loaded
+            if (nextLevelLoadingScreen != null)
+                nextLevelLoadingScreen.Hide();
+
+            // --- Gate 1.5b: Trigger HJB path calculation and wait for completion (optional) ---
             if (enableHJBPathCalculation)
             {
                 if (hjbClickPathController != null && worldDataManager != null)
@@ -86,9 +109,7 @@ namespace Game.Core
                     if (enableCoordinatorLogs)
                         Debug.Log("[AsyncLoadCoordinator] Triggering HJB path calculation from spawn coord...");
                     if (loadingState != null)
-                    {
                         loadingState.statusMessage = "Calculating optimal path to peak...";
-                    }
                     yield return hjbClickPathController.CalculatePathFromSpawnToPeak(worldDataManager.completeSpawnCoord);
                 }
                 else if (enableCoordinatorLogs)
@@ -118,6 +139,10 @@ namespace Game.Core
             yield return SceneManager.UnloadSceneAsync(debugGameplaySceneName);
 
             CompleteTransitionAndSpawnPlayer();
+
+            // Fire-and-forget: pre-calculate paths for all remaining levels in the background
+            if (enableHJBPathCalculation && hjbClickPathController != null)
+                hjbClickPathController.StartBackgroundPathCalculationForAllLevels();
         }
 
         private void CompleteTransitionAndSpawnPlayer()
@@ -145,6 +170,18 @@ namespace Game.Core
 
             if (enableCoordinatorLogs)
                 Debug.Log("[AsyncLoadCoordinator] Transition complete. Player spawning.");
+        }
+
+        private bool HasMissingLevelPaths()
+        {
+            if (hjbClickPathController == null) return false;
+            foreach (WorldLevel level in System.Enum.GetValues(typeof(WorldLevel)))
+            {
+                if (!hjbClickPathController.savedPathsByLevel.TryGetValue(level, out var path)
+                    || path == null || path.Count == 0)
+                    return true;
+            }
+            return false;
         }
 
         private bool ShouldUseAsyncLoadFlow()
@@ -199,7 +236,7 @@ namespace Game.Core
             return true;
         }
 
-        private IEnumerator WaitForLoadOpWithLoadingScreen(AsyncOperation loadOp)
+        private IEnumerator WaitForLoadOpWithLoadingScreen(AsyncOperation loadOp, bool autoHide = true)
         {
             if (loadOp == null)
             {
@@ -226,8 +263,8 @@ namespace Game.Core
             nextLevelLoadingScreen.SetProgress(1f);
             nextLevelLoadingScreen.SetStatus("Transition scene ready");
 
-            // Requirement: begin fade out right when loadOp finishes.
-            nextLevelLoadingScreen.Hide();
+            if (autoHide)
+                nextLevelLoadingScreen.Hide();
         }
     }
 }

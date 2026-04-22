@@ -65,6 +65,21 @@ public class RenderController : MonoBehaviour
         {
             dataManager.GenerateWorldData(chunkSize);
 
+            //we called the map making func here
+            Sprite generatedMinimap = MinimapGenerator.GenerateTopographicMinimap(
+            dataManager.globalHeightMap,
+            dataManager.expandedRoadRidge,
+            dataManager.activeGen.meshHeightMultiplier,
+            true               // File name
+             );
+
+            // 2. Generate the Trail Map!
+            Sprite roadMap = MinimapGenerator.GenerateRoadMinimap(
+                dataManager.expandedRoadRidge,
+                true
+            // It will automatically default to saving at "SavedMaps/RoadMap.png"
+            );
+
             SetupStageMaterial();
 
             float xChunks = (float)(dataManager.globalHeightMap.GetLength(0) - 1) / (chunkSize - 1);

@@ -315,7 +315,6 @@ namespace Game.Player
 
         private void HandleInteractInput()
         {
-            // Use new interaction system
             if (interactionDetector != null)
             {
                 interactionDetector.TryInteractWithNearest();

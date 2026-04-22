@@ -1,0 +1,436 @@
+using System.Collections.Generic;
+using System.IO;
+using TMPro;
+using DG.Tweening;
+using UnityEngine;
+using UnityEngine.UI;
+using Game.Core.DI;
+using Game.Core.Events;
+using Game.Sound.Events;
+using Game.Player;
+
+namespace Game.UI
+{
+    /// <summary>
+    /// Dedicated map viewer panel for held map items.
+    /// Loads the active map image from a Resources path defined by MapData.
+    /// </summary>
+    public class MapViewerPanel : MonoBehaviour, IUIPanel
+    {
+        [Header("Panel")]
+        [SerializeField] private GameObject panelRoot;
+        [SerializeField] private CanvasGroup canvasGroup;
+
+        [Header("Content")]
+        [SerializeField] private Image mapImage;
+        [SerializeField] private TMP_Text titleText;
+
+        [Header("Buttons")]
+        [SerializeField] private Button closeButton;
+
+        [Header("Animation")]
+        [SerializeField] private float fadeDuration = 0.2f;
+
+        [Header("Audio")]
+        [SerializeField] private string openSoundId = "UI_InventoryOpen";
+        [SerializeField] private float openSoundVolumeScale = 0.5f;
+        [SerializeField] private string closeSoundId = "UI_InventoryClose";
+        [SerializeField] private float closeSoundVolumeScale = 0.5f;
+
+        [Header("Path Overlay")]
+        [SerializeField] private Image pathOverlayImage;
+        [SerializeField] private Color lineColor = Color.red;
+        [SerializeField] private Color endpointColor = Color.red;
+        [SerializeField] private int lineThickness = 3;
+        [SerializeField] private int endpointRadius = 3;
+        [SerializeField] private float pathFadeDuration = 0.4f;
+
+        [Header("Player Position Marker")]
+        [SerializeField] private Color playerMarkerColor = Color.cyan;
+        [SerializeField] private int playerMarkerRadius = 15;
+
+        private Tween activeTween;
+        private IEventBus eventBus;
+        private ISaveLoadService saveLoadService;
+
+        private HeldMapData currentMapData;
+        private byte[] baseMapBytes;
+        private Texture2D currentTex;
+        private Sprite currentSprite;
+        private Texture2D pathOverlayTex;
+        private Sprite pathOverlaySprite;
+        private Tween pathFadeTween;
+        private bool pathCurrentlyDrawn;
+
+        public string PanelName => "MapViewer";
+        public bool BlocksInput => true;
+        public bool UnlocksCursor => true;
+        public bool IsActive => panelRoot != null && panelRoot.activeSelf;
+
+        private void Awake()
+        {
+            eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+
+            if (closeButton != null)
+                closeButton.onClick.AddListener(HandleCloseClicked);
+
+            if (panelRoot != null)
+                panelRoot.SetActive(false);
+
+            if (canvasGroup != null)
+                canvasGroup.alpha = 0f;
+        }
+
+        private void OnDestroy()
+        {
+            activeTween?.Kill();
+            pathFadeTween?.Kill();
+
+            if (closeButton != null)
+                closeButton.onClick.RemoveListener(HandleCloseClicked);
+
+            ReleaseMapSprite();
+            ReleasePathOverlay();
+        }
+
+        private void Update()
+        {
+            if (!IsActive || baseMapBytes == null || mapImage == null)
+                return;
+
+            bool shouldShow = MapPathRevealState.IsRevealed;
+            if (shouldShow == pathCurrentlyDrawn)
+                return;
+
+            if (pathOverlayImage != null)
+            {
+                FadePathOverlayTo(shouldShow ? 1f : 0f);
+                pathCurrentlyDrawn = shouldShow;
+                return;
+            }
+
+            var rebuilt = BuildMapSprite(shouldShow);
+            mapImage.sprite = rebuilt;
+            mapImage.enabled = rebuilt != null;
+        }
+
+        private void HandleCloseClicked()
+        {
+            if (UIServiceProvider.Instance != null)
+            {
+                UIServiceProvider.Instance.ClosePanel(PanelName);
+                return;
+            }
+
+            Hide();
+        }
+
+        public bool SetMapData(HeldMapData mapData)
+        {
+            currentMapData = mapData;
+
+            if (titleText != null)
+                titleText.text = mapData != null ? mapData.MapTitle : string.Empty;
+
+            ReleaseMapSprite();
+
+            Sprite mapSprite = null;
+            if (mapData != null && !string.IsNullOrWhiteSpace(mapData.MapSpriteResourcePath))
+            {
+                string rootPath = Application.persistentDataPath;
+                string loadPath = Path.Combine(rootPath, mapData.MapSpriteResourcePath);
+
+                if (File.Exists(loadPath))
+                {
+                    baseMapBytes = File.ReadAllBytes(loadPath);
+                    bool useOverlayImage = pathOverlayImage != null;
+                    bool revealed = MapPathRevealState.IsRevealed;
+                    mapSprite = BuildMapSprite(withPath: !useOverlayImage && revealed);
+
+                    if (useOverlayImage && currentTex != null)
+                    {
+                        var overlay = BuildPathOverlaySprite(currentTex.width, currentTex.height);
+                        pathOverlayImage.sprite = overlay;
+                        pathOverlayImage.enabled = overlay != null;
+                        SetPathOverlayAlphaImmediate(revealed ? 1f : 0f);
+                        pathCurrentlyDrawn = revealed;
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"Could not find map file at: {loadPath}");
+                }
+            }
+
+            if (mapImage != null)
+            {
+                mapImage.enabled = mapSprite != null;
+                mapImage.sprite = mapSprite;
+            }
+
+            if (mapData == null)
+            {
+                Debug.LogWarning("[MapViewerPanel] No MapData assigned.");
+                return false;
+            }
+
+            if (mapSprite == null)
+            {
+                Debug.LogWarning($"[MapViewerPanel] Could not load map sprite from AppData path '{mapData.MapSpriteResourcePath}'.");
+                return false;
+            }
+
+            return true;
+        }
+
+        public void Show()
+        {
+            if (panelRoot == null)
+                return;
+
+            PublishUISound(openSoundId, openSoundVolumeScale);
+            activeTween?.Kill();
+            panelRoot.SetActive(true);
+
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 0f;
+                canvasGroup.interactable = true;
+                canvasGroup.blocksRaycasts = true;
+
+                activeTween = canvasGroup
+                    .DOFade(1f, fadeDuration)
+                    .SetEase(Ease.OutQuad)
+                    .SetUpdate(true)
+                    .OnComplete(() => activeTween = null);
+            }
+        }
+
+        public void Hide()
+        {
+            if (panelRoot == null)
+                return;
+
+            PublishUISound(closeSoundId, closeSoundVolumeScale);
+            activeTween?.Kill();
+
+            if (canvasGroup != null)
+            {
+                canvasGroup.interactable = false;
+                canvasGroup.blocksRaycasts = false;
+
+                activeTween = canvasGroup
+                    .DOFade(0f, fadeDuration)
+                    .SetEase(Ease.InQuad)
+                    .SetUpdate(true)
+                    .OnComplete(() =>
+                    {
+                        panelRoot.SetActive(false);
+                        activeTween = null;
+                    });
+
+                return;
+            }
+
+            panelRoot.SetActive(false);
+        }
+
+        public void Toggle()
+        {
+            if (IsActive)
+                Hide();
+            else
+                Show();
+        }
+
+        private void PublishUISound(string clipId, float volumeScale)
+        {
+            if (string.IsNullOrWhiteSpace(clipId))
+                return;
+
+            eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>();
+            eventBus?.Publish(new PlayUISoundEvent(clipId, volumeScale));
+        }
+
+        private Sprite BuildMapSprite(bool withPath)
+        {
+            if (baseMapBytes == null)
+                return null;
+
+            ReleaseMapSprite();
+
+            currentTex = new Texture2D(2, 2);
+            currentTex.LoadImage(baseMapBytes);
+
+            if (withPath)
+            {
+                saveLoadService ??= ServiceContainer.Instance.TryGet<ISaveLoadService>();
+                var path = saveLoadService?.GetCachedPathForCurrentLevel();
+                if (path != null && path.Count >= 1)
+                    DrawPathOnTexture(currentTex, path);
+            }
+
+            pathCurrentlyDrawn = withPath;
+            currentSprite = Sprite.Create(currentTex, new Rect(0, 0, currentTex.width, currentTex.height), new Vector2(0.5f, 0.5f), 100f);
+            return currentSprite;
+        }
+
+        private void ReleaseMapSprite()
+        {
+            if (currentSprite != null)
+            {
+                Destroy(currentSprite);
+                currentSprite = null;
+            }
+            if (currentTex != null)
+            {
+                Destroy(currentTex);
+                currentTex = null;
+            }
+            pathCurrentlyDrawn = false;
+        }
+
+        private Sprite BuildPathOverlaySprite(int width, int height)
+        {
+            ReleasePathOverlay();
+
+            pathOverlayTex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            var clearPixels = new Color[width * height];
+            var clear = new Color(0f, 0f, 0f, 0f);
+            for (int i = 0; i < clearPixels.Length; i++) clearPixels[i] = clear;
+            pathOverlayTex.SetPixels(clearPixels);
+
+            saveLoadService ??= ServiceContainer.Instance.TryGet<ISaveLoadService>();
+            var path = saveLoadService?.GetCachedPathForCurrentLevel();
+            if (path != null && path.Count >= 1)
+                DrawPathOnTexture(pathOverlayTex, path);
+            else
+                pathOverlayTex.Apply();
+
+            pathOverlaySprite = Sprite.Create(pathOverlayTex, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f), 100f);
+            return pathOverlaySprite;
+        }
+
+        private void ReleasePathOverlay()
+        {
+            pathFadeTween?.Kill();
+            pathFadeTween = null;
+
+            if (pathOverlaySprite != null)
+            {
+                Destroy(pathOverlaySprite);
+                pathOverlaySprite = null;
+            }
+            if (pathOverlayTex != null)
+            {
+                Destroy(pathOverlayTex);
+                pathOverlayTex = null;
+            }
+        }
+
+        private void SetPathOverlayAlphaImmediate(float alpha)
+        {
+            if (pathOverlayImage == null) return;
+            pathFadeTween?.Kill();
+            pathFadeTween = null;
+            var c = pathOverlayImage.color;
+            c.a = alpha;
+            pathOverlayImage.color = c;
+        }
+
+        private void FadePathOverlayTo(float targetAlpha)
+        {
+            if (pathOverlayImage == null) return;
+            pathFadeTween?.Kill();
+            pathFadeTween = pathOverlayImage
+                .DOFade(targetAlpha, pathFadeDuration)
+                .SetEase(Ease.OutQuad)
+                .SetUpdate(true)
+                .OnComplete(() => pathFadeTween = null);
+        }
+
+        private void DrawPathOnTexture(Texture2D tex, List<Vector3> path)
+        {
+            for (int i = 0; i < path.Count - 1; i++)
+            {
+                int x0 = Mathf.RoundToInt(path[i].x);
+                int y0 = Mathf.RoundToInt(path[i].z);
+                int x1 = Mathf.RoundToInt(path[i + 1].x);
+                int y1 = Mathf.RoundToInt(path[i + 1].z);
+                PlotLine(tex, x0, y0, x1, y1, lineColor, lineThickness);
+            }
+
+            int ex0 = Mathf.RoundToInt(path[0].x);
+            int ey0 = Mathf.RoundToInt(path[0].z);
+            PlotDisc(tex, ex0, ey0, endpointRadius, endpointColor);
+
+            int ex1 = Mathf.RoundToInt(path[path.Count - 1].x);
+            int ey1 = Mathf.RoundToInt(path[path.Count - 1].z);
+            PlotDisc(tex, ex1, ey1, endpointRadius, endpointColor);
+
+            // Draw player position marker
+            DrawPlayerPositionMarker(tex);
+
+            tex.Apply();
+        }
+
+        private void DrawPlayerPositionMarker(Texture2D tex)
+        {
+            var playerController = ServiceContainer.Instance.TryGet<PlayerControllerRefactored>();
+            if (playerController != null)
+            {
+                Vector3 playerPos = playerController.transform.position;
+                int px = Mathf.RoundToInt(playerPos.x);
+                int py = Mathf.RoundToInt(playerPos.z);
+                PlotDisc(tex, px, py, playerMarkerRadius, playerMarkerColor);
+            }
+        }
+
+        private static void PlotLine(Texture2D tex, int x0, int y0, int x1, int y1, Color c, int thickness)
+        {
+            int dx = Mathf.Abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+            int dy = -Mathf.Abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+            int err = dx + dy;
+            while (true)
+            {
+                PlotBrush(tex, x0, y0, c, thickness);
+                if (x0 == x1 && y0 == y1) break;
+                int e2 = 2 * err;
+                if (e2 >= dy) { err += dy; x0 += sx; }
+                if (e2 <= dx) { err += dx; y0 += sy; }
+            }
+        }
+
+        private static void PlotBrush(Texture2D tex, int cx, int cy, Color c, int thickness)
+        {
+            int half = thickness / 2;
+            for (int dy = -half; dy <= half; dy++)
+            {
+                for (int dx = -half; dx <= half; dx++)
+                {
+                    int px = cx + dx;
+                    int py = cy + dy;
+                    if (px >= 0 && px < tex.width && py >= 0 && py < tex.height)
+                        tex.SetPixel(px, py, c);
+                }
+            }
+        }
+
+        private static void PlotDisc(Texture2D tex, int cx, int cy, int radius, Color c)
+        {
+            for (int dy = -radius; dy <= radius; dy++)
+            {
+                for (int dx = -radius; dx <= radius; dx++)
+                {
+                    if (dx * dx + dy * dy <= radius * radius)
+                    {
+                        int px = cx + dx;
+                        int py = cy + dy;
+                        if (px >= 0 && px < tex.width && py >= 0 && py < tex.height)
+                            tex.SetPixel(px, py, c);
+                    }
+                }
+            }
+        }
+    }
+}

@@ -126,6 +126,15 @@ public class NoiseTranslator : MonoBehaviour
     }
 
 
+    public void TerrainDrawingForPath(int seed)
+    {
+        DepthNoise(seed);
+        ErodedMountain(seed);
+        depthMap = SmoothHeightMap(depthMap, smoothMapPasses);
+        GenerateBufferArea();
+        mainPeak = CarveLighthouseFoundation(completeMap, mainPeak, completeMap[mainPeak.x, mainPeak.y]);
+    }
+
     public void TerrainDrawing(int seed)
     {
         //first gen mountain

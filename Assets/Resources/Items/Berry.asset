@@ -13,20 +13,17 @@ MonoBehaviour:
   m_Name: Berry
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
   itemName: Berry
-  description: 
+  description: Wild berries that provide a light  recovery.
   icon: {fileID: 21300000, guid: 36213be7768037e44898d0e8dbee419b, type: 3}
   maxStackSize: 30
   itemType: 1
-  category: 3
   gridSize: {x: 1, y: 1}
   worldPrefab: {fileID: 0}
   isConsumable: 1
   consumableEffects:
-  - statType: 1
+  - effectKind: 0
+    statType: 1
     value: 5
-    isPercentage: 1
-  - statType: 2
+  - effectKind: 0
+    statType: 2
     value: 5
-    isPercentage: 1
-  isCraftingMaterial: 0
-  isCraftedItem: 0

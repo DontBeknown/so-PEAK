@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using DG.Tweening;
+using Game.UI;
 using UnityEngine;
 
 public class HJBClickPathController : MonoBehaviour
@@ -218,6 +219,115 @@ public class HJBClickPathController : MonoBehaviour
         else
         {
             Debug.Log($"[HJBClickPath] Path calculation complete for {currentLvl}.");
+        }
+    }
+
+    public void PreloadLevelSnapshots() => provider.PreloadLevelSnapshots();
+
+    public System.Collections.IEnumerator PreloadLevelSnapshotsCoroutine(NextLevelLoadingScreen loadingScreen)
+    {
+        var levels = System.Enum.GetValues(typeof(WorldLevel));
+        int total = levels.Length;
+        int i = 0;
+        foreach (WorldLevel level in levels)
+        {
+            bool hasCachedPath = savedPathsByLevel.TryGetValue(level, out var cachedPath)
+                                 && cachedPath != null && cachedPath.Count > 0;
+
+            if (hasCachedPath)
+            {
+                if (loadingScreen != null)
+                {
+                    loadingScreen.SetStatus($"Terrain {level}: path already cached, skipping...");
+                    loadingScreen.SetProgress((float)(i + 1) / total);
+                }
+                i++;
+                yield return null;
+                continue;
+            }
+
+            if (loadingScreen != null)
+            {
+                loadingScreen.SetStatus($"Pre-loading terrain: {level}...");
+                loadingScreen.SetProgress((float)i / total);
+            }
+            yield return null; // let status message render before heavy work
+            provider.PreloadSnapshotForLevel(level);
+            i++;
+        }
+        if (loadingScreen != null)
+        {
+            loadingScreen.SetStatus("Terrain data ready.");
+            loadingScreen.SetProgress(1f);
+        }
+    }
+
+    public void StartBackgroundPathCalculationForAllLevels()
+    {
+        StartCoroutine(BackgroundCalculateAllLevelPaths());
+    }
+
+    System.Collections.IEnumerator BackgroundCalculateAllLevelPaths()
+    {
+        if (provider.levelSnapshots.Count == 0)
+        {
+            provider.PreloadLevelSnapshots();
+            yield return null;
+        }
+
+        foreach (WorldLevel level in System.Enum.GetValues(typeof(WorldLevel)))
+        {
+            if (savedPathsByLevel.ContainsKey(level) && savedPathsByLevel[level] != null && savedPathsByLevel[level].Count > 0)
+            {
+                Debug.Log($"[HJBClickPath] Skipping {level} — path already cached.");
+                continue;
+            }
+            yield return CalculatePathForLevel(level);
+        }
+    }
+
+    System.Collections.IEnumerator CalculatePathForLevel(WorldLevel level)
+    {
+        if (!provider.levelSnapshots.TryGetValue(level, out var snap))
+        {
+            Debug.LogWarning($"[HJBClickPath] No snapshot for {level}, skipping path pre-calculation.");
+            yield break;
+        }
+
+        Debug.Log($"[HJBClickPath] Starting path pre-calculation for {level}...");
+
+        provider.ApplySnapshot(level);
+        solver.cost.Build();
+
+        Vector2Int nextStart = snap.pathStart;
+        Vector2Int nextGoal  = snap.pathGoal;
+
+        bool done = false;
+        System.Threading.Tasks.Task.Run(() =>
+        {
+            solver.Solve(nextGoal);
+        }).ContinueWith(t =>
+        {
+            var path = backtracker.BuildPath(nextStart, nextGoal);
+            savedPathsByLevel[level] = path;
+            PersistPathsToCurrentSave(true);
+            provider.RestoreCurrentLevelData();
+            done = true;
+            Debug.Log($"[HJBClickPath] Background path calculation finished for {level}! Generated {path.Count} waypoints.");
+        }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
+
+        float timeout = 3600f;
+        float timer = 0f;
+        while (!done && timer < timeout)
+        {
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        if (!done)
+        {
+            Debug.LogWarning($"[HJBClickPath] Path calculation timed out for {level}!");
+            provider.RestoreCurrentLevelData();
         }
     }
 
