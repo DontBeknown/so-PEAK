@@ -15864,7 +15864,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CraftingManager
   availableRecipes:
-  - {fileID: 11400000, guid: b01bb3e53119ffc4c990e258d9596ad5, type: 2}
   - {fileID: 11400000, guid: 5dedc8a05df4ef94aa777e7697c022d3, type: 2}
   nearCampfire: 0
   nearWorkbench: 0

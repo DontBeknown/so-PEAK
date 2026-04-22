@@ -3,6 +3,7 @@ using Game.Core.DI;
 using Game.Interaction;
 using System;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 namespace Game.Dialog.Triggers
 {
@@ -26,6 +27,9 @@ namespace Game.Dialog.Triggers
         [Header("References")]
         [SerializeField] private InteractionDetector interactionDetector;
         [SerializeField] private DialogManager dialogManager;
+
+        [Header("Scene Guard")]
+        [SerializeField] private string debugGameplaySceneName = "Scene_Debug_Gameplay";
 
         private IDialogManager _dialogManagerInterface;
         private readonly HashSet<string> _triggeredDialogIds = new HashSet<string>();
@@ -114,6 +118,11 @@ namespace Game.Dialog.Triggers
 
         private void OnNearestInteractableChanged(IInteractable nearestInteractable)
         {
+            if (IsDebugGameplaySceneLoaded())
+            {
+                return;
+            }
+
             if (nearestInteractable == null || _dialogManagerInterface == null)
             {
                 return;
@@ -198,6 +207,17 @@ namespace Game.Dialog.Triggers
 
             _dialogManagerInterface.StartDialog(dialogData, false);
             return true;
+        }
+
+        private bool IsDebugGameplaySceneLoaded()
+        {
+            if (string.IsNullOrWhiteSpace(debugGameplaySceneName))
+            {
+                return false;
+            }
+
+            Scene debugScene = SceneManager.GetSceneByName(debugGameplaySceneName);
+            return debugScene.IsValid() && debugScene.isLoaded;
         }
 
         private static bool ContainsTargetItem(ResourceDrop[] drops, InventoryItem targetItem)

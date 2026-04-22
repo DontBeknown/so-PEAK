@@ -17,4 +17,4 @@ MonoBehaviour:
   instructionText: Hold SHIFT while moving to Sprint.
   inputHintText: Sprint
   completionType: 4
-  completionThreshold: 3
+  completionThreshold: 2

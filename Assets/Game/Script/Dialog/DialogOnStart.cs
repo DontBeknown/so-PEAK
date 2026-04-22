@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.Dialog;
+using UnityEngine.SceneManagement;
 
 namespace Game.Script.Dialog
 {
@@ -8,6 +9,7 @@ namespace Game.Script.Dialog
         [SerializeField] private DialogData dialogData;
         [SerializeField] private bool replayIfTriggered = false;
         [SerializeField] private DialogManager _dialogManager;
+        [SerializeField] private string debugGameplaySceneName = "Scene_Debug_Gameplay";
         
         private void Awake()
         {
@@ -22,8 +24,11 @@ namespace Game.Script.Dialog
             }
         }
 
-        private void Start()
+        private System.Collections.IEnumerator Start()
         {
+            while (IsDebugGameplaySceneLoaded())
+                yield return null;
+
             // Check if SaveLoadService exists and level is 1
             var saveLoadService = SaveLoadService.Instance;
             if (saveLoadService != null && _dialogManager != null && dialogData != null)
@@ -39,6 +44,15 @@ namespace Game.Script.Dialog
             {
                 Debug.LogWarning("DialogOnStart: No DialogData assigned.");
             }
+        }
+
+        private bool IsDebugGameplaySceneLoaded()
+        {
+            if (string.IsNullOrWhiteSpace(debugGameplaySceneName))
+                return false;
+
+            Scene debugScene = SceneManager.GetSceneByName(debugGameplaySceneName);
+            return debugScene.IsValid() && debugScene.isLoaded;
         }
     }
 }
