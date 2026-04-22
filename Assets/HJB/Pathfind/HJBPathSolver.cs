@@ -18,6 +18,9 @@ public class HJBPathSolver : MonoBehaviour
 
     public float maxWalkableSlope = 0.8f;
 
+    [Header("Risk Penalty")]
+    public float c_risk = 0.03f;
+
     const float INF = 1e15f;
     int w, h;
 
@@ -129,6 +132,28 @@ public class HJBPathSolver : MonoBehaviour
                 travelTime += (fLocal - fatigueLimit) * 5.0f;
 
             float cLocal = cost.baseCost[ix, iy];
+
+            // -----------------------------------------------------
+            // Add Risk Term and Penalty Term from pseudo code
+            // -----------------------------------------------------
+            float risk_term = 0f;
+            if (terrain.worldDataManager != null && terrain.worldDataManager.expandedRiskMap != null)
+            {
+                if (ix < terrain.worldDataManager.expandedRiskMap.GetLength(0) &&
+                    iy < terrain.worldDataManager.expandedRiskMap.GetLength(1))
+                {
+                    float hazardValue = terrain.worldDataManager.expandedRiskMap[ix, iy];
+                    risk_term = hazardValue * c_risk;
+                }
+            }
+
+            // Pseudo penalty term (lambda sequence usually wraps this whole solve, using 1.0 here as placeholder for soft limit)
+            float lambda = 1.0f; 
+            float penalty_term = lambda * fatigue[ix, iy];
+
+            cLocal += risk_term + penalty_term;
+            // -----------------------------------------------------
+
             float candidate = cLocal * travelTime + T2;
 
             if (candidate < bestT)

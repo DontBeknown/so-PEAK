@@ -43,7 +43,7 @@ MonoBehaviour:
   nightAmbientColor: {r: 0.03529412, g: 0.20392159, b: 0.4156863, a: 1}
   nightAmbientIntensity: 1.911
   nightMoonRotation: {x: 146.9, y: 0, z: 0}
-  useFog: 0
+  useFog: 1
   morningFogColor: {r: 0.81960785, g: 0.56078434, b: 0.34509805, a: 1}
   morningFogDensity: 0.0129
   dayFogColor: {r: 0.36677104, g: 0.8415094, b: 0.803304, a: 1}
