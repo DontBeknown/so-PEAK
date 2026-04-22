@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Snow_ExpertAdvice_1 1
   m_EditorClassIdentifier: Assembly-CSharp::Game.Collectable.CollectableItem
   id: Snow_ExpertAdvice_2
-  headerName: "\u0E01\u0E32\u0E23\u0E40\u0E2D\u0E32\u0E15\u0E31\u0E27\u0E23\u0E2D\u0E14\u0E08\u0E32\u0E01\u0E1E\u0E32\u0E22\u0E38\u0E2B\u0E34\u0E21\u0E30"
+  headerName: "Expert Field Notes \u2014 Surviving a Blizzard"
   content: '<size=120%><b>1. If you are outside</b></size>
 
 
