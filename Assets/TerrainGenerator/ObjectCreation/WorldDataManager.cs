@@ -167,6 +167,7 @@ public class WorldDataManager : MonoBehaviour
 
     private void SpawnUniqueLighthouse(int chunkSize, WorldLevelProfile profile, string worldGuid)
     {
+        // 1. Calculate Position
         Vector2Int peakCoord = profile.generator.mainPeak;
         float height = globalHeightMap[peakCoord.x, peakCoord.y] * profile.generator.meshHeightMultiplier;
 
@@ -174,21 +175,20 @@ public class WorldDataManager : MonoBehaviour
         Vector3 scale = Vector3.one * profile.lighthouseConfig.MaxScale;
         Vector3 finalPos = new Vector3(peakCoord.x, height, peakCoord.y) + (rotation * Vector3.Scale(profile.lighthouseConfig.PositionOffset, scale));
 
-        Vector2Int chunkCoord = new Vector2Int(Mathf.FloorToInt((float)peakCoord.x / chunkSize), Mathf.FloorToInt((float)peakCoord.y / chunkSize));
-        string safeWorldGuid = string.IsNullOrEmpty(worldGuid) ? "unknown-world" : worldGuid;
-        string lighthouseSpawnId = $"{safeWorldGuid}|L{(int)currentLevel}|Lighthouse|X:{peakCoord.x}|Z:{peakCoord.y}";
-
-        PlacedObject landmark = new PlacedObject
+        // 2. Instantiate it immediately!
+        if (profile.lighthouseConfig.Prefab != null)
         {
-            Prefab = profile.lighthouseConfig.Prefab,
-            Position = finalPos,
-            Rotation = rotation,
-            Scale = scale,
-            SpawnId = lighthouseSpawnId
-        };
+            GameObject lighthouseObj = Instantiate(profile.lighthouseConfig.Prefab, finalPos, rotation);
+            lighthouseObj.transform.localScale = scale;
+            lighthouseObj.name = "Global_Lighthouse_Landmark";
 
-        if (!masterSpawnGrid.ContainsKey(chunkCoord)) masterSpawnGrid.Add(chunkCoord, new List<PlacedObject>());
-        masterSpawnGrid[chunkCoord].Add(landmark);
+            // Put it inside the WorldDataManager so the hierarchy stays clean
+            lighthouseObj.transform.parent = this.transform;
+        }
+        else
+        {
+            Debug.LogWarning("[WorldDataManager] No Lighthouse Prefab assigned in the profile!");
+        }
     }
 
     // RenderController calls this to ask "What should I spawn in this chunk?"

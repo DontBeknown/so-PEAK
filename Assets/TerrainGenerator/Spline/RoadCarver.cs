@@ -109,21 +109,22 @@ public static class RoadCarver
 
         /////////////// We will use Dartboard Here //////////////////
         // C. Generate Heightmaps for ALL Mountains (The Dartboards)
-        // We create a full-size float[,] for each mountain's projected road heights
         List<float[,]> allRoadHeightMaps = new List<float[,]>();
 
         for (int i = 0; i < repPeaks.Length; i++)
         {
-            // 1. Calculate dynamic tiers for this specific peak (OLD LOGIC RESTORED)
             float maxDist = GetMaxDistanceToCorner(repPeaks[i], mapWidth, mapLength);
             int tierCount = Mathf.CeilToInt(maxDist / ringWidth) + 1;
 
-            // 2. Init Dartboard logic (OLD LOGIC RESTORED)
-            // Inside CarveRoad loop:
             RoadCurveProfile[,] dartboard = InitializeDartboard(peakHeights[i], tierCount, ringWidth, seed, maxHeight);
 
-            // 3. Generate the height map for this mountain
-            float[,] mountainRoadMap = GenerateHeightMapFromDartboard(dartboard, repPeaks[i], mapWidth, mapLength, ringWidth);
+            // --- THE FIX: Define the flat "Landing Pad" radius for the lighthouse ---
+            // If this is the main peak, make a 25-meter flat area. Otherwise, just 5 meters.
+            float plateauRadius = (i == tallestMountainIndex) ? 25f : 5f;
+
+            // Pass the peak height AND the plateau radius into the generator!
+            float[,] mountainRoadMap = GenerateHeightMapFromDartboard(dartboard, repPeaks[i], mapWidth, mapLength, ringWidth, peakHeights[i], plateauRadius);
+
             allRoadHeightMaps.Add(mountainRoadMap);
         }
 
@@ -133,7 +134,7 @@ public static class RoadCarver
         ApplyCombinedHeights(depthMap, roadRidge, allRoadHeightMaps);
     }
 
-    private static float[,] GenerateHeightMapFromDartboard(RoadCurveProfile[,] dartboard, Vector2Int peak, int width, int length, float ringWidth)
+    private static float[,] GenerateHeightMapFromDartboard(RoadCurveProfile[,] dartboard, Vector2Int peak, int width, int length, float ringWidth, float peakHeight, float plateauRadius)
     {
         float[,] map = new float[width, length];
         int tierLimit = dartboard.GetLength(1);
@@ -145,7 +146,18 @@ public static class RoadCarver
                 float dx = x - peak.x;
                 float dz = z - peak.y;
                 float dist = Mathf.Sqrt(dx * dx + dz * dz);
-                int tier = Mathf.FloorToInt(dist / ringWidth);
+
+                // --- THE FIX: Create the flat plateau ---
+                if (dist <= plateauRadius)
+                {
+                    // Perfectly flat under the lighthouse!
+                    map[x, z] = peakHeight;
+                    continue; // Skip the slope math entirely for these pixels
+                }
+
+                // Push the start of the mathematical slope OUTWARD to the edge of the plateau
+                float effectiveDist = dist - plateauRadius;
+                int tier = Mathf.FloorToInt(effectiveDist / ringWidth);
 
                 if (tier < tierLimit)
                 {
@@ -154,23 +166,25 @@ public static class RoadCarver
                     if (angle < 0) angle += 360f;
 
                     // 2. Find the two sectors we are between
-                    // Since 360 / 8 = 45 degrees per sector
                     float sectorFloat = angle / 45f;
                     int sectorA = Mathf.FloorToInt(sectorFloat) % 8;
                     int sectorB = (sectorA + 1) % 8;
 
-                    // 3. Find the 't' weight (how far are we from sectorA toward sectorB?)
+                    // 3. Find the 't' weight
                     float t_sector = sectorFloat - Mathf.Floor(sectorFloat);
 
-                    // 4. Evaluate both sectors at this distance
-                    float distT = (dist % ringWidth) / ringWidth;
+                    // 4. Evaluate both sectors using the EFFECTIVE distance
+                    float distT = (effectiveDist % ringWidth) / ringWidth;
                     float heightA = dartboard[sectorA, tier].Evaluate(distT);
                     float heightB = dartboard[sectorB, tier].Evaluate(distT);
 
-                    // 5. BLEND! No more tears.
+                    // 5. BLEND!
                     map[x, z] = Mathf.Lerp(heightA, heightB, t_sector);
                 }
-                else { map[x, z] = 0f; }
+                else
+                {
+                    map[x, z] = 0f;
+                }
             }
         });
 
