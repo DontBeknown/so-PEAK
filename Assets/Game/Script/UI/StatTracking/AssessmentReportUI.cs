@@ -15,6 +15,7 @@ public class AssessmentReportUI : MonoBehaviour
     
     [Header("Overall Score")]
     [SerializeField] private TextMeshProUGUI rankText;
+    [SerializeField] private TextMeshProUGUI rankProgressText;
     [SerializeField] private TextMeshProUGUI totalScoreText;
     [SerializeField] private Image rankIconImage;
     
@@ -106,11 +107,16 @@ public class AssessmentReportUI : MonoBehaviour
         
         currentScore = score;
         
-        // Display rank with emoji
+        // Display rank
         if (rankText != null)
         {
-            string rankName = GetRankName(score.rank);
-            rankText.text = $"{rankName}";
+            rankText.text = GetRankName(score.rank);
+        }
+
+        // Display progress toward next rank
+        if (rankProgressText != null)
+        {
+            rankProgressText.text = GetRankProgressText(score.totalScore, score.rank);
         }
         
         // Display total score
@@ -131,9 +137,9 @@ public class AssessmentReportUI : MonoBehaviour
         DisplayCategoryScore(planningScoreText, planningSlider, score.planningScore, "Planning");
         
         // Display detailed breakdowns
-        DisplayEfficiencyDetails(score.efficiencyDetails);
+        DisplayEfficiencyDetails(score.efficiencyDetails, score);
         DisplaySafetyDetails(score.safetyDetails);
-        DisplayPlanningDetails(score.planningDetails);
+        DisplayPlanningDetails(score.planningDetails, score);
         
         // Display combined feedback
         DisplayFeedback(score);
@@ -158,18 +164,32 @@ public class AssessmentReportUI : MonoBehaviour
     /// <summary>
     /// Displays efficiency breakdown details
     /// </summary>
-    private void DisplayEfficiencyDetails(EfficiencyBreakdown details)
+    private void DisplayEfficiencyDetails(EfficiencyBreakdown details, AssessmentScore score)
     {
         if (efficiencyDetailsText == null || details == null)
             return;
-        
+
+        var raw = score.rawMetrics;
+        var opt = score.optimalMetrics;
+
         string text = "<b>Resource Efficiency:</b>\n";
-        text += $"  Stamina: {details.staminaEfficiency:F1}%\n";
-        text += $"  Food: {details.foodEfficiency:F1}%\n";
-        text += $"  Water: {details.waterEfficiency:F1}%\n";
-        text += $"  Usage Ratio: {details.resourceUsageRatio:F2}x\n";
+
+        if (raw != null && opt != null)
+        {
+            text += $"  Stamina: {details.staminaEfficiency:F1}%  ({raw.totalStaminaUsed:F0} used / {opt.expectedStamina:F0} optimal)\n";
+            text += $"  Food: {details.foodEfficiency:F1}%  ({raw.totalFoodItemsConsumed} used / {opt.expectedFoodItems} optimal)\n";
+            text += $"  Water: {details.waterEfficiency:F1}%  ({raw.totalWaterItemsConsumed} used / {opt.expectedWaterItems} optimal)\n";
+        }
+        else
+        {
+            text += $"  Stamina: {details.staminaEfficiency:F1}%\n";
+            text += $"  Food: {details.foodEfficiency:F1}%\n";
+            text += $"  Water: {details.waterEfficiency:F1}%\n";
+        }
+
+        text += $"  Overall Usage: {details.resourceUsageRatio:F2}x optimal\n";
         text += $"<i>{details.feedback}</i>";
-        
+
         efficiencyDetailsText.text = text;
     }
     
@@ -194,36 +214,57 @@ public class AssessmentReportUI : MonoBehaviour
     /// <summary>
     /// Displays planning breakdown details
     /// </summary>
-    private void DisplayPlanningDetails(PlanningBreakdown details)
+    private void DisplayPlanningDetails(PlanningBreakdown details, AssessmentScore score)
     {
         if (planningDetailsText == null || details == null)
             return;
-        
+
+        var raw = score.rawMetrics;
+        var opt = score.optimalMetrics;
+
         string text = "<b>Route Planning:</b>\n";
-        text += $"  Path Deviation: {details.pathDeviation:F1}%\n";
-        text += $"  Time Efficiency: {details.timeEfficiency:F1}%\n";
+
+        if (raw != null && opt != null)
+        {
+            text += $"  Distance: {raw.totalDistance:F0}m  (optimal {opt.optimalDistance:F0}m, {details.pathDeviation:F1}% off)\n";
+            text += $"  Time: {FormatTime(raw.totalTime)}  (optimal {FormatTime(opt.optimalTime)}, {100f - details.timeEfficiency:F1}% off)\n";
+        }
+        else
+        {
+            text += $"  Path Deviation: {details.pathDeviation:F1}%\n";
+            text += $"  Time Efficiency: {details.timeEfficiency:F1}%\n";
+        }
+
         text += $"  Route Optimality: {details.routeOptimality:F1}/100\n";
+
+        if (score.planningUsedFallbackPath)
+            text += "<i>Note: No reference path available — planning score is estimated only.</i>\n";
+
         text += $"<i>{details.feedback}</i>";
-        
+
         planningDetailsText.text = text;
+    }
+
+    private static string FormatTime(float seconds)
+    {
+        int m = (int)(seconds / 60f);
+        int s = (int)(seconds % 60f);
+        return m > 0 ? $"{m}m {s:D2}s" : $"{s}s";
     }
     
     /// <summary>
-    /// Displays combined feedback summary
+    /// Displays actionable improvement tips per category.
     /// </summary>
     private void DisplayFeedback(AssessmentScore score)
     {
         if (feedbackText == null)
             return;
-        
-        string feedback = "<b>Performance Summary:</b>\n\n";
-        feedback += $"<b>Efficiency ({score.efficiencyScore:F1}/100):</b>\n";
-        feedback += $"{score.efficiencyDetails.feedback}\n\n";
-        feedback += $"<b>Safety ({score.safetyScore:F1}/100):</b>\n";
-        feedback += $"{score.safetyDetails.feedback}\n\n";
-        feedback += $"<b>Planning ({score.planningScore:F1}/100):</b>\n";
-        feedback += $"{score.planningDetails.feedback}";
-        
+
+        string feedback = "<b>How to Improve:</b>\n\n";
+        feedback += $"<b>Efficiency:</b>\n{LearningAssessmentService.GetEfficiencyTip(score.efficiencyScore)}\n\n";
+        feedback += $"<b>Safety:</b>\n{LearningAssessmentService.GetSafetyTip(score.safetyScore)}\n\n";
+        feedback += $"<b>Planning:</b>\n{LearningAssessmentService.GetPlanningTip(score.planningScore)}";
+
         feedbackText.text = feedback;
     }
     
@@ -243,6 +284,21 @@ public class AssessmentReportUI : MonoBehaviour
         };
     }
     
+    /// <summary>
+    /// Returns a short progress hint toward the next rank, or a congratulation at max rank.
+    /// </summary>
+    private string GetRankProgressText(float totalScore, PerformanceRank rank)
+    {
+        return rank switch
+        {
+            PerformanceRank.AlpineMaster => "Peak performance — you've reached the top rank!",
+            PerformanceRank.SkilledPlanner => $"Need {Mathf.Ceil(90f - totalScore):F0} more points for Alpine Master (90+)",
+            PerformanceRank.Survivor      => $"Need {Mathf.Ceil(70f - totalScore):F0} more points for Skilled Planner (70+)",
+            PerformanceRank.LostWanderer  => $"Need {Mathf.Ceil(50f - totalScore):F0} more points for Survivor (50+)",
+            _                             => string.Empty
+        };
+    }
+
     /// <summary>
     /// Gets icon sprite for performance rank
     /// </summary>

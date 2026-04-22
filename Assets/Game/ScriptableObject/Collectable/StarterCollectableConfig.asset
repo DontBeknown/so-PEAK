@@ -24,4 +24,5 @@ MonoBehaviour:
   - level: 3
     starterCollectables:
     - {fileID: 11400000, guid: 158ed22d1b4d5f44d851834980d104c1, type: 2}
+    - {fileID: 11400000, guid: 9ea0ea62c1f7d43458ae344596fcd17f, type: 2}
     - {fileID: 11400000, guid: c8e3b745c0fdb634ba52c9404e8c46a8, type: 2}

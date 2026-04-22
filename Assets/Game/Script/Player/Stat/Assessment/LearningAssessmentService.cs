@@ -26,6 +26,7 @@ namespace Game.Player.Stat.Assessment
         // Cached optimal metrics (can be set externally)
         private OptimalMetrics cachedOptimalMetrics;
         private bool hasExternalOptimalMetrics;
+        private bool lastAssessmentUsedFallbackPath;
         
         // Events
         public event System.Action<AssessmentScore> OnAssessmentComplete;
@@ -142,7 +143,10 @@ namespace Game.Player.Stat.Assessment
                 rank = DetermineRank(totalScore),
                 efficiencyDetails = CreateEfficiencyBreakdown(metrics, optimal, efficiencyScore),
                 safetyDetails = CreateSafetyBreakdown(metrics, safetyScore),
-                planningDetails = CreatePlanningBreakdown(metrics, optimal, planningScore)
+                planningDetails = CreatePlanningBreakdown(metrics, optimal, planningScore),
+                optimalMetrics = optimal,
+                rawMetrics = metrics,
+                planningUsedFallbackPath = lastAssessmentUsedFallbackPath
             };
             
             Debug.Log($"[LearningAssessment] Assessment complete! Score: {totalScore:F1}, Rank: {assessment.rank}");
@@ -157,6 +161,8 @@ namespace Game.Player.Stat.Assessment
         /// </summary>
         private OptimalMetrics GetOptimalMetrics(PerformanceMetrics metrics)
         {
+            lastAssessmentUsedFallbackPath = false;
+
             if (hasExternalOptimalMetrics)
             {
                 Debug.Log("[LearningAssessment] Using externally provided optimal metrics");
@@ -175,15 +181,16 @@ namespace Game.Player.Stat.Assessment
 
                 Debug.LogWarning($"[LearningAssessment] No cached HJB path found for level {saveLoadService.GetCurrentLevel()}");
             }
-            
-            // Fall back to the tracked player path if the save has no cached HJB path yet.
+
+            // Fall back to the tracked player path — planning score will be unreliable.
             if (metrics.pathTaken != null && metrics.pathTaken.Count >= 2)
             {
-                Debug.Log("[LearningAssessment] Calculating optimal metrics from player path");
+                lastAssessmentUsedFallbackPath = true;
+                Debug.LogWarning("[LearningAssessment] Falling back to player path for optimal metrics — planning score unreliable");
                 return optimalCalculator.Calculate(metrics.pathTaken);
             }
-            
-            // Fallback: use actual metrics as "optimal" (results in 100% efficiency)
+
+            lastAssessmentUsedFallbackPath = true;
             Debug.LogWarning("[LearningAssessment] No path data available, using actual metrics as baseline");
             return optimalCalculator.CreateFromValues(
                 metrics.totalStaminaUsed,
@@ -227,10 +234,10 @@ namespace Game.Player.Stat.Assessment
             
             float avgRatio = (staminaRatio + foodRatio + waterRatio) / 3f;
             
-            string feedback = avgRatio <= 1.1f ? "ยอดเยี่ยม! ใช้ทรัพยากรอย่างมีประสิทธิภาพ" :
-                             avgRatio <= 1.3f ? "ดี แต่ยังสามารถปรับปรุงได้" :
-                             avgRatio <= 1.6f ? "ใช้ทรัพยากรมากเกินไป ควรวางแผนให้ดีขึ้น" :
-                             "ใช้ทรัพยากรสิ้นเปลืองมาก จำเป็นต้องปรับปรุง";
+            string feedback = avgRatio <= 1.1f ? "Excellent! Resources used very efficiently." :
+                             avgRatio <= 1.3f ? "Good, but there is room for improvement." :
+                             avgRatio <= 1.6f ? "Too many resources consumed. Plan your route more carefully." :
+                             "Resource usage was very wasteful. Significant improvement needed.";
             
             return new EfficiencyBreakdown
             {
@@ -252,14 +259,14 @@ namespace Game.Player.Stat.Assessment
             
             int risksAvoided = metrics.totalRiskyEvents - metrics.encounterredRisks;
             
-            string feedback = avoidanceRate >= 90f ? "ปลอดภัยมาก หลีกเลี่ยงอันตรายได้ดีเยี่ยม" :
-                             avoidanceRate >= 70f ? "ปลอดภัย แต่ยังมีความเสี่ยงบางส่วน" :
-                             avoidanceRate >= 50f ? "เสี่ยงค่อนข้างมาก ควรระมัดระวังมากขึ้น" :
-                             "อันตราย! พบเหตุการณ์เสี่ยงมากเกินไป";
+            string feedback = avoidanceRate >= 90f ? "Very safe — hazards avoided excellently." :
+                             avoidanceRate >= 70f ? "Safe, but some risks were encountered." :
+                             avoidanceRate >= 50f ? "Risky — be more cautious on the next climb." :
+                             "Dangerous! Too many hazard events encountered.";
 
             if (metrics.deathCount > 0)
             {
-                feedback += $" (เสียชีวิต {metrics.deathCount} ครั้ง)";
+                feedback += $" ({metrics.deathCount} death{(metrics.deathCount > 1 ? "s" : "")} recorded.)";
             }
             
             return new SafetyBreakdown
@@ -290,10 +297,11 @@ namespace Game.Player.Stat.Assessment
                 ? Mathf.Abs((metrics.totalTime - optimal.optimalTime) / optimal.optimalTime) * 100f
                 : 0f;
             
-            string feedback = distanceDeviation <= 10f ? "วางแผนเยี่ยม! เลือกเส้นทางที่เหมาะสมมาก" :
-                             distanceDeviation <= 25f ? "วางแผนดี แต่ยังมีเส้นทางที่ดีกว่า" :
-                             distanceDeviation <= 40f ? "วางแผนพอใช้ ควรเลือกเส้นทางที่เหมาะสมกว่า" :
-                             "วางแผนไม่ดี เลือกเส้นทางที่ไม่เหมาะสม";
+            float blendedDeviation = (distanceDeviation + timeDeviation) * 0.5f;
+            string feedback = blendedDeviation <= 10f ? "Excellent planning! Route and time were near-optimal." :
+                             blendedDeviation <= 25f ? "Good planning, but a better route or pace exists." :
+                             blendedDeviation <= 40f ? "Adequate planning. Try to follow the suggested path more closely." :
+                             "Poor planning. Route choice and timing need significant improvement.";
             
             return new PlanningBreakdown
             {
@@ -302,6 +310,39 @@ namespace Game.Player.Stat.Assessment
                 routeOptimality = planningScore,
                 feedback = feedback
             };
+        }
+
+        /// <summary>
+        /// Returns an actionable improvement tip for efficiency based on the score.
+        /// </summary>
+        public static string GetEfficiencyTip(float score)
+        {
+            if (score >= 90f) return "Keep it up — your resource management is excellent.";
+            if (score >= 70f) return "Next time: pace yourself on steep sections to reduce stamina drain.";
+            if (score >= 50f) return "Next time: bring fewer supplies and stick to flatter terrain to save stamina.";
+            return "Next time: plan your load carefully — you over-consumed food, water, and stamina significantly.";
+        }
+
+        /// <summary>
+        /// Returns an actionable improvement tip for safety based on the score.
+        /// </summary>
+        public static string GetSafetyTip(float score)
+        {
+            if (score >= 90f) return "Great awareness — keep monitoring the risk map as you climb.";
+            if (score >= 70f) return "Next time: check the risk map before each segment to avoid the highlighted hazard zones.";
+            if (score >= 50f) return "Next time: slow down near red zones on the map and take detours around known hazards.";
+            return "Next time: prioritize safety over speed — review the risk map frequently and avoid all red-zone areas.";
+        }
+
+        /// <summary>
+        /// Returns an actionable improvement tip for planning based on the score.
+        /// </summary>
+        public static string GetPlanningTip(float score)
+        {
+            if (score >= 90f) return "Excellent route choice — you followed near-optimal path and timing.";
+            if (score >= 70f) return "Next time: follow the suggested HJB path more closely to shorten your route.";
+            if (score >= 50f) return "Next time: check the path overlay before you start and aim to finish closer to the estimated time.";
+            return "Next time: use the suggested path — your route and timing deviated significantly from optimal.";
         }
     }
 }

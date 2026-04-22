@@ -112,7 +112,7 @@ public class DeathScreenUI : MonoBehaviour, IUIPanel
     public void ShowDeath(DeathCause cause)
     {
         if (titleText != null)
-            titleText.text = "YOU DEAD";
+            titleText.text = "YOU DIED";
 
         if (detailText != null)
             detailText.text = GetDetailMessage(cause);
@@ -132,13 +132,13 @@ public class DeathScreenUI : MonoBehaviour, IUIPanel
     {
         return cause switch
         {
-            DeathCause.Starvation   => "จับตาดูแถบความหิวและกินอาหารสม่ำเสมอเพื่อความอยู่รอด",
-            DeathCause.Dehydration  => "เติมกระติกน้ำให้เต็มไว้เสมอ — การขาดน้ำเกิดขึ้นเร็วกว่าที่คุณคิด",
-            DeathCause.Damage       => "หลีกเลี่ยงการตกจากที่สูงและภูมิประเทศอันตราย รักษาตัวเองก่อนออกเดินทางต่อ",
-            DeathCause.LandslideRock=> "ระวังเสียงหินถล่มและสังเกตทางลาดชัน หลบออกจากแนวตกกระทบทันที",
-            DeathCause.Falling      => "วางแผนเส้นทางไว้ก่อน และระวังขอบผา มองหาเส้นทางลาดที่ปลอดภัยแทนการกระโดด",
-            DeathCause.Tornado      => "หลีกเลี่ยงบริเวณพายุหมุน หากติดอยู่ให้พยายามวิ่งออกมาจากแนวศูนย์กลาง",
-            _                       => "เตรียมตัวให้พร้อมก่อนออกสำรวจดินแดนที่ไม่รู้จัก"
+            DeathCause.Starvation   => "Watch your hunger bar and eat regularly to survive.",
+            DeathCause.Dehydration  => "Keep your water flask filled. Dehydration happens faster than you think.",
+            DeathCause.Damage       => "Avoid high falls and dangerous terrain. Recover before moving on.",
+            DeathCause.LandslideRock=> "Listen for falling rocks and watch steep slopes. Move out of the impact path immediately.",
+            DeathCause.Falling      => "Plan your route ahead and stay clear of cliff edges. Look for safer slopes instead of jumping.",
+            DeathCause.Tornado      => "Avoid tornado zones. If caught inside, run away from the center line as quickly as possible.",
+            _                       => "Prepare yourself before exploring the unknown."
         };
     }
 
@@ -146,13 +146,13 @@ public class DeathScreenUI : MonoBehaviour, IUIPanel
     {
         return cause switch
         {
-            DeathCause.Starvation   => "คุณอดอยากจนตาย ร่างกายของคุณทนไม่ไหวโดยไม่มีอาหาร",
-            DeathCause.Dehydration  => "คุณตายเพราะขาดน้ำ ร่างกายของคุณต้องการน้ำเพื่อความอยู่รอด",
-            DeathCause.Damage       => "คุณตายจากบาดแผลที่ได้รับ",
-            DeathCause.LandslideRock=> "คุณถูกหินถล่มกระแทกอย่างรุนแรงจนเสียชีวิต",
-            DeathCause.Falling      => "คุณพลัดตกจากที่สูงและเสียชีวิตจากแรงกระแทก",
-            DeathCause.Tornado      => "คุณเกี่ยวศูนย์กลางของพายุหมุน แรงปั่นและแรงกระแทกอย่างรุนแรงสิ้นชีวิต",
-            _                       => "คุณจบชีวิตลงอย่างไม่ทันตั้งตัว"
+            DeathCause.Starvation   => "You starved to death. Your body gave out without food.",
+            DeathCause.Dehydration  => "You died from dehydration. Your body needed water to survive.",
+            DeathCause.Damage       => "You died from your injuries.",
+            DeathCause.LandslideRock=> "You were fatally struck by a landslide rock.",
+            DeathCause.Falling      => "You fell from a height and died on impact.",
+            DeathCause.Tornado      => "You were caught near the tornado core and killed by violent spinning force and impact.",
+            _                       => "Your life ended before you could react."
         };
     }
 

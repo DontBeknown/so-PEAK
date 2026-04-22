@@ -30,6 +30,8 @@ public interface ISaveLoadService
     bool IsNewWorld();
     bool IsFreshLevelEntry();
     void ResetFreshLevelEntryFlag();
+    bool IsFirstSpawnPending();
+    void MarkFirstSpawnComplete();
     
     // Path cache
     List<Vector3> GetCachedPathForCurrentLevel();

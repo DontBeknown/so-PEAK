@@ -21,4 +21,11 @@ public class AssessmentScore
     public EfficiencyBreakdown efficiencyDetails;
     public SafetyBreakdown safetyDetails;
     public PlanningBreakdown planningDetails;
+
+    // Optimal baselines used during scoring (for display purposes)
+    public OptimalMetrics optimalMetrics;
+    public PerformanceMetrics rawMetrics;
+
+    // True when planning was scored against the player's own path (no HJB path available)
+    public bool planningUsedFallbackPath;
 }

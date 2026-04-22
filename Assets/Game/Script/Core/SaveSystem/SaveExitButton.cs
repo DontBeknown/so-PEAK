@@ -48,6 +48,7 @@ public class SaveExitButton : MonoBehaviour
             }
         }
         
+        SaveLoadService.Instance?.MarkFirstSpawnComplete();
         SceneManager.LoadScene(menuSceneName);
     }
 

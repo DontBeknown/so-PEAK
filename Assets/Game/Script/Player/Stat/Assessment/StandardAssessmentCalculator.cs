@@ -8,19 +8,8 @@ namespace Game.Player.Stat.Assessment
     /// </summary>
     public class StandardAssessmentCalculator : IAssessmentCalculator
     {
-        // Weight constants (from design doc)
-        private const float EFFICIENCY_WEIGHT = 0.4f;
-        private const float SAFETY_WEIGHT = 0.3f;
-        private const float PLANNING_WEIGHT = 0.3f;
         private const float DEATH_PENALTY_PER_DEATH = 10f;
-
-        // Planning tolerance: within this range, the player is treated as matching optimal.
         private const float PLANNING_TOLERANCE_PERCENT = 10f;
-        
-        // Path cost weights
-        private const float DISTANCE_WEIGHT = 0.5f;
-        private const float TIME_WEIGHT = 0.3f;
-        private const float STAMINA_WEIGHT = 0.2f;
         
         public float CalculateEfficiencyScore(PerformanceMetrics metrics, OptimalMetrics optimal)
         {
@@ -62,17 +51,17 @@ namespace Game.Player.Stat.Assessment
         {
             float distanceScore = CalculateToleranceScore(metrics.totalDistance, optimal.optimalDistance);
             float timeScore = CalculateToleranceScore(metrics.totalTime, optimal.optimalTime);
-            float staminaScore = CalculateToleranceScore(metrics.totalStaminaUsed, optimal.expectedStamina);
 
-            float planningScore = (distanceScore * DISTANCE_WEIGHT) +
-                                  (timeScore * TIME_WEIGHT) +
-                                  (staminaScore * STAMINA_WEIGHT);
+            float planningScore = (distanceScore * 0.6f) + (timeScore * 0.4f);
 
             return Mathf.Clamp(planningScore, 0f, 100f);
         }
         
         private float CalculateToleranceScore(float actual, float optimal)
         {
+            if (actual < optimal)
+                return 100f; 
+    
             if (optimal <= 0f)
                 return 100f;
 

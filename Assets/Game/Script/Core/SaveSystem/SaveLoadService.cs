@@ -46,7 +46,8 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     // Current save
     private WorldSaveData currentWorldSave;
     private float autoSaveTimer;
-    private bool freshLevelEntry = false; // Flag to indicate fresh level progression
+    private bool freshLevelEntry = false;
+    private bool _firstSpawnPending = false;
     private float playTimeLastCheckpoint;
     private bool hasPlayTimeCheckpoint;
     
@@ -109,6 +110,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         };
         
         currentWorldSave = newWorld;
+        _firstSpawnPending = true;
         ResetPlayTimeCheckpoint();
         SpawnedObjectStateRegistry.RefreshFromCurrentSave();
         SaveWorld(newWorld);
@@ -594,9 +596,8 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     {
         if (currentWorldSave == null) return false;
         
-        //Debug.Log($"[SaveLoadService] Checking if new world: TotalPlayTime={currentWorldSave.totalPlayTime}");
         // Simple and reliable: new world has 0 play time
-        return currentWorldSave.totalPlayTime == 0f;
+        return _firstSpawnPending;;
     }
 
     /// <summary>
@@ -667,6 +668,17 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         {
             Debug.Log("[SaveLoadService] Fresh level entry flag reset after save.");
         }
+    }
+
+    /// <summary>
+    /// True from CreateNewWorld() until the player's first spawn completes
+    /// (or until they exit via Save & Exit before spawn finishes).
+    /// </summary>
+    public bool IsFirstSpawnPending() => _firstSpawnPending;
+
+    public void MarkFirstSpawnComplete()
+    {
+        _firstSpawnPending = false;
     }
 
     /// <summary>

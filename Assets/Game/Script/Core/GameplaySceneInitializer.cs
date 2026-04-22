@@ -140,6 +140,7 @@ public class GameplaySceneInitializer : MonoBehaviour
 
         TryStartTutorial(resolvedSaveData);  
 
+        saveLoadService.MarkFirstSpawnComplete();
     }
 
     private void AwardStarterCollectablesAfterSpawn()

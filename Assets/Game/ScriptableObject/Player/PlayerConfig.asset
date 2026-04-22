@@ -16,7 +16,7 @@ MonoBehaviour:
   baseRunSpeed: 8
   runAcceleration: 8
   baseClimbSpeed: 2
-  jumpForce: 100
+  jumpForce: 5
   rotationSmoothness: 10
   minSlopeSpeedMultiplier: 0.7
   maxSlopeSpeedMultiplier: 1

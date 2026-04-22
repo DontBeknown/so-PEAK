@@ -156,16 +156,19 @@ namespace Game.Player.Inventory
         {
             if (!addStartingItemsOnStart || _service == null || startingItems == null || startingItems.Count == 0)
             {
+                Debug.Log("[InventoryManagerRefactored] No starting items to add or service not initialized.");
                 return;
             }
 
             if (onlyAddStartingItemsWhenEmpty && !IsInventoryEmpty())
             {
+                Debug.Log("[InventoryManagerRefactored] Inventory not empty, skipping adding starting items.");
                 return;
             }
 
             if(SaveLoadService.Instance != null && !SaveLoadService.Instance.IsNewWorld())
             {
+                Debug.Log("[InventoryManagerRefactored] Not a new world, skipping adding starting items.");
                 return;
             }
 
