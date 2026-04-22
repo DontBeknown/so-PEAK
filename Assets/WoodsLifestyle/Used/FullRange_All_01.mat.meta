@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 3fe5f3523d422184f8e8494d7940589c
+guid: cd18a0c9373f87242beb64d23a88e5ee
 timeCreated: 1475509709
 licenseType: Store
 NativeFormatImporter:
@@ -11,5 +11,5 @@ AssetOrigin:
   productId: 65306
   packageName: 'Low Poly: Woods Lifestyle'
   packageVersion: 1.1
-  assetPath: Assets/WoodsLifestyle/Materials/FullRange_All_01.mat
+  assetPath: Assets/WoodsLifestyle/Used/FullRange_All_01.mat
   uploadId: 140200

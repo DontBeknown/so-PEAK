@@ -33,6 +33,6 @@ public class DisableDuplicateEventSystem : MonoBehaviour
         else
             eventSystemToDisable.enabled = false;
 
-        Debug.Log($"[DisableDuplicateEventSystem] Found {allEventSystems.Length} EventSystems. Disabled: {eventSystemToDisable.name}", this);
+        //Debug.Log($"[DisableDuplicateEventSystem] Found {allEventSystems.Length} EventSystems. Disabled: {eventSystemToDisable.name}", this);
     }
 }

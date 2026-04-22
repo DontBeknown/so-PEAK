@@ -18,6 +18,9 @@ public class HJBMeshDataProvider : MonoBehaviour
     public RenderController renderController;
     public WorldDataManager worldDataManager;
 
+    [Header("Debug")]
+    public bool enableDebugLog;
+
     public float[,] heightMap;
     public float[,] slopeMap;
 
@@ -98,7 +101,7 @@ public class HJBMeshDataProvider : MonoBehaviour
             return;
         }
 
-        Debug.Log($"[HJBMeshDataProvider] Building snapshot for {level}...");
+        if (enableDebugLog) Debug.Log($"[HJBMeshDataProvider] Building snapshot for {level}...");
 
         if (profile.generator.completeMap == null)
             profile.generator.TerrainDrawingForPath(worldDataManager.GetSeedForLevel(level));
@@ -132,7 +135,7 @@ public class HJBMeshDataProvider : MonoBehaviour
     {
         if (levelSnapshots.ContainsKey(level))
         {
-            Debug.Log($"[HJBMeshDataProvider] Snapshot already exists for {level}, skipping.");
+            if (enableDebugLog) Debug.Log($"[HJBMeshDataProvider] Snapshot already exists for {level}, skipping.");
             return;
         }
 
@@ -152,7 +155,7 @@ public class HJBMeshDataProvider : MonoBehaviour
                     Mathf.Clamp(worldDataManager.activeGen.spawnCoord.y + buf, 0, this.height - 1)
                 )
             };
-            Debug.Log($"[HJBMeshDataProvider] Snapshot ready for {level} (current level).");
+            if (enableDebugLog) Debug.Log($"[HJBMeshDataProvider] Snapshot ready for {level} (current level).");
             return;
         }
 
@@ -163,7 +166,7 @@ public class HJBMeshDataProvider : MonoBehaviour
     {
         foreach (WorldLevel level in System.Enum.GetValues(typeof(WorldLevel)))
             PreloadSnapshotForLevel(level);
-        Debug.Log("[HJBMeshDataProvider] All level snapshots preloaded.");
+        if (enableDebugLog) Debug.Log("[HJBMeshDataProvider] All level snapshots preloaded.");
     }
 
     public void ApplySnapshot(WorldLevel level)

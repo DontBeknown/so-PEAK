@@ -7,6 +7,8 @@ public class HJBBacktracker : MonoBehaviour
     public HJBPathSolver solver;
     public HJBMeshDataProvider terrain;
     public HJBPathVisualizer visualizer;
+    [Header("Debug")]
+    public bool enableDebugLog;
     public List<Vector3> BuildPath(
     Vector2Int start,
     Vector2Int goal)
@@ -16,11 +18,11 @@ public class HJBBacktracker : MonoBehaviour
         Vector2Int p = start;
         path.Add(GridToWorld(p.x, p.y));
 
-        Debug.Log($"[Backtracker] Starting at: {start}, Goal is: {goal}");
-        Debug.Log($"[Backtracker] Initial Start T_Value: {solver.T[p.x, p.y]}");
-        Debug.Log($"[Backtracker] Initial Goal T_Value: {solver.T[goal.x, goal.y]}");
+        if (enableDebugLog) Debug.Log($"[Backtracker] Starting at: {start}, Goal is: {goal}");
+        if (enableDebugLog) Debug.Log($"[Backtracker] Initial Start T_Value: {solver.T[p.x, p.y]}");
+        if (enableDebugLog) Debug.Log($"[Backtracker] Initial Goal T_Value: {solver.T[goal.x, goal.y]}");
 
-        int safety = 0; // »éÍ§¡Ñ¹ infinite loop
+        int safety = 0; // ï¿½ï¿½Í§ï¿½Ñ¹ infinite loop
 
         while (p != goal && safety < 10000)
         {
@@ -33,9 +35,9 @@ public class HJBBacktracker : MonoBehaviour
             foreach (var dir in
                 DirectionUtility.Directions16)
             {
-                // ?? á¡éä¢: ¡èÍ¹Ë¹éÒ¹Õé + dir ¸ÃÃÁ´Ò «Öè§ÁÑ¹¢ÂÑºá¤è 1 ªèÍ§
-                // ã¹ Solver àÃÒãªéÃÐÂÐ¡éÒÇ (step) ã¹¡ÒÃ¤Ó¹Ç³ T 
-                // ´Ñ§¹Ñé¹µÍ¹á¡ÐÃÍÂ¡ÅÑº (Backtrack) ¨ÐµéÍ§¤Ù³ÃÐÂÐ step ãËéµÃ§¡Ñ¹´éÇÂ
+                // ?? ï¿½ï¿½ï¿½: ï¿½ï¿½Í¹Ë¹ï¿½Ò¹ï¿½ï¿½ + dir ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½Ñºï¿½ï¿½ 1 ï¿½ï¿½Í§
+                // ï¿½ Solver ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ (step) ã¹¡ï¿½Ã¤Ó¹Ç³ T 
+                // ï¿½Ñ§ï¿½ï¿½é¹µÍ¹ï¿½ï¿½ï¿½ï¿½Â¡ï¿½Ñº (Backtrack) ï¿½Ðµï¿½Í§ï¿½Ù³ï¿½ï¿½ï¿½ï¿½ step ï¿½ï¿½ï¿½Ã§ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½
                 Vector2Int p2 =
                     p + Vector2Int.RoundToInt(dir * solver.step);
 
@@ -62,8 +64,8 @@ public class HJBBacktracker : MonoBehaviour
             path.Add(GridToWorld(
                 p.x, p.y));
             
-            // àªç¤ÇèÒà¢éÒã¡Åé Goal ã¹ÃÐÂÐ¡éÒÇ (step) ËÃ×ÍÂÑ§ 
-            // ¶éÒãªè ãËé¡ÃÐâ´´à¢éÒ Goal àÅÂ à¾×èÍ»éÍ§¡Ñ¹¡ÒÃà´é§ä»ÁÒ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Goal ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ (step) ï¿½ï¿½ï¿½ï¿½ï¿½Ñ§ 
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½â´´ï¿½ï¿½ï¿½ Goal ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Í»ï¿½Í§ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             if (Vector2Int.Distance(p, goal) <= solver.step)
             {
                 p = goal;
@@ -72,7 +74,7 @@ public class HJBBacktracker : MonoBehaviour
             }
         }
         
-        Debug.Log($"[Backtracker] Finished! Path length: {path.Count}");
+        if (enableDebugLog) Debug.Log($"[Backtracker] Finished! Path length: {path.Count}");
         return path;
     }
 
