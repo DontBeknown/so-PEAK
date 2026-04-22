@@ -47,6 +47,7 @@ public class WorldDataManager : MonoBehaviour
 
     //ridge expanded
     [HideInInspector] public float[,] expandedRoadRidge;
+    [HideInInspector] public float[,] expandedRiskMap;
     [HideInInspector] public Texture2D roadRidgeTexture;
     [HideInInspector] public Color fieldColor, roadColor, sideRockColor;
     [HideInInspector] public int activeLevelSeed, seed1, seed2, seed3;
@@ -98,6 +99,10 @@ public class WorldDataManager : MonoBehaviour
         expandedRoadRidge = new float[activeGen.mapWidth + activeGen.bufferLength, activeGen.mapLength + activeGen.bufferLength];
         BufferGen.GenRoadMaskWithBuffer(activeGen.roadRidge, expandedRoadRidge, activeGen.bufferLength);
 
+        //risk Expanded
+        expandedRiskMap = new float[activeGen.mapWidth + activeGen.bufferLength, activeGen.mapLength + activeGen.bufferLength];
+        BufferGen.GenMapWithBuffer(activeGen.riskMap, expandedRiskMap, activeGen.bufferLength);
+
         // get color and prepare ridge for render shader
         roadColor = activeGen.roadColor;
         sideRockColor = activeGen.sideRockColor;
@@ -106,9 +111,6 @@ public class WorldDataManager : MonoBehaviour
 
         //SpawnCoord Getting
         GetSpawnCoord();
-
-        //Debug Roadmask to png for seeing
-        //SaveTextureAsPNG(roadRidgeTexture, "TerrainGenerator", "DebugRoadMask.png");
 
         // 4. Generate Resource Noise Maps (Using PROFILE specific list)
         Dictionary<NoiseType, float[,]> availableNoiseMaps = new Dictionary<NoiseType, float[,]>();
