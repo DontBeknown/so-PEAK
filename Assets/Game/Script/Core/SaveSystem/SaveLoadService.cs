@@ -908,7 +908,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     {
         return new WorldStateSaveData
         {
-            currentTimeOfDay = 6f, // Start at morning
+            currentTimeOfDay = 8f, // Start at morning
             dayNumber = 1,
             currentWeather = "Clear",
             temperature = 20f,

@@ -13,7 +13,7 @@ public class GameplaySceneInitializer : MonoBehaviour
     [Header("References")]
     [SerializeField] private WorldPersistenceManager worldPersistence;
     [SerializeField] private SaveLoadService saveLoadService; // Optional: will use persisted instance if not set
-    
+    [SerializeField] private DayNightCycleManager dayNightManager; // Optional: will find in scene if not set
     [Header("Debug")]
     [SerializeField] private bool enableDebug = false;
     private void Awake()
@@ -86,7 +86,7 @@ public class GameplaySceneInitializer : MonoBehaviour
             // Restore day/night immediately — does not require the player
             if (saveData.worldState != null)
             {
-                var dayNightManager = FindFirstObjectByType<DayNightCycleManager>();
+               
                 if (dayNightManager != null)
                 {
                     dayNightManager.SetTime(saveData.worldState.currentTimeOfDay);
@@ -110,6 +110,11 @@ public class GameplaySceneInitializer : MonoBehaviour
             RestoreEquipment(saveData.playerData);
             RestoreResourceNodes(saveData.worldState);
             
+            if (dayNightManager != null)
+            {
+                dayNightManager.SetPaused(false);
+            }
+
             if (enableDebug) Debug.Log("World state restored successfully");
         }
         else
@@ -133,7 +138,7 @@ public class GameplaySceneInitializer : MonoBehaviour
 
         AwardStarterCollectablesAfterSpawn();
 
-        TryStartTutorial(resolvedSaveData);
+        TryStartTutorial(resolvedSaveData);  
 
     }
 

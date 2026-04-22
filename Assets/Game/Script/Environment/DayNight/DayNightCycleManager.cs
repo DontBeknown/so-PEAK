@@ -29,7 +29,7 @@ namespace Game.Environment.DayNight
         private int _currentDay = 1;
         private TimeOfDay _currentTimeOfDay;
         private TimeOfDay _previousTimeOfDay;
-        private bool _isPaused = false;
+        private bool _isPaused = true;
         
         // Skybox blending
         private float _skyboxBlendProgress = 0f;
@@ -212,6 +212,11 @@ namespace Game.Environment.DayNight
             EnsureSubscribedToEvents();
             RefreshTorchEquippedState();
             EvaluateTorchNightFogOverride();
+
+            if (showDebugInfo)
+            {
+                Debug.Log("[DayNightCycle] Waiting for gameplay initialization to resume time progression");
+            }
         }
         
         private void OnDestroy()
