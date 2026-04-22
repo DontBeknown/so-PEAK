@@ -136,5 +136,10 @@ namespace Game.Environment.Tornado
 
             return targetPosition;
         }
+
+        public void SetStormDirection(Vector3 direction)
+        {
+            stormDirection = direction;
+        }
     }
 }

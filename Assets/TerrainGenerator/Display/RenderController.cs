@@ -12,6 +12,7 @@ public class RenderController : MonoBehaviour
 {
     [Header("Core Links")]
     public WorldDataManager dataManager; // LINK TO YOUR NEW SCRIPT HERE
+    public NaturalEventDirector eventSpawner;
 
     [Header("References")]
     public Transform player;
@@ -79,6 +80,17 @@ public class RenderController : MonoBehaviour
                 true
             // It will automatically default to saving at "SavedMaps/RoadMap.png"
             );
+
+            if (eventSpawner != null)
+            {
+                // Pass the expanded risk map down to the event spawner
+                // (Assuming your dataManager has a riskMap variable)
+
+                eventSpawner.InitializeMap(dataManager.expandedRiskMap,
+                    dataManager.globalHeightMap,
+                    dataManager.activeGen.meshHeightMultiplier);
+            }
+
 
             SetupStageMaterial();
 
@@ -564,6 +576,11 @@ public class RenderController : MonoBehaviour
                 cam.Follow = newPlayer;
                 cam.LookAt = cameraAimTarget;
             }
+        }
+
+        if (eventSpawner != null)
+        {
+            eventSpawner.playerTransform = newPlayer;
         }
     }
 

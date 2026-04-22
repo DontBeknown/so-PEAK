@@ -24,7 +24,7 @@ MonoBehaviour:
   PositionOffset: {x: 0, y: 0, z: 0}
   RoadRule: 1
   MinSpacing: 100
-  Density: 1
+  Density: 0.5
   MaxSlopeDiff: 1
   RequiredNoiseMap: 0
   NoiseThreshold: 0.5
