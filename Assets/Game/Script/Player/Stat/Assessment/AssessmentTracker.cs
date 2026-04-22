@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Game.Core.DI;
+using Game.Core.Events;
 
 namespace Game.Player.Stat.Assessment
 {
@@ -15,6 +16,8 @@ namespace Game.Player.Stat.Assessment
 
         // Assessment data
         private PerformanceMetrics currentMetrics;
+        private int deathCount;
+        private IEventBus eventBus;
 
         // Cumulative totals saved from previous sessions
         private AssessmentSaveData savedBaseline;
@@ -22,6 +25,34 @@ namespace Game.Player.Stat.Assessment
         // Returns the assigned tracker or resolves it from the ServiceContainer as a fallback.
         private PlayerStatsTrackerService StatsTracker =>
             statsTracker != null ? statsTracker : ServiceContainer.Instance.TryGet<PlayerStatsTrackerService>();
+
+        private void Start()
+        {
+            eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+        }
+
+        private void OnEnable()
+        {
+            eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>();
+            if (eventBus == null)
+                return;
+
+            // Defensive unsubscribe avoids duplicate handlers when this component
+            // is re-enabled or reinitialized within the same EventBus lifetime.
+            eventBus.Unsubscribe<PlayerDeathEvent>(OnPlayerDeath);
+            eventBus.Subscribe<PlayerDeathEvent>(OnPlayerDeath);
+        }
+
+        private void OnDisable()
+        {
+            eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>();
+            eventBus?.Unsubscribe<PlayerDeathEvent>(OnPlayerDeath);
+        }
+
+        private void OnDestroy()
+        {
+            eventBus?.Unsubscribe<PlayerDeathEvent>(OnPlayerDeath);
+        }
         
         /// <summary>
         /// Gets current performance metrics collected during expedition
@@ -66,6 +97,7 @@ namespace Game.Player.Stat.Assessment
 
             // Get health loss incidents count
             currentMetrics.healthLossIncidents = tracker.GetHealthLossIncidents();
+            currentMetrics.deathCount = deathCount;
 
 
 
@@ -79,6 +111,7 @@ namespace Game.Player.Stat.Assessment
         public void LoadBaseline(AssessmentSaveData baseline)
         {
             savedBaseline = baseline;
+            deathCount = baseline != null ? baseline.deathCount : 0;
             // Restore all individual trackers (distance, stamina, health, fatigue, time, consumables)
             StatsTracker?.LoadBaseline(baseline);
         }
@@ -99,6 +132,7 @@ namespace Game.Player.Stat.Assessment
                 totalRiskyEvents        = m.totalRiskyEvents,
                 encounterredRisks       = m.encounterredRisks,
                 healthLossIncidents     = m.healthLossIncidents,
+                deathCount              = m.deathCount,
                 totalHealthLost         = m.totalHealthLost,
                 totalFatigueAccumulated = StatsTracker != null ? StatsTracker.GetFatigueAccumulated() : 0f,
                 actualPathCost          = m.actualPathCost,
@@ -108,6 +142,8 @@ namespace Game.Player.Stat.Assessment
                 riskEvents              = StatsTracker?.GetRiskEventsForSave() ?? new System.Collections.Generic.List<RiskEventSaveData>()
             };
         }
+
+            public int DeathCount => deathCount;
 
 
         /// <summary>
@@ -149,6 +185,11 @@ namespace Game.Player.Stat.Assessment
                 return (stats.total, stats.encountered, stats.avoided);
             }
             return (0, 0, 0);
+        }
+
+        private void OnPlayerDeath(PlayerDeathEvent _)
+        {
+            deathCount++;
         }
         
 #if UNITY_EDITOR

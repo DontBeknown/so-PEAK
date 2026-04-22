@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.Tutorial.TutorialStepData
   stepId: stats
   title: Survival
-  instructionText: Watch your hunger, stamina, and health. Happy Hiking !!
+  instructionText: Watch your hunger, stamina, and health. Happy Hiking !! RIGHT
+    CLICK to progress diallog
   inputHintText: 
   completionType: 0
   completionThreshold: 5

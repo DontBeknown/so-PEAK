@@ -21,6 +21,7 @@ public class PerformanceMetrics
     public int totalRiskyEvents;        // Total possible risky events
     public int encounterredRisks;       // Actual risks encountered
     public int healthLossIncidents;     // Times health was damaged
+    public int deathCount;              // Player deaths during the expedition
     public float totalHealthLost;
     
     // Path Planning

@@ -165,6 +165,8 @@ public class DeathScreenUI : MonoBehaviour, IUIPanel
             return;
         }
 
+        saveService.SaveDeathCountOnly();
+
         string worldGuid = saveService.CurrentWorldSave.worldGuid;
         WorldSaveData data = saveService.LoadWorld(worldGuid);
 

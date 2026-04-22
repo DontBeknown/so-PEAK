@@ -185,6 +185,7 @@ public class AssessmentReportUI : MonoBehaviour
         text += $"  Risks Avoided: {details.risksAvoided}\n";
         text += $"  Risks Encountered: {details.risksEncountered}\n";
         text += $"  Avoidance Rate: {details.avoidanceRate:F1}%\n";
+        text += $"  Deaths: {details.deathCount} (-{details.deathPenaltyScore:F1})\n";
         text += $"<i>{details.feedback}</i>";
         
         safetyDetailsText.text = text;

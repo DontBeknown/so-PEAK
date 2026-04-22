@@ -194,6 +194,12 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
         // Stop player movement
         BlockPlayerInput(true);
 
+        var playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
+        if (playerStats != null)
+        {
+            playerStats.SetImmunity(true);
+        }
+
         simpleStatsHUD.Hide();
         
         // Stop tracking when UI is opened
@@ -273,6 +279,12 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
         
         // Resume player movement
         BlockPlayerInput(false);
+
+        var playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
+        if (playerStats != null)
+        {
+            playerStats.SetImmunity(false);
+        }
         
         // Resume tracking when UI is closed
         if (trackerService != null)

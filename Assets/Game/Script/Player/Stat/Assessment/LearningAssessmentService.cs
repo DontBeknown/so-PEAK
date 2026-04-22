@@ -9,6 +9,8 @@ namespace Game.Player.Stat.Assessment
     /// </summary>
     public class LearningAssessmentService : MonoBehaviour
     {
+        private const float DEATH_PENALTY_PER_DEATH = 10f;
+
         [Header("Dependencies")]
         [SerializeField] private PlayerStatsTrackerService statsTracker;
         [SerializeField] private AssessmentTracker assessmentTracker;
@@ -75,6 +77,11 @@ namespace Game.Player.Stat.Assessment
         {
             var tracker = AssessmentTrackerRef;
             return tracker != null ? tracker.GetSaveData() : new AssessmentSaveData();
+        }
+
+        public int GetDeathCount()
+        {
+            return AssessmentTrackerRef != null ? AssessmentTrackerRef.DeathCount : 0;
         }
 
         /// <summary>
@@ -249,6 +256,11 @@ namespace Game.Player.Stat.Assessment
                              avoidanceRate >= 70f ? "ปลอดภัย แต่ยังมีความเสี่ยงบางส่วน" :
                              avoidanceRate >= 50f ? "เสี่ยงค่อนข้างมาก ควรระมัดระวังมากขึ้น" :
                              "อันตราย! พบเหตุการณ์เสี่ยงมากเกินไป";
+
+            if (metrics.deathCount > 0)
+            {
+                feedback += $" (เสียชีวิต {metrics.deathCount} ครั้ง)";
+            }
             
             return new SafetyBreakdown
             {
@@ -256,6 +268,8 @@ namespace Game.Player.Stat.Assessment
                 risksEncountered = metrics.encounterredRisks,
                 avoidanceRate = avoidanceRate,
                 healthLossScore = safetyScore,
+                deathCount = metrics.deathCount,
+                deathPenaltyScore = metrics.deathCount * DEATH_PENALTY_PER_DEATH,
                 feedback = feedback
             };
         }

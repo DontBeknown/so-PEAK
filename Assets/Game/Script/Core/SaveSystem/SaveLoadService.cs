@@ -136,7 +136,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             {
                 json = CompressString(json);
             }
-            
+
             File.WriteAllText(filePath, json);
             
             // Update metadata
@@ -163,6 +163,30 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             Debug.LogError($"Failed to save world: {e.Message}");
             return false;
         }
+    }
+
+    /// <summary>
+    /// Saves only the current death count into the existing assessment save block.
+    /// Useful when respawning so the live death counter survives reload without
+    /// recalculating or overwriting the rest of the expedition metrics.
+    /// </summary>
+    public bool SaveDeathCountOnly()
+    {
+        if (currentWorldSave == null)
+        {
+            return false;
+        }
+
+        var learningAssessment = ServiceContainer.Instance.TryGet<Game.Player.Stat.Assessment.LearningAssessmentService>();
+        if (learningAssessment == null)
+        {
+            return false;
+        }
+
+        currentWorldSave.assessmentData ??= new AssessmentSaveData();
+        currentWorldSave.assessmentData.deathCount = learningAssessment.GetDeathCount();
+
+        return SaveWorld(currentWorldSave, refreshFreshLevelEntryFlag: false);
     }
     
     public WorldSaveData LoadWorld(string worldGuid)

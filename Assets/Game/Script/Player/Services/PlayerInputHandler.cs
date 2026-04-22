@@ -121,8 +121,8 @@ namespace Game.Player.Services
             };
             _inputActions.Player.Climb.performed += _ => 
             {
-                if (!IsInputBlocked())
-                    HandleClimbInput();
+                //if (!IsInputBlocked())
+                    //HandleClimbInput();
             };
 
             // Item/UI inputs - trigger events (inventory toggle always works)

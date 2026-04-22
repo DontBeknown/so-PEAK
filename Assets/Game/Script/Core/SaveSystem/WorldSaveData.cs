@@ -223,6 +223,7 @@ public class AssessmentSaveData
     public int   totalRiskyEvents;
     public int   encounterredRisks;
     public int   healthLossIncidents;
+    public int   deathCount;
     public float totalHealthLost;
     public int   totalHealthLossIncidents;
     public float totalFatigueAccumulated;

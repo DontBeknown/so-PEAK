@@ -141,38 +141,41 @@ public class PlayerStats : MonoBehaviour
 
         UpdateThirstDrainReductionBuff(dt);
 
-        hunger.Tick(dt);
-        thirst.Tick(dt);
-        stamina.Tick(dt);
-        fatigue.Tick(dt);
-
-        // Temperature: gather heat sources → set env target → tick
-        temperature.GatherHeatSources(transform.position);
-        if (_dayNightService != null)
+        if (!isImmune)
         {
-            int level = _saveLoadService?.GetCurrentLevel() ?? 1;
-            AnimationCurve selectedCurve = level switch
+            hunger.Tick(dt);
+            thirst.Tick(dt);
+            stamina.Tick(dt);
+            fatigue.Tick(dt);
+
+            // Temperature: gather heat sources → set env target → tick
+            temperature.GatherHeatSources(transform.position);
+            if (_dayNightService != null)
             {
-                2 => config.temperatureDayCurveLevel2,
-                3 => config.temperatureDayCurveLevel3,
-                _ => config.temperatureDayCurveLevel1
-            };
+                int level = _saveLoadService?.GetCurrentLevel() ?? 1;
+                AnimationCurve selectedCurve = level switch
+                {
+                    2 => config.temperatureDayCurveLevel2,
+                    3 => config.temperatureDayCurveLevel3,
+                    _ => config.temperatureDayCurveLevel1
+                };
 
-            float ambient = selectedCurve != null
-                ? selectedCurve.Evaluate(_dayNightService.DayProgress)
-                : 37f;
-            temperature.SetEnvironmentTarget(ambient);
+                float ambient = selectedCurve != null
+                    ? selectedCurve.Evaluate(_dayNightService.DayProgress)
+                    : 37f;
+                temperature.SetEnvironmentTarget(ambient);
+            }
+
+            // Apply equipment warmth insulation before ticking temperature drift.
+            float warmthInsulation = statModifierCalculator?.GetModifiedValue(StatModifierType.WarmthInsulation, 0f) ?? 0f;
+            temperature.SetInsulation(warmthInsulation);
+
+            temperature.Tick(dt);
+
+            // Push temperature penalties into hunger/thirst each frame
+            hunger.SetTemperatureMultiplier(temperature.GetHungerDrainMultiplier());
+            thirst.SetTemperatureMultiplier(temperature.GetThirstDrainMultiplier());
         }
-
-        // Apply equipment warmth insulation before ticking temperature drift.
-        float warmthInsulation = statModifierCalculator?.GetModifiedValue(StatModifierType.WarmthInsulation, 0f) ?? 0f;
-        temperature.SetInsulation(warmthInsulation);
-
-        temperature.Tick(dt);
-
-        // Push temperature penalties into hunger/thirst each frame
-        hunger.SetTemperatureMultiplier(temperature.GetHungerDrainMultiplier());
-        thirst.SetTemperatureMultiplier(temperature.GetThirstDrainMultiplier());
 
         if (!isImmune && hunger.ShouldHurt)
         {
@@ -296,6 +299,15 @@ public class PlayerStats : MonoBehaviour
     {
         TakeDamage(dmg, DeathCause.Falling);
     }
+
+    /// <summary>
+    /// Explicitly toggles temporary damage immunity.
+    /// </summary>
+    public void SetImmunity(bool value)
+    {
+        isImmune = value;
+    }
+
     public void Heal(float amount) => health.Heal(amount);
     public void Eat(float nutrition) => hunger.Add(nutrition);
     public void Drink(float water) => thirst.Add(water);

@@ -12,6 +12,10 @@ namespace Game.Player.Stat.Assessment
         private const float EFFICIENCY_WEIGHT = 0.4f;
         private const float SAFETY_WEIGHT = 0.3f;
         private const float PLANNING_WEIGHT = 0.3f;
+        private const float DEATH_PENALTY_PER_DEATH = 10f;
+
+        // Planning tolerance: within this range, the player is treated as matching optimal.
+        private const float PLANNING_TOLERANCE_PERCENT = 10f;
         
         // Path cost weights
         private const float DISTANCE_WEIGHT = 0.5f;
@@ -37,59 +41,49 @@ namespace Game.Player.Stat.Assessment
         
         public float CalculateSafetyScore(PerformanceMetrics metrics)
         {
-            if (metrics.totalRiskyEvents == 0)
-                return 100f;
-            
-            // Avoidance rate
-            float avoidanceRate = 1f - ((float)metrics.encounterredRisks / metrics.totalRiskyEvents);
+            float avoidanceRate = metrics.totalRiskyEvents > 0
+                ? 1f - ((float)metrics.encounterredRisks / metrics.totalRiskyEvents)
+                : 1f;
             
             // Base score from avoidance
             float baseScore = avoidanceRate * 100f;
             
             // Penalty for health loss (each incident reduces score)
             float healthPenalty = metrics.healthLossIncidents * 5f; // -5 points per incident
+
+            float deathPenalty = metrics.deathCount * DEATH_PENALTY_PER_DEATH;
             
-            float finalScore = baseScore - healthPenalty;
+            float finalScore = baseScore - healthPenalty - deathPenalty;
             
             return Mathf.Clamp(finalScore, 0f, 100f);
         }
         
         public float CalculatePlanningScore(PerformanceMetrics metrics, OptimalMetrics optimal)
         {
-            // Calculate actual path cost
-            float actualCost = CalculatePathCost(
-                metrics.totalDistance,
-                metrics.totalTime,
-                metrics.totalStaminaUsed
-            );
-            
-            // Calculate optimal path cost
-            float optimalCost = CalculatePathCost(
-                optimal.optimalDistance,
-                optimal.optimalTime,
-                optimal.expectedStamina
-            );
+            float distanceScore = CalculateToleranceScore(metrics.totalDistance, optimal.optimalDistance);
+            float timeScore = CalculateToleranceScore(metrics.totalTime, optimal.optimalTime);
+            float staminaScore = CalculateToleranceScore(metrics.totalStaminaUsed, optimal.expectedStamina);
 
-            if (optimalCost <= 0f)
-                return 100f;
+            float planningScore = (distanceScore * DISTANCE_WEIGHT) +
+                                  (timeScore * TIME_WEIGHT) +
+                                  (staminaScore * STAMINA_WEIGHT);
 
-            if (actualCost <= optimalCost)
-                return 100f;
-            
-            // Deviation percentage
-            float deviation = (actualCost - optimalCost) / optimalCost;
-            
-            // Score: 100 - (excess cost × 100)
-            float planningScore = 100f - (deviation * 100f);
-            
             return Mathf.Clamp(planningScore, 0f, 100f);
         }
         
-        private float CalculatePathCost(float distance, float time, float stamina)
+        private float CalculateToleranceScore(float actual, float optimal)
         {
-            return (distance * DISTANCE_WEIGHT) + 
-                   (time * TIME_WEIGHT) + 
-                   (stamina * STAMINA_WEIGHT);
+            if (optimal <= 0f)
+                return 100f;
+
+            float deviationPercent = Mathf.Abs((actual - optimal) / optimal) * 100f;
+            if (deviationPercent <= PLANNING_TOLERANCE_PERCENT)
+                return 100f;
+
+            float excessPercent = deviationPercent - PLANNING_TOLERANCE_PERCENT;
+            float normalizedExcess = excessPercent / Mathf.Max(100f - PLANNING_TOLERANCE_PERCENT, 0.0001f);
+
+            return Mathf.Clamp(100f - (normalizedExcess * 100f), 0f, 100f);
         }
     }
 }

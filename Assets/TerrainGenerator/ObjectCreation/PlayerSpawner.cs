@@ -74,6 +74,13 @@ public class PlayerSpawner : MonoBehaviour
            WorldSaveData saveData = SaveLoadService.Instance.CurrentWorldSave;
            targetXZ = new Vector3(saveData.playerData.position[0], saveData.playerData.position[1], saveData.playerData.position[2]);
            if (enableDebugLog) Debug.Log($"[PlayerSpawner] Using saved position: {targetXZ}");
+
+            if(targetXZ.x == 0 && targetXZ.z == 0)
+            {
+                targetXZ = proceduralSpawnPosition;
+                if (enableDebugLog) Debug.LogWarning($"[PlayerSpawner] Saved position was zero, falling back to procedural spawn position: {targetXZ}");
+            }
+
         }
         else
         {
