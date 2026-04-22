@@ -19,6 +19,9 @@ public class HoldInteractable_DrawPath : HoldInteractableBase
     [SerializeField] private bool destroyAfterUse;
     [SerializeField] private ScaleDownDestroyAnimation destroyAnimation;
 
+    [Header("Map Data")]
+    [SerializeField] private HeldMapData mapData;
+
     public override string InteractionPrompt => "Draw Path to Peak";
     public override bool CanInteract => true;
 
@@ -31,6 +34,26 @@ public class HoldInteractable_DrawPath : HoldInteractableBase
         if (hjbClickPathController != null)
         {
             hjbClickPathController.ToggleCachedPathDisplay(fadeInDuration, displayDuration, fadeOutDuration);
+
+            var uiServiceProvider = UIServiceProvider.Instance;
+            if (uiServiceProvider == null)
+            {
+                Debug.LogWarning("[MapBehavior] UIServiceProvider not found in scene.");
+                return;
+            }
+
+            var mapPanel = uiServiceProvider.GetPanel<MapViewerPanel>();
+            if (mapPanel == null)
+            {
+                Debug.LogWarning("[MapBehavior] MapViewerPanel not found in the UI scene.");
+                return;
+            }
+
+            if (!mapPanel.SetMapData(mapData))
+                return;
+
+            uiServiceProvider.OpenPanel(mapPanel.PanelName);
+
             MapPathRevealState.Reveal(displayDuration);
 
             if (destroyAfterUse)

@@ -7,6 +7,7 @@ using UnityEngine.UI;
 using Game.Core.DI;
 using Game.Core.Events;
 using Game.Sound.Events;
+using Game.Player;
 
 namespace Game.UI
 {
@@ -43,6 +44,10 @@ namespace Game.UI
         [SerializeField] private int lineThickness = 3;
         [SerializeField] private int endpointRadius = 3;
         [SerializeField] private float pathFadeDuration = 0.4f;
+
+        [Header("Player Position Marker")]
+        [SerializeField] private Color playerMarkerColor = Color.cyan;
+        [SerializeField] private int playerMarkerRadius = 15;
 
         private Tween activeTween;
         private IEventBus eventBus;
@@ -363,7 +368,22 @@ namespace Game.UI
             int ey1 = Mathf.RoundToInt(path[path.Count - 1].z);
             PlotDisc(tex, ex1, ey1, endpointRadius, endpointColor);
 
+            // Draw player position marker
+            DrawPlayerPositionMarker(tex);
+
             tex.Apply();
+        }
+
+        private void DrawPlayerPositionMarker(Texture2D tex)
+        {
+            var playerController = ServiceContainer.Instance.TryGet<PlayerControllerRefactored>();
+            if (playerController != null)
+            {
+                Vector3 playerPos = playerController.transform.position;
+                int px = Mathf.RoundToInt(playerPos.x);
+                int py = Mathf.RoundToInt(playerPos.z);
+                PlotDisc(tex, px, py, playerMarkerRadius, playerMarkerColor);
+            }
         }
 
         private static void PlotLine(Texture2D tex, int x0, int y0, int x1, int y1, Color c, int thickness)
