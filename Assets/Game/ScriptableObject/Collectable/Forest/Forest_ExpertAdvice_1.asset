@@ -15,20 +15,21 @@ MonoBehaviour:
   id: Forest_ExpertAdvice_1
   headerName: "Expert Field Notes \u2014 Surviving a Dry Landslide"
   content: "Should you face a <b><color=#C60004>dry landslide </color></b>, survival
-    depends on reading the physical signs and escaping the direction of movement.\n\n1.
-    Escape\n<b><color=#C60004>\tRun laterally:</color></b> If you see earth or stone
-    beginning to move,  <b><color=#C60004>flee perpendicular to the slide.</color></b>
-    Never run downhill in the same direction \u2014 the slide will outrun you.\n<b><color=#C60004>\tMove
-    toward stable high ground: </color></b> Solid rock or a firm ridgeline is your
-    destination.\n<b><color=#C60004>\tDo not shelter behind trees: </color></b>In
+    depends on reading the physical signs and escaping the direction of movement.\n\n<size=120%><b>1.
+    Escape</b></size>\n\n* <color=#cc6600><b>Run laterally:</b></color> If you see
+    earth or stone beginning to move, flee perpendicular to the slide. Never run
+    downhill in the same direction \u2014 the slide will outrun you.\n* <color=#cc6600><b>Move
+    toward stable high ground:</b></color> Solid rock or a firm ridgeline is your
+    destination.\n* <color=#cc6600><b>Do not shelter behind trees: </b></color>In
     a dry slide, the impact force can fell them onto you. Find a large deeply-anchored
-    boulder or solid structure instead.\n\n\r2. Warning Signs\n<b><color=#C60004>\tUnusual
-    sounds: </color></b> stones striking each other, the sharp cracking of branches,
-    or a deep rumbling from beneath the earth like a freight train underground.\n<b><color=#C60004>\tFresh
-    fissures: </color></b> new cracks appearing on the trail surface or along the
-    hillside.\n<b><color=#C60004>\tDust rising from the slope without any wind: </color></b>
-    That means the earth is already beginning to move.\n\n3. Safe Ground\n<b><color=#C60004>\tAvoid
-    narrow gullies: :</color></b> Debris flows into low channels. Stay clear of them
+    boulder or solid structure instead.\n\n\r<size=120%><b>2. Warning Signs</b></size>\n\n*
+    <color=#cc6600><b>Unusual sounds: </b></color> stones striking each other, the
+    sharp cracking of branches, or a deep rumbling from beneath the earth like a
+    freight train underground.\n* <color=#cc6600><b>Fresh fissures: </b></color>
+    new cracks appearing on the trail surface or along the hillside.\n* <color=#cc6600><b>Dust
+    rising from the slope without any wind: </color></b> That means the earth is
+    already beginning to move.\n\n<size=120%><b>3. Safe Ground</b></size>\n\n* <color=#cc6600><b>Avoid
+    narrow gullies:</b></color> Debris flows into low channels. Stay clear of them
     even in bright sunlight."
   type: 0
   biome: 0
