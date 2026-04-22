@@ -287,6 +287,7 @@ public class PlayerStatsTrackerService : MonoBehaviour
 
         // Restore consumable data
         LoadConsumableBaseline(data.consumablesUsedList);
+        consumableTracker.SetFoodWaterBaseline(data.totalFoodItemsConsumed, data.totalWaterItemsConsumed);
     }
 
     /// <summary>

@@ -67,22 +67,8 @@ namespace Game.Player.Stat.Assessment
             // Get health loss incidents count
             currentMetrics.healthLossIncidents = tracker.GetHealthLossIncidents();
 
-            // Add persisted baseline so cumulative tracking survives session exits
-            if (savedBaseline != null)
-            {
-                currentMetrics.totalStaminaUsed        += savedBaseline.totalStaminaUsed;
-                currentMetrics.totalFoodItemsConsumed  += savedBaseline.totalFoodItemsConsumed;
-                currentMetrics.totalWaterItemsConsumed += savedBaseline.totalWaterItemsConsumed;
-                currentMetrics.totalDistance           += savedBaseline.totalDistance;
-                currentMetrics.totalTime               += savedBaseline.totalTime;
-                currentMetrics.totalRiskyEvents        += savedBaseline.totalRiskyEvents;
-                currentMetrics.encounterredRisks       += savedBaseline.encounterredRisks;
-                currentMetrics.healthLossIncidents     += savedBaseline.healthLossIncidents;
-                currentMetrics.totalHealthLost         += savedBaseline.totalHealthLost;
-                currentMetrics.actualPathCost          += savedBaseline.actualPathCost;
-                currentMetrics.optimalPathCost         += savedBaseline.optimalPathCost;
-                currentMetrics.weatherSeverity          = Mathf.Max(currentMetrics.weatherSeverity, savedBaseline.weatherSeverity);
-            }
+
+
 
             return currentMetrics;
         }

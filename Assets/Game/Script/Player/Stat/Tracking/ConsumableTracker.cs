@@ -14,6 +14,8 @@ public class ConsumableTracker : BaseStatTracker<Dictionary<string, int>>
     // Persisted baseline from previous sessions (name → count)
     private Dictionary<string, int> savedConsumablesUsed = new Dictionary<string, int>();
     private int savedTotalConsumablesUsed;
+    private int savedFoodBaseline;
+    private int savedWaterBaseline;
 
     public override string MetricName => "Consumables Used";
     public override Dictionary<string, int> CurrentValue
@@ -60,6 +62,16 @@ public class ConsumableTracker : BaseStatTracker<Dictionary<string, int>>
             savedConsumablesUsed[entry.itemName] = entry.count;
             savedTotalConsumablesUsed += entry.count;
         }
+    }
+
+    /// <summary>
+    /// Restores food/water counts from a previous session.
+    /// These can't be derived from InventoryItem references on load.
+    /// </summary>
+    public void SetFoodWaterBaseline(int food, int water)
+    {
+        savedFoodBaseline = food;
+        savedWaterBaseline = water;
     }
 
     /// <summary>
@@ -139,7 +151,7 @@ public class ConsumableTracker : BaseStatTracker<Dictionary<string, int>>
     /// </summary>
     public int GetFoodItemsConsumed()
     {
-        int count = 0;
+        int count = savedFoodBaseline;
         foreach (var kvp in consumableItemsUsed)
         {
             if (IsFood(kvp.Key))
@@ -153,7 +165,7 @@ public class ConsumableTracker : BaseStatTracker<Dictionary<string, int>>
     /// </summary>
     public int GetWaterItemsConsumed()
     {
-        int count = 0;
+        int count = savedWaterBaseline;
         foreach (var kvp in consumableItemsUsed)
         {
             if (IsWater(kvp.Key))
@@ -205,5 +217,7 @@ public class ConsumableTracker : BaseStatTracker<Dictionary<string, int>>
         consumablesUsed.Clear();
         consumableItemsUsed.Clear();
         totalConsumablesUsed = 0;
+        savedFoodBaseline = 0;
+        savedWaterBaseline = 0;
     }
 }
