@@ -138,9 +138,6 @@ public class WorldStateSaveData
 
     // Cached HJB path waypoints by world level.
     public List<LevelPathSaveData> cachedPathsByLevel = new List<LevelPathSaveData>();
-
-    // Cached HJB terrain snapshots by world level (avoids re-generating terrain on load).
-    public List<LevelSnapshotSaveData> cachedSnapshotsByLevel = new List<LevelSnapshotSaveData>();
 }
 
 [Serializable]
@@ -148,21 +145,6 @@ public class LevelPathSaveData
 {
     public int level;
     public List<Vector3SaveData> waypoints = new List<Vector3SaveData>();
-}
-
-[Serializable]
-public class LevelSnapshotSaveData
-{
-    public int level;
-    public int width;
-    public int height;
-    public float heightMultiplier;
-    public List<float> heightMap;
-    public List<float> slopeMap;
-    public int pathGoalX;
-    public int pathGoalY;
-    public int pathStartX;
-    public int pathStartY;
 }
 
 [Serializable]

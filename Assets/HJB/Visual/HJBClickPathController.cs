@@ -31,10 +31,6 @@ public class HJBClickPathController : MonoBehaviour
     [Min(0f)] public float holdDuration = 3f;
     [Min(0f)] public float fadeOutDuration = 0.8f;
 
-    [Header("Debug")]
-    [Tooltip("Enables debug hotkeys and verbose pathing logs.")]
-    public bool enableDebugLog;
-
     bool isPathToggledOn;
 
     // Cached path data for manual drawing or exporting to save file (supports up to 3 levels)
@@ -48,7 +44,6 @@ public class HJBClickPathController : MonoBehaviour
         }
 
         LoadPathsFromCurrentSave();
-        LoadSnapshotsFromCurrentSave();
     }
 
     void OnDisable()
@@ -68,11 +63,6 @@ public class HJBClickPathController : MonoBehaviour
 
     void Update()
     {
-        if (!enableDebugLog)
-        {
-            return;
-        }
-
         if (Input.GetKeyDown(KeyCode.P))
         {
             // Sync the solver step with the current active level height multiplier if needed, 
@@ -199,7 +189,7 @@ public class HJBClickPathController : MonoBehaviour
         Vector2Int g = provider.WorldToGrid(world);
         start = g;
         SpawnMarker(ref startMarker, startMarkerPrefab, world);
-        if (enableDebugLog) Debug.Log($"[HJBClickPath] Start set to {(overrideWorldPos.HasValue ? "override position" : "player")} at {g}");
+        Debug.Log($"[HJBClickPath] Start set to {(overrideWorldPos.HasValue ? "override position" : "player")} at {g}");
     }
     // Coroutine to trigger path calculation and wait until path is ready for the current level
     public System.Collections.IEnumerator CalculatePathFromSpawnToPeak(Vector3 spawnWorldPos)
@@ -228,7 +218,7 @@ public class HJBClickPathController : MonoBehaviour
         }
         else
         {
-            if (enableDebugLog) Debug.Log($"[HJBClickPath] Path calculation complete for {currentLvl}.");
+            Debug.Log($"[HJBClickPath] Path calculation complete for {currentLvl}.");
         }
     }
 
@@ -241,15 +231,14 @@ public class HJBClickPathController : MonoBehaviour
         int i = 0;
         foreach (WorldLevel level in levels)
         {
-            bool hasSnapshot  = provider.levelSnapshots.ContainsKey(level);
             bool hasCachedPath = savedPathsByLevel.TryGetValue(level, out var cachedPath)
                                  && cachedPath != null && cachedPath.Count > 0;
 
-            if (hasSnapshot && hasCachedPath)
+            if (hasCachedPath)
             {
                 if (loadingScreen != null)
                 {
-                    loadingScreen.SetStatus($"Terrain {level}: snapshot + path already cached, skipping...");
+                    loadingScreen.SetStatus($"Terrain {level}: path already cached, skipping...");
                     loadingScreen.SetProgress((float)(i + 1) / total);
                 }
                 i++;
@@ -266,9 +255,6 @@ public class HJBClickPathController : MonoBehaviour
             provider.PreloadSnapshotForLevel(level);
             i++;
         }
-
-        PersistSnapshotsToCurrentSave(saveToFile: true);
-
         if (loadingScreen != null)
         {
             loadingScreen.SetStatus("Terrain data ready.");
@@ -293,7 +279,7 @@ public class HJBClickPathController : MonoBehaviour
         {
             if (savedPathsByLevel.ContainsKey(level) && savedPathsByLevel[level] != null && savedPathsByLevel[level].Count > 0)
             {
-                if (enableDebugLog) Debug.Log($"[HJBClickPath] Skipping {level} — path already cached.");
+                Debug.Log($"[HJBClickPath] Skipping {level} — path already cached.");
                 continue;
             }
             yield return CalculatePathForLevel(level);
@@ -308,7 +294,7 @@ public class HJBClickPathController : MonoBehaviour
             yield break;
         }
 
-    if (enableDebugLog) Debug.Log($"[HJBClickPath] Starting path pre-calculation for {level}...");
+        Debug.Log($"[HJBClickPath] Starting path pre-calculation for {level}...");
 
         provider.ApplySnapshot(level);
         solver.cost.Build();
@@ -327,7 +313,7 @@ public class HJBClickPathController : MonoBehaviour
             PersistPathsToCurrentSave(true);
             provider.RestoreCurrentLevelData();
             done = true;
-            if (enableDebugLog) Debug.Log($"[HJBClickPath] Background path calculation finished for {level}! Generated {path.Count} waypoints.");
+            Debug.Log($"[HJBClickPath] Background path calculation finished for {level}! Generated {path.Count} waypoints.");
         }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
 
         float timeout = 3600f;
@@ -360,7 +346,7 @@ public class HJBClickPathController : MonoBehaviour
         Vector3 worldPos = provider.GridToWorld(peakCoord.x, peakCoord.y);
 
         SpawnMarker(ref goalMarker, goalMarkerPrefab, worldPos);
-        if (enableDebugLog) Debug.Log($"[HJBClickPath] Goal set to Mountain Peak at {peakCoord}");
+        Debug.Log($"[HJBClickPath] Goal set to Mountain Peak at {peakCoord}");
     }
 
     void TrySolvePath()
@@ -370,11 +356,11 @@ public class HJBClickPathController : MonoBehaviour
             WorldLevel currentLvl = provider.worldDataManager.currentLevel;
             if (savedPathsByLevel.TryGetValue(currentLvl, out var cachedPath) && cachedPath != null && cachedPath.Count > 0)
             {
-                if (enableDebugLog) Debug.Log($"[HJBClickPath] Valid cached path already loaded for {currentLvl}. Skipping recalculation.");
+                Debug.Log($"[HJBClickPath] Valid cached path already loaded for {currentLvl}. Skipping recalculation.");
                 return;
             }
 
-            if (enableDebugLog) Debug.Log("Solving path from ClickController...");
+            Debug.Log("Solving path from ClickController...");
             
             // First ensure cost surface is built (this happens very quickly)
             if (solver.cost.baseSpeed == null) 
@@ -400,7 +386,7 @@ public class HJBClickPathController : MonoBehaviour
                 savedPathsByLevel[currentLvl] = generatedPath;
                 PersistPathsToCurrentSave(true);
 
-                if (enableDebugLog) Debug.Log($"[HJBClickPath] Background path calculation finished for {currentLvl}! Generated {generatedPath.Count} waypoints. Ready to be saved or drawn.");
+                Debug.Log($"[HJBClickPath] Background path calculation finished for {currentLvl}! Generated {generatedPath.Count} waypoints. Ready to be saved or drawn.");
             }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
         }
     }
@@ -419,7 +405,7 @@ public class HJBClickPathController : MonoBehaviour
         if (savedPathsByLevel.ContainsKey(currentLvl) && savedPathsByLevel[currentLvl] != null && savedPathsByLevel[currentLvl].Count > 0)
         {
             var calculatedPathData = savedPathsByLevel[currentLvl];
-            if (enableDebugLog) Debug.Log($"[HJBClickPath] Drawing cached path for {currentLvl} manually...");
+            Debug.Log($"[HJBClickPath] Drawing cached path for {currentLvl} manually...");
             visualizer.DrawPathWorld(calculatedPathData);
         }
         else
@@ -449,7 +435,7 @@ public class HJBClickPathController : MonoBehaviour
             return;
         }
 
-        if (enableDebugLog) Debug.Log($"[HJBClickPath] Drawing cached path for {currentLvl} with fade...");
+        Debug.Log($"[HJBClickPath] Drawing cached path for {currentLvl} with fade...");
         visualizer.DrawPathWorld(calculatedPathData);
 
         float localFadeIn = fadeInSeconds >= 0f ? fadeInSeconds : fadeInDuration;
@@ -479,7 +465,6 @@ public class HJBClickPathController : MonoBehaviour
     {
         isPathToggledOn = false;
         LoadPathsFromCurrentSave();
-        LoadSnapshotsFromCurrentSave();
     }
 
     void PersistPathsToCurrentSave(bool saveToFile = false)
@@ -572,89 +557,4 @@ public class HJBClickPathController : MonoBehaviour
             savedPathsByLevel[(WorldLevel)levelPath.level] = waypoints;
         }
     }
-
-    void PersistSnapshotsToCurrentSave(bool saveToFile = false)
-    {
-        if (SaveLoadService.Instance == null || SaveLoadService.Instance.CurrentWorldSave == null)
-            return;
-
-        var worldState = SaveLoadService.Instance.CurrentWorldSave.worldState;
-        if (worldState == null)
-            return;
-
-        var serialized = new List<LevelSnapshotSaveData>();
-        foreach (var kvp in provider.levelSnapshots)
-        {
-            var snap = kvp.Value;
-            serialized.Add(new LevelSnapshotSaveData
-            {
-                level            = (int)kvp.Key,
-                width            = snap.width,
-                height           = snap.height,
-                heightMultiplier = snap.heightMultiplier,
-                pathGoalX        = snap.pathGoal.x,
-                pathGoalY        = snap.pathGoal.y,
-                pathStartX       = snap.pathStart.x,
-                pathStartY       = snap.pathStart.y,
-                heightMap        = FlattenMap(snap.heightMap, snap.width, snap.height),
-                slopeMap         = FlattenMap(snap.slopeMap,  snap.width, snap.height),
-            });
-        }
-
-        worldState.cachedSnapshotsByLevel = serialized;
-
-        if (saveToFile)
-            SaveLoadService.Instance.SaveWorld(SaveLoadService.Instance.CurrentWorldSave,
-                                               refreshFreshLevelEntryFlag: false);
-    }
-
-    void LoadSnapshotsFromCurrentSave()
-    {
-        if (SaveLoadService.Instance == null || SaveLoadService.Instance.CurrentWorldSave == null)
-            return;
-
-        var worldState = SaveLoadService.Instance.CurrentWorldSave.worldState;
-        if (worldState == null || worldState.cachedSnapshotsByLevel == null)
-            return;
-
-        provider.levelSnapshots.Clear();
-
-        foreach (var entry in worldState.cachedSnapshotsByLevel)
-        {
-            if (entry == null)
-                continue;
-            if (!System.Enum.IsDefined(typeof(WorldLevel), entry.level))
-                continue;
-
-            provider.levelSnapshots[(WorldLevel)entry.level] = new LevelTerrainSnapshot
-            {
-                width            = entry.width,
-                height           = entry.height,
-                heightMultiplier = entry.heightMultiplier,
-                pathGoal         = new Vector2Int(entry.pathGoalX, entry.pathGoalY),
-                pathStart        = new Vector2Int(entry.pathStartX, entry.pathStartY),
-                heightMap        = UnflattenMap(entry.heightMap, entry.width, entry.height),
-                slopeMap         = UnflattenMap(entry.slopeMap,  entry.width, entry.height),
-            };
-        }
-    }
-
-    static List<float> FlattenMap(float[,] map, int w, int h)
-    {
-        var list = new List<float>(w * h);
-        for (int y = 0; y < h; y++)
-            for (int x = 0; x < w; x++)
-                list.Add(map[x, y]);
-        return list;
-    }
-
-    static float[,] UnflattenMap(List<float> list, int w, int h)
-    {
-        var map = new float[w, h];
-        for (int y = 0; y < h; y++)
-            for (int x = 0; x < w; x++)
-                map[x, y] = list[y * w + x];
-        return map;
-    }
-
 }
