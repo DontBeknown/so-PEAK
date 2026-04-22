@@ -15,19 +15,18 @@ MonoBehaviour:
   dialogId: 0_DialogStart
   lines:
   - speakerName: Aira
-    text: "Okay. The coordinates from that radio static pointed here. \nIf there's
-      anyone left... if that settlement is real...  "
+    text: "Okay. The coordinates from that radio static pointed here. \r\nI need
+      to hurry before I get left behind here.  "
   - speakerName: Aira
-    text: "it has to be up at the summit. \n(Taking a shaky breath, rubbing her arms
-      against the chill) "
+    text: I got separated from the group a while ago. I need to hurry and rejoin
+      them at the <b><color=#ffff00>Lighthouse</color></b>
   - speakerName: Aira
-    text: 'I just need to find a sign. A trail marker, a <b><color=#ffff00>Campfire</color></b>,
-      a piece of trash.
+    text: 'it has to be up at the summit.  '
+  - speakerName: Aira
+    text: 'I just need to find a sign. A trail marker,  <b><color=#ffff00>a Campfire,
+      a House</color></b>, a piece of trash.
 
       Anything human. '
   - speakerName: Aira
-    text: "I can't be the only one who made it out of that place. \nMaybe i need
-      to find high place like <b><color=#ffff00>Light House</color></b> (Voice low,
-      trying to reassure)"
-  - speakerName: Aira
-    text: 'Something''s wrong with this place, though. It''s too quiet. And the map... '
+    text: This is so lonely. I should write something down in my journal, so I'll
+      feel less lonely.
