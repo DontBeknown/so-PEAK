@@ -519,6 +519,9 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
         if (nextLevelButton != null)
             nextLevelButton.gameObject.SetActive(_progressNextLevelMode);
         
+        if (assessmentTabButton != null)
+            assessmentTabButton.gameObject.SetActive(_progressNextLevelMode);
+        
         if (closeButton != null)
             closeButton.gameObject.SetActive(!_progressNextLevelMode);
     }

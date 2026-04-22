@@ -12,10 +12,14 @@ namespace Game.Player.Stat.Assessment
         [Header("Dependencies")]
         [SerializeField] private PlayerStatsTrackerService statsTracker;
         [SerializeField] private AssessmentTracker assessmentTracker;
-        
+
         [Header("Calculator")]
         private IAssessmentCalculator calculator;
         private OptimalMetricsCalculator optimalCalculator;
+
+        // Returns the assigned tracker or searches the scene as a fallback (handles late-spawned players).
+        private AssessmentTracker AssessmentTrackerRef =>
+            assessmentTracker != null ? assessmentTracker : FindFirstObjectByType<AssessmentTracker>();
         
         // Cached optimal metrics (can be set externally)
         private OptimalMetrics cachedOptimalMetrics;
@@ -64,6 +68,25 @@ namespace Game.Player.Stat.Assessment
         }
         
         /// <summary>
+        /// Returns cumulative assessment metrics as a save payload.
+        /// Called by SaveLoadService during save.
+        /// </summary>
+        public AssessmentSaveData GetSaveData()
+        {
+            var tracker = AssessmentTrackerRef;
+            return tracker != null ? tracker.GetSaveData() : new AssessmentSaveData();
+        }
+
+        /// <summary>
+        /// Restores cumulative baseline into the tracker from a previous session's save data.
+        /// Called by SaveLoadService after world load.
+        /// </summary>
+        public void RestoreFromSaveData(AssessmentSaveData data)
+        {
+            AssessmentTrackerRef?.LoadBaseline(data);
+        }
+
+        /// <summary>
         /// Clear cached optimal metrics (forces recalculation on next assessment)
         /// </summary>
         public void ClearOptimalMetrics()
@@ -78,14 +101,15 @@ namespace Game.Player.Stat.Assessment
         /// </summary>
         public AssessmentScore GenerateAssessment()
         {
-            if (assessmentTracker == null)
+            var tracker = AssessmentTrackerRef;
+            if (tracker == null)
             {
                 Debug.LogError("[LearningAssessment] AssessmentTracker reference is missing!");
                 return null;
             }
-            
+
             // Get performance metrics
-            PerformanceMetrics metrics = assessmentTracker.GetCurrentMetrics();
+            PerformanceMetrics metrics = tracker.GetCurrentMetrics();
             
             // Get or calculate optimal metrics
             OptimalMetrics optimal = GetOptimalMetrics(metrics);

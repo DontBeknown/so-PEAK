@@ -10,24 +10,73 @@ public class ConsumableTracker : BaseStatTracker<Dictionary<string, int>>
     private Dictionary<string, int> consumablesUsed;
     private Dictionary<InventoryItem, int> consumableItemsUsed; // Track actual items
     private int totalConsumablesUsed;
-    
+
+    // Persisted baseline from previous sessions (name → count)
+    private Dictionary<string, int> savedConsumablesUsed = new Dictionary<string, int>();
+    private int savedTotalConsumablesUsed;
+
     public override string MetricName => "Consumables Used";
-    public override Dictionary<string, int> CurrentValue 
-    { 
-        get => new Dictionary<string, int>(consumablesUsed);
+    public override Dictionary<string, int> CurrentValue
+    {
+        get
+        {
+            // Return merged live + saved so callers see the full historical picture
+            var merged = new Dictionary<string, int>(savedConsumablesUsed);
+            foreach (var kvp in consumablesUsed)
+            {
+                if (merged.ContainsKey(kvp.Key)) merged[kvp.Key] += kvp.Value;
+                else merged[kvp.Key] = kvp.Value;
+            }
+            return merged;
+        }
         set => consumablesUsed = new Dictionary<string, int>(value);
     }
-    
+
     /// <summary>
-    /// Total count of all consumables used.
+    /// Total count of all consumables used (current session + saved baseline).
     /// </summary>
-    public int TotalCount => totalConsumablesUsed;
-    
+    public int TotalCount => totalConsumablesUsed + savedTotalConsumablesUsed;
+
     public ConsumableTracker(int maxDataPoints = 100) : base(maxDataPoints)
     {
         consumablesUsed = new Dictionary<string, int>();
         consumableItemsUsed = new Dictionary<InventoryItem, int>();
         totalConsumablesUsed = 0;
+        savedConsumablesUsed = new Dictionary<string, int>();
+        savedTotalConsumablesUsed = 0;
+    }
+
+    /// <summary>
+    /// Restores the per-item consumable list from a previous session's save data.
+    /// </summary>
+    public void LoadConsumableBaseline(List<ConsumableUseSaveData> saved)
+    {
+        savedConsumablesUsed = new Dictionary<string, int>();
+        savedTotalConsumablesUsed = 0;
+        if (saved == null) return;
+        foreach (var entry in saved)
+        {
+            if (string.IsNullOrEmpty(entry.itemName)) continue;
+            savedConsumablesUsed[entry.itemName] = entry.count;
+            savedTotalConsumablesUsed += entry.count;
+        }
+    }
+
+    /// <summary>
+    /// Returns the merged (live + saved baseline) per-item list ready to persist.
+    /// </summary>
+    public List<ConsumableUseSaveData> GetConsumablesForSave()
+    {
+        var merged = new Dictionary<string, int>(savedConsumablesUsed);
+        foreach (var kvp in consumablesUsed)
+        {
+            if (merged.ContainsKey(kvp.Key)) merged[kvp.Key] += kvp.Value;
+            else merged[kvp.Key] = kvp.Value;
+        }
+        var result = new List<ConsumableUseSaveData>(merged.Count);
+        foreach (var kvp in merged)
+            result.Add(new ConsumableUseSaveData { itemName = kvp.Key, count = kvp.Value });
+        return result;
     }
     
     /// <summary>
@@ -128,8 +177,13 @@ public class ConsumableTracker : BaseStatTracker<Dictionary<string, int>>
     
     private bool IsWater(InventoryItem item)
     {
-        if (item == null || !item.isConsumable) return false;
-        
+        if (item == null) return false;
+
+        // Canteen sips restore thirst via playerStats.Drink() directly — no consumableEffects
+        if (item is CanteenItem) return true;
+
+        if (!item.isConsumable) return false;
+
         // Check if item has consumable effects that restore Thirst
         foreach (var effect in item.consumableEffects)
         {

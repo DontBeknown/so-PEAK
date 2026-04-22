@@ -33,6 +33,12 @@ public class HealthLossTracker : BaseStatTracker<float>
     /// Gets the number of times health was damaged.
     /// </summary>
     public int GetIncidentCount() => incidentCount;
+
+    /// <summary>
+    /// Restores the incident counter from a saved baseline.
+    /// </summary>
+    public void SetIncidentCount(int count) => incidentCount = count;
+
     
     protected override TimeSeriesDataPoint CreateDataPoint(float timestamp)
     {

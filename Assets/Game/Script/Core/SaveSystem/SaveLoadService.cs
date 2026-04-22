@@ -47,6 +47,8 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     private WorldSaveData currentWorldSave;
     private float autoSaveTimer;
     private bool freshLevelEntry = false; // Flag to indicate fresh level progression
+    private float playTimeLastCheckpoint;
+    private bool hasPlayTimeCheckpoint;
     
     // Constants
     private const string SAVE_FILE_EXTENSION = ".sav";
@@ -107,6 +109,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         };
         
         currentWorldSave = newWorld;
+        ResetPlayTimeCheckpoint();
         SpawnedObjectStateRegistry.RefreshFromCurrentSave();
         SaveWorld(newWorld);
         UpdateMetadata(newWorld);
@@ -120,6 +123,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     {
         try
         {
+            AccumulatePlayTimeSinceLastSave(saveData);
             saveData.lastPlayedDate = DateTime.Now;
             UpdateTutorialDataFromGame(saveData);
             SpawnedObjectStateRegistry.ExportToSave(saveData);
@@ -201,8 +205,11 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             saveData.worldState.cachedPathsByLevel ??= new List<LevelPathSaveData>();
             saveData.worldState.unlockedCollectables ??= new List<string>();
             saveData.worldState.triggeredDialogs ??= new List<string>();
+            saveData.assessmentData ??= new AssessmentSaveData();
+            saveData.assessmentData.consumablesUsedList ??= new List<ConsumableUseSaveData>();
             
             currentWorldSave = saveData;
+            ResetPlayTimeCheckpoint();
             SpawnedObjectStateRegistry.ImportFromSave(saveData);
             OnWorldLoaded?.Invoke(saveData);
             
@@ -344,7 +351,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
                 var rot = player.transform.rotation;
                 currentWorldSave.playerData.position = new float[] { pos.x, pos.y, pos.z };
                 currentWorldSave.playerData.rotation = new float[] { rot.x, rot.y, rot.z, rot.w };
-                Debug.Log($"[SaveLoadService] Player reference found. Position: {pos}");
+                //Debug.Log($"[SaveLoadService] Player reference found. Position: {pos}");
                 if (enableDebug) Debug.Log($"Updated player position: {pos}");
             }
             else
@@ -441,15 +448,49 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
                 currentWorldSave.worldState.triggeredDialogs = dialogManager.GetTriggeredIds();
             }
             
-            // Update play time
-            currentWorldSave.totalPlayTime += Time.unscaledDeltaTime;
-            Debug.Log($"[SaveLoadService] Updated total play time: {currentWorldSave.totalPlayTime:F1} seconds {Time.unscaledDeltaTime}");
+            // Update assessment tracking data
+            var learningAssessment = container.TryGet<Game.Player.Stat.Assessment.LearningAssessmentService>();
+            if (learningAssessment != null)
+            {
+                currentWorldSave.assessmentData = learningAssessment.GetSaveData();
+            }
             
             if (enableDebug) Debug.Log("[SaveLoadService] Player data updated from game state");
         }
         catch (Exception e)
         {
             Debug.LogWarning($"[SaveLoadService] Could not update player data: {e.Message}");
+        }
+    }
+
+    private void ResetPlayTimeCheckpoint()
+    {
+        playTimeLastCheckpoint = Time.time;
+        hasPlayTimeCheckpoint = true;
+    }
+
+    private void AccumulatePlayTimeSinceLastSave(WorldSaveData saveData)
+    {
+        if (saveData == null)
+        {
+            return;
+        }
+
+        float now = Time.time;
+        if (!hasPlayTimeCheckpoint)
+        {
+            playTimeLastCheckpoint = now;
+            hasPlayTimeCheckpoint = true;
+            return;
+        }
+
+        float elapsed = Mathf.Max(0f, now - playTimeLastCheckpoint);
+        saveData.totalPlayTime += elapsed;
+        playTimeLastCheckpoint = now;
+
+        if (enableDebug)
+        {
+            Debug.Log($"[SaveLoadService] Added {elapsed:F2}s to total play time. Total: {saveData.totalPlayTime:F2}s");
         }
     }
 
@@ -557,7 +598,8 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         // Reset player position to default for new level
         ResetPlayerSpawnToDefault();
         ResetPlayerStatsForNextLevel();
-    
+        currentWorldSave.assessmentData = new AssessmentSaveData();
+
         SpawnedObjectStateRegistry.ClearAllDestroyed();
         bool saved = SaveWorld(currentWorldSave);
 
@@ -937,6 +979,12 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
 
         var dialogManager = container.TryGet<IDialogManager>();
         dialogManager?.LoadState(saveData.worldState.triggeredDialogs ?? new List<string>());
+
+        var learningAssessment = container.TryGet<Game.Player.Stat.Assessment.LearningAssessmentService>();
+        if (learningAssessment != null && saveData.assessmentData != null)
+        {
+            learningAssessment.RestoreFromSaveData(saveData.assessmentData);
+        }
     }
 
     private void ReloadActiveScene()

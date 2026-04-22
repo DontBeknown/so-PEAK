@@ -61,6 +61,37 @@ public class RiskTracker : BaseStatTracker<RiskEvent>
         totalPossibleRisks = 0;
         risksEncountered = 0;
     }
+
+    /// <summary>
+    /// Restores saved risk events as a baseline so cumulative tracking survives reloads.
+    /// </summary>
+    public void LoadBaseline(List<RiskEventSaveData> saved)
+    {
+        if (saved == null) return;
+        foreach (var entry in saved)
+        {
+            if (string.IsNullOrEmpty(entry.riskType)) continue;
+            if (!System.Enum.TryParse<RiskType>(entry.riskType, out var type)) continue;
+
+            var evt = new RiskEvent { riskType = type, wasEncountered = entry.wasEncountered };
+            allRiskEvents.Add(evt);
+            totalPossibleRisks++;
+            if (entry.wasEncountered) risksEncountered++;
+        }
+    }
+
+    /// <summary>
+    /// Returns a minimal save payload of all recorded risk events (type + wasEncountered).
+    /// </summary>
+    public List<RiskEventSaveData> GetRiskEventsForSave()
+    {
+        var result = new List<RiskEventSaveData>(allRiskEvents.Count);
+        foreach (var evt in allRiskEvents)
+            result.Add(new RiskEventSaveData { riskType = evt.riskType.ToString(), wasEncountered = evt.wasEncountered });
+        return result;
+    }
+
+
     
     public override void RecordValue(RiskEvent riskEvent)
     {

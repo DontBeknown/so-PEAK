@@ -253,6 +253,57 @@ public class PlayerStatsTrackerService : MonoBehaviour
     /// Gets the total count of consumables used.
     /// </summary>
     public int GetTotalConsumablesUsed() => consumableTracker.TotalCount;
+
+    /// <summary>
+    /// Restores the per-item consumable baseline from a previous session's save data.
+    /// </summary>
+    public void LoadConsumableBaseline(List<ConsumableUseSaveData> saved)
+    {
+        consumableTracker.LoadConsumableBaseline(saved);
+    }
+
+    /// <summary>
+    /// Restores cumulative stat baselines (distance, stamina, health, fatigue, time)
+    /// from a previous session's save data so the UI shows the correct accumulated values.
+    /// </summary>
+    public void LoadBaseline(AssessmentSaveData data)
+    {
+        if (data == null) return;
+
+        // Restore per-tracker accumulators
+        distanceTracker.CurrentValue    = data.totalDistance;
+        staminaTracker.CurrentValue     = data.totalStaminaUsed;
+        healthLossTracker.CurrentValue  = data.totalHealthLost;
+        fatigueTracker.CurrentValue     = data.totalFatigueAccumulated;
+
+        // Restore health incident counter
+        healthLossTracker.SetIncidentCount(data.healthLossIncidents);
+
+        // Restore session time baseline so the timer continues from where it left off
+        accumulatedSessionDuration = data.totalTime;
+
+        // Restore risk events
+        riskTracker.LoadBaseline(data.riskEvents);
+
+        // Restore consumable data
+        LoadConsumableBaseline(data.consumablesUsedList);
+    }
+
+    /// <summary>
+    /// Returns the merged per-item consumable list (live + saved baseline) for persistence.
+    /// </summary>
+    public List<ConsumableUseSaveData> GetConsumablesForSave()
+    {
+        return consumableTracker.GetConsumablesForSave();
+    }
+
+    /// <summary>
+    /// Returns all recorded risk events (live + restored baseline) for persistence.
+    /// </summary>
+    public List<RiskEventSaveData> GetRiskEventsForSave()
+    {
+        return riskTracker.GetRiskEventsForSave();
+    }
     
     /// <summary>
     /// Gets count of food items consumed (for assessment).

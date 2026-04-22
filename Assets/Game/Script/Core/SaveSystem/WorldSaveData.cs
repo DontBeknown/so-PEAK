@@ -22,7 +22,10 @@ public class WorldSaveData
 
     // Tutorial State
     public TutorialSaveData tutorial;
-    
+
+    // Assessment / performance tracking
+    public AssessmentSaveData assessmentData;
+
     // Meta Information
     public string gameVersion;
     public int saveVersion;
@@ -194,6 +197,42 @@ public class SaveMetadata
     public string seed2;
     public string seed3;
 }
+
+[Serializable]
+public class ConsumableUseSaveData
+{
+    public string itemName;
+    public int count;
+}
+
+[Serializable]
+public class RiskEventSaveData
+{
+    public string riskType;       // RiskType enum name
+    public bool wasEncountered;
+}
+
+[Serializable]
+public class AssessmentSaveData
+{
+    public float totalStaminaUsed;
+    public int   totalFoodItemsConsumed;
+    public int   totalWaterItemsConsumed;
+    public float totalDistance;
+    public float totalTime;
+    public int   totalRiskyEvents;
+    public int   encounterredRisks;
+    public int   healthLossIncidents;
+    public float totalHealthLost;
+    public int   totalHealthLossIncidents;
+    public float totalFatigueAccumulated;
+    public float actualPathCost;
+    public float optimalPathCost;
+    public float weatherSeverity;
+    public List<ConsumableUseSaveData> consumablesUsedList;
+    public List<RiskEventSaveData>     riskEvents;
+}
+
 
 [Serializable]
 public class SaveMetadataList
