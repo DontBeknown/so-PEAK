@@ -34,7 +34,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 3990180182345840903}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &3319298
@@ -149,27 +150,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85ced32b465c7f7409c48d88e099c48c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.GatheringInteractable
+  holdDuration: 3
+  interactionPriority: 1.2
+  highlightEffect: {fileID: 0}
+  holdStartSoundID: gather_start
+  holdStartSoundVolume: 1
+  holdCompleteSoundID: item_pickup
+  holdCompleteSoundVolume: 1
   resourceDrops:
   - item: {fileID: 11400000, guid: 00705344c5389cc47b73eb86edcbb90f, type: 2}
     guaranteedAmount: 2
     bonusDropChance: 0.2
     bonusAmount: 1
   customPrompt: 
-  gatherDuration: 3
   isMultiUse: 0
   respawnTime: 60
   destroyOnUse: 1
-  interactionPriority: 1.2
-  highlightEffect: {fileID: 0}
   depletedVisual: {fileID: 0}
-  gatherStartSound: {fileID: 0}
-  gatherLoopSound: {fileID: 0}
-  gatherCompleteSound: {fileID: 0}
-  gatherCancelSound: {fileID: 0}
-  itemPickupSFXId: item_pickup
-  itemPickupSFXVolume: 0.45
-  startGatherSoundId: gather_start
-  startGatherSoundVolume: 0.5
 --- !u!114 &8746405733583039494
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -187,3 +184,34 @@ MonoBehaviour:
   shrinkDuration: 0.25
   bounceEase: 6
   shrinkEase: 26
+--- !u!1 &157695601253709904
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3990180182345840903}
+  m_Layer: 11
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3990180182345840903
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 157695601253709904}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 436906}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

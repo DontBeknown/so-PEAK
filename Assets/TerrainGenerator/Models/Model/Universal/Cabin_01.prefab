@@ -3023,9 +3023,10 @@ MonoBehaviour:
   holdDuration: 3
   interactionPriority: 1.2
   highlightEffect: {fileID: 0}
-  holdStartSound: {fileID: 0}
-  holdCompleteSound: {fileID: 0}
-  holdCancelSound: {fileID: 0}
+  holdStartSoundID: gather_start
+  holdStartSoundVolume: 1
+  holdCompleteSoundID: 
+  holdCompleteSoundVolume: 1
   customPrompt: Check Assessment Report
   interactionVerb: Hold F to
   terminalInteractionPriority: 0.8

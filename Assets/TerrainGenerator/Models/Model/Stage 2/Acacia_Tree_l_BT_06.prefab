@@ -131,9 +131,10 @@ MonoBehaviour:
   holdDuration: 1.5
   interactionPriority: 1.2
   highlightEffect: {fileID: 0}
-  holdStartSound: {fileID: 0}
-  holdCompleteSound: {fileID: 0}
-  holdCancelSound: {fileID: 0}
+  holdStartSoundID: gather_start
+  holdStartSoundVolume: 1
+  holdCompleteSoundID: 
+  holdCompleteSoundVolume: 1
   tiedSpeedMultiplier: 0.35
   maxTiedRadius: 4
   anchorTransform: {fileID: 7500633507598847482}

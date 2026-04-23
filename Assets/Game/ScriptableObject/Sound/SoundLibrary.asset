@@ -46,8 +46,6 @@ MonoBehaviour:
     - {fileID: 8300000, guid: a032259e8b027224282b8f7ae94b604f, type: 3}
     - {fileID: 8300000, guid: 6c50982a84e38104bb32e95e701d44b4, type: 3}
     - {fileID: 8300000, guid: f7e0f13a5cf2f5f4b9373c572edf78d5, type: 3}
-  - Id: interact_complete
-    Clips: []
   - Id: item_pickup
     Clips: []
   - Id: music_menu
@@ -184,3 +182,13 @@ MonoBehaviour:
   - Id: UI_MapClose
     Clips:
     - {fileID: 8300000, guid: 80ef2975567916745b5af7d42a101abd, type: 3}
+  - Id: Refill_Canteen
+    Clips:
+    - {fileID: 8300000, guid: 3c304ca9cef600b409f339ba8198d336, type: 3}
+  - Id: Refill_Canteen_Complete
+    Clips:
+    - {fileID: 8300000, guid: a84a4331687ae49449bdb25125a96fa4, type: 3}
+  - Id: Foliage_Interact
+    Clips:
+    - {fileID: 8300000, guid: a1603ab601810c14393693923a3676dd, type: 3}
+    - {fileID: 8300000, guid: 28466d5065f1e084e872f13e570e5ae7, type: 3}

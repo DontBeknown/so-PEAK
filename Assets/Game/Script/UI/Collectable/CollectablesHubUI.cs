@@ -95,6 +95,9 @@ namespace Game.UI.Collectable
             SetBiomeControlsInteractable(true);
             PrepareHubAndSharedBackgroundForOpen();
             RefreshEntries();
+
+            documentPageUI?.HideImmediately();
+            
             PlayHubOpenAnimation();
         }
 

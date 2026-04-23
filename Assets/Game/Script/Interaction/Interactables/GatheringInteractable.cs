@@ -44,10 +44,6 @@ namespace Game.Interaction
         [Header("Depleted Visual")]
         [SerializeField] private GameObject depletedVisual;
 
-        [Header("Audio")]
-        [SerializeField] private string itemPickupSFXId = "item_pickup";
-        [SerializeField] private float itemPickupSFXVolume = 0.45f;
-
         private bool isDepleted;
         private float respawnTimer;
         private IEventBus _eventBus;
@@ -108,9 +104,6 @@ namespace Game.Interaction
                     ShowCompletionNotification();
                 }
             }
-
-            _eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>();
-            _eventBus?.Publish(new PlayPositionalSFXEvent(itemPickupSFXId, transform.position, itemPickupSFXVolume));
 
             if (!isMultiUse)
             {

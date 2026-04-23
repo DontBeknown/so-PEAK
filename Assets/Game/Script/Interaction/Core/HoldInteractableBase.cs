@@ -26,10 +26,10 @@ namespace Game.Interaction
         [SerializeField] protected GameObject highlightEffect;
         
         [Header("Audio")]
-        [SerializeField] protected AudioClip holdStartSound;
-        [SerializeField] protected AudioClip holdCompleteSound;
-        [SerializeField] protected AudioClip holdCancelSound;
-        
+        [SerializeField] protected string holdStartSoundID = "gather_start";
+        [SerializeField] protected float holdStartSoundVolume = 1f;
+        [SerializeField] protected string holdCompleteSoundID = "";
+        [SerializeField] protected float holdCompleteSoundVolume = 1f;
         // State
         protected bool isHighlighted = false;
         protected bool isCurrentlyHolding = false;
@@ -99,9 +99,10 @@ namespace Game.Interaction
             }
             
             // Play start sound
-            if (holdStartSound != null)
+            if (!string.IsNullOrEmpty(holdStartSoundID))
             {
-                AudioSource.PlayClipAtPoint(holdStartSound, transform.position);
+                _eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>();
+                _eventBus?.Publish(new PlayPositionalSFXEvent(holdStartSoundID, transform.position, holdStartSoundVolume));
             }
             
             // Get prompt UI
@@ -115,9 +116,6 @@ namespace Game.Interaction
                 promptUI.ShowProgressBar();
             }
             
-            // Notify derived class
-            (_eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>())
-                ?.Publish(new PlayPositionalSFXEvent("gather_start", transform.position));
             _eventBus?.Publish(new HoldInteractStartedEvent(gameObject));
             OnHoldStart();
             
@@ -174,14 +172,13 @@ namespace Game.Interaction
                 return;
 
             // Play completion sound
-            if (holdCompleteSound != null)
+            if (!string.IsNullOrEmpty(holdCompleteSoundID))
             {
-                AudioSource.PlayClipAtPoint(holdCompleteSound, transform.position);
+                _eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>();
+                _eventBus?.Publish(new PlayPositionalSFXEvent(holdCompleteSoundID, transform.position, holdCompleteSoundVolume));
             }
             
-            // Notify derived class - THIS IS WHERE CUSTOM LOGIC GOES
-            /*(_eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>())
-                ?.Publish(new PlayPositionalSFXEvent("gather_complete", transform.position));*/
+
             _eventBus?.Publish(new HoldInteractCompletedEvent(gameObject));
             OnHoldComplete();
             
@@ -193,15 +190,6 @@ namespace Game.Interaction
             if (!isCurrentlyHolding)
                 return;
 
-            // Play cancel sound
-            if (holdCancelSound != null)
-            {
-                AudioSource.PlayClipAtPoint(holdCancelSound, transform.position);
-            }
-            
-            // Notify derived class
-            (_eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>())
-                ?.Publish(new PlayPositionalSFXEvent("interact_cancel", transform.position));
             OnHoldCancel(reason);
             
             Cleanup();

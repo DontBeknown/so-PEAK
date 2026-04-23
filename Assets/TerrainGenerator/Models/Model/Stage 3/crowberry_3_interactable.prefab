@@ -10,15 +10,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 9a34896a917906046ab146665f2c66a5, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 5246.9385
+      value: -31.918945
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9a34896a917906046ab146665f2c66a5, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.040594045
+      value: -0.610406
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9a34896a917906046ab146665f2c66a5, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -12209.831
+      value: -11.868164
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9a34896a917906046ab146665f2c66a5, type: 3}
       propertyPath: m_LocalRotation.w
@@ -26,7 +26,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9a34896a917906046ab146665f2c66a5, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9a34896a917906046ab146665f2c66a5, type: 3}
       propertyPath: m_LocalRotation.y
@@ -111,9 +111,10 @@ MonoBehaviour:
   holdDuration: 3
   interactionPriority: 1.2
   highlightEffect: {fileID: 0}
-  holdStartSound: {fileID: 0}
-  holdCompleteSound: {fileID: 0}
-  holdCancelSound: {fileID: 0}
+  holdStartSoundID: gather_start
+  holdStartSoundVolume: 1
+  holdCompleteSoundID: item_pickup
+  holdCompleteSoundVolume: 1
   resourceDrops:
   - item: {fileID: 11400000, guid: d3e3eecd9fd2f6d4ba393532665e7c01, type: 2}
     guaranteedAmount: 1
@@ -124,8 +125,6 @@ MonoBehaviour:
   respawnTime: 60
   destroyOnUse: 1
   depletedVisual: {fileID: 0}
-  itemPickupSFXId: item_pickup
-  itemPickupSFXVolume: 0.45
 --- !u!114 &9026568418013634384
 MonoBehaviour:
   m_ObjectHideFlags: 0

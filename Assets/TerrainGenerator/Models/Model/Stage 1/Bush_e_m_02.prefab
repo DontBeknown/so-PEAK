@@ -164,9 +164,10 @@ MonoBehaviour:
   holdDuration: 3
   interactionPriority: 1.2
   highlightEffect: {fileID: 0}
-  holdStartSound: {fileID: 0}
-  holdCompleteSound: {fileID: 0}
-  holdCancelSound: {fileID: 0}
+  holdStartSoundID: gather_start
+  holdStartSoundVolume: 1
+  holdCompleteSoundID: item_pickup
+  holdCompleteSoundVolume: 1
   resourceDrops:
   - item: {fileID: 11400000, guid: dbb83d9c4cbc72f4fa5fe4006f0a7dab, type: 2}
     guaranteedAmount: 2
@@ -177,8 +178,6 @@ MonoBehaviour:
   respawnTime: 60
   destroyOnUse: 1
   depletedVisual: {fileID: 0}
-  itemPickupSFXId: item_pickup
-  itemPickupSFXVolume: 0.45
 --- !u!114 &1207939850576998951
 MonoBehaviour:
   m_ObjectHideFlags: 0

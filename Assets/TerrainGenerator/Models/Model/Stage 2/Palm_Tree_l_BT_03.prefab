@@ -151,27 +151,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85ced32b465c7f7409c48d88e099c48c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.GatheringInteractable
+  holdDuration: 3
+  interactionPriority: 1.2
+  highlightEffect: {fileID: 0}
+  holdStartSoundID: Foliage_Interact
+  holdStartSoundVolume: 1
+  holdCompleteSoundID: item_pickup
+  holdCompleteSoundVolume: 1
   resourceDrops:
   - item: {fileID: 11400000, guid: 233fa3d455b7c4f4bbd395d76602892b, type: 2}
     guaranteedAmount: 1
     bonusDropChance: 0.5
     bonusAmount: 1
   customPrompt: 
-  gatherDuration: 3
   isMultiUse: 0
   respawnTime: 60
   destroyOnUse: 1
-  interactionPriority: 1.2
-  highlightEffect: {fileID: 0}
   depletedVisual: {fileID: 0}
-  gatherStartSound: {fileID: 0}
-  gatherLoopSound: {fileID: 0}
-  gatherCompleteSound: {fileID: 0}
-  gatherCancelSound: {fileID: 0}
-  itemPickupSFXId: item_pickup
-  itemPickupSFXVolume: 0.45
-  startGatherSoundId: gather_start
-  startGatherSoundVolume: 0.5
 --- !u!114 &1931674101672219740
 MonoBehaviour:
   m_ObjectHideFlags: 0

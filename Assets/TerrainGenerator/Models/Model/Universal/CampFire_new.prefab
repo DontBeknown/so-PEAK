@@ -464,9 +464,10 @@ MonoBehaviour:
   holdDuration: 3
   interactionPriority: 0.8
   highlightEffect: {fileID: 0}
-  holdStartSound: {fileID: 0}
-  holdCompleteSound: {fileID: 0}
-  holdCancelSound: {fileID: 0}
+  holdStartSoundID: gather_start
+  holdStartSoundVolume: 1
+  holdCompleteSoundID: 
+  holdCompleteSoundVolume: 1
   customPrompt: Rest
   interactionVerb: Press F to
   terminalInteractionPriority: 0.8

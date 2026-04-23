@@ -17,19 +17,20 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 26b5163892ed10c4e9c9b3dc580c4316, type: 3}
   maxStackSize: 1
   itemType: 3
-  category: 0
   gridSize: {x: 2, y: 2}
   worldPrefab: {fileID: 9088813262201544815, guid: fe3eb600b3ca34749b4bbcb04723419d, type: 3}
   isConsumable: 0
   consumableEffects: []
-  isCraftingMaterial: 0
-  isCraftedItem: 0
   equipmentSlot: 4
+  playerModelIndex: -1
   statModifiers: []
+  isRuntimeGenerated: 0
+  runtimeInstanceId: 
+  runtimeTemplateItemId: 
   heldItemPrefab: {fileID: 7093492883319578582, guid: 697cba56f1a64824ca552532e527aa95, type: 3}
   maxCharges: 5
   thirstRestorationPerSip: 20
-  useCooldownSeconds: 2
+  useCooldownSeconds: 0
   refillDurationSeconds: 3
   drinkSound: {fileID: 0}
   refillSound: {fileID: 0}
