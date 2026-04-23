@@ -34,6 +34,7 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
     [SerializeField] private Button statTrackingTabButton;
     [SerializeField] private Button assessmentTabButton;
     [SerializeField] private Button nextLevelButton;
+    [SerializeField] private Button viewMapWithPathButton;
     
     [Header("Text Displays")]
     [SerializeField] private TextMeshProUGUI sessionTimeText;
@@ -533,6 +534,9 @@ public class PlayerStatsTrackerUI : MonoBehaviour, IUIPanel
         
         if (assessmentTabButton != null)
             assessmentTabButton.gameObject.SetActive(_progressNextLevelMode);
+
+        if(viewMapWithPathButton != null)
+            viewMapWithPathButton.gameObject.SetActive(_progressNextLevelMode);
         
         if (closeButton != null)
             closeButton.gameObject.SetActive(!_progressNextLevelMode);

@@ -41,6 +41,7 @@ namespace Game.UI
         [SerializeField] private Image pathOverlayImage;
         [SerializeField] private Color lineColor = Color.red;
         [SerializeField] private Color endpointColor = Color.red;
+        [SerializeField] private Color walkPathColor = Color.green;
         [SerializeField] private int lineThickness = 3;
         [SerializeField] private int endpointRadius = 3;
         [SerializeField] private float pathFadeDuration = 0.4f;
@@ -61,6 +62,7 @@ namespace Game.UI
         private Sprite pathOverlaySprite;
         private Tween pathFadeTween;
         private bool pathCurrentlyDrawn;
+        private bool includeWalkPath;
 
         public string PanelName => "MapViewer";
         public bool BlocksInput => true;
@@ -98,6 +100,9 @@ namespace Game.UI
             if (!IsActive || baseMapBytes == null || mapImage == null)
                 return;
 
+            if (includeWalkPath)
+                return;
+
             bool shouldShow = MapPathRevealState.IsRevealed;
             if (shouldShow == pathCurrentlyDrawn)
                 return;
@@ -127,6 +132,18 @@ namespace Game.UI
 
         public bool SetMapData(HeldMapData mapData)
         {
+            includeWalkPath = false;
+            return ApplyMapData(mapData);
+        }
+
+        public bool SetMapDataWithWalkPath(HeldMapData mapData)
+        {
+            includeWalkPath = true;
+            return ApplyMapData(mapData);
+        }
+
+        private bool ApplyMapData(HeldMapData mapData)
+        {
             currentMapData = mapData;
 
             if (titleText != null)
@@ -145,15 +162,16 @@ namespace Game.UI
                     baseMapBytes = File.ReadAllBytes(loadPath);
                     bool useOverlayImage = pathOverlayImage != null;
                     bool revealed = MapPathRevealState.IsRevealed;
-                    mapSprite = BuildMapSprite(withPath: !useOverlayImage && revealed);
+                    bool showOverlay = includeWalkPath || revealed;
+                    mapSprite = BuildMapSprite(withPath: !useOverlayImage && showOverlay);
 
                     if (useOverlayImage && currentTex != null)
                     {
                         var overlay = BuildPathOverlaySprite(currentTex.width, currentTex.height);
                         pathOverlayImage.sprite = overlay;
                         pathOverlayImage.enabled = overlay != null;
-                        SetPathOverlayAlphaImmediate(revealed ? 1f : 0f);
-                        pathCurrentlyDrawn = revealed;
+                        SetPathOverlayAlphaImmediate(showOverlay ? 1f : 0f);
+                        pathCurrentlyDrawn = showOverlay;
                     }
                 }
                 else
@@ -266,7 +284,9 @@ namespace Game.UI
             {
                 saveLoadService ??= ServiceContainer.Instance.TryGet<ISaveLoadService>();
                 var path = saveLoadService?.GetCachedPathForCurrentLevel();
-                if (path != null && path.Count >= 1)
+                bool hasCached = path != null && path.Count >= 1;
+                bool hasWalk = includeWalkPath && HasWalkPath();
+                if (hasCached || hasWalk)
                     DrawPathOnTexture(currentTex, path);
             }
 
@@ -302,7 +322,9 @@ namespace Game.UI
 
             saveLoadService ??= ServiceContainer.Instance.TryGet<ISaveLoadService>();
             var path = saveLoadService?.GetCachedPathForCurrentLevel();
-            if (path != null && path.Count >= 1)
+            bool hasCached = path != null && path.Count >= 1;
+            bool hasWalk = includeWalkPath && HasWalkPath();
+            if (hasCached || hasWalk)
                 DrawPathOnTexture(pathOverlayTex, path);
             else
                 pathOverlayTex.Apply();
@@ -349,7 +371,35 @@ namespace Game.UI
                 .OnComplete(() => pathFadeTween = null);
         }
 
-        private void DrawPathOnTexture(Texture2D tex, List<Vector3> path)
+        private void DrawPathOnTexture(Texture2D tex, List<Vector3> cachedPath)
+        {
+            if (cachedPath != null && cachedPath.Count >= 1)
+            {
+                DrawPathLines(tex, cachedPath, lineColor, lineThickness);
+
+                int ex0 = Mathf.RoundToInt(cachedPath[0].x);
+                int ey0 = Mathf.RoundToInt(cachedPath[0].z);
+                PlotDisc(tex, ex0, ey0, endpointRadius, endpointColor);
+
+                int ex1 = Mathf.RoundToInt(cachedPath[cachedPath.Count - 1].x);
+                int ey1 = Mathf.RoundToInt(cachedPath[cachedPath.Count - 1].z);
+                PlotDisc(tex, ex1, ey1, endpointRadius, endpointColor);
+            }
+
+            if (includeWalkPath)
+            {
+                var walkPath = ResolveWalkPath();
+                if (walkPath != null && walkPath.Count >= 1)
+                    DrawPathLines(tex, walkPath, walkPathColor, lineThickness);
+            }
+
+            // Draw player position marker
+            DrawPlayerPositionMarker(tex);
+
+            tex.Apply();
+        }
+
+        private static void DrawPathLines(Texture2D tex, List<Vector3> path, Color color, int thickness)
         {
             for (int i = 0; i < path.Count - 1; i++)
             {
@@ -357,21 +407,20 @@ namespace Game.UI
                 int y0 = Mathf.RoundToInt(path[i].z);
                 int x1 = Mathf.RoundToInt(path[i + 1].x);
                 int y1 = Mathf.RoundToInt(path[i + 1].z);
-                PlotLine(tex, x0, y0, x1, y1, lineColor, lineThickness);
+                PlotLine(tex, x0, y0, x1, y1, color, thickness);
             }
+        }
 
-            int ex0 = Mathf.RoundToInt(path[0].x);
-            int ey0 = Mathf.RoundToInt(path[0].z);
-            PlotDisc(tex, ex0, ey0, endpointRadius, endpointColor);
+        private static List<Vector3> ResolveWalkPath()
+        {
+            var tracker = ServiceContainer.Instance.TryGet<PlayerStatsTrackerService>()?.GetPathTracker();
+            return tracker?.PathPositions;
+        }
 
-            int ex1 = Mathf.RoundToInt(path[path.Count - 1].x);
-            int ey1 = Mathf.RoundToInt(path[path.Count - 1].z);
-            PlotDisc(tex, ex1, ey1, endpointRadius, endpointColor);
-
-            // Draw player position marker
-            DrawPlayerPositionMarker(tex);
-
-            tex.Apply();
+        private static bool HasWalkPath()
+        {
+            var walk = ResolveWalkPath();
+            return walk != null && walk.Count >= 1;
         }
 
         private void DrawPlayerPositionMarker(Texture2D tex)

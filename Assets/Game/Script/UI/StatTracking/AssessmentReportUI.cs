@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using Game.Player.Stat.Assessment;
 using Game.Core.DI;
+using Game.UI;
 
 /// <summary>
 /// UI presenter for displaying assessment reports
@@ -37,6 +38,10 @@ public class AssessmentReportUI : MonoBehaviour
     
     [Header("Generate Button")]
     [SerializeField] private Button generateAssessmentButton;
+
+    [Header("View Map With Walk Path")]
+    [SerializeField] private Button viewMapWithPathButton;
+    [SerializeField] private HeldMapData assessmentMapData;
     
     [Header("Rank Icons (Optional)")]
     [SerializeField] private Sprite lostWandererIcon;
@@ -57,6 +62,52 @@ public class AssessmentReportUI : MonoBehaviour
         {
             generateAssessmentButton.onClick.AddListener(GenerateAndDisplayAssessment);
         }
+
+        if (viewMapWithPathButton != null)
+        {
+            viewMapWithPathButton.onClick.AddListener(HandleViewMapWithPath);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (generateAssessmentButton != null)
+        {
+            generateAssessmentButton.onClick.RemoveListener(GenerateAndDisplayAssessment);
+        }
+
+        if (viewMapWithPathButton != null)
+        {
+            viewMapWithPathButton.onClick.RemoveListener(HandleViewMapWithPath);
+        }
+    }
+
+    private void HandleViewMapWithPath()
+    {
+        if (assessmentMapData == null)
+        {
+            Debug.LogWarning("[AssessmentReportUI] No HeldMapData assigned for the walk-path map button.");
+            return;
+        }
+
+        var uiServiceProvider = UIServiceProvider.Instance;
+        if (uiServiceProvider == null)
+        {
+            Debug.LogWarning("[AssessmentReportUI] UIServiceProvider not found.");
+            return;
+        }
+
+        var mapPanel = uiServiceProvider.GetPanel<MapViewerPanel>();
+        if (mapPanel == null)
+        {
+            Debug.LogWarning("[AssessmentReportUI] MapViewerPanel not found.");
+            return;
+        }
+
+        if (!mapPanel.SetMapDataWithWalkPath(assessmentMapData))
+            return;
+
+        uiServiceProvider.OpenPanel(mapPanel.PanelName);
     }
     
     private void OnEnable()
