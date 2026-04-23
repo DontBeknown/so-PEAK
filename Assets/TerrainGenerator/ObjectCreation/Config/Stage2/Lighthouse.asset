@@ -13,15 +13,15 @@ MonoBehaviour:
   m_Name: Lighthouse
   m_EditorClassIdentifier: Assembly-CSharp::SpawnConfig
   ObjectName: Lighthouse
-  Prefab: {fileID: 8274077260532194656, guid: dc9baecee7283c340b1c3654f975ca48, type: 3}
+  Prefab: {fileID: 1665842126198509778, guid: 7f9c1687ff6ead342a283b04e94ec542, type: 3}
   IsTerrainTree: 0
   TreePrototypeIndex: 0
-  BaseRadius: 5.75
-  BaseHeight: 21
+  BaseRadius: 3.5
+  BaseHeight: 17.40177
   MinScale: 1
   MaxScale: 1
   BaseRotation: {x: 0, y: 0, z: 0}
-  PositionOffset: {x: -3, y: 0, z: -3}
+  PositionOffset: {x: 0, y: 0.8, z: 0}
   RoadRule: 1
   MinSpacing: 1
   Density: 1
