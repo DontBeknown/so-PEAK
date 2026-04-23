@@ -16488,10 +16488,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Player.PathFollowing.PlayerPathDriver
   driveMode: 1
+  statImmue: 0
+  ignoreSlope: 1
   playerController: {fileID: 4962120396931287550}
   playerCamera: {fileID: 0}
   hjbClickPathController: {fileID: 0}
-  characterController: {fileID: 0}
+  characterController: {fileID: 988247627514051869}
+  playerStats: {fileID: 4013136103283677608}
   arrivalRadius: 0.6
   lowStaminaThreshold: 0.15
   resumeStaminaThreshold: 0.9
@@ -16500,7 +16503,7 @@ MonoBehaviour:
   postJumpStuckSeconds: 1
   ignoreLayers:
     serializedVersion: 2
-    m_Bits: 2048
+    m_Bits: 133120
 --- !u!1 &4494736775984268260
 GameObject:
   m_ObjectHideFlags: 0
