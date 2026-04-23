@@ -429,6 +429,11 @@ namespace Game.Player
         {
             _inputHandler?.SetInputBlocked(blocked);
         }
+
+        public void SetInventoryToggleBlocked(bool blocked)
+        {
+            _inputHandler?.SetInventoryToggleBlocked(blocked);
+        }
         
         /// <summary>
         /// Check if the pickup/interact button is currently held down
@@ -440,6 +445,11 @@ namespace Game.Player
         /// Used by gathering system to detect button release even when movement is locked.
         /// </summary>
         public bool IsPickupButtonPhysicallyHeld => _inputHandler?.IsPickupButtonPhysicallyHeld ?? false;
+
+        /// <summary>
+        /// Exposes the input handler so path-driving systems can inject synthetic input.
+        /// </summary>
+        public Game.Player.Services.PlayerInputHandler InputHandler => _inputHandler;
         #endregion
     }
 }

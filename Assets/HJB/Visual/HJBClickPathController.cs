@@ -82,6 +82,7 @@ public class HJBClickPathController : MonoBehaviour
         {
             ToggleCachedPathDisplay(fadeInDuration, 0f, fadeOutDuration);
         }
+
     }
 
     public void ToggleCachedPathDisplay(float fadeInSeconds = -1f, float displaySeconds = -1f, float fadeOutSeconds = -1f)

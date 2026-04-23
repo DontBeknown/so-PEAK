@@ -18,7 +18,10 @@ namespace Game.Player.Services
         private PlayerInventoryFacade _inventoryFacade;
         
         private Vector2 _moveInput;
+        private Vector2? _moveOverride;
+        private bool? _sprintOverride;
         private bool _inputBlocked = false;
+        private bool _inventoryToggleBlocked = false;
         private float _sprintPressTime = -1f;
         private const float SprintInputBufferTime = 0.15f;
 
@@ -28,7 +31,18 @@ namespace Game.Player.Services
         public System.Action OnQuickUseRequested;
         public System.Action OnPauseToggleRequested;
 
-        public Vector2 MoveInput => _moveInput;
+        public Vector2 MoveInput => _moveOverride ?? _moveInput;
+
+        /// <summary>
+        /// Set a synthetic move direction that overrides physical input (used by PlayerPathDriver).
+        /// Pass null to restore physical input.
+        /// </summary>
+        public void OverrideMoveInput(Vector2? value) => _moveOverride = value;
+
+        /// <summary>
+        /// Force the sprint flag regardless of physical button state. Pass null to restore physical input.
+        /// </summary>
+        public void SetSprintOverride(bool? value) => _sprintOverride = value;
 
         /// <summary>
         /// Returns true if the sprint button is held down. Includes a brief input buffer
@@ -38,6 +52,7 @@ namespace Game.Player.Services
         {
             get
             {
+                if (_sprintOverride.HasValue) return _sprintOverride.Value;
                 if (IsInputBlocked()) return false;
                 if (_inputActions.Player.Sprint.IsPressed())
                 {
@@ -100,6 +115,14 @@ namespace Game.Player.Services
             }
         }
 
+        /// <summary>
+        /// Blocks or unblocks inventory toggle input (OpenInventory action).
+        /// </summary>
+        public void SetInventoryToggleBlocked(bool blocked)
+        {
+            _inventoryToggleBlocked = blocked;
+        }
+
         private void BindInputActions()
         {
             // Movement input (continuous) - block when input is blocked or inventory is open
@@ -131,8 +154,16 @@ namespace Game.Player.Services
                 if (!IsInputBlocked())
                     OnInteractRequested?.Invoke();
             };
-            _inputActions.Player.OpenInventory.performed += _ => OnInventoryToggleRequested?.Invoke();
-            _inputActions.Player.Pause.performed += _ => OnPauseToggleRequested?.Invoke();
+            _inputActions.Player.OpenInventory.performed += _ =>
+            {
+                if (!_inventoryToggleBlocked)
+                    OnInventoryToggleRequested?.Invoke();
+            };
+            _inputActions.Player.Pause.performed += _ => 
+            {
+                if (!_inventoryToggleBlocked)
+                    OnPauseToggleRequested?.Invoke();
+            };
             
             // Uncomment when sprint is added to input actions
             // _inputActions.Player.QuickUse.performed += _ => 
@@ -152,11 +183,16 @@ namespace Game.Player.Services
             return _inputBlocked || IsInventoryOpen();
         }
 
+        /// <summary>
+        /// Trigger a jump bypassing input-block state (used by PlayerPathDriver for stuck recovery).
+        /// </summary>
+        public void TriggerJump() => HandleJumpInput();
+
         private void HandleJumpInput()
         {
             if (_stateTransitioner?.CurrentState != null)
             {
-                _stateTransitioner.CurrentState.OnJump(_model, _moveInput);
+                _stateTransitioner.CurrentState.OnJump(_model, MoveInput);
             }
         }
 

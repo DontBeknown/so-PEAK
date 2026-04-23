@@ -12,6 +12,11 @@ namespace Game.Interaction
         [SerializeField] private string customPrompt = "";
         [SerializeField] private float refillDuration = 3f;
 
+        private void Start()
+        {
+            holdStartSoundID = "Refill_Canteen";
+            holdCompleteSoundID = "Refill_Canteen_Complete";
+        }
         public override string InteractionPrompt
         {
             get

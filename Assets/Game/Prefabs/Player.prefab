@@ -16143,6 +16143,7 @@ GameObject:
   - component: {fileID: 7247859217976784321}
   - component: {fileID: 6185875552093178812}
   - component: {fileID: 5655163553795439231}
+  - component: {fileID: 7211555308733799645}
   m_Layer: 13
   m_Name: Player
   m_TagString: Player
@@ -16474,6 +16475,32 @@ CapsuleCollider:
   m_Height: 2.75049
   m_Direction: 1
   m_Center: {x: 0, y: 0.875245, z: 0}
+--- !u!114 &7211555308733799645
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4482526209655570014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 438b6eab3843338458363e7c1346d29e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Player.PathFollowing.PlayerPathDriver
+  driveMode: 1
+  playerController: {fileID: 4962120396931287550}
+  playerCamera: {fileID: 0}
+  hjbClickPathController: {fileID: 0}
+  characterController: {fileID: 0}
+  arrivalRadius: 0.6
+  lowStaminaThreshold: 0.15
+  resumeStaminaThreshold: 0.9
+  stuckEpsilon: 0.05
+  stuckSeconds: 1
+  postJumpStuckSeconds: 1
+  ignoreLayers:
+    serializedVersion: 2
+    m_Bits: 2048
 --- !u!1 &4494736775984268260
 GameObject:
   m_ObjectHideFlags: 0
