@@ -13719,7 +13719,7 @@ MonoBehaviour:
   itemStatsText: {fileID: 7525089771511716126}
   itemTypeText: {fileID: 1819883916203058296}
   itemQuantityText: {fileID: 5892525710256702811}
-  offset: {x: 15, y: -15}
+  offset: {x: 80, y: -15}
 --- !u!114 &4688469898614290232
 MonoBehaviour:
   m_ObjectHideFlags: 0
