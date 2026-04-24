@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
   itemName: Acacia Sap
   description: Sticky sap that gives a quick boost and slows thirst drain.
-  icon: {fileID: 21300000, guid: 50097e53903a1504d984f18c7b1b11ed, type: 3}
+  icon: {fileID: 21300000, guid: 388cb36c9bdec05479506b84bd00c291, type: 3}
   maxStackSize: 1
   itemType: 1
   gridSize: {x: 1, y: 1}

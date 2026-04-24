@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
   itemName: BlueBerry
   description: Juicy blueberries that are best for hydration and light hunger recovery.
-  icon: {fileID: 21300000, guid: 42c825dd426f6464bbba762111cb8131, type: 3}
+  icon: {fileID: 21300000, guid: 051e84fb171e9ff4f9285f317b8db760, type: 3}
   maxStackSize: 1
   itemType: 1
   gridSize: {x: 1, y: 1}

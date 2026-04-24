@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
   itemName: Date palm
   description: Sweet dates that restore hunger and reduce thirst drain.
-  icon: {fileID: 21300000, guid: 629897c06d8c570459e804a0377c5381, type: 3}
+  icon: {fileID: 21300000, guid: 46d7022338ec11449bc4eed2691e6c06, type: 3}
   maxStackSize: 1
   itemType: 1
   gridSize: {x: 2, y: 2}

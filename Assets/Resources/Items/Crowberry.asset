@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
   itemName: Crowberry
   description: Tart crowberries that help with hunger and give a quick stamina lift.
-  icon: {fileID: 21300000, guid: c7c46bf4bf7bf954d8923d7aef38cfda, type: 3}
+  icon: {fileID: 21300000, guid: d5c34fdcc26e26542863e6d250eeddfd, type: 3}
   maxStackSize: 1
   itemType: 1
   gridSize: {x: 1, y: 1}
