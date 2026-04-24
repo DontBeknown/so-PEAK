@@ -63,6 +63,7 @@ public class HJBClickPathController : MonoBehaviour
 
     void Update()
     {
+#if UNITY_EDITOR
         if (Input.GetKeyDown(KeyCode.P))
         {
             // Sync the solver step with the current active level height multiplier if needed, 
@@ -82,7 +83,7 @@ public class HJBClickPathController : MonoBehaviour
         {
             ToggleCachedPathDisplay(fadeInDuration, 0f, fadeOutDuration);
         }
-
+#endif
     }
 
     public void ToggleCachedPathDisplay(float fadeInSeconds = -1f, float displaySeconds = -1f, float fadeOutSeconds = -1f)
