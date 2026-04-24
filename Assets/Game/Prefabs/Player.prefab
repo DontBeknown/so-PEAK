@@ -4974,7 +4974,7 @@ MonoBehaviour:
   dialogData: {fileID: 11400000, guid: 383feb82d6b3abf4b88d61b8626b8852, type: 2}
   replayIfTriggered: 0
   _dialogManager: {fileID: 4036666107913804897}
-  debugGameplaySceneName: Scene_Debug_Gameplay
+  debugGameplaySceneName: Tutorial_Scene
 --- !u!114 &2872759342119167229
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4996,7 +4996,7 @@ MonoBehaviour:
     triggerOnce: 1
   interactionDetector: {fileID: 6903466817524714061}
   dialogManager: {fileID: 4036666107913804897}
-  debugGameplaySceneName: Scene_Debug_Gameplay
+  debugGameplaySceneName: Tutorial_Scene
 --- !u!114 &3781271768975692295
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23135,7 +23135,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaveExitButton
   menuSceneName: Scene_Menu
-  waitingRoomSceneName: Scene_Debug_Gameplay
+  waitingRoomSceneName: Tutorial_Scene
 --- !u!114 &7417154447713567254
 MonoBehaviour:
   m_ObjectHideFlags: 0

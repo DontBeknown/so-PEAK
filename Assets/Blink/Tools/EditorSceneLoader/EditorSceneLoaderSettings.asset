@@ -19,3 +19,5 @@ MonoBehaviour:
     scene: {fileID: 102900000, guid: a72210e55e7935740bbe118be099462e, type: 3}
   - displayName: Debug
     scene: {fileID: 102900000, guid: 99c9720ab356a0642a771bea13969a05, type: 3}
+  - displayName: Tutorial
+    scene: {fileID: 102900000, guid: ee94b9efc34417e4c8bc687e5aed5a89, type: 3}

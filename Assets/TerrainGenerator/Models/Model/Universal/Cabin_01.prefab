@@ -2858,6 +2858,10 @@ PrefabInstance:
       propertyPath: 'forestPool.Array.data[4]'
       value: 
       objectReference: {fileID: 11400000, guid: 4ab2f40d2659baa489612cd1b2a19d1b, type: 2}
+    - target: {fileID: 5364726192260399029, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
+      propertyPath: m_Layer
+      value: 11
+      objectReference: {fileID: 0}
     - target: {fileID: 7493584719571517060, guid: 5d79d91de6276604c9a2b1aa28a73fb2, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.219
