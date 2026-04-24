@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MapItem
   itemName: Contour Map
   description: 
-  icon: {fileID: 21300000, guid: 0520339f5a61fdf48b478f7a1d894025, type: 3}
+  icon: {fileID: 21300000, guid: 9829acf808f749647850d4e8259b0692, type: 3}
   maxStackSize: 1
   itemType: 3
   gridSize: {x: 2, y: 2}

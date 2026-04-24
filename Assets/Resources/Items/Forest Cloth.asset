@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EquipmentItem
   itemName: Forest Cloth
   description: Balanced outdoor clothing suited for mixed weather.
-  icon: {fileID: 21300000, guid: 686161071ef7775448055f798bea6d70, type: 3}
+  icon: {fileID: 21300000, guid: 675e7db245ba5194d912844526efe623, type: 3}
   maxStackSize: 1
   itemType: 3
   gridSize: {x: 3, y: 2}

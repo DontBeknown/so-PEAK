@@ -18,14 +18,12 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 7bcb5de78b06619448ca98b6b31d1f05, type: 3}
   maxStackSize: 1
   itemType: 3
-  category: 0
   gridSize: {x: 2, y: 2}
   worldPrefab: {fileID: 1387712542713289088, guid: a9f98aba87a84fa47bde79329ea4aa85, type: 3}
   isConsumable: 0
   consumableEffects: []
-  isCraftingMaterial: 0
-  isCraftedItem: 0
   equipmentSlot: 2
+  playerModelIndex: -1
   statModifiers:
   - modifierType: 3
     value: 0.8
@@ -36,3 +34,6 @@ MonoBehaviour:
   - modifierType: 9
     value: -0.2
     isMultiplicative: 1
+  isRuntimeGenerated: 0
+  runtimeInstanceId: 
+  runtimeTemplateItemId: 
