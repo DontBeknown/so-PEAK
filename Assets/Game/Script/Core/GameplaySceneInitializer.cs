@@ -141,6 +141,8 @@ public class GameplaySceneInitializer : MonoBehaviour
         TryStartTutorial(resolvedSaveData);  
 
         saveLoadService.MarkFirstSpawnComplete();
+
+        saveLoadService.PerformAutoSave(false);
     }
 
     private void AwardStarterCollectablesAfterSpawn()

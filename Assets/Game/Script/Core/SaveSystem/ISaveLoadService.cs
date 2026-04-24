@@ -16,7 +16,7 @@ public interface ISaveLoadService
     // Auto-save
     void EnableAutoSave(float intervalSeconds);
     void DisableAutoSave();
-    void PerformAutoSave();
+    void PerformAutoSave(bool refreshFreshLevelEntryFlag = true);
     void PerformAutoSave(Transform customSpawnPoint);
     
     // Backup

@@ -315,14 +315,14 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         autoSaveEnabled = false;
     }
     
-    public void PerformAutoSave()
+    public void PerformAutoSave(bool refreshFreshLevelEntryFlag = true)
     {
         if (currentWorldSave != null)
         {
             UpdatePlayerDataFromGame();
             
             if (enableDebug) Debug.Log("Auto-saving...");
-            SaveWorld(currentWorldSave);
+            SaveWorld(currentWorldSave, refreshFreshLevelEntryFlag);
         }
     }
 
