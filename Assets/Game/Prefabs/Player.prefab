@@ -8375,7 +8375,7 @@ MonoBehaviour:
   statTrackingTabButton: {fileID: 689852426822230723}
   assessmentTabButton: {fileID: 4228865020872775895}
   nextLevelButton: {fileID: 6500771218384914567}
-  viewMapWithPathButton: {fileID: 0}
+  viewMapWithPathButton: {fileID: 127170226500912807}
   sessionTimeText: {fileID: 5486085932368527091}
   distanceText: {fileID: 5613161592184492341}
   staminaText: {fileID: 1161669563457336896}
