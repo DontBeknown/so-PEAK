@@ -41,12 +41,16 @@ public class TemperatureStat : Stat
     private float _weatherOffset       = 0f;
     private float _heatSourceBonus     = 0f;
     private float _warmthInsulation    = 0f;
+    private float _coldResistance      = 0f;
+    private float _hotResistance       = 0f;
 
     // ── Debug read-only (used by PlayerStatsEditor) ───────────────────
     public float DebugEnvironmentTarget => _environmentTarget;
     public float DebugWeatherOffset     => _weatherOffset;
     public float DebugHeatBonus         => _heatSourceBonus;
     public float DebugInsulation        => _warmthInsulation;
+    public float DebugColdResistance    => _coldResistance;
+    public float DebugHotResistance     => _hotResistance;
     public float DebugColdThreshold     => coldDamageThreshold;
     public float DebugHotThreshold      => hotDamageThreshold;
     public float DebugColdSpeedPenaltyThreshold => coldSpeedPenaltyThreshold;
@@ -107,6 +111,12 @@ public class TemperatureStat : Stat
     /// <summary>Update equipment insulation. 0 = no insulation, 1 = perfect insulation (stays at 37°C).</summary>
     public void SetInsulation(float insulation) => _warmthInsulation = Mathf.Clamp01(insulation);
 
+    /// <summary>Set cold resistance (0..1). Only pulls toward 37°C when effective target is below 37°C.</summary>
+    public void SetColdResistance(float resistance) => _coldResistance = Mathf.Clamp01(resistance);
+
+    /// <summary>Set hot resistance (0..1). Only pulls toward 37°C when effective target is above 37°C.</summary>
+    public void SetHotResistance(float resistance) => _hotResistance = Mathf.Clamp01(resistance);
+
     /// <summary>
     /// Scans nearby ITemperatureSource objects and accumulates their bonus.
     /// Call once per frame BEFORE Tick(). Mirrors InteractionDetector's OverlapSphere pattern.
@@ -145,6 +155,12 @@ public class TemperatureStat : Stat
 
         // Warm clothing blends effective target toward comfort zone (37°C)
         effectiveTarget = Mathf.Lerp(effectiveTarget, 37f, _warmthInsulation);
+
+        // Directional resistance: cold resistance only applies when cold, hot resistance only when hot
+        if (effectiveTarget < 37f)
+            effectiveTarget = Mathf.Lerp(effectiveTarget, 37f, _coldResistance);
+        else if (effectiveTarget > 37f)
+            effectiveTarget = Mathf.Lerp(effectiveTarget, 37f, _hotResistance);
 
         // Drift current temperature toward effective target
         float drift = (effectiveTarget - current) * driftRate * deltaTime;

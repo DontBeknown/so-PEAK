@@ -18,6 +18,10 @@ public class CanteenItem : HeldEquipmentItem
     [SerializeField] private float useCooldownSeconds = 2f;
     [SerializeField] private float refillDurationSeconds = 3f;
 
+    [Header("Hot Resistance Buff")]
+    [SerializeField] private float hotResistancePercent = 0f;
+    [SerializeField] private float hotResistanceDuration = 30f;
+
     [Header("Audio")]
     [SerializeField] private AudioClip drinkSound;
     [SerializeField] private AudioClip refillSound;
@@ -79,10 +83,12 @@ public class CanteenItem : HeldEquipmentItem
         state.currentCharges--;
         state.lastUsedTime = Time.time;
 
-        // Apply thirst effect
+        // Apply thirst effect + optional hot resistance buff
         if (playerStats != null)
         {
             playerStats.Drink(thirstRestorationPerSip);
+            if (hotResistancePercent > 0f)
+                playerStats.ApplyHotResistanceBuff(hotResistancePercent, hotResistanceDuration);
             //Debug.Log($"[CanteenItem] Drank from canteen - restored {thirstRestorationPerSip} thirst. Charges: {state.currentCharges}/{state.maxCharges}");
         }
 

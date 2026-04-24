@@ -136,7 +136,62 @@ namespace Game.Interaction
                 }
             }
 
-            return RuntimeEquipmentFactory.CreateRolledInstance(template, slot, rolledModifiers);
+            List<StatModifier> finalModifiers = MergeTemplateAndRolledModifiers(template, rolledModifiers);
+            return RuntimeEquipmentFactory.CreateRolledInstance(template, slot, finalModifiers);
+        }
+
+        private List<StatModifier> MergeTemplateAndRolledModifiers(EquipmentItem template, List<StatModifier> rolledModifiers)
+        {
+            Dictionary<StatModifierType, float> valueByType = new Dictionary<StatModifierType, float>();
+            Dictionary<StatModifierType, bool> multiplicativeByType = new Dictionary<StatModifierType, bool>();
+
+            AddModifiers(template != null ? template.StatModifiers : null, valueByType, multiplicativeByType);
+            AddModifiers(rolledModifiers, valueByType, multiplicativeByType);
+
+            List<StatModifier> merged = new List<StatModifier>();
+            foreach (var pair in valueByType)
+            {
+                bool isMultiplicative = multiplicativeByType.TryGetValue(pair.Key, out bool flag) && flag;
+                merged.Add(new StatModifier(pair.Key, pair.Value, isMultiplicative));
+            }
+
+            return merged;
+        }
+
+        private void AddModifiers(IReadOnlyList<IStatModifier> source, Dictionary<StatModifierType, float> valueByType, Dictionary<StatModifierType, bool> multiplicativeByType)
+        {
+            if (source == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < source.Count; i++)
+            {
+                IStatModifier modifier = source[i];
+                if (modifier == null)
+                {
+                    continue;
+                }
+
+                if (valueByType.ContainsKey(modifier.ModifierType))
+                {
+                    valueByType[modifier.ModifierType] += modifier.Value;
+                }
+                else
+                {
+                    valueByType.Add(modifier.ModifierType, modifier.Value);
+                }
+
+                // When mixed types exist for one stat, prefer multiplicative so the result remains a single entry.
+                if (multiplicativeByType.ContainsKey(modifier.ModifierType))
+                {
+                    multiplicativeByType[modifier.ModifierType] = multiplicativeByType[modifier.ModifierType] || modifier.IsMultiplicative;
+                }
+                else
+                {
+                    multiplicativeByType.Add(modifier.ModifierType, modifier.IsMultiplicative);
+                }
+            }
         }
 
         private int SelectModifierIndex(List<int> usedIndices)

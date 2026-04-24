@@ -23,7 +23,10 @@ MonoBehaviour:
   consumableEffects: []
   equipmentSlot: 1
   playerModelIndex: 2
-  statModifiers: []
+  statModifiers:
+  - modifierType: 12
+    value: 0.3
+    isMultiplicative: 0
   isRuntimeGenerated: 0
   runtimeInstanceId: 
   runtimeTemplateItemId: 

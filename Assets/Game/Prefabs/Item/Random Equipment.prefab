@@ -109,17 +109,13 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b7b38b784d04ecd41a55b0f37414f494, type: 2}
   allowedSlots: 01000000
   modifierPool:
-  - modifierType: 0
-    minValue: 0.1
-    maxValue: 0.4
-    isMultiplicative: 1
   - modifierType: 11
-    minValue: 1
-    maxValue: 10
-    isMultiplicative: 0
+    minValue: 0.1
+    maxValue: 0.5
+    isMultiplicative: 1
   - modifierType: 4
     minValue: 0.1
-    maxValue: 0.4
+    maxValue: 0.3
     isMultiplicative: 1
   minModifierCount: 1
   maxModifierCount: 2

@@ -101,8 +101,8 @@ public class PlayerModelRefactored
     public ICameraProvider GetCameraProvider() => _cameraProvider;
 
     // Direct config properties (reads live values from Inspector for easy debugging)
-    public float WalkSpeed => _config.baseWalkSpeed;
-    public float RunSpeed => _config.baseRunSpeed;
+    public float WalkSpeed => Stats != null ? Stats.GetModifiedWalkSpeed(false) : _config.baseWalkSpeed;
+    public float RunSpeed => Stats != null ? Stats.GetModifiedRunSpeed() : _config.baseRunSpeed;
     public float ClimbSpeed => _config.baseClimbSpeed;
     public float JumpForce => _config.jumpForce;
     public float RotationSmoothness => _config.rotationSmoothness;

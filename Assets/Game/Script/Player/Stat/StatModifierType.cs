@@ -26,5 +26,7 @@ public enum StatModifierType
     FatigueGainWhenRest,     // Increases fatigue recovery when resting
 
     // Temperature Modifiers
-    WarmthInsulation         // 0..1 — blends temperature drift toward comfort zone (37°C)
+    WarmthInsulation,        // 0..1 — blends temperature drift toward comfort zone (37°C) in both directions
+    ColdResistance,          // 0..1 — pulls effective target toward 37°C only when target < 37°C
+    HotResistance            // 0..1 — pulls effective target toward 37°C only when target > 37°C
 }

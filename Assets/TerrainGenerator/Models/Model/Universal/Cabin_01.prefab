@@ -4853,6 +4853,58 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 17
       objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: maxModifierCount
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: modifierPool.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: 'allowedSlots.Array.data[0]'
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: equipmentTemplates.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: 'equipmentTemplates.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 544147a83d806f74e85bff050932f0b5, type: 2}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: modifierPool.Array.data[0].maxValue
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: modifierPool.Array.data[1].maxValue
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: modifierPool.Array.data[2].maxValue
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: modifierPool.Array.data[2].minValue
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: modifierPool.Array.data[0].modifierType
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: modifierPool.Array.data[1].modifierType
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: modifierPool.Array.data[2].modifierType
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: modifierPool.Array.data[2].isMultiplicative
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8656195751373519524, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
       propertyPath: m_Layer
       value: 17

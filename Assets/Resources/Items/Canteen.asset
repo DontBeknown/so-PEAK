@@ -32,5 +32,7 @@ MonoBehaviour:
   thirstRestorationPerSip: 20
   useCooldownSeconds: 0
   refillDurationSeconds: 3
+  hotResistancePercent: 30
+  hotResistanceDuration: 30
   drinkSound: {fileID: 0}
   refillSound: {fileID: 0}

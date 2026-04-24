@@ -259,6 +259,17 @@ public class RunningState : IPlayerState
             config.maxSlopeSpeedMultiplier,
             Mathf.Clamp01(normalizedValue));
 
+        bool isOnSlope = slopeAngle > 5f;
+
+        // Equipment slope bonus: scale by ratio of on-slope vs flat modified walk speed so WalkSpeedSlope applies.
+        if (model.Stats != null && isOnSlope)
+        {
+            float flatSpeed  = model.Stats.GetModifiedWalkSpeed(false);
+            float slopeSpeed = model.Stats.GetModifiedWalkSpeed(true);
+            if (flatSpeed > 0.01f)
+                toblerMultiplier *= slopeSpeed / flatSpeed;
+        }
+
         // ── Stamina drain (sprint rate, slope-adjusted) ────────────────
         if (model.Stats != null && horizontalVelocity.magnitude > config.movementThreshold)
         {
@@ -270,18 +281,23 @@ public class RunningState : IPlayerState
                 drainPerSecond *= 1f + (slopeAngle / 45f) * 0.5f;
             }
 
-            // Fatigue multiplier compounds on top
+            // Fatigue-driven stamina penalty, softened by PenaltyFatigueReduce equipment.
             if (model.Stats.FatigueStat != null)
             {
-                drainPerSecond *= model.Stats.FatigueStat.GetStaminaDrainMultiplier();
+                float fatigueDrainMultiplier = model.Stats.FatigueStat.GetStaminaDrainMultiplier();
+                drainPerSecond *= model.Stats.GetFatiguePenaltyMultiplier(fatigueDrainMultiplier);
             }
+
+            // Equipment stamina-drain reduction (Universal only; sprint has no dedicated reducer).
+            drainPerSecond *= model.Stats.GetStaminaDrainMultiplier(isWalking: false);
 
             model.Stats.StaminaStat.ApplyTerrainDrain(drainPerSecond);
 
-            // Update fatigue accumulation
+            // Update fatigue accumulation, scaled by equipment fatigue reduction.
             if (model.Stats.FatigueStat != null)
             {
-                float movementSpeed = horizontalVelocity.magnitude * toblerMultiplier;
+                float fatigueMult = model.Stats.GetFatigueMultiplier(isOnSlope);
+                float movementSpeed = horizontalVelocity.magnitude * toblerMultiplier * fatigueMult;
                 model.Stats.FatigueStat.UpdateMovement(slopeGradient, movementSpeed, true);
             }
         }

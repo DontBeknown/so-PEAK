@@ -45,6 +45,10 @@ public class PlayerStats : MonoBehaviour
     private PlayerControllerRefactored _playerController;
     private float _thirstDrainReductionMultiplier = 1f;
     private float _thirstDrainReductionRemaining = 0f;
+    private float _coldResistanceBuff = 0f;
+    private float _coldResistanceBuffRemaining = 0f;
+    private float _hotResistanceBuff = 0f;
+    private float _hotResistanceBuffRemaining = 0f;
 
     private IEventBus _eventBus;
     private IDayNightCycleService _dayNightService;
@@ -140,6 +144,7 @@ public class PlayerStats : MonoBehaviour
         float dt = Time.deltaTime;
 
         UpdateThirstDrainReductionBuff(dt);
+        UpdateResistanceBuffs(dt);
 
         if (!isImmune)
         {
@@ -169,6 +174,12 @@ public class PlayerStats : MonoBehaviour
             // Apply equipment warmth insulation before ticking temperature drift.
             float warmthInsulation = statModifierCalculator?.GetModifiedValue(StatModifierType.WarmthInsulation, 0f) ?? 0f;
             temperature.SetInsulation(warmthInsulation);
+
+            // Combine equipment-sourced resistance with any active buff (both 0..1, clamped).
+            float coldResistEquip = statModifierCalculator?.GetModifiedValue(StatModifierType.ColdResistance, 0f) ?? 0f;
+            float hotResistEquip  = statModifierCalculator?.GetModifiedValue(StatModifierType.HotResistance, 0f) ?? 0f;
+            temperature.SetColdResistance(Mathf.Clamp01(coldResistEquip + _coldResistanceBuff));
+            temperature.SetHotResistance(Mathf.Clamp01(hotResistEquip + _hotResistanceBuff));
 
             temperature.Tick(dt);
 
@@ -225,6 +236,29 @@ public class PlayerStats : MonoBehaviour
         thirst.SetConsumableDrainMultiplier(_thirstDrainReductionMultiplier);
     }
 
+    private void UpdateResistanceBuffs(float dt)
+    {
+        if (_coldResistanceBuffRemaining > 0f)
+        {
+            _coldResistanceBuffRemaining -= dt;
+            if (_coldResistanceBuffRemaining <= 0f)
+            {
+                _coldResistanceBuffRemaining = 0f;
+                _coldResistanceBuff = 0f;
+            }
+        }
+
+        if (_hotResistanceBuffRemaining > 0f)
+        {
+            _hotResistanceBuffRemaining -= dt;
+            if (_hotResistanceBuffRemaining <= 0f)
+            {
+                _hotResistanceBuffRemaining = 0f;
+                _hotResistanceBuff = 0f;
+            }
+        }
+    }
+
     private void HandleLongFallDeath(float dt)
     {
         if (_playerController == null || health.Current <= 0f)
@@ -255,8 +289,9 @@ public class PlayerStats : MonoBehaviour
 
     public void OnJump()
     {
-        if (stamina.CanUse(config.jumpStaminaCost))
-            stamina.Drain(config.jumpStaminaCost);
+        float cost = config.jumpStaminaCost * GetStaminaDrainMultiplier();
+        if (stamina.CanUse(cost))
+            stamina.Drain(cost);
     }
     
     public void SetClimbing(bool climbing)
@@ -363,6 +398,36 @@ public class PlayerStats : MonoBehaviour
         temperature.SetInsulation(insulation);
     }
 
+    /// <summary>
+    /// Applies a temporary cold-resistance buff (percent 0..100). Non-stacking; retriggering only refreshes duration.
+    /// </summary>
+    public void ApplyColdResistanceBuff(float percent, float durationSeconds)
+    {
+        if (_coldResistanceBuffRemaining > 0f)
+        {
+            _coldResistanceBuffRemaining = durationSeconds;
+            return;
+        }
+
+        _coldResistanceBuff = Mathf.Clamp(percent, 0f, 100f) / 100f;
+        _coldResistanceBuffRemaining = durationSeconds;
+    }
+
+    /// <summary>
+    /// Applies a temporary hot-resistance buff (percent 0..100). Non-stacking; retriggering only refreshes duration.
+    /// </summary>
+    public void ApplyHotResistanceBuff(float percent, float durationSeconds)
+    {
+        if (_hotResistanceBuffRemaining > 0f)
+        {
+            _hotResistanceBuffRemaining = durationSeconds;
+            return;
+        }
+
+        _hotResistanceBuff = Mathf.Clamp(percent, 0f, 100f) / 100f;
+        _hotResistanceBuffRemaining = durationSeconds;
+    }
+
     public void RestoreStamina(float amount)
     {
         stamina.Add(amount);
@@ -446,6 +511,32 @@ public class PlayerStats : MonoBehaviour
         return baseSpeed;
     }
     
+    /// <summary>
+    /// Gets the modified run speed with equipment bonuses applied.
+    /// Sprint reuses <see cref="StatModifierType.UniversalWalkSpeed"/>; there is no dedicated run modifier.
+    /// </summary>
+    public float GetModifiedRunSpeed()
+    {
+        float baseSpeed = config.baseRunSpeed;
+
+        if (statModifierCalculator != null)
+        {
+            baseSpeed = statModifierCalculator.GetModifiedValue(StatModifierType.UniversalWalkSpeed, baseSpeed);
+        }
+
+        return baseSpeed;
+    }
+
+    /// <summary>
+    /// Wraps a fatigue-sourced stamina drain multiplier with <see cref="StatModifierType.PenaltyFatigueReduce"/>
+    /// so equipment can soften the stamina penalty that high fatigue imposes.
+    /// </summary>
+    public float GetFatiguePenaltyMultiplier(float baseMultiplier)
+    {
+        if (statModifierCalculator == null) return baseMultiplier;
+        return statModifierCalculator.GetModifiedValue(StatModifierType.PenaltyFatigueReduce, baseMultiplier);
+    }
+
     /// <summary>
     /// Gets the modified climb speed with equipment bonuses applied.
     /// </summary>

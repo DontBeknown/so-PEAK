@@ -267,6 +267,7 @@ public class TooltipUI : MonoBehaviour
             StatModifierType.UniversalFatigueReduce => "Fatigue Reduction",
             StatModifierType.SlopeFatigueReduce => "Slope Fatigue Reduction",
             StatModifierType.FatigueGainWhenRest => "Rest Recovery Bonus",
+            StatModifierType.WarmthInsulation => "Temperature Regulation",
             _ => type.ToString()
         };
     }

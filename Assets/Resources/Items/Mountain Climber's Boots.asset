@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ae0d8562e999bf4c84777fdd4a5aef9, type: 3}
   m_Name: Mountain Climber's Boots
   m_EditorClassIdentifier: Assembly-CSharp::EquipmentItem
-  itemName: 'Mountain Climber''s Boots '
-  description: Reinforced boots with specialized grip. Makes climbing easier and
-    less exhausting
+  itemName: 'Hiking''s Boots '
+  description: Reinforced boots with specialized grip. Makes hiking easier and less
+    exhausting
   icon: {fileID: 21300000, guid: 466fbc16e9c1fad49b180eeffa8cbe6d, type: 3}
   maxStackSize: 1
   itemType: 3
@@ -24,16 +24,7 @@ MonoBehaviour:
   consumableEffects: []
   equipmentSlot: 2
   playerModelIndex: -1
-  statModifiers:
-  - modifierType: 3
-    value: 0.8
-    isMultiplicative: 0
-  - modifierType: 6
-    value: -0.25
-    isMultiplicative: 1
-  - modifierType: 9
-    value: -0.2
-    isMultiplicative: 1
+  statModifiers: []
   isRuntimeGenerated: 0
   runtimeInstanceId: 
   runtimeTemplateItemId: 
