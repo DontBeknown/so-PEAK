@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 1887208468594921486}
   - component: {fileID: 5142523843062098485}
   - component: {fileID: 8162643930521366224}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: Wall_Narrow_01_a
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -168,7 +168,7 @@ GameObject:
   - component: {fileID: 3332560}
   - component: {fileID: 2305752}
   - component: {fileID: 3662884976334110960}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: Roof_01_a
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -282,7 +282,7 @@ GameObject:
   - component: {fileID: 2385258}
   - component: {fileID: 567015369870630683}
   - component: {fileID: 8094914715241002995}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: Wall_Wide_01_a
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -417,7 +417,7 @@ GameObject:
   - component: {fileID: 2369578}
   - component: {fileID: 6067056086792568783}
   - component: {fileID: 1568452275942284085}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: Wall_Narrow_02_a
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -549,7 +549,7 @@ GameObject:
   m_Component:
   - component: {fileID: 415204}
   - component: {fileID: 2927236465249440365}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: Cabin_Desert
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -622,7 +622,7 @@ GameObject:
   - component: {fileID: 2369466}
   - component: {fileID: 3910837582544627771}
   - component: {fileID: 8196348621458889806}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: Floor_01_a
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -757,7 +757,7 @@ GameObject:
   - component: {fileID: 2365980}
   - component: {fileID: 1258230514704104224}
   - component: {fileID: 5687597557748790723}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: Wall_Wide_02_a
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1077,7 +1077,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7303101590565771138}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1239,7 +1239,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4318468403644145545}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1281,7 +1281,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8760550185227390477}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1444,7 +1444,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3771592799455161343}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1489,7 +1489,7 @@ GameObject:
   - component: {fileID: 2168990174648566265}
   - component: {fileID: 928038405929379542}
   - component: {fileID: 3744187781729577789}
-  m_Layer: 11
+  m_Layer: 17
   m_Name: Point Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1614,7 +1614,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 785292937964643490}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: SavePoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1645,7 +1645,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 619499219446433917}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2908,7 +2908,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 100000, guid: 67db6c5b46da9ab41bb4dc86d034f942, type: 3}
       propertyPath: m_Layer
-      value: 11
+      value: 17
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 67db6c5b46da9ab41bb4dc86d034f942, type: 3}
       propertyPath: m_LocalScale.x
@@ -3023,9 +3023,10 @@ MonoBehaviour:
   holdDuration: 3
   interactionPriority: 1.2
   highlightEffect: {fileID: 0}
-  holdStartSound: {fileID: 0}
-  holdCompleteSound: {fileID: 0}
-  holdCancelSound: {fileID: 0}
+  holdStartSoundID: gather_start
+  holdStartSoundVolume: 1
+  holdCompleteSoundID: 
+  holdCompleteSoundVolume: 1
   customPrompt: Check Assessment Report
   interactionVerb: Hold F to
   terminalInteractionPriority: 0.8
