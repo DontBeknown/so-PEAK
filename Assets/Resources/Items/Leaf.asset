@@ -14,13 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
   itemName: Leaf
   description: Common plant material for starter crafting and fuel.
-  icon: {fileID: 21300000, guid: 9414d5698a6fc35419b715bd376e8e13, type: 3}
+  icon: {fileID: 21300000, guid: b3bce5d67df61d04ab1234a0ba6a299f, type: 3}
   maxStackSize: 20
   itemType: 0
-  category: 2
   gridSize: {x: 1, y: 1}
   worldPrefab: {fileID: 6825214349049489606, guid: 5d5ae4d71c5db7f47be4e05e04358a6d, type: 3}
   isConsumable: 0
   consumableEffects: []
-  isCraftingMaterial: 0
-  isCraftedItem: 0

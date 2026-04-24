@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
   itemName: Apple
   description: A crisp apple that restores a little thirst and hunger.
-  icon: {fileID: 21300000, guid: adaac68d8e5d693499597113889d11d3, type: 3}
+  icon: {fileID: 21300000, guid: bf953bf57fa74d447ace88914accb4e5, type: 3}
   maxStackSize: 1
   itemType: 1
   gridSize: {x: 1, y: 1}
