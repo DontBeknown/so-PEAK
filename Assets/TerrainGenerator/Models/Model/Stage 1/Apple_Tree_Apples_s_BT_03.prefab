@@ -153,7 +153,7 @@ MonoBehaviour:
   holdDuration: 3
   interactionPriority: 1.2
   highlightEffect: {fileID: 0}
-  holdStartSoundID: gather_start
+  holdStartSoundID: Foliage_Interact
   holdStartSoundVolume: 1
   holdCompleteSoundID: item_pickup
   holdCompleteSoundVolume: 1

@@ -2712,6 +2712,10 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: modifierPool.Array.data[0].isMultiplicative
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8682322740610022109, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
       propertyPath: m_Name
       value: Random Equipment
@@ -3159,6 +3163,8 @@ MonoBehaviour:
   customSaveSpawnPoint: {fileID: 785292937964643490}
   progressNextLevelOnUse: 0
   saveGameOnUse: 1
+  normalizeTemperatureWhenNear: 1
+  comfortRadius: 5
 --- !u!1001 &4028500114970844508
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4769,15 +4775,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
       propertyPath: modifierPool.Array.data[1].maxValue
-      value: 0.3
+      value: -0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: modifierPool.Array.data[1].minValue
+      value: -0.3
       objectReference: {fileID: 0}
     - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
       propertyPath: modifierPool.Array.data[2].maxValue
-      value: 0.3
+      value: -0.1
       objectReference: {fileID: 0}
     - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
       propertyPath: modifierPool.Array.data[2].minValue
-      value: 0.1
+      value: -0.3
       objectReference: {fileID: 0}
     - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
       propertyPath: modifierPool.Array.data[0].modifierType
