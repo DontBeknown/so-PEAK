@@ -269,12 +269,14 @@ namespace Game.Player.Stat.Assessment
                 feedback += $" ({metrics.deathCount} death{(metrics.deathCount > 1 ? "s" : "")} recorded.)";
             }
             
+            float healthLossPenalty = Mathf.Min(metrics.totalHealthLost * 0.5f, 50f);
+
             return new SafetyBreakdown
             {
                 risksAvoided = risksAvoided,
                 risksEncountered = metrics.encounterredRisks,
                 avoidanceRate = avoidanceRate,
-                healthLossScore = safetyScore,
+                healthLossScore = healthLossPenalty,
                 deathCount = metrics.deathCount,
                 deathPenaltyScore = metrics.deathCount * DEATH_PENALTY_PER_DEATH,
                 healthLossIncidents = metrics.healthLossIncidents,

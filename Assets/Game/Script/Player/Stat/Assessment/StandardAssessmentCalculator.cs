@@ -10,6 +10,8 @@ namespace Game.Player.Stat.Assessment
     {
         private const float DEATH_PENALTY_PER_DEATH = 10f;
         private const float PLANNING_TOLERANCE_PERCENT = 10f;
+        private const float HEALTH_PENALTY_RATE = 0.5f;
+        private const float HEALTH_PENALTY_CAP = 50f;
         
         public float CalculateEfficiencyScore(PerformanceMetrics metrics, OptimalMetrics optimal)
         {
@@ -37,8 +39,8 @@ namespace Game.Player.Stat.Assessment
             // Base score from avoidance
             float baseScore = avoidanceRate * 100f;
             
-            // Penalty for health loss (each incident reduces score)
-            float healthPenalty = metrics.healthLossIncidents * 5f; // -5 points per incident
+            // Penalty scales with total HP lost, not per-frame damage calls
+            float healthPenalty = Mathf.Min(metrics.totalHealthLost * HEALTH_PENALTY_RATE, HEALTH_PENALTY_CAP);
 
             float deathPenalty = metrics.deathCount * DEATH_PENALTY_PER_DEATH;
             
