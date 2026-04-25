@@ -43,6 +43,7 @@ public class TemperatureStat : Stat
     private float _warmthInsulation    = 0f;
     private float _coldResistance      = 0f;
     private float _hotResistance       = 0f;
+    private bool  _comfortForced       = false;
 
     // ── Debug read-only (used by PlayerStatsEditor) ───────────────────
     public float DebugEnvironmentTarget => _environmentTarget;
@@ -117,6 +118,9 @@ public class TemperatureStat : Stat
     /// <summary>Set hot resistance (0..1). Only pulls toward 37°C when effective target is above 37°C.</summary>
     public void SetHotResistance(float resistance) => _hotResistance = Mathf.Clamp01(resistance);
 
+    /// <summary>When true, effective temperature target is forced to 37°C (comfort zone) regardless of environment.</summary>
+    public void SetComfortForced(bool forced) => _comfortForced = forced;
+
     /// <summary>
     /// Scans nearby ITemperatureSource objects and accumulates their bonus.
     /// Call once per frame BEFORE Tick(). Mirrors InteractionDetector's OverlapSphere pattern.
@@ -149,18 +153,30 @@ public class TemperatureStat : Stat
         if (!_initialized) return; // wait for Init() — prevents drift before Awake completes
 
         // Effective ambient = environment + weather shift + heat sources, clamped to stat range
-        float effectiveTarget = Mathf.Clamp(
+        float rawTarget = Mathf.Clamp(
             _environmentTarget + _weatherOffset + _heatSourceBonus,
             0f, max);
 
-        // Warm clothing blends effective target toward comfort zone (37°C)
-        effectiveTarget = Mathf.Lerp(effectiveTarget, 37f, _warmthInsulation);
+        // Combine insulation + directional resistance into one lerp so they add intuitively.
+        // Cold side: warmthInsulation + coldResistance; hot side: warmthInsulation + hotResistance.
+        float effectiveTarget;
+        if (rawTarget < 37f)
+        {
+            float combined = Mathf.Clamp01(_warmthInsulation + _coldResistance);
+            effectiveTarget = Mathf.Lerp(rawTarget, 37f, combined);
+        }
+        else if (rawTarget > 37f)
+        {
+            float combined = Mathf.Clamp01(_warmthInsulation + _hotResistance);
+            effectiveTarget = Mathf.Lerp(rawTarget, 37f, combined);
+        }
+        else
+        {
+            effectiveTarget = 37f;
+        }
 
-        // Directional resistance: cold resistance only applies when cold, hot resistance only when hot
-        if (effectiveTarget < 37f)
-            effectiveTarget = Mathf.Lerp(effectiveTarget, 37f, _coldResistance);
-        else if (effectiveTarget > 37f)
-            effectiveTarget = Mathf.Lerp(effectiveTarget, 37f, _hotResistance);
+        // Terminal comfort zone: force target to body temperature regardless of environment
+        if (_comfortForced) effectiveTarget = 37f;
 
         // Drift current temperature toward effective target
         float drift = (effectiveTarget - current) * driftRate * deltaTime;

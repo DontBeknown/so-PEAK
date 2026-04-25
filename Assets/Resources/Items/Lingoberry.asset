@@ -27,3 +27,6 @@ MonoBehaviour:
   - effectKind: 0
     statType: 1
     value: 7
+  - effectKind: 0
+    statType: 2
+    value: 3

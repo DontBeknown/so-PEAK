@@ -47,12 +47,22 @@ namespace Game.Interaction
         [SerializeField] private float healAmountOnUse = 25f;
         [Tooltip("Optional custom spawn transform to save for the player. If null, current player position is used.")]
         [SerializeField] private Transform customSaveSpawnPoint;
-        [SerializeField] private bool progressNextLevelOnUse = false; 
+        [SerializeField] private bool progressNextLevelOnUse = false;
         [SerializeField] private bool saveGameOnUse = true;
+
+        [Header("Temperature Comfort Zone")]
+        [Tooltip("If true, player temperature drifts toward 37°C while within comfortRadius of this terminal.")]
+        [SerializeField] private bool normalizeTemperatureWhenNear = true;
+        [Tooltip("Radius in which the temperature comfort effect is applied.")]
+        [SerializeField] private float comfortRadius = 5f;
         
         private float lastInteractionTime = -999f;
         private bool _hasBeenUsed = false;
         private UIServiceProvider uiServiceProvider;
+        private readonly Collider[] _comfortBuffer = new Collider[4];
+        private PlayerStats _playerInComfortZone;
+        private float _comfortZoneTimer;
+        private const float ComfortZoneUpdateInterval = 0.1f;
         private IDayNightCycleService _dayNightService;
         private IEventBus _eventBus;
         private bool _isWaitingForPanelClose = false;
@@ -63,8 +73,31 @@ namespace Game.Interaction
 
         private void Awake()
         {
-           
+
         }
+
+        private void Update()
+        {
+            if (!normalizeTemperatureWhenNear) return;
+            _comfortZoneTimer += Time.deltaTime;
+            if (_comfortZoneTimer < ComfortZoneUpdateInterval) return;
+            _comfortZoneTimer = 0f;
+
+            int count = Physics.OverlapSphereNonAlloc(transform.position, comfortRadius, _comfortBuffer);
+            PlayerStats found = null;
+            for (int i = 0; i < count; i++)
+            {
+                if (_comfortBuffer[i] == null) continue;
+                var stats = _comfortBuffer[i].GetComponentInParent<PlayerStats>();
+                if (stats != null) { found = stats; break; }
+            }
+
+            if (found == _playerInComfortZone) return;
+            _playerInComfortZone?.TemperatureStat.SetComfortForced(false);
+            _playerInComfortZone = found;
+            _playerInComfortZone?.TemperatureStat.SetComfortForced(true);
+        }
+
         private void Start()
         {
             // Defer service initialization - they may not be ready yet when spawned dynamically
@@ -359,6 +392,10 @@ namespace Game.Interaction
             _isWaitingForPanelClose = false;
             UnlockPlayer();
             _interactingPlayer = null;
+
+            _playerInComfortZone?.TemperatureStat.SetComfortForced(false);
+            _playerInComfortZone = null;
+
             base.OnDestroy();
         }
 
