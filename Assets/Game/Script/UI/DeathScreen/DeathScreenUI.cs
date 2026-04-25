@@ -138,6 +138,8 @@ public class DeathScreenUI : MonoBehaviour, IUIPanel
             DeathCause.LandslideRock=> "Listen for falling rocks and watch steep slopes. Move out of the impact path immediately.",
             DeathCause.Falling      => "Plan your route ahead and stay clear of cliff edges. Look for safer slopes instead of jumping.",
             DeathCause.Tornado      => "Avoid tornado zones. If caught inside, run away from the center line as quickly as possible.",
+            DeathCause.Freezing     => "Equip warm clothing found near campfires or inside cabins. Stay near heat sources to slow the cold.",
+            DeathCause.Heatstroke   => "Wear light clothing found near campfires or inside cabins. Drink water to cool your body down.",
             _                       => "Prepare yourself before exploring the unknown."
         };
     }
@@ -152,6 +154,8 @@ public class DeathScreenUI : MonoBehaviour, IUIPanel
             DeathCause.LandslideRock=> "You were fatally struck by a landslide rock.",
             DeathCause.Falling      => "You fell from a height and died on impact.",
             DeathCause.Tornado      => "You were caught near the tornado core and killed by violent spinning force and impact.",
+            DeathCause.Freezing     => "You froze to death. The cold consumed your body heat before you could find warmth.",
+            DeathCause.Heatstroke   => "You died from heatstroke. The extreme heat overwhelmed your body.",
             _                       => "Your life ended before you could react."
         };
     }
