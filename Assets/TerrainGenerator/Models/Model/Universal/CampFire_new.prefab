@@ -292,6 +292,22 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: -0.193
       objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: holdCompleteSoundID
+      value: item_pickup
+      objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: modifierPool.Array.data[1].maxValue
+      value: -0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: modifierPool.Array.data[1].minValue
+      value: -0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5355416596955685481, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
+      propertyPath: modifierPool.Array.data[0].isMultiplicative
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8682322740610022109, guid: 10eed03dbdffe9f4ebcc8d6ae7f257df, type: 3}
       propertyPath: m_Name
       value: Random Equipment
@@ -352,7 +368,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: ec4b42a77ec137c44b66ecc9c95199c1, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 5270.6523
+      value: 5266.68
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ec4b42a77ec137c44b66ecc9c95199c1, type: 3}
       propertyPath: m_LocalPosition.y
@@ -485,7 +501,9 @@ MonoBehaviour:
   healAmountOnUse: 25
   customSaveSpawnPoint: {fileID: 0}
   progressNextLevelOnUse: 0
-  saveGameOnUse: 1
+  saveGameOnUse: 0
+  normalizeTemperatureWhenNear: 1
+  comfortRadius: 5
 --- !u!1001 &7886593701394275900
 PrefabInstance:
   m_ObjectHideFlags: 0
