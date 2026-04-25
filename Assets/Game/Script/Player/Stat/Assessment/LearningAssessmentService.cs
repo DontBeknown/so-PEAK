@@ -259,9 +259,9 @@ namespace Game.Player.Stat.Assessment
             
             int risksAvoided = metrics.totalRiskyEvents - metrics.encounterredRisks;
             
-            string feedback = avoidanceRate >= 90f ? "Very safe — hazards avoided excellently." :
-                             avoidanceRate >= 70f ? "Safe, but some risks were encountered." :
-                             avoidanceRate >= 50f ? "Risky — be more cautious on the next climb." :
+            string feedback = safetyScore >= 90f ? "Very safe — hazards avoided excellently." :
+                             safetyScore >= 70f ? "Safe, but some risks were encountered." :
+                             safetyScore >= 50f ? "Risky — be more cautious on the next climb." :
                              "Dangerous! Too many hazard events encountered.";
 
             if (metrics.deathCount > 0)
@@ -277,6 +277,8 @@ namespace Game.Player.Stat.Assessment
                 healthLossScore = safetyScore,
                 deathCount = metrics.deathCount,
                 deathPenaltyScore = metrics.deathCount * DEATH_PENALTY_PER_DEATH,
+                healthLossIncidents = metrics.healthLossIncidents,
+                totalHealthLost = metrics.totalHealthLost,
                 feedback = feedback
             };
         }

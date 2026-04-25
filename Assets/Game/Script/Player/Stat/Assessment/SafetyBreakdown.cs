@@ -12,5 +12,7 @@ public class SafetyBreakdown
     public float healthLossScore;        // Penalty for health loss
     public int deathCount;
     public float deathPenaltyScore;
+    public int healthLossIncidents;
+    public float totalHealthLost;
     public string feedback;
 }
