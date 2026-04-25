@@ -23,6 +23,10 @@ public class PlayerSpawner : MonoBehaviour
     [SerializeField] private float fadeInDuration = 0.3f;
     [SerializeField] private float fadeOutDuration = 0.5f;
 
+    [Header("Music")]
+    [SerializeField] private string fallbackMusicId = "music_gameplay";
+    [SerializeField] private string[] levelMusicIds; // index 0 = level 1, index 1 = level 2, …
+
     [SerializeField] private bool loadFromSave = true;
 
     [Header("Debug")]
@@ -175,7 +179,12 @@ public class PlayerSpawner : MonoBehaviour
             yield return FadeOutLoadingScreen();
         }
 
-        ServiceContainer.Instance.TryGet<IEventBus>()?.Publish(new PlayMusicEvent("music_gameplay"));
+        int currentLevel = SaveLoadService.Instance?.GetCurrentLevel() ?? 1;
+        int musicIdx = currentLevel - 1;
+        string musicId = (levelMusicIds != null && musicIdx >= 0 && musicIdx < levelMusicIds.Length && !string.IsNullOrEmpty(levelMusicIds[musicIdx]))
+            ? levelMusicIds[musicIdx]
+            : fallbackMusicId;
+        ServiceContainer.Instance.TryGet<IEventBus>()?.Publish(new PlayMusicEvent(musicId));
         
         ServiceContainer.Instance.TryGet<IEventBus>()?.Publish(new PlayerSpawnCompletedEvent());
         
