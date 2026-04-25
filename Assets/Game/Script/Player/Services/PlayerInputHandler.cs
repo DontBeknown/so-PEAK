@@ -136,7 +136,7 @@ namespace Game.Player.Services
             // Action inputs - delegate to current state (block when input is blocked or inventory is open)
             _inputActions.Player.Jump.performed += _ => 
             {
-                if (!IsInputBlocked())
+                if (!IsInputBlocked() && CanJump())
                 {
                     ServiceContainer.Instance.TryGet<IEventBus>()?.Publish(new JumpExecutedEvent());
                     HandleJumpInput();
@@ -181,6 +181,14 @@ namespace Game.Player.Services
         private bool IsInputBlocked()
         {
             return _inputBlocked || IsInventoryOpen();
+        }
+
+        private bool CanJump()
+        {
+            if (_model?.Stats == null)
+                return true;
+
+            return _model.Stats.Stamina >= _model.Stats.Config.jumpStaminaCost;
         }
 
         /// <summary>
