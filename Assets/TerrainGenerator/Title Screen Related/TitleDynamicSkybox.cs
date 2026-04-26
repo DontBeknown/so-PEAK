@@ -1,6 +1,8 @@
 using UnityEngine;
 using System;
 using Game.Environment.DayNight;
+using Game.Sound;
+using Game.Core.DI;
 
 [ExecuteAlways]
 public class TitleDynamicEnvironment : MonoBehaviour
@@ -17,6 +19,13 @@ public class TitleDynamicEnvironment : MonoBehaviour
     [Range(0f, 10f)]
     public float globalLightMultiplier = 1f;
 
+    [Header("Audio (Ambient Sounds)")]
+    [Tooltip("Make sure these match the IDs in your SoundLibrary!")]
+    public string morningAmbientId = "ambient_morning";
+    public string dayAmbientId = "ambient_day";
+    public string eveningAmbientId = "ambient_evening";
+    public string nightAmbientId = "ambient_night";
+
     [Header("Testing")]
     public bool useTestTime = false;
     [Range(0, 23)] public int testHour = 12;
@@ -25,16 +34,36 @@ public class TitleDynamicEnvironment : MonoBehaviour
     private bool _lastTestState = false;
     private float _lastMultiplier = -1f;
 
+    // --- Audio State ---
+    private SoundService _soundService;
+    private TimeOfDay _lastPlayedPeriod = (TimeOfDay)(-1); // Forces an update on the first frame
+
     void Start()
     {
-        if (Application.isPlaying && !useTestTime) ApplyEnvironment();
+        if (Application.isPlaying)
+        {
+            Debug.Log("[TitleEnvironment] Start() called. Attempting to fetch SoundService...");
+
+            // Fetch the sound service from your friend's architecture
+            _soundService = FindAnyObjectByType<SoundService>();
+
+            if (_soundService == null)
+            {
+                Debug.LogWarning("[TitleEnvironment] Start(): FAILED to find SoundService in ServiceContainer. Will try again when environment applies.");
+            }
+            else
+            {
+                Debug.Log("[TitleEnvironment] Start(): Successfully found SoundService.");
+            }
+
+            if (!useTestTime) ApplyEnvironment();
+        }
     }
 
     void Update()
     {
         if (useTestTime)
         {
-            // We now also check if the multiplier slider changed so it updates in real-time
             if (_lastHour != testHour || _lastTestState != useTestTime || _lastMultiplier != globalLightMultiplier)
             {
                 ApplyEnvironment();
@@ -65,10 +94,68 @@ public class TitleDynamicEnvironment : MonoBehaviour
 
     public void ApplyEnvironment()
     {
-        if (config == null) return;
+        if (config == null)
+        {
+            Debug.LogWarning("[TitleEnvironment] Config is missing! Cannot apply environment.");
+            return;
+        }
 
         int hour = useTestTime ? testHour : DateTime.Now.Hour;
         TimeOfDay currentPeriod = config.GetTimeOfDay(hour);
+
+        // --- AMBIENT SOUND LOGIC (WITH OPTION 2 FAILSAFE) ---
+        if (Application.isPlaying && currentPeriod != _lastPlayedPeriod)
+        {
+            Debug.Log($"[TitleEnvironment] Time period changed to: {currentPeriod}. Processing audio...");
+
+            // Failsafe 1: Try the Service Container if we still don't have it
+            if (_soundService == null && ServiceContainer.Instance != null)
+            {
+                _soundService = ServiceContainer.Instance.TryGet<SoundService>();
+                if (_soundService != null) Debug.Log("[TitleEnvironment] Found SoundService via ServiceContainer late-fetch!");
+            }
+
+            // Failsafe 2: Your friend's brute-force method
+            if (_soundService == null)
+            {
+                _soundService = FindFirstObjectByType<SoundService>();
+                if (_soundService != null) Debug.Log("[TitleEnvironment] Found SoundService via FindFirstObjectByType fallback!");
+            }
+
+            // Now attempt to play the sound
+            if (_soundService != null)
+            {
+                string targetAmbientId = "";
+
+                switch (currentPeriod)
+                {
+                    case TimeOfDay.Morning: targetAmbientId = morningAmbientId; break;
+                    case TimeOfDay.Day: targetAmbientId = dayAmbientId; break;
+                    case TimeOfDay.Evening: targetAmbientId = eveningAmbientId; break;
+                    case TimeOfDay.Night: targetAmbientId = nightAmbientId; break;
+                }
+
+                Debug.Log($"[TitleEnvironment] Target Ambient ID resolved to: '{targetAmbientId}'");
+
+                if (!string.IsNullOrEmpty(targetAmbientId))
+                {
+                    Debug.Log($"[TitleEnvironment] Calling _soundService.PlayAmbient({targetAmbientId})");
+                    _soundService.PlayAmbient(targetAmbientId);
+                }
+                else
+                {
+                    Debug.LogWarning($"[TitleEnvironment] The string ID for {currentPeriod} is empty in the Inspector!");
+                }
+            }
+            else
+            {
+                // If it hits this point, the SoundService literally does not exist in the active scene at all.
+                Debug.LogError("[TitleEnvironment] FATAL: SoundService is completely missing from the scene. Check if it was destroyed or never loaded.");
+            }
+
+            _lastPlayedPeriod = currentPeriod;
+        }
+        // ----------------------------------------------------
 
         Color lightColor = Color.white;
         float lightIntensity = 1f;
@@ -134,7 +221,7 @@ public class TitleDynamicEnvironment : MonoBehaviour
             RenderSettings.fogDensity = fogDens;
         }
 
-        // 3. Apply Skybox (This triggers Unity's automatic override)
+        // 3. Apply Skybox
         Material skyboxMat = config.GetSkyboxForTime(currentPeriod);
         if (skyboxMat != null)
         {
@@ -144,10 +231,8 @@ public class TitleDynamicEnvironment : MonoBehaviour
         // 4. Force global illumination to update
         DynamicGI.UpdateEnvironment();
 
-        // 5. THE FIX: Force Ambient Mode to Flat LAST
+        // 5. Force Ambient Mode to Flat
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-
-        // Multiply the base color by your intensity slider to force Unity to respect it!
         RenderSettings.ambientLight = ambColor * ambIntens;
         RenderSettings.ambientIntensity = ambIntens;
     }
