@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Contour Map
   m_EditorClassIdentifier: Assembly-CSharp::MapItem
   itemName: Contour Map
-  description: 
+  description: 'A detailed topographic chart rendered with precise elevation lines.
+    Equip and <b><color=#590000>LEFT-CLICK</color></b> to unfold '
   icon: {fileID: 21300000, guid: 9829acf808f749647850d4e8259b0692, type: 3}
   maxStackSize: 1
   itemType: 3

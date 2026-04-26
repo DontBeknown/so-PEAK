@@ -7,8 +7,8 @@ public class WorldSaveData
     // World Identity
     public string worldName;
     public string worldGuid;
-    public DateTime createdDate;
-    public DateTime lastPlayedDate;
+    public string createdDate;
+    public string lastPlayedDate;
     public float totalPlayTime; // in seconds
     
     // Seed Information
@@ -187,7 +187,7 @@ public class SaveMetadata
 {
     public string worldGuid;
     public string worldName;
-    public DateTime lastPlayedDate;
+    public string lastPlayedDate;
     public float totalPlayTime;
     public string thumbnailPath; // Screenshot
     

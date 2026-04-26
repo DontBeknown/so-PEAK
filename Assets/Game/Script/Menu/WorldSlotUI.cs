@@ -98,7 +98,10 @@ namespace Game.Menu
 
             if (lastPlayedText != null)
             {
-                lastPlayedText.text = $"{worldMetadata.lastPlayedDate:dd/MM/yyyy}";
+                if (DateTime.TryParse(worldMetadata.lastPlayedDate, out var lastPlayed))
+                    lastPlayedText.text = lastPlayed.ToString("dd/MM/yyyy");
+                else
+                    lastPlayedText.text = worldMetadata.lastPlayedDate;
             }
 
             if (playTimeText != null)

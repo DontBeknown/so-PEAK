@@ -38,8 +38,8 @@ MonoBehaviour:
   sprintStaminaDrainPerSecond: 5
   climbStaminaDrainPerSecond: 8
   staminaExhaustedSpeedMultiplier: 0.4
-  staminaRegenPerSecond: 15
-  staminaDrainCooldown: 1
+  staminaRegenPerSecond: 30
+  staminaDrainCooldown: 0.8
   baseMovementStaminaDrain: 0.5
   slopeStartAngle: 15
   slopeMaxAngle: 45

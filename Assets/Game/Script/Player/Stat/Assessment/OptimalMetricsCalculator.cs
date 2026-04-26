@@ -65,9 +65,8 @@ namespace Game.Player.Stat.Assessment
                 if (segDist < 0.01f) continue;
                 totalDistance += segDist;
 
-                // Derive slope gradient from waypoint elevation delta
-                float horizontalDist  = Mathf.Sqrt((to.x - from.x) * (to.x - from.x) + (to.z - from.z) * (to.z - from.z));
-                float slopeGradient   = horizontalDist > 0.01f ? (to.y - from.y) / horizontalDist : 0f;
+                // Derive slope gradient from sampled ground normals to better match runtime movement.
+                float slopeGradient = ComputeSlopeGradient(from, to, config);
 
                 // Tobler's hiking function — same formula as WalkingState.CalculateSlopeEffects
                 float toblerRaw  = Mathf.Exp(-3.5f * Mathf.Abs(slopeGradient + 0.05f));
@@ -155,6 +154,48 @@ namespace Game.Player.Stat.Assessment
             for (int i = 0; i < path.Count - 1; i++)
                 total += Vector3.Distance(path[i], path[i + 1]);
             return total;
+        }
+
+        private static float ComputeSlopeGradient(Vector3 from, Vector3 to, PlayerConfig config)
+        {
+            float horizontalDist = Mathf.Sqrt((to.x - from.x) * (to.x - from.x) + (to.z - from.z) * (to.z - from.z));
+            if (horizontalDist <= 0.01f)
+                return 0f;
+
+            // If no config/layer info is available, keep the original waypoint-delta behavior.
+            if (config == null)
+                return (to.y - from.y) / horizontalDist;
+
+            Vector3 direction = new Vector3(to.x - from.x, 0f, to.z - from.z).normalized;
+            Vector3 normalSum = Vector3.zero;
+            int hitCount = 0;
+
+            const int samples = 4;
+            for (int i = 0; i < samples; i++)
+            {
+                float t = samples == 1 ? 0f : (float)i / (samples - 1);
+                Vector3 samplePos = Vector3.Lerp(from, to, t);
+                Vector3 rayOrigin = samplePos + Vector3.up * 1.5f;
+
+                if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hit, 4f, config.groundLayer))
+                {
+                    normalSum += hit.normal;
+                    hitCount++;
+                }
+            }
+
+            if (hitCount == 0)
+                return (to.y - from.y) / horizontalDist;
+
+            Vector3 avgNormal = (normalSum / hitCount).normalized;
+            float slopeAngle = Vector3.Angle(Vector3.up, avgNormal);
+            float slopeGradient = Mathf.Tan(slopeAngle * Mathf.Deg2Rad);
+
+            bool isMovingUphill = Vector3.Dot(direction, avgNormal) < 0f;
+            if (!isMovingUphill)
+                slopeGradient = -slopeGradient;
+
+            return slopeGradient;
         }
     }
 }

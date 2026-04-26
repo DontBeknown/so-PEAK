@@ -148,6 +148,12 @@ namespace Game.Player.Stat.Assessment
                 rawMetrics = metrics,
                 planningUsedFallbackPath = lastAssessmentUsedFallbackPath
             };
+
+            if (assessment.optimalMetrics != null && assessment.optimalMetrics.optimalTime > 0.01f)
+            {
+                float timeDeltaPercent = ((metrics.totalTime - assessment.optimalMetrics.optimalTime) / assessment.optimalMetrics.optimalTime) * 100f;
+                Debug.Log($"[LearningAssessment] Time comparison - actual:{metrics.totalTime:F1}s optimal:{assessment.optimalMetrics.optimalTime:F1}s delta:{timeDeltaPercent:+0.0;-0.0;0.0}%");
+            }
             
             Debug.Log($"[LearningAssessment] Assessment complete! Score: {totalScore:F1}, Rank: {assessment.rank}");
             
@@ -162,6 +168,8 @@ namespace Game.Player.Stat.Assessment
         private OptimalMetrics GetOptimalMetrics(PerformanceMetrics metrics)
         {
             lastAssessmentUsedFallbackPath = false;
+            PlayerStats playerStats = FindFirstObjectByType<PlayerStats>();
+            PlayerConfig playerConfig = playerStats != null ? playerStats.Config : null;
 
             if (hasExternalOptimalMetrics)
             {
@@ -176,7 +184,7 @@ namespace Game.Player.Stat.Assessment
                 if (cachedPath != null && cachedPath.Count >= 2)
                 {
                     Debug.Log($"[LearningAssessment] Using cached HJB path from save for level {saveLoadService.GetCurrentLevel()}");
-                    return optimalCalculator.Calculate(cachedPath);
+                    return optimalCalculator.Calculate(cachedPath, playerConfig);
                 }
 
                 Debug.LogWarning($"[LearningAssessment] No cached HJB path found for level {saveLoadService.GetCurrentLevel()}");
@@ -187,7 +195,7 @@ namespace Game.Player.Stat.Assessment
             {
                 lastAssessmentUsedFallbackPath = true;
                 Debug.LogWarning("[LearningAssessment] Falling back to player path for optimal metrics — planning score unreliable");
-                return optimalCalculator.Calculate(metrics.pathTaken);
+                return optimalCalculator.Calculate(metrics.pathTaken, playerConfig);
             }
 
             lastAssessmentUsedFallbackPath = true;

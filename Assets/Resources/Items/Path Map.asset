@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Path Map
   m_EditorClassIdentifier: Assembly-CSharp::MapItem
   itemName: Path Map
-  description: 
+  description: 'A weathered paper chart detailing the region''s established paths
+    and major landmarks. Equip and <b><color=#590000>LEFT-CLICK</color></b> to unfold '
   icon: {fileID: 21300000, guid: bb22aca5559fd6447900965f73804b36, type: 3}
   maxStackSize: 1
   itemType: 3

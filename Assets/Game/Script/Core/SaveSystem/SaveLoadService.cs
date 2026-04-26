@@ -98,8 +98,8 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         {
             worldName = worldName,
             worldGuid = Guid.NewGuid().ToString(),
-            createdDate = DateTime.Now,
-            lastPlayedDate = DateTime.Now,
+            createdDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+            lastPlayedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
             totalPlayTime = 0f,
             seedData = seedData,
             gameVersion = Application.version,
@@ -126,7 +126,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         try
         {
             AccumulatePlayTimeSinceLastSave(saveData);
-            saveData.lastPlayedDate = DateTime.Now;
+            saveData.lastPlayedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             UpdateTutorialDataFromGame(saveData);
             SpawnedObjectStateRegistry.ExportToSave(saveData);
             
@@ -189,6 +189,74 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         currentWorldSave.assessmentData.deathCount = learningAssessment.GetDeathCount();
 
         return SaveWorld(currentWorldSave, refreshFreshLevelEntryFlag: false);
+    }
+
+    /// <summary>
+    /// Saves only the current inventory placements into the active save file.
+    /// Leaves all other save data untouched.
+    /// </summary>
+    public bool SaveInventoryItemsOnly()
+    {
+        if (currentWorldSave == null)
+        {
+            
+            return false;
+        }
+
+        try
+        {
+            var inventoryManager = ServiceContainer.Instance.TryGet<Game.Player.Inventory.InventoryManagerRefactored>();
+            if (inventoryManager == null)
+            {
+                return false;
+            }
+
+            currentWorldSave.playerData ??= CreateDefaultPlayerData();
+
+            var placements = inventoryManager.GetAllPlacements();
+            currentWorldSave.playerData.inventoryItems = new List<InventoryItemSaveData>();
+
+            foreach (var p in placements)
+            {
+                var generatedEquipment = BuildGeneratedEquipmentPayload(p.Item);
+                currentWorldSave.playerData.inventoryItems.Add(new InventoryItemSaveData
+                {
+                    itemId = generatedEquipment?.templateItemId ?? p.Item.name,
+                    quantity = 1,
+                    gridX = p.Position.x,
+                    gridY = p.Position.y,
+                    isRotated = p.Rotated,
+                    generatedEquipment = generatedEquipment
+                });
+            }
+
+            string filePath = GetSaveFilePath(currentWorldSave.worldGuid);
+            string json = JsonUtility.ToJson(currentWorldSave, true);
+
+            if (enableCompression)
+            {
+                json = CompressString(json);
+            }
+
+            File.WriteAllText(filePath, json);
+
+            if (createBackupOnSave)
+            {
+                CreateBackup(currentWorldSave.worldGuid);
+            }
+
+            if (enableDebug)
+            {
+                Debug.Log($"[SaveLoadService] Saved inventory only ({currentWorldSave.playerData.inventoryItems.Count} items)");
+            }
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to save inventory-only data: {e.Message}");
+            return false;
+        }
     }
     
     public WorldSaveData LoadWorld(string worldGuid)
