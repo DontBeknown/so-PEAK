@@ -301,7 +301,17 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             saveData.worldState.triggeredDialogs ??= new List<string>();
             saveData.assessmentData ??= new AssessmentSaveData();
             saveData.assessmentData.consumablesUsedList ??= new List<ConsumableUseSaveData>();
-            
+
+            // If the save has no inventory and tutorial is not yet complete, starting items
+            // were never given to the real player (world was abandoned in the waiting room).
+            // Restore _firstSpawnPending so IsNewWorld() returns true and
+            // AddStartingItemsIfConfigured() gives items on the next spawn.
+            if (saveData.tutorial?.isCompleted == false &&
+                (saveData.playerData?.inventoryItems == null || saveData.playerData.inventoryItems.Count == 0))
+            {
+                _firstSpawnPending = true;
+            }
+
             currentWorldSave = saveData;
             ResetPlayTimeCheckpoint();
             SpawnedObjectStateRegistry.ImportFromSave(saveData);

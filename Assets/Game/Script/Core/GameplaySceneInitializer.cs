@@ -266,8 +266,6 @@ public class GameplaySceneInitializer : MonoBehaviour
         {
             InventoryItem item = ResolveSavedInventoryItem(itemData.itemId, itemData.generatedEquipment);
             if (item == null) continue;
-
-            Debug.Log($"Restoring inventory item: {item.name} x{itemData.quantity} at grid ({itemData.gridX}, {itemData.gridY}), rotated: {itemData.isRotated}");
             // Restore at saved grid position; fall back to auto-place if the slot is taken
             var placement = inventoryManager.PlaceItemAt(item, new Vector2Int(itemData.gridX, itemData.gridY));
             if (placement == null)
