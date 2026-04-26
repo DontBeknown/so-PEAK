@@ -6367,10 +6367,10 @@ RectTransform:
   - {fileID: 9112483059629998088}
   m_Father: {fileID: 7686709837730348964}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 506.7, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 741.1254, y: -796.14}
+  m_SizeDelta: {x: 506.7, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6210250767566399425
 CanvasRenderer:
@@ -8077,7 +8077,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 598.21}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &7994334035006095587
 MonoBehaviour:
@@ -9957,10 +9957,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 7686709837730348964}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1345.98, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 741.1254, y: -36}
+  m_SizeDelta: {x: 1345.98, y: 204.69}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &5565823310073294428
 CanvasRenderer:
@@ -23080,7 +23080,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 4.6569214, y: 17.463379}
-  m_SizeDelta: {x: 1482.2509, y: 0}
+  m_SizeDelta: {x: 1482.2509, y: 926.14}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2565535327829049136
 CanvasRenderer:
@@ -28580,10 +28580,10 @@ RectTransform:
   - {fileID: 88876194090469114}
   m_Father: {fileID: 7686709837730348964}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1124.4977, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 741.1254, y: -503.415}
+  m_SizeDelta: {x: 1124.4977, y: 445.45}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5737684660300631796
 CanvasRenderer:
@@ -34761,10 +34761,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 8198990890767084640}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1160.2905, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 562.24884, y: -20}
+  m_SizeDelta: {x: 1160.2905, y: 558.21}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &3250565184244850526
 CanvasRenderer:
@@ -34804,12 +34804,20 @@ MonoBehaviour:
 
 
     Game
-    Design & Development: Me and My Friends
+    Design & Development: Team ThisIsSoPEAK
 
-    Programming: Me and My Friends
+    Programming: Team ThisIsSoPEAK
 
     Art
-    & Assets: Power of MONEY
+    & Assets: LMHPOLY, Team ThisIsSoPEAK
+
+
+    SPECIAL THANKS
+
+    PLXY Music
+
+    Composer:
+    Suwattana Pratoomkaew
 
 
     Special Thanks to all the players who contributed
