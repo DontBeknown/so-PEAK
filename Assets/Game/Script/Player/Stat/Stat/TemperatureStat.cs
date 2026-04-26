@@ -40,6 +40,8 @@ public class TemperatureStat : Stat
     private float _environmentTarget   = 37f;
     private float _weatherOffset       = 0f;
     private float _heatSourceBonus     = 0f;
+    private float _heldItemHeatBonus         = 0f;
+    private float _heldItemColdResistance    = 0f;
     private float _warmthInsulation    = 0f;
     private float _coldResistance      = 0f;
     private float _hotResistance       = 0f;
@@ -109,6 +111,12 @@ public class TemperatureStat : Stat
     /// </summary>
     public void SetWeatherTemperatureOffset(float offsetCelsius) => _weatherOffset = offsetCelsius;
 
+    /// <summary>Set warmth bonus from a held item. Called each frame by HeldItemBehaviorManager.</summary>
+    public void SetHeldItemHeatBonus(float bonus) => _heldItemHeatBonus = bonus;
+
+    /// <summary>Set cold resistance from a held item (e.g. torch). 0..1. Called each frame by HeldItemBehaviorManager.</summary>
+    public void SetHeldItemColdResistance(float resistance) => _heldItemColdResistance = Mathf.Clamp01(resistance);
+
     /// <summary>Update equipment insulation. 0 = no insulation, 1 = perfect insulation (stays at 37°C).</summary>
     public void SetInsulation(float insulation) => _warmthInsulation = Mathf.Clamp01(insulation);
 
@@ -154,7 +162,7 @@ public class TemperatureStat : Stat
 
         // Effective ambient = environment + weather shift + heat sources, clamped to stat range
         float rawTarget = Mathf.Clamp(
-            _environmentTarget + _weatherOffset + _heatSourceBonus,
+            _environmentTarget + _weatherOffset + _heatSourceBonus + _heldItemHeatBonus,
             0f, max);
 
         // Combine insulation + directional resistance into one lerp so they add intuitively.
@@ -162,7 +170,7 @@ public class TemperatureStat : Stat
         float effectiveTarget;
         if (rawTarget < 37f)
         {
-            float combined = Mathf.Clamp01(_warmthInsulation + _coldResistance);
+            float combined = Mathf.Clamp01(_warmthInsulation + _coldResistance + _heldItemColdResistance);
             effectiveTarget = Mathf.Lerp(rawTarget, 37f, combined);
         }
         else if (rawTarget > 37f)

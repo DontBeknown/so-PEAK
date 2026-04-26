@@ -11,6 +11,10 @@ public abstract class HeldEquipmentItem : EquipmentItem
     [Header("Held Item Properties")]
     [SerializeField] protected GameObject heldItemPrefab; // Visual prefab to spawn on player
 
+    // Transient: set by GridInventoryUI immediately before Equip(); read+cleared inside CreateBehavior().
+    // Also written by HeldItemBehaviorManager when unequipping so the state survives re-add to grid.
+    [System.NonSerialized] public HeldItemState PendingEquipState;
+
     /// <summary>
     /// Gets the unique state ID for this item instance.
     /// Override to provide instance-specific IDs if needed.
@@ -34,7 +38,7 @@ public abstract class HeldEquipmentItem : EquipmentItem
     /// Creates a behavior component for this item on the player.
     /// Must be implemented by derived classes.
     /// </summary>
-    public abstract IHeldItemBehavior CreateBehavior(GameObject playerObject);
+    public abstract IHeldItemBehavior CreateBehavior(GameObject playerObject, HeldItemState state = null);
 
     /// <summary>
     /// Gets a description of the current state (for UI display).
@@ -50,7 +54,17 @@ public abstract class HeldEquipmentItem : EquipmentItem
     /// Initializes default state for this item.
     /// Called when item is first created or state doesn't exist.
     /// </summary>
-    protected abstract void InitializeDefaultState(HeldItemState state);
+    public abstract void InitializeDefaultState(HeldItemState state);
+
+    /// <summary>
+    /// Creates and returns a fresh HeldItemState initialized to this item's defaults.
+    /// </summary>
+    public HeldItemState CreateFreshState()
+    {
+        var state = new HeldItemState();
+        InitializeDefaultState(state);
+        return state;
+    }
 
     /// <summary>
     /// Ensures state is initialized.

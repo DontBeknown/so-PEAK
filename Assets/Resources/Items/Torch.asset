@@ -38,5 +38,5 @@ MonoBehaviour:
   igniteSound: {fileID: 0}
   cracklingSoundLoop: {fileID: 0}
   useNightFogOverride: 1
-  nightFogOverrideDensity: 0.08
+  nightFogOverrideDensity: 0.012
   nightFogFadeDuration: 0.5

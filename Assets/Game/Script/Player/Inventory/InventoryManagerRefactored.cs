@@ -181,6 +181,8 @@ namespace Game.Player.Inventory
 
                 _service.AddItem(entry.item, entry.quantity, suppressNotification: true);
             }
+
+            _eventBus.Publish(new Events.InventoryChangedEvent());
         }
 
         private bool IsInventoryEmpty()

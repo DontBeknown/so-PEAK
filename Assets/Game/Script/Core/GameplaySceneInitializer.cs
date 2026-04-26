@@ -61,14 +61,14 @@ public class GameplaySceneInitializer : MonoBehaviour
         if (worldPersistence.isNewWorld)
         {
             if (enableDebug) Debug.Log($"Initializing new world: {worldPersistence.currentWorldName}");
-            InitializeDefaultWorldState();
             resolvedSaveData = saveLoadService.CurrentWorldSave;
-
             var renderController = FindFirstObjectByType<RenderController>();
             if (renderController != null)
             {
                 yield return new WaitUntil(() => renderController.PlayerSpawnComplete);
             }
+            
+            InitializeDefaultWorldState();
         }
         else if (worldPersistence.shouldLoadWorld)
         {
@@ -83,6 +83,12 @@ public class GameplaySceneInitializer : MonoBehaviour
 
             resolvedSaveData = saveData;
 
+            // Wait until RenderController has fully completed the player spawn sequence
+            // (terrain loaded → player instantiated → services updated)
+            var renderController = FindFirstObjectByType<RenderController>();
+            yield return new WaitUntil(() =>
+                renderController != null && renderController.PlayerSpawnComplete);
+            
             // Restore day/night immediately — does not require the player
             if (saveData.worldState != null)
             {
@@ -93,13 +99,6 @@ public class GameplaySceneInitializer : MonoBehaviour
                     dayNightManager.SetDay(saveData.worldState.dayNumber);
                 }
             }
-
-            // Wait until RenderController has fully completed the player spawn sequence
-            // (terrain loaded → player instantiated → services updated)
-            var renderController = FindFirstObjectByType<RenderController>();
-            yield return new WaitUntil(() =>
-                renderController != null && renderController.PlayerSpawnComplete);
-            
             
             // Restore player-dependent state
             var playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
@@ -220,7 +219,7 @@ public class GameplaySceneInitializer : MonoBehaviour
         var dayNightManager = FindFirstObjectByType<DayNightCycleManager>();
         if (dayNightManager != null)
         {
-            dayNightManager.SetTime(6f); // 6 AM
+            dayNightManager.SetTime(8f); // 8 AM
             dayNightManager.SetDay(1);
         }
     }

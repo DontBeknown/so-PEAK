@@ -81,7 +81,7 @@ MonoBehaviour:
   tempHeatSourceRadius: 5
   tempHeatSourceLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 1024
   temperatureDayCurveLevel1:
     serializedVersion: 2
     m_Curve:
@@ -156,7 +156,7 @@ MonoBehaviour:
       outWeight: 0
     - serializedVersion: 3
       time: 0.5
-      value: 55
+      value: 48
       inSlope: 0
       outSlope: 0
       tangentMode: 0

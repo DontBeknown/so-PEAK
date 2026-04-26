@@ -255,6 +255,10 @@ public class GridInventoryUI : MonoBehaviour
         // Equipment → equip
         if (item is EquipmentItem equipItem && _equipmentManager != null)
         {
+            // Thread per-placement state to the behavior before the equip event fires.
+            if (equipItem is HeldEquipmentItem heldEquip && itemUI.Placement.LocalHeldState != null)
+                heldEquip.PendingEquipState = itemUI.Placement.LocalHeldState;
+
             // Remove the exact clicked placement first (same behavior style as drop),
             // then equip without generic inventory-type removal.
             if (_inventoryManager != null)
@@ -318,7 +322,7 @@ public class GridInventoryUI : MonoBehaviour
     public void ShowTooltip(GridItemUI itemUI)
     {
         if (tooltipUI == null || itemUI == null || itemUI.Placement == null) return;
-        tooltipUI.ShowTooltip(itemUI.Placement.Item, 1);
+        tooltipUI.ShowTooltip(itemUI.Placement.Item, 1, itemUI.Placement);
     }
 
     public void HideTooltip()

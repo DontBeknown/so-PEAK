@@ -49,6 +49,8 @@ namespace Game.UI
         [Header("Player Position Marker")]
         [SerializeField] private Color playerMarkerColor = Color.cyan;
         [SerializeField] private int playerMarkerRadius = 15;
+        [SerializeField] private Color playerMarkerOutlineColor = Color.black;
+        [SerializeField] private int playerMarkerOutlineThickness = 3;
 
         private Tween activeTween;
         private IEventBus eventBus;
@@ -432,6 +434,7 @@ namespace Game.UI
                 int px = Mathf.RoundToInt(playerPos.x);
                 int py = Mathf.RoundToInt(playerPos.z);
                 PlotDisc(tex, px, py, playerMarkerRadius, playerMarkerColor);
+                PlotCircleOutline(tex, px, py, playerMarkerRadius, playerMarkerOutlineThickness, playerMarkerOutlineColor);
             }
         }
 
@@ -472,6 +475,31 @@ namespace Game.UI
                 for (int dx = -radius; dx <= radius; dx++)
                 {
                     if (dx * dx + dy * dy <= radius * radius)
+                    {
+                        int px = cx + dx;
+                        int py = cy + dy;
+                        if (px >= 0 && px < tex.width && py >= 0 && py < tex.height)
+                            tex.SetPixel(px, py, c);
+                    }
+                }
+            }
+        }
+
+        private static void PlotCircleOutline(Texture2D tex, int cx, int cy, int radius, int thickness, Color c)
+        {
+            if (radius <= 0 || thickness <= 0)
+                return;
+
+            int innerRadius = Mathf.Max(0, radius - thickness);
+            int outerSq = radius * radius;
+            int innerSq = innerRadius * innerRadius;
+
+            for (int dy = -radius; dy <= radius; dy++)
+            {
+                for (int dx = -radius; dx <= radius; dx++)
+                {
+                    int distSq = dx * dx + dy * dy;
+                    if (distSq <= outerSq && distSq >= innerSq)
                     {
                         int px = cx + dx;
                         int py = cy + dy;

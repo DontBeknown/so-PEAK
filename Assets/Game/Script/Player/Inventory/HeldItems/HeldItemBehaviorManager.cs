@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Game.Core.DI;
 using Game.Player.Inventory.HeldItems;
+using Game.Environment.Temperature;
 
 /// <summary>
 /// Manages runtime behaviors for held items (torch, canteen).
@@ -12,6 +13,7 @@ public class HeldItemBehaviorManager : MonoBehaviour
 {
     private Dictionary<HeldEquipmentItem, IHeldItemBehavior> activeBehaviors = new Dictionary<HeldEquipmentItem, IHeldItemBehavior>();
     private EquipmentManager equipmentManager;
+    private TemperatureStat temperatureStat;
     private GameObject playerObject;
     
     // Cached bone references (found once)
@@ -42,6 +44,26 @@ public class HeldItemBehaviorManager : MonoBehaviour
         {
             Debug.LogWarning("[HeldItemBehaviorManager] EquipmentManager not found in ServiceContainer!");
         }
+
+        var playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
+        if (playerStats != null)
+            temperatureStat = playerStats.TemperatureStat;
+    }
+
+    private void Update()
+    {
+        if (temperatureStat == null) return;
+
+        float heatBonus = 0f;
+        float coldResistBonus = 0f;
+        var behavior = GetActiveBehavior();
+        if (behavior is ITemperatureSource src && src.IsActive)
+            heatBonus = src.TemperatureBonus;
+        if (behavior is IHeldItemColdResistanceSource crs && crs.IsActive)
+            coldResistBonus = crs.ColdResistanceBonus;
+
+        temperatureStat.SetHeldItemHeatBonus(heatBonus);
+        temperatureStat.SetHeldItemColdResistance(coldResistBonus);
     }
 
     private void OnDestroy()
@@ -89,7 +111,8 @@ public class HeldItemBehaviorManager : MonoBehaviour
         // Clean up any existing behavior first
         HandleItemUnequipped();
 
-        // Create new behavior
+        // PendingEquipState is set by GridInventoryUI.UseItem() before calling Equip().
+        // CreateBehavior reads and clears it internally.
         IHeldItemBehavior behavior = item.CreateBehavior(playerObject);
         if (behavior != null)
         {
@@ -108,15 +131,18 @@ public class HeldItemBehaviorManager : MonoBehaviour
         // Unequip and destroy all active behaviors
         foreach (var kvp in activeBehaviors)
         {
-            if (kvp.Value != null)
+            var heldItem = kvp.Key;
+            var behavior = kvp.Value;
+            if (behavior != null)
             {
-                kvp.Value.OnUnequipped();
-                
-                // Destroy the behavior component if it's a MonoBehaviour
-                if (kvp.Value is MonoBehaviour behaviorMono)
-                {
+                // Save current state so the returned inventory placement picks it up
+                if (behavior is TorchBehavior torchBehavior && heldItem is TorchItem torchItem)
+                    torchItem.PendingEquipState = torchBehavior.CurrentState;
+
+                behavior.OnUnequipped();
+
+                if (behavior is MonoBehaviour behaviorMono)
                     Destroy(behaviorMono);
-                }
             }
         }
         activeBehaviors.Clear();
@@ -256,7 +282,7 @@ public class HeldItemBehaviorManager : MonoBehaviour
         else if (behavior is MapBehavior mapBehavior)
         {
             // Use reflection to set the private field
-            var field = typeof(MapBehavior).GetField("rightHandBone", 
+            var field = typeof(MapBehavior).GetField("rightHandBone",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             field?.SetValue(mapBehavior, rightHandBone);
         }

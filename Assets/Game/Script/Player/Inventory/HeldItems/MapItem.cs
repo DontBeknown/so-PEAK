@@ -12,7 +12,7 @@ public class MapItem : HeldEquipmentItem
 
     public HeldMapData MapData => mapData;
 
-    public override IHeldItemBehavior CreateBehavior(GameObject playerObject)
+    public override IHeldItemBehavior CreateBehavior(GameObject playerObject, HeldItemState state = null)
     {
         var behavior = playerObject.AddComponent<MapBehavior>();
         behavior.Initialize(this);
@@ -24,7 +24,7 @@ public class MapItem : HeldEquipmentItem
         return mapData != null ? mapData.MapTitle : itemName;
     }
 
-    protected override void InitializeDefaultState(HeldItemState state)
+    public override void InitializeDefaultState(HeldItemState state)
     {
         if (state == null)
             return;

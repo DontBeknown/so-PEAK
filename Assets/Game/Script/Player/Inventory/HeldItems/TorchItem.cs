@@ -2,7 +2,7 @@ using UnityEngine;
 using Game.Player.Inventory.HeldItems;
 
 /// <summary>
-/// Torch item - provides light and warmth, depletes durability when equipped.
+/// Torch item - provides light and cold resistance, depletes durability when equipped.
 /// Destroyed when durability reaches 0.
 /// Follows Single Responsibility Principle.
 /// </summary>
@@ -12,7 +12,7 @@ public class TorchItem : HeldEquipmentItem
     [Header("Torch Settings")]
     [SerializeField] private float maxDurabilitySeconds = 300f; // 5 minutes
     [SerializeField] private float durabilityDrainRate = 1f; // seconds per second (1.0 = normal time)
-    [SerializeField] private float warmthBonus = 10f;
+    [SerializeField, Range(0f, 1f)] private float coldResistance = 0.25f;
     
     [Header("Light Settings")]
     [SerializeField] private float lightRadius = 10f;
@@ -31,7 +31,7 @@ public class TorchItem : HeldEquipmentItem
 
     public float MaxDurabilitySeconds => maxDurabilitySeconds;
     public float DurabilityDrainRate => durabilityDrainRate;
-    public float WarmthBonus => warmthBonus;
+    public float ColdResistance => coldResistance;
     public float LightRadius => lightRadius;
     public float LightIntensity => lightIntensity;
     public Color LightColor => lightColor;
@@ -42,10 +42,12 @@ public class TorchItem : HeldEquipmentItem
     public float NightFogOverrideDensity => nightFogOverrideDensity;
     public float NightFogFadeDuration => nightFogFadeDuration;
 
-    public override IHeldItemBehavior CreateBehavior(GameObject playerObject)
+    public override IHeldItemBehavior CreateBehavior(GameObject playerObject, HeldItemState state = null)
     {
+        var activeState = PendingEquipState ?? state ?? CreateFreshState();
+        PendingEquipState = null;
         var behavior = playerObject.AddComponent<TorchBehavior>();
-        behavior.Initialize(this);
+        behavior.Initialize(this, activeState);
         return behavior;
     }
 
@@ -57,7 +59,7 @@ public class TorchItem : HeldEquipmentItem
         return $"{Mathf.RoundToInt(percentage)}%";
     }
 
-    protected override void InitializeDefaultState(HeldItemState state)
+    public override void InitializeDefaultState(HeldItemState state)
     {
         state.maxDurability = maxDurabilitySeconds;
         state.currentDurability = maxDurabilitySeconds;

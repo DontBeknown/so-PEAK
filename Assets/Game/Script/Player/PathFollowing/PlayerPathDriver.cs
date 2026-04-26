@@ -73,10 +73,12 @@ namespace Game.Player.PathFollowing
 
         private void Update()
         {
+            #if UNITY_EDITOR
             if (Input.GetKeyDown(KeyCode.L))
             {
                 StartCachedPathForCurrentLevel();
             }
+            #endif
         }
 
         /// <summary>Supply the path before calling StartPath.</summary>

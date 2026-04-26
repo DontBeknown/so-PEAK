@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Game.Player.Inventory.HeldItems;
+using Game.Player.Inventory.Storage;
 
 /// <summary>
 /// Displays item/equipment details in a tooltip near the mouse cursor.
@@ -44,7 +45,7 @@ public class TooltipUI : MonoBehaviour
         HideTooltip();
     }
 
-    public void ShowTooltip(InventoryItem item, int quantity = 1)
+    public void ShowTooltip(InventoryItem item, int quantity = 1, GridPlacement placement = null)
     {
         if (item == null) return;
 
@@ -104,7 +105,7 @@ public class TooltipUI : MonoBehaviour
             // Show state for held equipment items (torch durability, canteen charges)
             if (item is HeldEquipmentItem heldItem)
             {
-                string stateDesc = GetHeldItemStateText(heldItem);
+                string stateDesc = GetHeldItemStateText(heldItem, placement?.LocalHeldState);
                 if (!string.IsNullOrEmpty(stateDesc))
                 {
                     statsBuilder.AppendLine(stateDesc);
@@ -197,19 +198,25 @@ public class TooltipUI : MonoBehaviour
         return item.isConsumable ? "<color=#4CAF50>Consumable</color>" : "<color=#888888>Item</color>";
     }
     
-    private string GetHeldItemStateText(HeldEquipmentItem heldItem)
+    private string GetHeldItemStateText(HeldEquipmentItem heldItem, HeldItemState localState)
     {
-        if (heldItem is TorchItem torchItem)
+        if (heldItem is TorchItem && localState != null)
         {
-            string durability = torchItem.GetStateDescription();
-            return $"<b>Durability:</b> <color=#FFA500>{durability}</color>";
+            float pct = localState.maxDurability > 0f
+                ? (localState.currentDurability / localState.maxDurability) * 100f
+                : 0f;
+            return $"<b>Durability:</b> <color=#FFA500>{Mathf.RoundToInt(pct)}%</color>";
+        }
+        else if (heldItem is TorchItem torchFallback)
+        {
+            return $"<b>Durability:</b> <color=#FFA500>{torchFallback.GetStateDescription()}</color>";
         }
         else if (heldItem is CanteenItem canteenItem)
         {
             string charges = canteenItem.GetStateDescription();
             return $"<b>Charges:</b> <color=#4FC3F7>{charges}</color>";
         }
-        
+
         return "";
     }
 

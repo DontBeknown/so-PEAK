@@ -32,7 +32,7 @@ public class CanteenItem : HeldEquipmentItem
     public float RefillDurationSeconds => refillDurationSeconds;
 
 
-    public override IHeldItemBehavior CreateBehavior(GameObject playerObject)
+    public override IHeldItemBehavior CreateBehavior(GameObject playerObject, HeldItemState state = null)
     {
         var behavior = playerObject.AddComponent<CanteenBehavior>();
         behavior.Initialize(this);
@@ -46,7 +46,7 @@ public class CanteenItem : HeldEquipmentItem
         return $"{state.currentCharges}/{state.maxCharges}";
     }
 
-    protected override void InitializeDefaultState(HeldItemState state)
+    public override void InitializeDefaultState(HeldItemState state)
     {
         state.maxCharges = maxCharges;
         state.currentCharges = maxCharges; // Start full

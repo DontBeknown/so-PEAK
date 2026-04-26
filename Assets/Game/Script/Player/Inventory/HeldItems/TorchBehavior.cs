@@ -4,27 +4,30 @@ using Game.Core.DI;
 using Game.Environment.Temperature;
 
 /// <summary>
-/// Runtime behavior for torch - manages light, durability depletion, and warmth bonus.
+/// Runtime behavior for torch - manages light, durability depletion, and cold resistance.
 /// Attached to player when torch is equipped.
 /// Follows Single Responsibility Principle.
 /// </summary>
-public class TorchBehavior : MonoBehaviour, IHeldItemBehavior, ITemperatureSource
+public class TorchBehavior : MonoBehaviour, IHeldItemBehavior, IHeldItemColdResistanceSource
 {
     // Injected by HeldItemBehaviorManager (no Inspector assignment needed)
     [SerializeField] private Transform rightHandBone;
     
     private TorchItem torchItem;
+    private HeldItemState _state;
     private Light torchLight;
     private AudioSource loopingAudio;
     private GameObject visualPrefabInstance;
     private bool isEquipped = false;
 
-    public float TemperatureBonus => torchItem != null ? torchItem.WarmthBonus : 0f;
-    public bool IsActive => isEquipped && torchItem != null && torchItem.HasDurability();
+    public HeldItemState CurrentState => _state;
+    public float ColdResistanceBonus => torchItem != null ? torchItem.ColdResistance : 0f;
+    public bool IsActive => isEquipped && torchItem != null && _state != null && _state.currentDurability > 0f;
 
-    public void Initialize(TorchItem item)
+    public void Initialize(TorchItem item, HeldItemState state)
     {
         torchItem = item;
+        _state = state;
     }
 
     public void OnEquipped()
@@ -85,12 +88,14 @@ public class TorchBehavior : MonoBehaviour, IHeldItemBehavior, ITemperatureSourc
 
     public string GetStateDescription()
     {
-        return torchItem?.GetStateDescription() ?? "N/A";
+        if (_state == null || _state.maxDurability <= 0f) return "N/A";
+        float pct = (_state.currentDurability / _state.maxDurability) * 100f;
+        return $"{Mathf.RoundToInt(pct)}%";
     }
 
     public bool IsUsable()
     {
-        return torchItem != null && torchItem.HasDurability();
+        return torchItem != null && _state != null && _state.currentDurability > 0f;
     }
 
     private void Update()
@@ -193,9 +198,8 @@ public class TorchBehavior : MonoBehaviour, IHeldItemBehavior, ITemperatureSourc
 
     private void DepleteDurability()
     {
-        var state = torchItem.GetState();
-        state.currentDurability -= Time.deltaTime * torchItem.DurabilityDrainRate;
-        state.currentDurability = Mathf.Max(0, state.currentDurability);
+        _state.currentDurability -= Time.deltaTime * torchItem.DurabilityDrainRate;
+        _state.currentDurability = Mathf.Max(0f, _state.currentDurability);
     }
 
     private void UpdateLightIntensity()
@@ -203,7 +207,9 @@ public class TorchBehavior : MonoBehaviour, IHeldItemBehavior, ITemperatureSourc
         if (torchLight == null)
             return;
 
-        float durabilityPercentage = torchItem.GetDurabilityPercentage();
+        float durabilityPercentage = _state.maxDurability > 0f
+            ? _state.currentDurability / _state.maxDurability
+            : 0f;
 
         // Flicker when low
         if (durabilityPercentage < torchItem.LowDurabilityThreshold)
@@ -219,7 +225,7 @@ public class TorchBehavior : MonoBehaviour, IHeldItemBehavior, ITemperatureSourc
 
     private void CheckDestruction()
     {
-        if (!torchItem.HasDurability())
+        if (_state.currentDurability <= 0f)
         {
             //Debug.Log("[TorchBehavior] Torch durability depleted - destroying item");
             DestroyTorch();
@@ -237,9 +243,6 @@ public class TorchBehavior : MonoBehaviour, IHeldItemBehavior, ITemperatureSourc
         {
             inventoryService.RemoveItem(torchItem, 1);
         }
-
-        // Remove state
-        HeldItemStateManager.Instance.RemoveState(torchItem.GetStateID());
 
         // Destroy this behavior component
         Destroy(this);

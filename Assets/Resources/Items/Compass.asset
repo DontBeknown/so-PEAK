@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f164d1237f20a1a41b95b855b0c37eab, type: 3}
+  m_Name: Compass
+  m_EditorClassIdentifier: Assembly-CSharp::CompassItem
+  itemName: Compass
+  description: While carried, a directional HUD appears, indicating the exact heading
+    the player is currently facing.
+  icon: {fileID: 21300000, guid: 3b175a97b20e8744eb52dc75244b2357, type: 3}
+  maxStackSize: 1
+  itemType: 3
+  gridSize: {x: 1, y: 1}
+  worldPrefab: {fileID: 2436211010255848394, guid: 9ab47d8f740ae414fa97a4fc16cf3a66, type: 3}
+  isConsumable: 0
+  consumableEffects: []

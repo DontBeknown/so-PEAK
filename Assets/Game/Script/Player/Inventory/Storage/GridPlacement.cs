@@ -1,4 +1,5 @@
 using UnityEngine;
+using Game.Player.Inventory.HeldItems;
 
 namespace Game.Player.Inventory.Storage
 {
@@ -12,6 +13,9 @@ namespace Game.Player.Inventory.Storage
         public Vector2Int Position { get; internal set; }
         public Vector2Int Size { get; internal set; }
         public bool Rotated { get; internal set; }
+        // Per-slot runtime state for HeldEquipmentItems (torch durability, canteen charges).
+        // Null for plain inventory items.
+        public HeldItemState LocalHeldState { get; internal set; }
 
         public RectInt Bounds => new RectInt(Position, Size);
 

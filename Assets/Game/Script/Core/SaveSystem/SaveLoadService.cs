@@ -623,6 +623,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         // Reset player position to default for new level
         ResetPlayerSpawnToDefault();
         ResetPlayerStatsForNextLevel();
+        ResetCanteenChargesForNextLevel();
         currentWorldSave.assessmentData = new AssessmentSaveData();
 
         SpawnedObjectStateRegistry.ClearAllDestroyed();
@@ -742,6 +743,26 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
         currentWorldSave.playerData.rotation = new float[] { 0, 0, 0, 1 };
 
         if (enableDebug) Debug.Log("[SaveLoadService] Reset player spawn to default for new level");
+    }
+
+    private void ResetCanteenChargesForNextLevel()
+    {
+        try
+        {
+            var inventoryManager = ServiceContainer.Instance
+                .TryGet<Game.Player.Inventory.InventoryManagerRefactored>();
+            if (inventoryManager == null) return;
+
+            foreach (var placement in inventoryManager.GetAllPlacements())
+            {
+                if (placement.Item is CanteenItem canteen)
+                    canteen.Refill();
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[SaveLoadService] Could not reset canteen charges: {e.Message}");
+        }
     }
 
     private void ResetPlayerStatsForNextLevel()

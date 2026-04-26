@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Game.Player.Inventory.HeldItems;
 
 namespace Game.Player.Inventory.Storage
 {
@@ -118,6 +119,20 @@ namespace Game.Player.Inventory.Storage
             }
 
             var placement = new GridPlacement(item, topLeft, size);
+
+            if (item is HeldEquipmentItem heldItem)
+            {
+                if (heldItem.PendingEquipState != null)
+                {
+                    placement.LocalHeldState = heldItem.PendingEquipState;
+                    heldItem.PendingEquipState = null;
+                }
+                else
+                {
+                    placement.LocalHeldState = heldItem.CreateFreshState();
+                }
+            }
+
             _placements.Add(placement);
             Stamp(placement);
             return placement;

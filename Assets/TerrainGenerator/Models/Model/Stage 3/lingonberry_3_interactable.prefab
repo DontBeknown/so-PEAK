@@ -120,6 +120,10 @@ MonoBehaviour:
     guaranteedAmount: 1
     bonusDropChance: 0.5
     bonusAmount: 1
+  - item: {fileID: 11400000, guid: 0bd05febf0f3e4743a320c0980a39d15, type: 2}
+    guaranteedAmount: 1
+    bonusDropChance: 0.5
+    bonusAmount: 1
   customPrompt: 
   isMultiUse: 0
   respawnTime: 60
