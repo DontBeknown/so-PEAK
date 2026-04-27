@@ -24446,6 +24446,7 @@ MonoBehaviour:
   tutorialManager: {fileID: 4978143082256581627}
   starterCollectableService: {fileID: 3781271768975692295}
   levelBonusCollectableService: {fileID: 1178019701429757886}
+  gameplayTipManager: {fileID: 0}
   enableDebugLogs: 0
 --- !u!1 &6511930402334749835
 GameObject:
@@ -27191,9 +27192,9 @@ MonoBehaviour:
   endpointRadius: 20
   pathFadeDuration: 0.4
   playerMarkerColor: {r: 0, g: 0.5377358, b: 0.09529722, a: 1}
-  playerMarkerRadius: 18
+  playerMarkerRadius: 25
   playerMarkerOutlineColor: {r: 0.8962264, g: 0.877297, b: 0.83281416, a: 1}
-  playerMarkerOutlineThickness: 5
+  playerMarkerOutlineThickness: 8
 --- !u!1 &7230369604955167024
 GameObject:
   m_ObjectHideFlags: 0

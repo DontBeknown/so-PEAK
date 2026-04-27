@@ -58,8 +58,7 @@ namespace Game.Interaction.UI
                 }
             }
             
-            // Get EventBus from ServiceContainer (SOLID: Dependency Inversion)
-            eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+
 
             // Auto-assign if not set
             if (promptContainer == null)
@@ -82,6 +81,12 @@ namespace Game.Interaction.UI
             }
         }
 
+        void Start()
+        {
+            // Get EventBus from ServiceContainer (SOLID: Dependency Inversion)
+            eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+        }
+
         private void OnEnable()
         {
             // Subscribe to interaction events from the detector instance
@@ -96,6 +101,10 @@ namespace Game.Interaction.UI
             {
                 eventBus.Subscribe<PanelOpenedEvent>(HandlePanelOpened);
                 eventBus.Subscribe<PanelClosedEvent>(HandlePanelClosed);
+            }
+            else
+            {
+                Debug.LogWarning("[InteractionPromptUI] No IEventBus found in ServiceContainer. Panel events will not be handled.");
             }
         }
 
