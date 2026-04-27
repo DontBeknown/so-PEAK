@@ -15,6 +15,8 @@ namespace Game.Player.PathFollowing
     /// Detects stuck state, attempts one jump to clear obstacles, then aborts with assessment if still stuck.
     /// Call GenerateAssessment is fired automatically at path end/abort.
     /// </summary>
+    // Run after PlayerControllerRefactored so our body rotation is the final write each physics tick.
+    [DefaultExecutionOrder(100)]
     public class PlayerPathDriver : MonoBehaviour
     {
         public enum DriveMode { WalkOnly, Run }
@@ -295,8 +297,20 @@ namespace Game.Player.PathFollowing
 
             // ── Drive input toward waypoint ────────────────────────────────
             Vector3 worldDir = toTarget / distXZ;
-            Vector2 driveInput = WorldDirToCameraInput(worldDir);
-            handler.OverrideMoveInput(driveInput);
+
+            // Directly orient the player body toward the target.
+            // This anchors Cinemachine's reference frame and prevents the
+            // feedback loop that spins the player when the camera faces away
+            // from the path. DefaultExecutionOrder(100) ensures this write
+            // happens after WalkingState's rotation so it always wins.
+            transform.rotation = Quaternion.RotateTowards(
+                transform.rotation,
+                Quaternion.LookRotation(worldDir, Vector3.up),
+                720f * Time.fixedDeltaTime);
+
+            // Pure forward input — body already faces the target, camera follows
+            // within a frame or two, so camForward converges to worldDir quickly.
+            handler.OverrideMoveInput(Vector2.up);
 
             if (_mode == DriveMode.Run && !_staminaPaused)
                 handler.SetSprintOverride(true);
@@ -331,25 +345,5 @@ namespace Game.Player.PathFollowing
             }
         }
 
-        /// <summary>
-        /// Converts a world-space XZ direction into the camera-relative Vector2 input
-        /// the player states expect (input.x = right, input.y = forward relative to camera).
-        /// </summary>
-        private static Vector2 WorldDirToCameraInput(Vector3 worldDir)
-        {
-            var cam = Camera.main;
-            if (cam == null)
-                return new Vector2(worldDir.x, worldDir.z);
-
-            Vector3 camForward = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up);
-            Vector3 camRight   = Vector3.ProjectOnPlane(cam.transform.right,   Vector3.up);
-
-            if (camForward.sqrMagnitude > 0.001f) camForward.Normalize();
-            if (camRight.sqrMagnitude   > 0.001f) camRight.Normalize();
-
-            return new Vector2(
-                Vector3.Dot(worldDir, camRight),
-                Vector3.Dot(worldDir, camForward));
-        }
     }
 }
