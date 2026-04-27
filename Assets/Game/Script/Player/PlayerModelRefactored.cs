@@ -33,6 +33,9 @@ public class PlayerModelRefactored
         set => _movementContext.Velocity = value;
     }
 
+    // When set, movement states use this world-space direction directly instead of camera-relative input.
+    public Vector3? WorldMoveDirOverride { get; set; }
+
     private Vector3 _externalVelocity;
 
     /// <summary>

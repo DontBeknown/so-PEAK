@@ -309,6 +309,8 @@ namespace Game.Player
 
         public IPlayerState CurrentState => _currentState;
 
+        public void SetWorldMoveDirOverride(Vector3? dir) => _model.WorldMoveDirOverride = dir;
+
         #endregion
 
         #region Input Handlers

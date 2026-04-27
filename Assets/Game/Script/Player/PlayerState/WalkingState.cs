@@ -67,8 +67,8 @@ public class WalkingState : IPlayerState
         var animService = model.GetAnimationService();
         var physicsService = model.GetPhysicsService();
 
-        // Get movement direction from camera
-        Vector3 moveDir = cameraProvider.GetWorldDirection(input);
+        // Get movement direction — world override bypasses camera-relative conversion (used by PlayerPathDriver)
+        Vector3 moveDir = model.WorldMoveDirOverride ?? cameraProvider.GetWorldDirection(input);
 
         // Apply horizontal movement with Tobler's hiking function for slope speed
         Vector3 horizontal = moveDir * model.WalkSpeed;

@@ -15,8 +15,8 @@ namespace Game.Player.PathFollowing
     /// Detects stuck state, attempts one jump to clear obstacles, then aborts with assessment if still stuck.
     /// Call GenerateAssessment is fired automatically at path end/abort.
     /// </summary>
-    // Run after PlayerControllerRefactored so our body rotation is the final write each physics tick.
-    [DefaultExecutionOrder(100)]
+    // Run before PlayerControllerRefactored so WorldMoveDirOverride is set before WalkingState reads it.
+    [DefaultExecutionOrder(-50)]
     public class PlayerPathDriver : MonoBehaviour
     {
         public enum DriveMode { WalkOnly, Run }
@@ -185,6 +185,8 @@ namespace Game.Player.PathFollowing
             _isActive = false;
             _staminaPaused = false;
 
+            playerController.SetWorldMoveDirOverride(null);
+
             var inputHandler = playerController.InputHandler;
             if (inputHandler != null)
             {
@@ -232,6 +234,10 @@ namespace Game.Player.PathFollowing
         private void FixedUpdate()
         {
             if (!_isActive || _waypoints == null) return;
+
+            // Reset each tick so any early-return path (stamina pause, no handler) leaves the
+            // override null — WalkingState/RunningState will stand still rather than drift.
+            playerController.SetWorldMoveDirOverride(null);
 
             if (_waypointIndex >= _waypoints.Count)
             {
@@ -308,8 +314,9 @@ namespace Game.Player.PathFollowing
                 Quaternion.LookRotation(worldDir, Vector3.up),
                 720f * Time.fixedDeltaTime);
 
-            // Pure forward input — body already faces the target, camera follows
-            // within a frame or two, so camForward converges to worldDir quickly.
+            // Store world direction directly — WalkingState/RunningState use it without camera conversion.
+            // OverrideMoveInput(up) keeps IsMoving = true for HandleAutomaticTransitions.
+            playerController.SetWorldMoveDirOverride(worldDir);
             handler.OverrideMoveInput(Vector2.up);
 
             if (_mode == DriveMode.Run && !_staminaPaused)

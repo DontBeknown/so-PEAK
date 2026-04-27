@@ -64,7 +64,7 @@ public class RunningState : IPlayerState
         var config         = model.GetConfig();
 
         // ── Direction ──────────────────────────────────────────────────
-        Vector3 moveDir = cameraProvider.GetWorldDirection(input);
+        Vector3 moveDir = model.WorldMoveDirOverride ?? cameraProvider.GetWorldDirection(input);
 
         // ── Target speed (decelerate when out of stamina) ──────────────
         bool hasStamina = model.Stats == null || model.Stats.Stamina > 0.01f;
