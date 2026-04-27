@@ -19,6 +19,9 @@ public class AssessmentReportUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI rankProgressText;
     [SerializeField] private TextMeshProUGUI totalScoreText;
     [SerializeField] private Image rankIconImage;
+
+    [Header("Level Info")]
+    [SerializeField] private TextMeshProUGUI currentBiomeText;
     
     [Header("Category Scores")]
     [SerializeField] private TextMeshProUGUI efficiencyScoreText;
@@ -175,6 +178,9 @@ public class AssessmentReportUI : MonoBehaviour
         {
             totalScoreText.text = $"{score.totalScore:F1}/100";
         }
+
+        // Display current level biome
+        DisplayCurrentBiome();
         
         // Set rank icon
         if (rankIconImage != null)
@@ -318,6 +324,22 @@ public class AssessmentReportUI : MonoBehaviour
         feedback += $"<b>Planning:</b>\n{LearningAssessmentService.GetPlanningTip(score.planningScore)}";
 
         feedbackText.text = feedback;
+    }
+
+    /// <summary>
+    /// Displays the current level biome in the assessment report.
+    /// </summary>
+    private void DisplayCurrentBiome()
+    {
+        if (currentBiomeText == null)
+            return;
+
+        var saveLoadService = SaveLoadService.Instance;
+        string biomeText = saveLoadService != null
+            ? saveLoadService.GetCurrentLevelBiomeText()
+            : "Unknown";
+
+        currentBiomeText.text = $"Biome: {biomeText}";
     }
     
     

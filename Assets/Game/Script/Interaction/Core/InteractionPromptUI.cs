@@ -79,12 +79,13 @@ namespace Game.Interaction.UI
             {
                 progressBarContainer.SetActive(false);
             }
-        }
 
-        void Start()
-        {
-            // Get EventBus from ServiceContainer (SOLID: Dependency Inversion)
+            // Fetch EventBus here so OnEnable (which fires before Start) has a valid reference.
+            // GameServiceBootstrapper (ExecutionOrder -100) registers IEventBus in its own Awake,
+            // so it is guaranteed to be present by the time this Awake runs.
             eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+            if (eventBus == null)
+                Debug.LogWarning("[InteractionPromptUI] IEventBus not found in ServiceContainer.");
         }
 
         private void OnEnable()

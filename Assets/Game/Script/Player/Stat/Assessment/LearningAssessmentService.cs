@@ -352,7 +352,7 @@ namespace Game.Player.Stat.Assessment
         public static string GetPlanningTip(float score)
         {
             if (score >= 90f) return "Excellent route choice — you followed near-optimal path and timing.";
-            if (score >= 70f) return "Next time: follow the suggested HJB path more closely to shorten your route.";
+            if (score >= 70f) return "Next time: follow the suggested path more closely to shorten your route.";
             if (score >= 50f) return "Next time: check the path overlay before you start and aim to finish closer to the estimated time.";
             return "Next time: use the suggested path — your route and timing deviated significantly from optimal.";
         }

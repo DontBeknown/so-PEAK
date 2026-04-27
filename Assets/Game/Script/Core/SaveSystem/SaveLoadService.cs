@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 using Game.Core.DI;
 using Game.Collectable;
 using Game.Dialog;
+using Game.Progression;
 using Game.Tutorial;
 
 public class SaveLoadService : MonoBehaviour, ISaveLoadService
@@ -766,6 +767,22 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     public int GetCurrentLevel()
     {
         return currentWorldSave?.worldState?.level ?? 1;
+    }
+
+    /// <summary>
+    /// Returns the biome for the current world level.
+    /// </summary>
+    public CollectableBiome GetCurrentLevelBiome()
+    {
+        return LevelBonusCollectableService.GetBiomeForLevel(GetCurrentLevel());
+    }
+
+    /// <summary>
+    /// Returns the current level biome as display text.
+    /// </summary>
+    public string GetCurrentLevelBiomeText()
+    {
+        return GetCurrentLevelBiome().ToString();
     }
 
     /// <summary>
