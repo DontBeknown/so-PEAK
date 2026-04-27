@@ -307,6 +307,12 @@ namespace Game.Core.Events
     {
     }
 
+    // Tutorial interactable completion events — published by TutorialInteractablePublisher
+    public class CanteenRefilledTutorialEvent { }
+    public class AssessmentTerminalUsedTutorialEvent { }
+    public class CampfireUsedTutorialEvent { }
+    public class LighthouseUsedTutorialEvent { }
+
     // UI Events
     public class ContextMenuOpenedEvent
     {
@@ -319,5 +325,20 @@ namespace Game.Core.Events
 
     public class TornadoEndedEvent
     {
+    }
+
+    // Natural Disaster Events (published by NaturalEventDirector)
+    public class NaturalDisasterEvent
+    {
+        public enum DisasterType { Landslide, Tornado }
+        public DisasterType Type { get; }
+        public NaturalDisasterEvent(DisasterType type) => Type = type;
+    }
+
+    // Gameplay Tip Events
+    public class ShowGameplayTipEvent
+    {
+        public GameplayTipData TipData { get; }
+        public ShowGameplayTipEvent(GameplayTipData tipData) => TipData = tipData;
     }
 }

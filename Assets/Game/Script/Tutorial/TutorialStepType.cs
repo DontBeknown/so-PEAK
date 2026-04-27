@@ -11,6 +11,14 @@ namespace Game.Tutorial
         HoldInteract,
         OpenInventory,
         OpenContextMenu,
-        CompleteCraft
+        CompleteCraft,
+        ConsumeItem,
+        WaitForTrigger,
+        ConsumeFood,
+        DrinkFromCanteen,
+        RefillCanteen,
+        InteractTerminal,
+        InteractCampfire,
+        InteractLighthouse
     }
 }

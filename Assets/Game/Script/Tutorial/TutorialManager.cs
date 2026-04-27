@@ -4,6 +4,7 @@ using Game.Core.Events;
 using Game.Player;
 using Game.Player.Inventory.Events;
 using InventoryItemAddedEvent = Game.Player.Inventory.Events.ItemAddedEvent;
+using ItemConsumedEvent = Game.Player.Inventory.Events.ItemConsumedEvent;
 using UnityEngine;
 
 namespace Game.Tutorial
@@ -89,6 +90,11 @@ namespace Game.Tutorial
             _eventBus.Subscribe<HoldInteractStartedEvent>(OnHoldInteractStarted);
             _eventBus.Subscribe<HoldInteractCompletedEvent>(OnHoldInteractCompleted);
             _eventBus.Subscribe<JumpExecutedEvent>(OnJumpExecuted);
+            _eventBus.Subscribe<ItemConsumedEvent>(OnItemConsumed);
+            _eventBus.Subscribe<CanteenRefilledTutorialEvent>(OnCanteenRefilled);
+            _eventBus.Subscribe<AssessmentTerminalUsedTutorialEvent>(OnAssessmentTerminalUsed);
+            _eventBus.Subscribe<CampfireUsedTutorialEvent>(OnCampfireUsed);
+            _eventBus.Subscribe<LighthouseUsedTutorialEvent>(OnLighthouseUsed);
         }
 
         private void UnsubscribeFromEvents()
@@ -106,6 +112,11 @@ namespace Game.Tutorial
             _eventBus.Unsubscribe<HoldInteractStartedEvent>(OnHoldInteractStarted);
             _eventBus.Unsubscribe<HoldInteractCompletedEvent>(OnHoldInteractCompleted);
             _eventBus.Unsubscribe<JumpExecutedEvent>(OnJumpExecuted);
+            _eventBus.Unsubscribe<ItemConsumedEvent>(OnItemConsumed);
+            _eventBus.Unsubscribe<CanteenRefilledTutorialEvent>(OnCanteenRefilled);
+            _eventBus.Unsubscribe<AssessmentTerminalUsedTutorialEvent>(OnAssessmentTerminalUsed);
+            _eventBus.Unsubscribe<CampfireUsedTutorialEvent>(OnCampfireUsed);
+            _eventBus.Unsubscribe<LighthouseUsedTutorialEvent>(OnLighthouseUsed);
         }
 
         private void Update()
@@ -411,7 +422,6 @@ namespace Game.Tutorial
             switch (step.completionType)
             {
                 case TutorialStepType.PressInteract:
-                case TutorialStepType.HoldInteract:
                     return _hasSeenInteractableInRange;
                 case TutorialStepType.OpenInventory:
                 case TutorialStepType.OpenContextMenu:
@@ -422,7 +432,7 @@ namespace Game.Tutorial
             }
         }
 
-        private void CompleteCurrentStep()
+        public void CompleteCurrentStep()
         {
             if (!IsActive || IsCompleted)
             {
@@ -636,6 +646,60 @@ namespace Game.Tutorial
         private void OnJumpExecuted(JumpExecutedEvent evt)
         {
             _jumpCount++;
+        }
+
+        private void OnItemConsumed(ItemConsumedEvent evt)
+        {
+            if (!IsActive || IsCompleted) return;
+            var step = GetCurrentStep();
+            if (step == null) return;
+
+            switch (step.completionType)
+            {
+                case TutorialStepType.ConsumeItem:
+                    CompleteCurrentStep();
+                    break;
+                case TutorialStepType.ConsumeFood:
+                    if (evt.Item is not CanteenItem)
+                        CompleteCurrentStep();
+                    break;
+                case TutorialStepType.DrinkFromCanteen:
+                    if (evt.Item is CanteenItem)
+                        CompleteCurrentStep();
+                    break;
+            }
+        }
+
+        private void OnCanteenRefilled(CanteenRefilledTutorialEvent evt)
+        {
+            if (!IsActive || IsCompleted) return;
+            var step = GetCurrentStep();
+            if (step != null && step.completionType == TutorialStepType.RefillCanteen)
+                CompleteCurrentStep();
+        }
+
+        private void OnAssessmentTerminalUsed(AssessmentTerminalUsedTutorialEvent evt)
+        {
+            if (!IsActive || IsCompleted) return;
+            var step = GetCurrentStep();
+            if (step != null && step.completionType == TutorialStepType.InteractTerminal)
+                CompleteCurrentStep();
+        }
+
+        private void OnCampfireUsed(CampfireUsedTutorialEvent evt)
+        {
+            if (!IsActive || IsCompleted) return;
+            var step = GetCurrentStep();
+            if (step != null && step.completionType == TutorialStepType.InteractCampfire)
+                CompleteCurrentStep();
+        }
+
+        private void OnLighthouseUsed(LighthouseUsedTutorialEvent evt)
+        {
+            if (!IsActive || IsCompleted) return;
+            var step = GetCurrentStep();
+            if (step != null && step.completionType == TutorialStepType.InteractLighthouse)
+                CompleteCurrentStep();
         }
 
     }

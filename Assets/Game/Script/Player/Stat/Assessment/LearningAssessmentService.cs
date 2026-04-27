@@ -340,9 +340,9 @@ namespace Game.Player.Stat.Assessment
         /// </summary>
         public static string GetSafetyTip(float score)
         {
-            if (score >= 90f) return "Great awareness — keep monitoring the risk map as you climb.";
+            if (score >= 90f) return "Great awareness — keep looking around for hazards and plan safe routes.";
             if (score >= 70f) return "Next time: check the risk map before each segment to avoid the highlighted hazard zones.";
-            if (score >= 50f) return "Next time: slow down near red zones on the map and take detours around known hazards.";
+            if (score >= 50f) return "Next time: slow down near cliffs on the map and take detours around known hazards.";
             return "Next time: prioritize safety over speed — review the risk map frequently and avoid all red-zone areas.";
         }
 

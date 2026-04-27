@@ -145,4 +145,13 @@ public class CanteenItem : HeldEquipmentItem
         EnsureStateInitialized();
         return GetState().currentCharges;
     }
+
+    /// <summary>
+    /// Empties the canteen. Used by the tutorial to force a refill teaching moment.
+    /// </summary>
+    public void DrainCharges()
+    {
+        EnsureStateInitialized();
+        GetState().currentCharges = 0;
+    }
 }

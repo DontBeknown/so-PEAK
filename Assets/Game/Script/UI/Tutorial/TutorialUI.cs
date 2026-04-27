@@ -195,7 +195,7 @@ namespace Game.UI.Tutorial
 
         private void OnStepChanged(TutorialStepChangedEvent evt)
         {
-            if (evt.IsWaitingForGate)
+            if (evt.IsWaitingForGate || evt.StepData?.completionType == TutorialStepType.WaitForTrigger)
             {
                 ApplyProgress(0f, false);
                 Hide();

@@ -9,6 +9,7 @@ namespace Game.Tutorial
 
         void StartTutorial();
         void SkipTutorial();
+        void CompleteCurrentStep();
         void SyncToSaveData(TutorialSaveData tutorialSaveData);
     }
 }

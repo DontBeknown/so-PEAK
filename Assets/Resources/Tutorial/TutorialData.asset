@@ -14,12 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.Tutorial.TutorialData
   tutorialId: main_onboarding
   steps:
-  - {fileID: 11400000, guid: 3d4c18831dc14c44c845985f0a6c2eb6, type: 2}
-  - {fileID: 11400000, guid: 94416d5a3e1594240b0378a22145de67, type: 2}
-  - {fileID: 11400000, guid: 34dea5d58bc90ca4b80ae17f18b3cbfe, type: 2}
-  - {fileID: 11400000, guid: 04adcf12c248722498b5f4c77a5d351e, type: 2}
-  - {fileID: 11400000, guid: c4ddcbe9854de7d4dbd16b7b6ff404d8, type: 2}
-  - {fileID: 11400000, guid: 1ae0c486078f11f4387f2ca7e05d716e, type: 2}
-  - {fileID: 11400000, guid: 8d46e5e4affa06f44a73b9f63e03399b, type: 2}
-  - {fileID: 11400000, guid: 7229365e58502fe46833f88576f6b6c8, type: 2}
-  - {fileID: 11400000, guid: ffc649abe5daf6340afb3b2a0271b71a, type: 2}
+  - {fileID: 11400000, guid: 6aa272711d8436e42b87a7b1a9b6b7d2, type: 2}
+  - {fileID: 11400000, guid: a50e376c387db0342b877a3493527f89, type: 2}
+  - {fileID: 11400000, guid: 70c9a3eb8f2543645a4f4094d61c1e4c, type: 2}
+  - {fileID: 11400000, guid: 17990de2bcca85a4aa6b690b3977d463, type: 2}
+  - {fileID: 11400000, guid: 37d6b827c4afd8e47a6e6c1e0cd9b269, type: 2}
+  - {fileID: 11400000, guid: 82c889520a08ef84896d60bba7f8a237, type: 2}
+  - {fileID: 11400000, guid: c19b797a90ba9734ea916a24cbe8ff48, type: 2}
+  - {fileID: 11400000, guid: a275e195e2a9be64e93a880532c6e3dc, type: 2}
+  - {fileID: 11400000, guid: 3c1fc760eceaa994180acc1748788b59, type: 2}
+  - {fileID: 11400000, guid: 17de9f4c17949664997bf2ef8c5835dd, type: 2}
+  - {fileID: 11400000, guid: 453ef1730ee12a944bd4d68db2362a61, type: 2}
+  - {fileID: 11400000, guid: ad852ec223c20ee4b9171c4871119a0c, type: 2}
+  - {fileID: 11400000, guid: 676894d5dce7af148b9e505fa11af087, type: 2}
+  - {fileID: 11400000, guid: 95a2d0f4c6ea1d84fbe9f44d13ccfb12, type: 2}

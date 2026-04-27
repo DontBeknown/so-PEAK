@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Game.Core.DI;
+using Game.Core.Events;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -59,6 +61,7 @@ public class NaturalEventDirector : MonoBehaviour
 
     private float[,] worldHeightMap;
     private float heightMultiplier;
+    private IEventBus _eventBus;
 
     public void InitializeMap(float[,] generatedRiskMap, float[,] generatedHeightMap, float multiplier)
     {
@@ -145,6 +148,8 @@ public class NaturalEventDirector : MonoBehaviour
                 Debug.Log($"[NaturalEventDirector] Spawning Landslide!");
                 currentTimeRisk = 0f;
                 OnLandslideTriggered?.Invoke(cliffAnchor, currentProfile.targetLevel);
+                _eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>();
+                _eventBus?.Publish(new NaturalDisasterEvent(NaturalDisasterEvent.DisasterType.Landslide));
             }
             else
             {
@@ -158,6 +163,8 @@ public class NaturalEventDirector : MonoBehaviour
             Debug.Log($"[NaturalEventDirector] Spawning Tornado!");
             currentTimeRisk = 0f;
             OnTornadoTriggered?.Invoke(playerTransform, currentProfile.targetLevel);
+            _eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>();
+            _eventBus?.Publish(new NaturalDisasterEvent(NaturalDisasterEvent.DisasterType.Tornado));
         }
     }
 

@@ -40,6 +40,7 @@ namespace Game.Core
         [SerializeField] private TutorialManager tutorialManager;
         [SerializeField] private StarterCollectableService starterCollectableService;
         [SerializeField] private LevelBonusCollectableService levelBonusCollectableService;
+        [SerializeField] private GameplayTipManager gameplayTipManager;
 
         
         [Header("Debug")]
@@ -237,6 +238,16 @@ namespace Game.Core
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] LevelBonusCollectableService found, registered, and initialized");
             }
+
+            // Find and initialize GameplayTipManager
+            var tipManager = gameplayTipManager ?? FindFirstObjectByType<GameplayTipManager>();
+            if (tipManager != null)
+            {
+                container.Register(tipManager);
+                tipManager.Initialize(eventBus, saveLoadService, stats);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] GameplayTipManager found, registered, and initialized");
+            }
         }
         
         private void RegisterManualServices()
@@ -299,6 +310,16 @@ namespace Game.Core
                 levelBonusCollectableService.Initialize(eventBus, cm, svc, starterCollectableService);
                 if (enableDebugLogs)
                     Debug.Log("[GameServiceBootstrapper] LevelBonusCollectableService manually registered and initialized");
+            }
+
+            if (gameplayTipManager != null)
+            {
+                container.Register(gameplayTipManager);
+                var svc = container.TryGet<ISaveLoadService>();
+                var stats = container.TryGet<PlayerStats>();
+                gameplayTipManager.Initialize(eventBus, svc, stats);
+                if (enableDebugLogs)
+                    Debug.Log("[GameServiceBootstrapper] GameplayTipManager manually registered and initialized");
             }
         }
         

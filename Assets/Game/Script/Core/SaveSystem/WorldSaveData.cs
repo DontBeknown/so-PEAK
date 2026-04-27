@@ -139,6 +139,9 @@ public class WorldStateSaveData
     public List<string> unlockedCollectables = new List<string>();
     public List<string> triggeredDialogs = new List<string>();
 
+    // Contextual tip tracking
+    public List<string> seenGameplayTips = new List<string>();
+
     // Cached HJB path waypoints by world level.
     public List<LevelPathSaveData> cachedPathsByLevel = new List<LevelPathSaveData>();
 }
