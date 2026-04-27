@@ -18,6 +18,7 @@ namespace Game.UI.Tutorial
         [SerializeField] private TMP_Text instructionText;
         [SerializeField] private TMP_Text inputHintText;
         [SerializeField] private TMP_Text progressText;
+        [SerializeField] private Image progressFillImage;
         [SerializeField] private TMP_Text waitingText;
         [SerializeField] private Button skipButton;
 
@@ -28,6 +29,8 @@ namespace Game.UI.Tutorial
         [SerializeField] private float stepChangeDuration = 0.18f;
         [SerializeField] private float stepChangeStartScale = 0.97f;
         [SerializeField] private float stepChangeStartAlpha = 0.8f;
+        [SerializeField] private float progressTweenDuration = 0.2f;
+        [SerializeField] private Ease progressTweenEase = Ease.OutQuad;
 
         private IEventBus _eventBus;
         private ITutorialManager _tutorialManager;
@@ -35,6 +38,7 @@ namespace Game.UI.Tutorial
         private RectTransform _panelRectTransform;
         private Sequence _panelTween;
         private Sequence _stepChangeTween;
+        private Tween _progressTween;
 
         public string PanelName => "Tutorial";
         public bool BlocksInput => false;
@@ -70,6 +74,7 @@ namespace Game.UI.Tutorial
         {
             _panelTween?.Kill();
             _stepChangeTween?.Kill();
+            _progressTween?.Kill();
 
             if (skipButton != null)
             {
@@ -88,6 +93,7 @@ namespace Game.UI.Tutorial
             _eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>();
             _eventBus?.Subscribe<TutorialStartedEvent>(OnTutorialStarted);
             _eventBus?.Subscribe<TutorialStepChangedEvent>(OnStepChanged);
+            _eventBus?.Subscribe<TutorialStepProgressChangedEvent>(OnStepProgressChanged);
             _eventBus?.Subscribe<TutorialCompletedEvent>(OnTutorialEnded);
             _eventBus?.Subscribe<TutorialSkippedEvent>(OnTutorialSkipped);
         }
@@ -96,6 +102,7 @@ namespace Game.UI.Tutorial
         {
             _eventBus?.Unsubscribe<TutorialStartedEvent>(OnTutorialStarted);
             _eventBus?.Unsubscribe<TutorialStepChangedEvent>(OnStepChanged);
+            _eventBus?.Unsubscribe<TutorialStepProgressChangedEvent>(OnStepProgressChanged);
             _eventBus?.Unsubscribe<TutorialCompletedEvent>(OnTutorialEnded);
             _eventBus?.Unsubscribe<TutorialSkippedEvent>(OnTutorialSkipped);
         }
@@ -109,6 +116,7 @@ namespace Game.UI.Tutorial
 
             CachePanelAnimationComponents();
             _panelTween?.Kill();
+            _progressTween?.Kill();
 
             panelRoot.SetActive(true);
 
@@ -150,6 +158,7 @@ namespace Game.UI.Tutorial
             CachePanelAnimationComponents();
             _panelTween?.Kill();
             _stepChangeTween?.Kill();
+            _progressTween?.Kill();
 
             _panelTween = DOTween.Sequence();
 
@@ -181,12 +190,14 @@ namespace Game.UI.Tutorial
         private void OnTutorialStarted(TutorialStartedEvent evt)
         {
             Show();
+            ApplyProgress(_tutorialManager != null ? _tutorialManager.CurrentStepProgress : 0f, false);
         }
 
         private void OnStepChanged(TutorialStepChangedEvent evt)
         {
             if (evt.IsWaitingForGate)
             {
+                ApplyProgress(0f, false);
                 Hide();
                 return;
             }
@@ -223,16 +234,36 @@ namespace Game.UI.Tutorial
                 inputHintText.text = evt.StepData != null ? evt.StepData.inputHintText : string.Empty;
             }
 
+            ApplyProgress(_tutorialManager != null ? _tutorialManager.CurrentStepProgress : 0f, false);
+
             PlayStepChangeAnimation();
+        }
+
+        private void OnStepProgressChanged(TutorialStepProgressChangedEvent evt)
+        {
+            if (!IsActive)
+            {
+                return;
+            }
+
+            _tutorialManager ??= ServiceContainer.Instance.TryGet<ITutorialManager>();
+            if (_tutorialManager == null || evt.StepIndex != _tutorialManager.CurrentStepIndex)
+            {
+                return;
+            }
+
+            ApplyProgress(evt.NormalizedProgress, true);
         }
 
         private void OnTutorialEnded(TutorialCompletedEvent evt)
         {
+            ApplyProgress(1f, true);
             Hide();
         }
 
         private void OnTutorialSkipped(TutorialSkippedEvent evt)
         {
+            ApplyProgress(1f, true);
             Hide();
         }
 
@@ -289,6 +320,27 @@ namespace Game.UI.Tutorial
             {
                 _panelCanvasGroup = panelRoot.AddComponent<CanvasGroup>();
             }
+        }
+
+        private void ApplyProgress(float normalizedProgress, bool animated)
+        {
+            if (progressFillImage == null)
+            {
+                return;
+            }
+
+            float clamped = Mathf.Clamp01(normalizedProgress);
+            _progressTween?.Kill();
+
+            if (!animated || !IsActive)
+            {
+                progressFillImage.fillAmount = clamped;
+                return;
+            }
+
+            _progressTween = progressFillImage
+                .DOFillAmount(clamped, progressTweenDuration)
+                .SetEase(progressTweenEase);
         }
     }
 }

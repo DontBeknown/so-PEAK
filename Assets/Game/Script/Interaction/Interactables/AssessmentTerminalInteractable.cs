@@ -76,8 +76,11 @@ namespace Game.Interaction
 
         }
 
-        private void Update()
+        protected override void Update()
         {
+            // Preserve base hold-input polling so releasing interact can cancel the hold.
+            base.Update();
+
             if (!normalizeTemperatureWhenNear) return;
             _comfortZoneTimer += Time.deltaTime;
             if (_comfortZoneTimer < ComfortZoneUpdateInterval) return;

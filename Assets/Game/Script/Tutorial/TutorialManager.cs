@@ -35,10 +35,12 @@ namespace Game.Tutorial
         private int _jumpCount;
         private Vector3 _lastPlayerPosition;
         private float _lastCameraYaw;
+        private float _lastPublishedStepProgress = -1f;
 
         public bool IsActive { get; private set; }
         public bool IsCompleted { get; private set; }
         public int CurrentStepIndex { get; private set; } = -1;
+        public float CurrentStepProgress => ComputeCurrentStepProgress();
 
         /// <summary>Called by GameServiceBootstrapper after registration.</summary>
         public void Initialize(IEventBus eventBus, ISaveLoadService saveLoadService,
@@ -127,6 +129,7 @@ namespace Game.Tutorial
 
             _stepTimer += Time.deltaTime;
             UpdatePollingProgress(step);
+            PublishStepProgressIfNeeded();
             TryCompleteByPolling(step);
         }
 
@@ -293,6 +296,7 @@ namespace Game.Tutorial
                 _isWaitingForGate = true;
                 _waitingStepIndex = stepIndex;
                 CurrentStepIndex = stepIndex;
+                _lastPublishedStepProgress = -1f;
                 PublishStepChanged(stepIndex, null, true);
                 return;
             }
@@ -309,6 +313,7 @@ namespace Game.Tutorial
             ResetStepTracking();
             PersistProgress(false);
             PublishStepChanged(stepIndex, _tutorialData.steps[stepIndex], false);
+            PublishStepProgressIfNeeded(true);
         }
 
         private void ResetStepTracking()
@@ -425,6 +430,7 @@ namespace Game.Tutorial
             }
 
             int completedIndex = CurrentStepIndex;
+            PublishStepProgress(CurrentStepProgress, true);
             _eventBus?.Publish(new TutorialStepCompletedEvent(_tutorialData.tutorialId, completedIndex));
 
             if (completedIndex + 1 >= _tutorialData.steps.Count)
@@ -438,6 +444,8 @@ namespace Game.Tutorial
 
         private void MarkCompleted(bool skipped)
         {
+            PublishStepProgress(1f, true);
+
             IsCompleted = true;
             IsActive = false;
             _isWaitingForGate = false;
@@ -481,6 +489,58 @@ namespace Game.Tutorial
         private void PublishStepChanged(int stepIndex, TutorialStepData stepData, bool waitingForGate)
         {
             _eventBus?.Publish(new TutorialStepChangedEvent(_tutorialData.tutorialId, stepIndex, stepData, waitingForGate));
+        }
+
+        private float ComputeCurrentStepProgress()
+        {
+            if (!IsActive || IsCompleted || _isWaitingForGate)
+            {
+                return 0f;
+            }
+
+            var step = GetCurrentStep();
+            if (step == null)
+            {
+                return 0f;
+            }
+
+            switch (step.completionType)
+            {
+                case TutorialStepType.AutoAdvance:
+                    return Mathf.Clamp01(_stepTimer / Mathf.Max(0.01f, step.completionThreshold));
+                case TutorialStepType.WalkDistance:
+                    return Mathf.Clamp01(_walkDistance / Mathf.Max(0.01f, step.completionThreshold));
+                case TutorialStepType.LookAround:
+                    return Mathf.Clamp01(_lookAngle / Mathf.Max(0.01f, step.completionThreshold));
+                case TutorialStepType.Jump:
+                    return Mathf.Clamp01(_jumpCount / Mathf.Max(1f, Mathf.RoundToInt(step.completionThreshold)));
+                case TutorialStepType.Sprint:
+                    return Mathf.Clamp01(_sprintDuration / Mathf.Max(0.01f, step.completionThreshold));
+                default:
+                    return 0f;
+            }
+        }
+
+        private void PublishStepProgressIfNeeded(bool force = false)
+        {
+            PublishStepProgress(CurrentStepProgress, force);
+        }
+
+        private void PublishStepProgress(float normalizedProgress, bool force = false)
+        {
+            if (_eventBus == null || _tutorialData == null || CurrentStepIndex < 0)
+            {
+                return;
+            }
+
+            float clamped = Mathf.Clamp01(normalizedProgress);
+            if (!force && Mathf.Abs(clamped - _lastPublishedStepProgress) < 0.001f)
+            {
+                return;
+            }
+
+            _lastPublishedStepProgress = clamped;
+            _eventBus.Publish(new TutorialStepProgressChangedEvent(_tutorialData.tutorialId, CurrentStepIndex, clamped));
         }
 
         private void OnItemAdded(InventoryItemAddedEvent evt)

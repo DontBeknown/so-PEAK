@@ -5,6 +5,7 @@ namespace Game.Tutorial
         bool IsActive { get; }
         bool IsCompleted { get; }
         int CurrentStepIndex { get; }
+        float CurrentStepProgress { get; }
 
         void StartTutorial();
         void SkipTutorial();

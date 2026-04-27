@@ -248,6 +248,20 @@ namespace Game.Core.Events
         }
     }
 
+    public class TutorialStepProgressChangedEvent
+    {
+        public string TutorialId { get; }
+        public int StepIndex { get; }
+        public float NormalizedProgress { get; }
+
+        public TutorialStepProgressChangedEvent(string tutorialId, int stepIndex, float normalizedProgress)
+        {
+            TutorialId = tutorialId;
+            StepIndex = stepIndex;
+            NormalizedProgress = normalizedProgress;
+        }
+    }
+
     public class TutorialCompletedEvent
     {
         public string TutorialId { get; }
