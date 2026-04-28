@@ -19,6 +19,9 @@ public class StaminaStat : Stat
     // Terrain-based drain tracking
     private float currentSlopeDrain;
 
+    // When false, drains will be reported via OnDrained but won't reduce current stamina.
+    public bool ConsumeDrains { get; set; } = true;
+
     public void Init(float regen, float cooldown, float climbDrain)
     {
         regenPerSecond = regen;
@@ -55,11 +58,12 @@ public class StaminaStat : Stat
         }
     }
 
-    public void Drain(float amount)
+    public void Drain(float amount, bool consume = true)
     {
         draining = true;
         OnDrained?.Invoke(amount);
-        SetCurrent(Current - amount);
+        if (consume && ConsumeDrains)
+            SetCurrent(Current - amount);
     }
 
     public void SetClimbing(bool climbing)

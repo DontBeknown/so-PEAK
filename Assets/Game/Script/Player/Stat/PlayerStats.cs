@@ -150,7 +150,6 @@ public class PlayerStats : MonoBehaviour
         {
             hunger.Tick(dt);
             thirst.Tick(dt);
-            stamina.Tick(dt);
             fatigue.Tick(dt);
 
             // Temperature: gather heat sources → set env target → tick
@@ -187,6 +186,10 @@ public class PlayerStats : MonoBehaviour
             hunger.SetTemperatureMultiplier(temperature.GetHungerDrainMultiplier());
             thirst.SetTemperatureMultiplier(temperature.GetThirstDrainMultiplier());
         }
+
+        // Ensure stamina drains are tracked but optionally not consumed while immune.
+        stamina.ConsumeDrains = !isImmune;
+        stamina.Tick(dt);
 
         if (!isImmune && hunger.ShouldHurt)
         {
