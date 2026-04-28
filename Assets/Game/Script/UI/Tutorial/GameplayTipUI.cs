@@ -2,6 +2,8 @@ using DG.Tweening;
 using Game.Core.DI;
 using Game.Core.Events;
 using Game.Tutorial;
+using Game.Sound;
+using Game.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,11 +33,22 @@ namespace Game.UI.Tutorial
         [Header("Animation")]
         [SerializeField] private float showDuration = 0.28f;
         [SerializeField] private float hideDuration = 0.2f;
-
+        
+        [Header("Sound")]
+        [SerializeField] private SoundService soundService;
+        [SerializeField] private string openSoundId = "";
+        [SerializeField] private float openVolumeScale = 1f;
+        [SerializeField] private string closeSoundId = "";
+        [SerializeField] private float closeVolumeScale = 1f;
         private IEventBus _eventBus;
         private CanvasGroup _canvasGroup;
         private GameplayTipSlide[] _slides;
+        private string _currentTipId;
         private int _currentSlide;
+        private PlayerStats _playerStats;
+        private CinemachinePlayerCamera _playerCamera;
+        private IInputBlocker _inputBlocker;
+        
 
         private void Awake()
         {
@@ -51,7 +64,14 @@ namespace Game.UI.Tutorial
         private void Start()
         {
             _eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
+            _playerStats = ServiceContainer.Instance.TryGet<PlayerStats>();
             _eventBus?.Subscribe<ShowGameplayTipEvent>(OnShowTip);
+
+            _playerCamera = ServiceContainer.Instance.TryGet<CinemachinePlayerCamera>();
+
+            soundService = ServiceContainer.Instance.TryGet<SoundService>();
+            
+            _inputBlocker = UIServiceProvider.Instance?.InputBlocker;
         }
 
         private void OnDestroy()
@@ -65,6 +85,7 @@ namespace Game.UI.Tutorial
 
             _slides = evt.TipData.slides;
             _currentSlide = 0;
+            _currentTipId = evt.TipData.tipId;
             ShowPanel();
             DisplaySlide(_currentSlide);
         }
@@ -110,17 +131,41 @@ namespace Game.UI.Tutorial
         private void ShowPanel()
         {
             if (panelRoot == null) return;
+
             panelRoot.SetActive(true);
+
+            _playerStats?.SetImmunity(true);
+
+            _playerCamera?.SetCursorLock(false);
+            
+            _inputBlocker?.BlockInput();
 
             if (_canvasGroup != null)
             {
                 _canvasGroup.alpha = 0f;
                 _canvasGroup.DOFade(1f, showDuration).SetUpdate(true);
             }
+
+            soundService?.PlayUISound(openSoundId, volumeScale: openVolumeScale);
+
+            HJBClickPathController.Instance?.HidePath();
         }
 
         private void HidePanel()
         {
+            _playerStats?.SetImmunity(false);
+
+            if(_currentTipId != "Map")
+            {
+                _playerCamera?.SetCursorLock(true);
+                _inputBlocker?.UnblockInput();
+            }
+            else
+            {
+                MapPathRevealState.RevealAgain();
+                HJBClickPathController.Instance?.ToggleCachedPathDisplay();
+            }
+
             if (panelRoot == null) return;
 
             if (_canvasGroup != null)
@@ -133,6 +178,12 @@ namespace Game.UI.Tutorial
             {
                 panelRoot.SetActive(false);
             }
+
+            soundService?.PlayUISound(closeSoundId, volumeScale: closeVolumeScale);
+
+            
+
+            _currentTipId = "";
         }
     }
 }

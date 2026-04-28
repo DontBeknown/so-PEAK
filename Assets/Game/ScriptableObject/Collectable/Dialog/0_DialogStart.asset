@@ -25,10 +25,8 @@ MonoBehaviour:
   - speakerName: Aira
     text: 'it has to be up at the summit.  '
   - speakerName: Aira
-    text: 'I just need to find a sign. A trail marker,  <b><color=#ffff00>a Campfire,
-      a House</color></b>, a piece of trash.
-
-      Anything human. '
+    text: "I just need to find a sign. A trail marker,  <b><color=#ffff00>a Campfire,
+      \na House</color></b>, a piece of trash. Anything human. "
   - speakerName: Aira
     text: 'This is so lonely. I should write something down in my journal,
 

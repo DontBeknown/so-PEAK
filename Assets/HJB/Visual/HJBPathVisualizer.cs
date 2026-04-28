@@ -310,6 +310,7 @@ public class HJBPathVisualizer : MonoBehaviour
             var main = ps.main;
             main.startSize = new ParticleSystem.MinMaxCurve(stepStartSizeRange.x, stepStartSizeRange.y);
             ps.Clear(true);
+            ps.time = 0f;
             ps.Play(true);
             activeSparkSystems.Add(ps);
         }
@@ -326,19 +327,27 @@ public class HJBPathVisualizer : MonoBehaviour
             stepVFXParent.SetParent(transform, false);
         }
 
+        Vector3 parkPos = new Vector3(0f, -100000f, 0f);
+
         stepPool = new ObjectPool<GameObject>(
             createFunc: () =>
             {
                 var go = Instantiate(sparkVFXPrefab, stepVFXParent);
-                go.SetActive(false);
+                var ps = go.GetComponent<ParticleSystem>();
+                if (ps != null) ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                go.transform.position = parkPos;
                 return go;
             },
-            actionOnGet: go => go.SetActive(true),
+            actionOnGet: go =>
+            {
+                var ps = go.GetComponent<ParticleSystem>();
+                if (ps != null) ps.Clear(true);
+            },
             actionOnRelease: go =>
             {
                 var ps = go.GetComponent<ParticleSystem>();
                 if (ps != null) ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-                go.SetActive(false);
+                go.transform.position = parkPos;
             },
             actionOnDestroy: go => { if (go != null) Destroy(go); },
             collectionCheck: false,

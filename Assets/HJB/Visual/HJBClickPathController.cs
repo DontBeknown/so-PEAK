@@ -36,8 +36,12 @@ public class HJBClickPathController : MonoBehaviour
     // Cached path data for manual drawing or exporting to save file (supports up to 3 levels)
     [HideInInspector] public Dictionary<WorldLevel, List<Vector3>> savedPathsByLevel = new Dictionary<WorldLevel, List<Vector3>>();
 
+    public static HJBClickPathController Instance { get; private set; }
+
     void OnEnable()
     {
+        Instance = this;
+
         if (SaveLoadService.Instance != null)
         {
             SaveLoadService.Instance.OnWorldLoaded += HandleWorldLoaded;
@@ -48,6 +52,8 @@ public class HJBClickPathController : MonoBehaviour
 
     void OnDisable()
     {
+        if (Instance == this) Instance = null;
+
         if (SaveLoadService.Instance != null)
         {
             SaveLoadService.Instance.OnWorldLoaded -= HandleWorldLoaded;
@@ -58,6 +64,14 @@ public class HJBClickPathController : MonoBehaviour
             visualizer.CancelFadeAnimation(false);
         }
 
+        isPathToggledOn = false;
+    }
+
+    public void HidePath()
+    {
+        if (visualizer == null) return;
+        visualizer.CancelFadeAnimation(false);
+        visualizer.Clear();
         isPathToggledOn = false;
     }
 
@@ -436,6 +450,10 @@ public class HJBClickPathController : MonoBehaviour
             Debug.LogWarning($"[HJBClickPath] No path data cached to draw for {currentLvl}! Press P to calculate first.");
             return;
         }
+
+        visualizer.CancelFadeAnimation(false);
+        visualizer.Clear();
+        isPathToggledOn = false;
 
         Debug.Log($"[HJBClickPath] Drawing cached path for {currentLvl} with fade...");
         visualizer.DrawPathWorld(calculatedPathData);

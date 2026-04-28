@@ -82,6 +82,7 @@ MonoBehaviour:
   destroyAfterUse: 1
   destroyAnimation: {fileID: 1202182677493556524}
   mapData: {fileID: 11400000, guid: 1ba560d06426d9f48ad39b34f9e703ca, type: 2}
+  detectionTip: {fileID: 11400000, guid: 262f074986b2fcc478999fab64df5ef6, type: 2}
 --- !u!114 &1202182677493556524
 MonoBehaviour:
   m_ObjectHideFlags: 0

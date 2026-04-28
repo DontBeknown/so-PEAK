@@ -72,6 +72,9 @@ namespace Game.UI
             _inputBlocker = new PlayerInputBlocker(playerController, playerCamera);
             _panelController = new UIPanelController(_cursorManager, _inputBlocker, eventBus);
             
+            // Register InputBlocker to ServiceContainer so other components can access it
+            ServiceContainer.Instance.Register<IInputBlocker>(_inputBlocker);
+            
             if (enableDebugLogs)
                 Debug.Log("[UIServiceProvider] Services initialized");
         }
@@ -122,6 +125,10 @@ namespace Game.UI
                 // Panel controller needs to be recreated to use new input blocker
                 var eventBus = ServiceContainer.Instance.TryGet<IEventBus>();
                 _panelController = new UIPanelController(_cursorManager, _inputBlocker, eventBus);
+                
+                // Re-register the updated InputBlocker to ServiceContainer
+                ServiceContainer.Instance.Unregister<IInputBlocker>();
+                ServiceContainer.Instance.Register<IInputBlocker>(_inputBlocker);
                 
                 // Re-register all panels
                 RegisterAllPanels();

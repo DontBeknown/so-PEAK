@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c317abc05a5214b44a82ca6bb8faf700, type: 3}
+  m_Name: Hazard
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Tutorial.GameplayTipData
+  tipId: Hazard
+  slides:
+  - title: HAZARDS
+    bodyText: "While hiking, you may encounter <color=#B22222><b>Hazards</b></color>
+      that can cause harm. \r\n\r\nDon't worry too much\u2014all hazards are preceded
+      by <color=#E65100><b>warning signs</b></color>. Keep a close watch on your
+      surroundings and stay alert for any <b>weird or unusual</b> environmental changes!</color>"
+    illustration: {fileID: 21300000, guid: fbd492863cfeaa8429436f45e0866b92, type: 3}
+  - title: HAZARDS
+    bodyText: "Don't worry too much\u2014all hazards are preceded by <color=#E65100><b>warning
+      signs</b></color>. Keep a close watch on your surroundings and stay alert for
+      any <b>weird or unusual</b> environmental changes!</color>"
+    illustration: {fileID: 21300000, guid: c71e58d4cc7e25f49803bbaacef6d0b5, type: 3}

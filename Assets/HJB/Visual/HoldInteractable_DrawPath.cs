@@ -1,5 +1,7 @@
 using UnityEngine;
+using Game.Core.DI;
 using Game.Interaction;
+using Game.Tutorial;
 using Game.UI;
 
 /// <summary>
@@ -22,8 +24,18 @@ public class HoldInteractable_DrawPath : HoldInteractableBase
     [Header("Map Data")]
     [SerializeField] private HeldMapData mapData;
 
+    [Header("Tip")]
+    [SerializeField] private GameplayTipData detectionTip;
+
     public override string InteractionPrompt => "Draw Path to Peak";
     public override bool CanInteract => true;
+
+    public override void OnHighlighted(bool highlighted)
+    {
+        base.OnHighlighted(highlighted);
+        if (highlighted && detectionTip != null)
+            ServiceContainer.Instance.TryGet<GameplayTipManager>()?.ShowTip(detectionTip);
+    }
 
     protected override void OnHoldComplete()
     {
@@ -54,7 +66,9 @@ public class HoldInteractable_DrawPath : HoldInteractableBase
 
             uiServiceProvider.OpenPanel(mapPanel.PanelName);
 
-            MapPathRevealState.Reveal(displayDuration);
+            var cachedController = hjbClickPathController;
+            float fi = fadeInDuration, dd = displayDuration, fo = fadeOutDuration;
+            MapPathRevealState.Reveal(displayDuration, () => cachedController?.DrawCachedPathWithFade(fi, dd, fo));
 
             if (destroyAfterUse)
             {

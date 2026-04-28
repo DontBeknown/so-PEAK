@@ -13,13 +13,18 @@ namespace Game.Tutorial
         [SerializeField] private GameplayTipData hotTemperatureTip;
         [SerializeField] private GameplayTipData landslideTip;
         [SerializeField] private GameplayTipData tornadoTip;
+        [SerializeField] private GameplayTipData mapViewerTip;
 
         [Header("Temperature Poll Interval (seconds)")]
         [SerializeField] private float temperaturePollInterval = 0.5f;
 
+        [Header("Config")]
+        [SerializeField] private PlayerConfig playerConfig;
+
         private IEventBus _eventBus;
         private ISaveLoadService _saveLoadService;
         private PlayerStats _playerStats;
+        private readonly System.Collections.Generic.List<string> _seenGameplayTipsBackup = new();
 
         private float _temperaturePollTimer;
         private bool _initialized;
@@ -38,22 +43,24 @@ namespace Game.Tutorial
                 _eventBus = Game.Core.DI.ServiceContainer.Instance.TryGet<IEventBus>();
 
             _eventBus?.Subscribe<NaturalDisasterEvent>(OnNaturalDisaster);
+            _eventBus?.Subscribe<PanelOpenedEvent>(OnPanelOpened);
         }
 
         private void OnDestroy()
         {
             _eventBus?.Unsubscribe<NaturalDisasterEvent>(OnNaturalDisaster);
+            _eventBus?.Unsubscribe<PanelOpenedEvent>(OnPanelOpened);
         }
 
         private void Update()
         {
-            if (!_initialized || _playerStats == null || hotTemperatureTip == null) return;
+            if (!_initialized || _playerStats == null || hotTemperatureTip == null || playerConfig == null) return;
 
             _temperaturePollTimer += Time.deltaTime;
             if (_temperaturePollTimer < temperaturePollInterval) return;
             _temperaturePollTimer = 0f;
 
-            if (_playerStats.TemperatureStat.IsOverheating)
+            if (_playerStats.TemperatureStat.Current >= playerConfig.tempHotThirstPenaltyThreshold)
                 ShowTip(hotTemperatureTip);
         }
 
@@ -70,7 +77,13 @@ namespace Game.Tutorial
             }
         }
 
-        private void ShowTip(GameplayTipData tip)
+        private void OnPanelOpened(PanelOpenedEvent evt)
+        {
+            if (mapViewerTip != null && evt.PanelName == "MapViewer")
+                ShowTip(mapViewerTip);
+        }
+
+        public void ShowTip(GameplayTipData tip)
         {
             if (HasSeenTip(tip.tipId)) return;
             MarkTipSeen(tip.tipId);
@@ -80,16 +93,23 @@ namespace Game.Tutorial
         private bool HasSeenTip(string id)
         {
             var worldState = _saveLoadService?.CurrentWorldSave?.worldState;
-            return worldState?.seenGameplayTips?.Contains(id) ?? false;
+            return worldState?.seenGameplayTips?.Contains(id) ?? _seenGameplayTipsBackup.Contains(id);
         }
 
         private void MarkTipSeen(string id)
         {
             var worldState = _saveLoadService?.CurrentWorldSave?.worldState;
+            if (!_seenGameplayTipsBackup.Contains(id))
+                _seenGameplayTipsBackup.Add(id);
+
             if (worldState == null) return;
+
             worldState.seenGameplayTips ??= new System.Collections.Generic.List<string>();
-            if (!worldState.seenGameplayTips.Contains(id))
-                worldState.seenGameplayTips.Add(id);
+            foreach (var tipId in _seenGameplayTipsBackup)
+            {
+                if (!worldState.seenGameplayTips.Contains(tipId))
+                    worldState.seenGameplayTips.Add(tipId);
+            }
         }
     }
 }
