@@ -202,10 +202,37 @@ public class HJBClickPathController : MonoBehaviour
             }
             world = playerTransform.position;
         }
-        Vector2Int g = provider.WorldToGrid(world);
+
+        // The snapshot's pathStart is the single source of truth so the live spawn-to-peak
+        // flow and the background batch flow agree on the same start cell for this level.
+        Vector2Int g;
+        if (TryGetCurrentSnapshot(out var snap))
+        {
+            g = snap.pathStart;
+            world = provider.GridToWorld(g.x, g.y);
+        }
+        else
+        {
+            g = provider.WorldToGrid(world);
+        }
+
         start = g;
         SpawnMarker(ref startMarker, startMarkerPrefab, world);
-        Debug.Log($"[HJBClickPath] Start set to {(overrideWorldPos.HasValue ? "override position" : "player")} at {g}");
+        Debug.Log($"[HJBClickPath] Start set to snapshot pathStart at {g}");
+    }
+
+    bool TryGetCurrentSnapshot(out LevelTerrainSnapshot snap)
+    {
+        snap = null;
+        if (provider == null || provider.worldDataManager == null) return false;
+        if (provider.levelSnapshots == null) return false;
+
+        WorldLevel lvl = provider.worldDataManager.currentLevel;
+        if (!provider.levelSnapshots.ContainsKey(lvl))
+        {
+            provider.PreloadSnapshotForLevel(lvl);
+        }
+        return provider.levelSnapshots.TryGetValue(lvl, out snap) && snap != null;
     }
     // Coroutine to trigger path calculation and wait until path is ready for the current level
     public System.Collections.IEnumerator CalculatePathFromSpawnToPeak(Vector3 spawnWorldPos)
@@ -355,9 +382,11 @@ public class HJBClickPathController : MonoBehaviour
             return;
         }
 
-        // Get the main peak directly from the generator
-        Vector2Int peakCoord = provider.worldDataManager.activeGen.mainPeak;
-        
+        // Prefer the snapshot's pathGoal so the live and background flows always agree.
+        Vector2Int peakCoord = TryGetCurrentSnapshot(out var snap)
+            ? snap.pathGoal
+            : provider.worldDataManager.activeGen.mainPeak;
+
         goal = peakCoord;
         Vector3 worldPos = provider.GridToWorld(peakCoord.x, peakCoord.y);
 
@@ -377,32 +406,35 @@ public class HJBClickPathController : MonoBehaviour
             }
 
             Debug.Log("Solving path from ClickController...");
-            
+
             // First ensure cost surface is built (this happens very quickly)
-            if (solver.cost.baseSpeed == null) 
+            if (solver.cost.baseSpeed == null)
             {
                 solver.cost.Build();
             }
 
-            solver.startPos = start.Value;
+            // Capture the important values now so the background task doesn't observe mutated state later
+            var levelAtStart = currentLvl;
+            var startAt = start.Value;
+            var goalAt = goal.Value;
+
+            solver.startPos = startAt;
 
             // Optional: Show some UI loading indication here
 
-            // Run the solver in a background task
+            // Run the solver in a background task using the captured endpoints
             System.Threading.Tasks.Task.Run(() =>
             {
-                solver.Solve(goal.Value);
+                solver.Solve(goalAt);
             }).ContinueWith(t =>
             {
-                // Retrieve but DO NOT draw the path immediately
-                var generatedPath = backtracker.BuildPath(start.Value, goal.Value);
-                
-                // Store safely in the dictionary based on current WorldLevel
-                currentLvl = provider.worldDataManager.currentLevel;
-                savedPathsByLevel[currentLvl] = generatedPath;
+                // Build using the captured start/goal and save under the level captured at task start
+                var generatedPath = backtracker.BuildPath(startAt, goalAt);
+
+                savedPathsByLevel[levelAtStart] = generatedPath;
                 PersistPathsToCurrentSave(true);
 
-                Debug.Log($"[HJBClickPath] Background path calculation finished for {currentLvl}! Generated {generatedPath.Count} waypoints. Ready to be saved or drawn.");
+                Debug.Log($"[HJBClickPath] Background path calculation finished for {levelAtStart}! Generated {generatedPath.Count} waypoints. Ready to be saved or drawn.");
             }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
         }
     }
