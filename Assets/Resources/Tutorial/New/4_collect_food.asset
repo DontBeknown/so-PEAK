@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.Tutorial.TutorialStepData
   stepId: 4_collect_food
   title: Gather Food
-  instructionText: "You're hungry \u2014 find something to eat and gather it."
+  instructionText: "You're hungry \u2014 go near apple tree and hold F to start collecting."
   inputHintText: 
   completionType: 6
   completionThreshold: 1

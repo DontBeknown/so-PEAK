@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.Tutorial.TutorialStepData
   stepId: 10_reach_campfire
   title: Rest
-  instructionText: After taking damage, go to the campfire and bed in cabin then
-    interact with it to recover.
+  instructionText: After taking damage, you can go to the campfire and bed in cabin
+    then interact with it to recover.
   inputHintText: 
   completionType: 16
   completionThreshold: 2

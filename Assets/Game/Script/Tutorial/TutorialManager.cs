@@ -5,7 +5,9 @@ using Game.Player;
 using Game.Player.Inventory.Events;
 using InventoryItemAddedEvent = Game.Player.Inventory.Events.ItemAddedEvent;
 using ItemConsumedEvent = Game.Player.Inventory.Events.ItemConsumedEvent;
+using UnityEngine.SceneManagement;
 using UnityEngine;
+
 
 namespace Game.Tutorial
 {
@@ -16,6 +18,7 @@ namespace Game.Tutorial
 
         [Header("Debug")]
         [SerializeField] private bool debugLogs;
+        [SerializeField] private bool tutorialOnStart = false;
 
         private IEventBus _eventBus;
         private ISaveLoadService _saveLoadService;
@@ -57,17 +60,9 @@ namespace Game.Tutorial
             {
                 Debug.LogError($"[TutorialManager] TutorialData not found at Resources/{tutorialResourcePath}. Tutorial disabled.");
             }
-        }
 
-        private void Start()
-        {
             SubscribeToEvents();
             StartTutorial();
-        }
-
-        private void OnEnable()
-        {
-            // Event subscriptions are now handled in Start() after EventBus is initialized
         }
 
         private void OnDisable()
@@ -79,6 +74,7 @@ namespace Game.Tutorial
         {
             if (_eventBus == null)
             {
+                Debug.LogError("[TutorialManager] Cannot subscribe to events because IEventBus reference is missing.");
                 return;
             }
 
@@ -146,15 +142,10 @@ namespace Game.Tutorial
 
         public void StartTutorial()
         {
-            if (_tutorialData == null || _tutorialData.steps == null || _tutorialData.steps.Count == 0)
+            if (!tutorialOnStart)
             {
-                if (debugLogs)
-                {
-                    Debug.LogWarning("[TutorialManager] Cannot start tutorial without valid data.");
-                }
                 return;
             }
-
             EnsureReferences();
             EnsureSaveData();
 
@@ -162,6 +153,7 @@ namespace Game.Tutorial
             if (tutorialSave != null && tutorialSave.isCompleted)
             {
                 IsCompleted = true;
+                Debug.LogWarning("[TutorialManager] Tutorial already completed according to save data. Marking as completed without starting.");
                 return;
             }
 

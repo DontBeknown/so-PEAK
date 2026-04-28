@@ -16,10 +16,12 @@ MonoBehaviour:
   lines:
   - speakerName: Aira
     text: "Okay. The coordinates from that radio static pointed here. \r\nI need
-      to hurry before I get left behind here.  "
+      to hurry before I get left behind here. \n(Press RIGHT CLICK to proceed) "
   - speakerName: Aira
-    text: I got separated from the group a while ago. I need to hurry and rejoin
-      them at the <b><color=#ffff00>Lighthouse</color></b>
+    text: 'I got separated from the group a while ago.
+
+      I need to hurry and
+      rejoin them at the <b><color=#ffff00>Lighthouse</color></b>'
   - speakerName: Aira
     text: 'it has to be up at the summit.  '
   - speakerName: Aira
@@ -28,5 +30,7 @@ MonoBehaviour:
 
       Anything human. '
   - speakerName: Aira
-    text: This is so lonely. I should write something down in my journal, so I'll
-      feel less lonely.
+    text: 'This is so lonely. I should write something down in my journal,
+
+      so
+      I''ll feel less lonely.'

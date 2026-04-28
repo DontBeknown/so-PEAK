@@ -138,7 +138,7 @@ public class GameplaySceneInitializer : MonoBehaviour
 
         AwardStarterCollectablesAfterSpawn();
 
-        TryStartTutorial(resolvedSaveData);  
+        //TryStartTutorial(resolvedSaveData);  
 
         saveLoadService.MarkFirstSpawnComplete();
 

@@ -1,5 +1,6 @@
 using Game.Core.DI;
 using Game.Core.Events;
+using Game.Interaction;
 using UnityEngine;
 
 namespace Game.Tutorial
@@ -16,11 +17,14 @@ namespace Game.Tutorial
 
         [Header("References")]
         [SerializeField] private Collider barrierCollider;
-        [SerializeField] private Animator animator;
-        [Tooltip("Fallback: hide this object if no Animator is assigned.")]
+        [Tooltip("Root object whose direct children are destroyed in random order when unlocked.")]
         [SerializeField] private GameObject visualRoot;
 
+        [Header("Destroy Visuals")]
+        [SerializeField] private float delayBetweenVisualDestroy = 0.05f;
+
         private IEventBus _eventBus;
+        private bool _isOpened;
 
         private void Start()
         {
@@ -41,15 +45,31 @@ namespace Game.Tutorial
 
         private void OnStepCompleted(TutorialStepCompletedEvent evt)
         {
-            if (evt.StepIndex != stepIndexToUnlock) return;
+            if (evt.StepIndex != stepIndexToUnlock || _isOpened) return;
+
+            _isOpened = true;
 
             if (barrierCollider != null)
                 barrierCollider.enabled = false;
 
-            if (animator != null)
-                animator.SetTrigger("Open");
-            else if (visualRoot != null)
-                visualRoot.SetActive(false);
+            PlayVisualDestroySequence();
+        }
+
+        private void PlayVisualDestroySequence()
+        {
+            if (visualRoot == null)
+            {
+                Debug.LogWarning("[TutorialAreaGate] visualRoot is not assigned. Skipping visual destroy sequence.");
+                return;
+            }
+
+            RandomScaleDownDestroySequence sequence = GetComponent<RandomScaleDownDestroySequence>();
+            if (sequence == null)
+                sequence = gameObject.AddComponent<RandomScaleDownDestroySequence>();
+
+            sequence.SetDelay(delayBetweenVisualDestroy);
+            sequence.CollectFromParentDirectChildren(visualRoot.transform, clearExisting: true, includeParentWhenNoChildren: true);
+            sequence.Play();
         }
     }
 }
