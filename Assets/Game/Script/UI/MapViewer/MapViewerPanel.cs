@@ -42,6 +42,7 @@ namespace Game.UI
         [SerializeField] private Color lineColor = Color.red;
         [SerializeField] private Color endpointColor = Color.red;
         [SerializeField] private Color walkPathColor = Color.green;
+        [SerializeField] private Color aStarLineColor = Color.blue;
         [SerializeField] private int lineThickness = 3;
         [SerializeField] private int endpointRadius = 3;
         [SerializeField] private float pathFadeDuration = 0.4f;
@@ -52,6 +53,8 @@ namespace Game.UI
         [SerializeField] private Color playerMarkerOutlineColor = Color.black;
         [SerializeField] private int playerMarkerOutlineThickness = 3;
 
+        [Header("A Star Path")]
+        [SerializeField] bool includeAStarPath;
         private Tween activeTween;
         private IEventBus eventBus;
         private ISaveLoadService saveLoadService;
@@ -144,6 +147,51 @@ namespace Game.UI
             return ApplyMapData(mapData);
         }
 
+        public bool SetMapDataWithAStarPath(HeldMapData mapData)
+        {
+            includeWalkPath = false;
+            return ApplyMapData(mapData);
+        }
+
+        public void SetShowAStarPath(bool show)
+        {
+            if (includeAStarPath == show) return;
+            includeAStarPath = show;
+            RebuildOverlay();
+        }
+
+        public void ToggleAStarPath()
+        {
+            includeAStarPath = !includeAStarPath;
+            RebuildOverlay();
+        }
+
+        private void RebuildOverlay()
+        {
+            if (baseMapBytes == null) return;
+
+            bool revealed = MapPathRevealState.IsRevealed;
+            bool showOverlay = includeWalkPath || includeAStarPath || revealed;
+
+            if (pathOverlayImage != null && currentTex != null)
+            {
+                ReleasePathOverlay();
+                var overlay = BuildPathOverlaySprite(currentTex.width, currentTex.height);
+                pathOverlayImage.sprite = overlay;
+                pathOverlayImage.enabled = overlay != null;
+                SetPathOverlayAlphaImmediate(showOverlay ? 1f : 0f);
+                pathCurrentlyDrawn = showOverlay;
+                return;
+            }
+
+            var rebuilt = BuildMapSprite(withPath: showOverlay);
+            if (mapImage != null)
+            {
+                mapImage.sprite = rebuilt;
+                mapImage.enabled = rebuilt != null;
+            }
+        }
+
         private bool ApplyMapData(HeldMapData mapData)
         {
             currentMapData = mapData;
@@ -164,7 +212,7 @@ namespace Game.UI
                     baseMapBytes = File.ReadAllBytes(loadPath);
                     bool useOverlayImage = pathOverlayImage != null;
                     bool revealed = MapPathRevealState.IsRevealed;
-                    bool showOverlay = includeWalkPath || revealed;
+                    bool showOverlay = includeWalkPath || includeAStarPath || revealed;
                     mapSprite = BuildMapSprite(withPath: !useOverlayImage && showOverlay);
 
                     if (useOverlayImage && currentTex != null)
@@ -288,7 +336,8 @@ namespace Game.UI
                 var path = saveLoadService?.GetCachedPathForCurrentLevel();
                 bool hasCached = path != null && path.Count >= 1;
                 bool hasWalk = includeWalkPath && HasWalkPath();
-                if (hasCached || hasWalk)
+                bool hasAStar = includeAStarPath && HasAStarPath();
+                if (hasCached || hasWalk || hasAStar)
                     DrawPathOnTexture(currentTex, path);
             }
 
@@ -326,7 +375,8 @@ namespace Game.UI
             var path = saveLoadService?.GetCachedPathForCurrentLevel();
             bool hasCached = path != null && path.Count >= 1;
             bool hasWalk = includeWalkPath && HasWalkPath();
-            if (hasCached || hasWalk)
+            bool hasAStar = HasAStarPath();
+            if (hasCached || hasWalk || hasAStar)
                 DrawPathOnTexture(pathOverlayTex, path);
             else
                 pathOverlayTex.Apply();
@@ -388,6 +438,13 @@ namespace Game.UI
                 PlotDisc(tex, ex1, ey1, endpointRadius, endpointColor);
             }
 
+            if (includeAStarPath)
+            {
+                var aStarPath = ResolveAStarPath();
+                if (aStarPath != null && aStarPath.Count >= 2)
+                    DrawPathLines(tex, aStarPath, aStarLineColor, lineThickness);
+            }
+
             if (includeWalkPath)
             {
                 var walkPath = ResolveWalkPath();
@@ -423,6 +480,21 @@ namespace Game.UI
         {
             var walk = ResolveWalkPath();
             return walk != null && walk.Count >= 1;
+        }
+
+        private static List<Vector3> ResolveAStarPath()
+        {
+            var ctrl = HJBClickPathController.Instance;
+            if (ctrl == null || ctrl.provider == null || ctrl.provider.worldDataManager == null) return null;
+            var lvl = ctrl.provider.worldDataManager.currentLevel;
+            if (ctrl.savedAStarPathsByLevel == null) return null;
+            return ctrl.savedAStarPathsByLevel.TryGetValue(lvl, out var p) ? p : null;
+        }
+
+        private static bool HasAStarPath()
+        {
+            var p = ResolveAStarPath();
+            return p != null && p.Count >= 2;
         }
 
         private void DrawPlayerPositionMarker(Texture2D tex)

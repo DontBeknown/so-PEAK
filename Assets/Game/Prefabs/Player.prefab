@@ -28540,6 +28540,7 @@ MonoBehaviour:
   lineColor: {r: 0.06132078, g: 1, b: 0.96142405, a: 1}
   endpointColor: {r: 0.08018869, g: 0.45159885, b: 1, a: 1}
   walkPathColor: {r: 0, g: 1, b: 0, a: 1}
+  aStarLineColor: {r: 0, g: 0, b: 1, a: 1}
   lineThickness: 10
   endpointRadius: 20
   pathFadeDuration: 0.4
@@ -28547,6 +28548,7 @@ MonoBehaviour:
   playerMarkerRadius: 25
   playerMarkerOutlineColor: {r: 0.8962264, g: 0.877297, b: 0.83281416, a: 1}
   playerMarkerOutlineThickness: 8
+  includeAStarPath: 1
 --- !u!1 &7230369604955167024
 GameObject:
   m_ObjectHideFlags: 0
