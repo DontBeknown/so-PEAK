@@ -75,6 +75,16 @@ namespace Game.Player.PathFollowing
 
         private void Update()
         {
+            if (Input.GetKeyDown(KeyCode.K))
+            {
+                var inst = HJBClickPathController.Instance;
+                if (inst != null && inst.savedAStarPathsByLevel.TryGetValue(WorldLevel.Forest, out var path) && path?.Count > 0)
+                {
+                    SetPath(path);
+                    StartPath(DriveMode.Run);
+                } 
+            }
+                
             #if UNITY_EDITOR
             if (Input.GetKeyDown(KeyCode.L))
             {

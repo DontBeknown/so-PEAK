@@ -12,6 +12,10 @@ public class HJBClickPathController : MonoBehaviour
     public HJBBacktracker backtracker;
     public HJBPathVisualizer visualizer;
 
+    [Header("A* Optional")]
+    public HJB.Pathfind.AStarPathSolver aStarSolver;
+    public HJBPathVisualizer aStarVisualizer; // Assign a separate visualizer (with e.g. blue line) for A*
+
     [Header("Markers")]
     public GameObject startMarkerPrefab;
     public GameObject goalMarkerPrefab;
@@ -32,11 +36,13 @@ public class HJBClickPathController : MonoBehaviour
     [Min(0f)] public float fadeOutDuration = 0.8f;
 
     bool isPathToggledOn;
+    public static HJBClickPathController Instance { get; private set; }
 
     // Cached path data for manual drawing or exporting to save file (supports up to 3 levels)
     [HideInInspector] public Dictionary<WorldLevel, List<Vector3>> savedPathsByLevel = new Dictionary<WorldLevel, List<Vector3>>();
 
-    public static HJBClickPathController Instance { get; private set; }
+    // Cached A* path data
+    [HideInInspector] public Dictionary<WorldLevel, List<Vector3>> savedAStarPathsByLevel = new Dictionary<WorldLevel, List<Vector3>>();
 
     void OnEnable()
     {
@@ -62,6 +68,10 @@ public class HJBClickPathController : MonoBehaviour
         if (visualizer != null)
         {
             visualizer.CancelFadeAnimation(false);
+        }
+        if (aStarVisualizer != null)
+        {
+            aStarVisualizer.CancelFadeAnimation(false);
         }
 
         isPathToggledOn = false;
@@ -90,7 +100,7 @@ public class HJBClickPathController : MonoBehaviour
             SetStartToPlayer();
             SetGoalToPeak();
             TrySolvePath();
-            
+
         }
 
         if (Input.GetKeyDown(KeyCode.O))
@@ -123,11 +133,17 @@ public class HJBClickPathController : MonoBehaviour
             if (useFadeWhenDrawing)
             {
                 visualizer.HidePathWithFade(localFadeOut, true);
+                if (aStarVisualizer != null) aStarVisualizer.HidePathWithFade(localFadeOut, true);
             }
             else
             {
                 visualizer.CancelFadeAnimation(false);
                 visualizer.Clear();
+                if (aStarVisualizer != null)
+                {
+                    aStarVisualizer.CancelFadeAnimation(false);
+                    aStarVisualizer.Clear();
+                }
             }
 
             isPathToggledOn = false;
@@ -135,37 +151,54 @@ public class HJBClickPathController : MonoBehaviour
         }
 
         WorldLevel currentLvl = provider.worldDataManager.currentLevel;
-        if (!savedPathsByLevel.TryGetValue(currentLvl, out var calculatedPathData) || calculatedPathData == null || calculatedPathData.Count == 0)
+        bool hasHJBPath = savedPathsByLevel.TryGetValue(currentLvl, out var calculatedPathData) && calculatedPathData != null && calculatedPathData.Count > 0;
+
+        List<Vector3> calculatedAStarPathData = null;
+        bool hasAStarPath = false;
+
+        if (aStarVisualizer != null && savedAStarPathsByLevel.TryGetValue(currentLvl, out calculatedAStarPathData) && calculatedAStarPathData != null && calculatedAStarPathData.Count > 0)
+        {
+            hasAStarPath = true;
+        }
+
+        if (!hasHJBPath || !hasAStarPath)
         {
             Debug.LogWarning($"[HJBClickPath] No path data cached to draw for {currentLvl}! Press P to calculate first.");
             return;
         }
 
         //Debug.Log($"[HJBClickPath] Toggling path ON for {currentLvl}.");
-        visualizer.DrawPathWorld(calculatedPathData);
+        if (hasHJBPath) visualizer.DrawPathWorld(calculatedPathData);
+        if (hasAStarPath && aStarVisualizer != null) aStarVisualizer.DrawPathWorld(calculatedAStarPathData);
+
         if (useFadeWhenDrawing)
         {
             if (localDisplay > 0f)
             {
-                var sequence = visualizer.AnimatePathFadeInOut(localFadeIn, localDisplay, localFadeOut);
+                var sequence = hasHJBPath ? visualizer.AnimatePathFadeInOut(localFadeIn, localDisplay, localFadeOut) : null;
+                var aStarSequence = (hasAStarPath && aStarVisualizer != null) ? aStarVisualizer.AnimatePathFadeInOut(localFadeIn, localDisplay, localFadeOut) : null;
+
                 if (sequence != null)
                 {
                     sequence.OnComplete(() =>
                     {
                         visualizer.Clear();
+                        if (aStarVisualizer != null) aStarVisualizer.Clear();
                         isPathToggledOn = false;
                     });
                 }
                 else
                 {
                     visualizer.Clear();
+                    if (aStarVisualizer != null) aStarVisualizer.Clear();
                     isPathToggledOn = false;
                 }
 
                 return;
             }
 
-            visualizer.ShowPathWithFade(localFadeIn);
+            if (hasHJBPath) visualizer.ShowPathWithFade(localFadeIn);
+            if (hasAStarPath && aStarVisualizer != null) aStarVisualizer.ShowPathWithFade(localFadeIn);
         }
 
         isPathToggledOn = true;
@@ -343,7 +376,7 @@ public class HJBClickPathController : MonoBehaviour
         solver.cost.Build();
 
         Vector2Int nextStart = snap.pathStart;
-        Vector2Int nextGoal  = snap.pathGoal;
+        Vector2Int nextGoal = snap.pathGoal;
 
         bool done = false;
         System.Threading.Tasks.Task.Run(() =>
@@ -382,10 +415,8 @@ public class HJBClickPathController : MonoBehaviour
             return;
         }
 
-        // Prefer the snapshot's pathGoal so the live and background flows always agree.
-        Vector2Int peakCoord = TryGetCurrentSnapshot(out var snap)
-            ? snap.pathGoal
-            : provider.worldDataManager.activeGen.mainPeak;
+        // Get the main peak directly from the generator
+        Vector2Int peakCoord = provider.worldDataManager.activeGen.mainPeak;
 
         goal = peakCoord;
         Vector3 worldPos = provider.GridToWorld(peakCoord.x, peakCoord.y);
@@ -399,7 +430,10 @@ public class HJBClickPathController : MonoBehaviour
         if (start != null && goal != null)
         {
             WorldLevel currentLvl = provider.worldDataManager.currentLevel;
-            if (savedPathsByLevel.TryGetValue(currentLvl, out var cachedPath) && cachedPath != null && cachedPath.Count > 0)
+            bool hasHJBPath = savedPathsByLevel.TryGetValue(currentLvl, out var cachedPath) && cachedPath != null && cachedPath.Count > 0;
+            bool hasAStarPath = savedAStarPathsByLevel.TryGetValue(currentLvl, out var cachedAStarPath) && cachedAStarPath != null && cachedAStarPath.Count > 0;
+
+            if (hasHJBPath && (aStarSolver == null || hasAStarPath))
             {
                 Debug.Log($"[HJBClickPath] Valid cached path already loaded for {currentLvl}. Skipping recalculation.");
                 return;
@@ -422,19 +456,35 @@ public class HJBClickPathController : MonoBehaviour
 
             // Optional: Show some UI loading indication here
 
-            // Run the solver in a background task using the captured endpoints
+            // Run the solvers in a background task
             System.Threading.Tasks.Task.Run(() =>
             {
-                solver.Solve(goalAt);
+                solver.Solve(goal.Value);
+
+                List<Vector3> aStarResult = null;
+                if (aStarSolver != null)
+                {
+                    aStarResult = aStarSolver.Solve(start.Value, goal.Value);
+                }
+
+                return aStarResult;
             }).ContinueWith(t =>
             {
-                // Build using the captured start/goal and save under the level captured at task start
-                var generatedPath = backtracker.BuildPath(startAt, goalAt);
+                // Retrieve but DO NOT draw the path immediately
+                var generatedPath = backtracker.BuildPath(start.Value, goal.Value);
+                var generatedAStarPath = t.Result; // from Task return
 
-                savedPathsByLevel[levelAtStart] = generatedPath;
+                // Store safely in the dictionary based on current WorldLevel
+                currentLvl = provider.worldDataManager.currentLevel;
+                savedPathsByLevel[currentLvl] = generatedPath;
+                if (generatedAStarPath != null)
+                {
+                    savedAStarPathsByLevel[currentLvl] = generatedAStarPath;
+                }
+
                 PersistPathsToCurrentSave(true);
 
-                Debug.Log($"[HJBClickPath] Background path calculation finished for {levelAtStart}! Generated {generatedPath.Count} waypoints. Ready to be saved or drawn.");
+                Debug.Log($"[HJBClickPath] Background path calculation finished for {currentLvl}! Generated HJB waypoints: {generatedPath.Count}, AStar waypoints: {generatedAStarPath?.Count ?? 0}. Ready to be saved or drawn.");
             }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
         }
     }
@@ -450,13 +500,24 @@ public class HJBClickPathController : MonoBehaviour
 
         WorldLevel currentLvl = provider.worldDataManager.currentLevel;
 
+        bool drewAnything = false;
         if (savedPathsByLevel.ContainsKey(currentLvl) && savedPathsByLevel[currentLvl] != null && savedPathsByLevel[currentLvl].Count > 0)
         {
             var calculatedPathData = savedPathsByLevel[currentLvl];
-            Debug.Log($"[HJBClickPath] Drawing cached path for {currentLvl} manually...");
+            Debug.Log($"[HJBClickPath] Drawing cached HJB path for {currentLvl} manually...");
             visualizer.DrawPathWorld(calculatedPathData);
+            drewAnything = true;
         }
-        else
+
+        if (aStarVisualizer != null && savedAStarPathsByLevel.ContainsKey(currentLvl) && savedAStarPathsByLevel[currentLvl] != null && savedAStarPathsByLevel[currentLvl].Count > 0)
+        {
+            var calculatedPathDataAstar = savedAStarPathsByLevel[currentLvl];
+            Debug.Log($"[HJBClickPath] Drawing cached AStar path for {currentLvl} manually...");
+            aStarVisualizer.DrawPathWorld(calculatedPathDataAstar);
+            drewAnything = true;
+        }
+
+        if (!drewAnything)
         {
             Debug.LogWarning($"[HJBClickPath] No path data cached to draw for {currentLvl}! Press P to calculate first.");
         }
@@ -477,24 +538,36 @@ public class HJBClickPathController : MonoBehaviour
         }
 
         WorldLevel currentLvl = provider.worldDataManager.currentLevel;
-        if (!savedPathsByLevel.TryGetValue(currentLvl, out var calculatedPathData) || calculatedPathData == null || calculatedPathData.Count == 0)
+
+        List<Vector3> calculatedPathData = null;
+        bool hasHJBPath = savedPathsByLevel.TryGetValue(currentLvl, out calculatedPathData) && calculatedPathData != null && calculatedPathData.Count > 0;
+
+        List<Vector3> calculatedAStarPathData = null;
+        bool hasAStarPath = aStarVisualizer != null && savedAStarPathsByLevel.TryGetValue(currentLvl, out calculatedAStarPathData) && calculatedAStarPathData != null && calculatedAStarPathData.Count > 0;
+
+        if (!hasHJBPath && !hasAStarPath)
         {
             Debug.LogWarning($"[HJBClickPath] No path data cached to draw for {currentLvl}! Press P to calculate first.");
             return;
         }
 
-        visualizer.CancelFadeAnimation(false);
-        visualizer.Clear();
-        isPathToggledOn = false;
-
-        Debug.Log($"[HJBClickPath] Drawing cached path for {currentLvl} with fade...");
-        visualizer.DrawPathWorld(calculatedPathData);
-
         float localFadeIn = fadeInSeconds >= 0f ? fadeInSeconds : fadeInDuration;
         float localHold = holdSeconds >= 0f ? holdSeconds : holdDuration;
         float localFadeOut = fadeOutSeconds >= 0f ? fadeOutSeconds : fadeOutDuration;
 
-        visualizer.AnimatePathFadeInOut(localFadeIn, localHold, localFadeOut);
+        if (hasHJBPath)
+        {
+            Debug.Log($"[HJBClickPath] Drawing cached HJB path for {currentLvl} with fade...");
+            visualizer.DrawPathWorld(calculatedPathData);
+            visualizer.AnimatePathFadeInOut(localFadeIn, localHold, localFadeOut);
+        }
+
+        if (hasAStarPath && calculatedAStarPathData != null)
+        {
+            Debug.Log($"[HJBClickPath] Drawing cached AStar path for {currentLvl} with fade...");
+            aStarVisualizer.DrawPathWorld(calculatedAStarPathData);
+            aStarVisualizer.AnimatePathFadeInOut(localFadeIn, localHold, localFadeOut);
+        }
     }
 
     void SpawnMarker(ref GameObject marker,
