@@ -17723,7 +17723,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Player.PathFollowing.PlayerPathDriver
   driveMode: 1
-  statImmue: 0
+  statImmue: 1
   ignoreSlope: 1
   playerController: {fileID: 4962120396931287550}
   playerCamera: {fileID: 0}
@@ -28548,7 +28548,7 @@ MonoBehaviour:
   playerMarkerRadius: 25
   playerMarkerOutlineColor: {r: 0.8962264, g: 0.877297, b: 0.83281416, a: 1}
   playerMarkerOutlineThickness: 8
-  includeAStarPath: 1
+  includeAStarPath: 0
 --- !u!1 &7230369604955167024
 GameObject:
   m_ObjectHideFlags: 0

@@ -21,10 +21,21 @@ public class HJBPathSolver : MonoBehaviour
     [Header("Risk Penalty")]
     public float c_risk = 0.03f;
 
+    [Header("Debug")]
+    public bool enableDebugLogs = false;
+
     const float INF = 1e15f;
     int w, h;
 
     public Vector2Int startPos;
+
+    void DebugLog(string message)
+    {
+        if (enableDebugLogs)
+        {
+            Debug.Log(message);
+        }
+    }
 
     Vector2[] directions;
 
@@ -69,7 +80,7 @@ public class HJBPathSolver : MonoBehaviour
 
             if (maxDiff < tolerance)
             {
-                UnityEngine.Debug.Log($"[HJB] Converged at iteration {iter + 1} (maxDiff={maxDiff:F4})");
+                DebugLog($"[HJB] Converged at iteration {iter + 1} (maxDiff={maxDiff:F4})");
                 return;
             }
         }
