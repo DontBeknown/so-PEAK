@@ -74,7 +74,7 @@ MonoBehaviour:
   phase1DurationSeconds: 5
   phase2DurationSeconds: 20
   delayBeforeDestroy: 2
-  destroyOnEnd: 0
+  destroyOnEnd: 1
   tornadoVisuals: {fileID: 4584258576608703394, guid: cac519ca198952643a19646aa2022810, type: 3}
   gameObjectsToToggleOnPhase2:
   - {fileID: 7276233480952824739}

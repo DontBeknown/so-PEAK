@@ -10,6 +10,8 @@ namespace Game.UI
 
         public static bool IsRevealed => Time.realtimeSinceStartup < revealUntilRealtime;
 
+        public static bool HasPendingReveal => lastDuration > 0f;
+
         public static void Reveal(float duration, System.Action onRevealAgain = null)
         {
             if (duration <= 0f) return;

@@ -155,15 +155,15 @@ namespace Game.UI.Tutorial
         {
             _playerStats?.SetImmunity(false);
 
-            if(_currentTipId != "Map")
-            {
-                _playerCamera?.SetCursorLock(true);
-                _inputBlocker?.UnblockInput();
-            }
-            else
+            if (_currentTipId == "Map" && MapPathRevealState.HasPendingReveal)
             {
                 MapPathRevealState.RevealAgain();
                 HJBClickPathController.Instance?.ToggleCachedPathDisplay();
+            }
+            else
+            {
+                _playerCamera?.SetCursorLock(true);
+                _inputBlocker?.UnblockInput();
             }
 
             if (panelRoot == null) return;
