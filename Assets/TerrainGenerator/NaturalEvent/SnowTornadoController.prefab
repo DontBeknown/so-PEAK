@@ -130,7 +130,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e731f5780c499cf47ab7c2b9b84735de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Environment.Tornado.TornadoMovement
-  canMove: 0
+  canMove: 1
   stormDirection: {x: -1, y: 0, z: 0}
   warningPhaseSpeed: 2
   actionPhaseSpeed: 3

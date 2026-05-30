@@ -130,7 +130,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e731f5780c499cf47ab7c2b9b84735de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Environment.Tornado.TornadoMovement
-  canMove: 0
+  canMove: 1
   stormDirection: {x: -1, y: 0, z: 0}
   warningPhaseSpeed: 2
   actionPhaseSpeed: 3
@@ -153,6 +153,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 7678869811948477540}
     m_Modifications:
+    - target: {fileID: 1768147021502099131, guid: cac519ca198952643a19646aa2022810, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3051822730380565948, guid: 826ae99268ce2714a812fa0af3dbd2fa, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -204,10 +208,6 @@ PrefabInstance:
     - target: {fileID: 4053276181225918372, guid: 826ae99268ce2714a812fa0af3dbd2fa, type: 3}
       propertyPath: m_Name
       value: TornadoVFX_Sand
-      objectReference: {fileID: 0}
-    - target: {fileID: 1768147021502099131, guid: cac519ca198952643a19646aa2022810, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

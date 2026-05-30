@@ -22,6 +22,8 @@ public class HazardLevelProfile
     [Header("Procedural Search Settings")]
     [Tooltip("How much higher than the player must a cliff be to spawn rocks?")]
     public float minCliffHeightOffset = 10f;
+    [Tooltip("Minimum vertical drop around a point to count as a cliff (meters).")]
+    public float minCliffDrop = 6f;
     [Tooltip("Initial radius to search for a cliff (meters).")]
     public float initialSearchRadius = 30f;
     [Tooltip("Expanded radius if the initial search fails (meters).")]
@@ -62,6 +64,9 @@ public class NaturalEventDirector : MonoBehaviour
     private float[,] worldHeightMap;
     private float heightMultiplier;
     private IEventBus _eventBus;
+    private Transform pendingLandslideAnchor;
+    private float pendingLandslideAnchorExpireTime;
+    private const float CliffAnchorLifetimeSeconds = 15f;
 
     public void InitializeMap(float[,] generatedRiskMap, float[,] generatedHeightMap, float multiplier)
     {
@@ -74,6 +79,8 @@ public class NaturalEventDirector : MonoBehaviour
     private void Update()
     {
         if (!isInitialized || playerTransform == null || dataManager == null) return;
+
+        UpdatePendingLandslideAim();
 
         HazardLevelProfile currentProfile = levelProfiles.Find(p => p.targetLevel == dataManager.currentLevel);
         if (currentProfile == null) return;
@@ -147,6 +154,7 @@ public class NaturalEventDirector : MonoBehaviour
             {
                 Debug.Log($"[NaturalEventDirector] Spawning Landslide!");
                 currentTimeRisk = 0f;
+                SetPendingLandslideAnchor(cliffAnchor);
                 OnLandslideTriggered?.Invoke(cliffAnchor, currentProfile.targetLevel);
                 _eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>();
                 _eventBus?.Publish(new NaturalDisasterEvent(NaturalDisasterEvent.DisasterType.Landslide));
@@ -172,7 +180,7 @@ public class NaturalEventDirector : MonoBehaviour
     private Transform FindProceduralCliffAnchor(HazardLevelProfile profile)
     {
         // 1. Try the Initial Radius
-        Transform foundCliff = SearchAreaForCliff(profile.initialSearchRadius, profile.minCliffHeightOffset);
+        Transform foundCliff = SearchAreaForCliff(profile.initialSearchRadius, profile.minCliffHeightOffset, profile.minCliffDrop);
 
         if (foundCliff != null)
         {
@@ -181,7 +189,7 @@ public class NaturalEventDirector : MonoBehaviour
 
         // 2. If it fails, expand to the Expanded Radius
         Debug.Log($"[NaturalEventDirector] No cliff at {profile.initialSearchRadius}m. Expanding to {profile.expandedSearchRadius}m...");
-        foundCliff = SearchAreaForCliff(profile.expandedSearchRadius, profile.minCliffHeightOffset);
+        foundCliff = SearchAreaForCliff(profile.expandedSearchRadius, profile.minCliffHeightOffset, profile.minCliffDrop);
 
         if (foundCliff != null)
         {
@@ -194,11 +202,12 @@ public class NaturalEventDirector : MonoBehaviour
     }
 
     // Notice this now accepts the radius AND the height requirement as parameters
-    private Transform SearchAreaForCliff(float searchRadiusInMeters, float requiredHeightOffset)
+    private Transform SearchAreaForCliff(float searchRadiusInMeters, float requiredHeightOffset, float minCliffDrop)
     {
         int searchRadius = Mathf.CeilToInt(searchRadiusInMeters);
         int playerX = Mathf.FloorToInt(playerTransform.position.x);
         int playerZ = Mathf.FloorToInt(playerTransform.position.z);
+        float playerY = playerTransform.position.y;
 
         // --- NEW: Track only the absolute highest valid cliff ---
         Vector3 highestCliffPosition = Vector3.zero;
@@ -220,8 +229,17 @@ public class NaturalEventDirector : MonoBehaviour
                     float actualHeight = rawHeight * heightMultiplier;
 
                     // 1. Is it tall enough?
-                    if (actualHeight > playerTransform.position.y + requiredHeightOffset)
+                    if (actualHeight > playerY + requiredHeightOffset)
                     {
+                        if (minCliffDrop > 0f)
+                        {
+                            float maxDrop = GetMaxNeighborDrop(checkX, checkZ, actualHeight);
+                            if (maxDrop < minCliffDrop)
+                            {
+                                continue;
+                            }
+                        }
+
                         // 2. Is it the tallest one we have seen so far?
                         if (actualHeight > highestValidY)
                         {
@@ -246,11 +264,62 @@ public class NaturalEventDirector : MonoBehaviour
             // --- NEW: Rotate the invisible anchor to aim directly at the player! ---
             tempAnchor.transform.LookAt(playerTransform.position);
 
-            Destroy(tempAnchor, 15f);
+            Destroy(tempAnchor, CliffAnchorLifetimeSeconds);
 
             return tempAnchor.transform;
         }
 
         return null;
+    }
+
+    private float GetMaxNeighborDrop(int centerX, int centerZ, float centerHeight)
+    {
+        float maxDrop = 0f;
+
+        for (int dx = -1; dx <= 1; dx++)
+        {
+            for (int dz = -1; dz <= 1; dz++)
+            {
+                if (dx == 0 && dz == 0) continue;
+
+                int checkX = centerX + dx;
+                int checkZ = centerZ + dz;
+
+                if (checkX < 0 || checkX >= worldHeightMap.GetLength(0) ||
+                    checkZ < 0 || checkZ >= worldHeightMap.GetLength(1))
+                {
+                    continue;
+                }
+
+                float neighborHeight = worldHeightMap[checkX, checkZ] * heightMultiplier;
+                float drop = centerHeight - neighborHeight;
+
+                if (drop > maxDrop)
+                {
+                    maxDrop = drop;
+                }
+            }
+        }
+
+        return maxDrop;
+    }
+
+    private void SetPendingLandslideAnchor(Transform anchor)
+    {
+        pendingLandslideAnchor = anchor;
+        pendingLandslideAnchorExpireTime = Time.time + CliffAnchorLifetimeSeconds;
+    }
+
+    private void UpdatePendingLandslideAim()
+    {
+        if (pendingLandslideAnchor == null) return;
+
+        if (Time.time >= pendingLandslideAnchorExpireTime)
+        {
+            pendingLandslideAnchor = null;
+            return;
+        }
+
+        pendingLandslideAnchor.LookAt(playerTransform.position);
     }
 }
