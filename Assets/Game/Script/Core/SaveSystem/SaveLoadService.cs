@@ -298,6 +298,7 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
 
             saveData.worldState.spawnedObjectStates ??= new List<SpawnedObjectStateSaveData>();
             saveData.worldState.cachedPathsByLevel ??= new List<LevelPathSaveData>();
+            saveData.worldState.cachedAStarPathsByLevel ??= new List<LevelPathSaveData>();
             saveData.worldState.unlockedCollectables ??= new List<string>();
             saveData.worldState.triggeredDialogs ??= new List<string>();
             saveData.assessmentData ??= new AssessmentSaveData();
@@ -798,7 +799,27 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
     /// </summary>
     public List<Vector3> GetCachedPathForLevel(int level)
     {
-        var cachedPaths = currentWorldSave?.worldState?.cachedPathsByLevel;
+        return GetCachedPathFromList(currentWorldSave?.worldState?.cachedPathsByLevel, level);
+    }
+
+    /// <summary>
+    /// Gets the cached A* path for the current world level, if one exists in the save.
+    /// </summary>
+    public List<Vector3> GetCachedAStarPathForCurrentLevel()
+    {
+        return GetCachedAStarPathForLevel(GetCurrentLevel());
+    }
+
+    /// <summary>
+    /// Gets the cached A* path for a specific world level, if one exists in the save.
+    /// </summary>
+    public List<Vector3> GetCachedAStarPathForLevel(int level)
+    {
+        return GetCachedPathFromList(currentWorldSave?.worldState?.cachedAStarPathsByLevel, level);
+    }
+
+    private List<Vector3> GetCachedPathFromList(List<LevelPathSaveData> cachedPaths, int level)
+    {
         if (cachedPaths == null || cachedPaths.Count == 0)
         {
             return null;
@@ -1112,7 +1133,8 @@ public class SaveLoadService : MonoBehaviour, ISaveLoadService
             spawnedObjectStates = new List<SpawnedObjectStateSaveData>(),
             unlockedCollectables = new List<string>(),
             triggeredDialogs = new List<string>(),
-            cachedPathsByLevel = new List<LevelPathSaveData>()
+            cachedPathsByLevel = new List<LevelPathSaveData>(),
+            cachedAStarPathsByLevel = new List<LevelPathSaveData>()
         };
     }
 

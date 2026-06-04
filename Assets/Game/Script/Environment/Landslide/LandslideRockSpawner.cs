@@ -10,7 +10,7 @@ using UnityEngine.Rendering.Universal;
 namespace Game.Environment.Landslide
 {
     [DisallowMultipleComponent]
-    public class LandslideRockSpawner : MonoBehaviour
+    public class LandslideRockSpawner : NaturalEventSpawnerBase
     {
         #region Nested Types
         [System.Serializable]
@@ -37,13 +37,6 @@ namespace Game.Environment.Landslide
         #endregion
 
         #region Serialized Fields
-        [Header("Biome Target")]
-        [Tooltip("Check this box if you want this spawner to trigger in EVERY biome!")]
-        public bool spawnInAnyBiome = true;
-
-        [Tooltip("If the box above is unchecked, which specific biome should this spawn in?")]
-        public WorldLevel targetBiome;
-
         [Header("Rock Prefab")]
         [SerializeField] private GameObject rockPrefab;
         [Tooltip("Optional prefab-specific damage map. When assigned, each prefab can use its own damage multiplier.")]
@@ -99,7 +92,6 @@ namespace Game.Environment.Landslide
         [Header("Collaborators")]
         [SerializeField] private LandslideDecalService decalService;
         [SerializeField] private LandslideShakeController shakeController;
-        [SerializeField] private NaturalEventDirector eventDirector;
 
         [Header("Pooling")]
         [SerializeField] private int prewarmCount = 24;
@@ -157,17 +149,6 @@ namespace Game.Environment.Landslide
         #region Unity Lifecycle
 
 
-        private void OnEnable()
-        {
-            if (eventDirector != null)
-            {
-                // Tells this script to wake up when the Director shouts "Landslide!"
-                eventDirector.OnLandslideTriggered += TriggerLandslideAt;
-            }
-        }
-
-  
-
         private void Awake()
         {
             ResolveEventBus();
@@ -189,13 +170,9 @@ namespace Game.Environment.Landslide
             }
         }
 
-        private void OnDisable()
+        protected override void OnDisable()
         {
-            if (eventDirector != null)
-            {
-                // Safely hangs up the phone if this script gets turned off
-                eventDirector.OnLandslideTriggered -= TriggerLandslideAt;
-            }
+            base.OnDisable();
 
             FinalizeRockfallRiskEvent();
             StopPhaseTwoHardRumbleLoop();
@@ -213,6 +190,16 @@ namespace Game.Environment.Landslide
             }
 
             decalService?.DestroyAllDecalsImmediate();
+        }
+
+        protected override void SubscribeToDirector(NaturalEventDirector director)
+        {
+            director.OnLandslideTriggered += Spawn;
+        }
+
+        protected override void UnsubscribeFromDirector(NaturalEventDirector director)
+        {
+            director.OnLandslideTriggered -= Spawn;
         }
         #endregion
 
@@ -269,21 +256,19 @@ namespace Game.Environment.Landslide
             StartCoroutine(SpawnRoutine(spawnAnchors));
         }
 
-        public void TriggerLandslideAt(Transform anchor, WorldLevel triggeredBiome)
+        protected override void SpawnInternal(Transform anchor, WorldLevel triggeredBiome)
         {
-            if (!spawnInAnyBiome && triggeredBiome != targetBiome) return;
-
-            if (anchor == null)
-            {
-                Debug.LogWarning("[LandslideRockSpawner] TriggerLandslideAt called with null anchor.");
-                return;
-            }
-
             _hasRegisteredRockfallEncounterEvent = false;
             BeginRockfallRiskTracking(anchor.position);
 
             PlayPhaseOneAnchorSounds(anchor.position);
             StartCoroutine(SpawnRoutine(new[] { anchor }));
+        }
+
+        [System.Obsolete("Use Spawn(Transform, WorldLevel) instead.")]
+        public void TriggerLandslideAt(Transform anchor, WorldLevel triggeredBiome)
+        {
+            Spawn(anchor, triggeredBiome);
         }
 
         /// <summary>

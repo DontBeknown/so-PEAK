@@ -63,7 +63,7 @@ namespace Game.Core
 
                 CompleteTransitionAndSpawnPlayer();
 
-                if (enableHJBPathCalculation && hjbClickPathController != null && HasMissingLevelPaths())
+                if (enableHJBPathCalculation && hjbClickPathController != null && hjbClickPathController.HasMissingRequiredCachedPaths())
                 {
                     if (enableCoordinatorLogs)
                         Debug.Log("[AsyncLoadCoordinator] Missing level paths detected. Pre-loading snapshots and starting background path calculation...");
@@ -101,15 +101,17 @@ namespace Game.Core
             if (nextLevelLoadingScreen != null)
                 nextLevelLoadingScreen.Hide();
 
-            // --- Gate 1.5b: Trigger HJB path calculation and wait for completion (optional) ---
+            // --- Gate 1.5b: Trigger required path calculation and wait for completion (optional) ---
             if (enableHJBPathCalculation)
             {
                 if (hjbClickPathController != null && worldDataManager != null)
                 {
                     if (enableCoordinatorLogs)
-                        Debug.Log("[AsyncLoadCoordinator] Triggering HJB path calculation from spawn coord...");
+                        Debug.Log("[AsyncLoadCoordinator] Triggering required path calculation from spawn coord...");
                     if (loadingState != null)
-                        loadingState.statusMessage = "Calculating optimal path to peak...";
+                        loadingState.statusMessage = hjbClickPathController.RequiresAStarPath
+                            ? "Calculating HJB and A* paths to peak..."
+                            : "Calculating optimal path to peak...";
                     yield return hjbClickPathController.CalculatePathFromSpawnToPeak(worldDataManager.completeSpawnCoord);
                 }
                 else if (enableCoordinatorLogs)
@@ -126,7 +128,7 @@ namespace Game.Core
             }
 
             if (enableCoordinatorLogs)
-                Debug.Log("[AsyncLoadCoordinator] Gate 1 passed  all chunks ready and HJB path calculated. Waiting for player confirmation.");
+                Debug.Log("[AsyncLoadCoordinator] Gate 1 passed  all chunks ready and required paths calculated. Waiting for player confirmation.");
 
             // --- Gate 2: Wait for player to press Y in Scene_Debug_Gameplay ---
             yield return new WaitUntil(() =>
@@ -172,18 +174,6 @@ namespace Game.Core
                 Debug.Log("[AsyncLoadCoordinator] Transition complete. Player spawning.");
         }
 
-        private bool HasMissingLevelPaths()
-        {
-            if (hjbClickPathController == null) return false;
-            foreach (WorldLevel level in System.Enum.GetValues(typeof(WorldLevel)))
-            {
-                if (!hjbClickPathController.savedPathsByLevel.TryGetValue(level, out var path)
-                    || path == null || path.Count == 0)
-                    return true;
-            }
-            return false;
-        }
-
         private bool ShouldUseAsyncLoadFlow()
         {
             if (!enableAsyncLoadFlow)
@@ -219,21 +209,30 @@ namespace Game.Core
             }
 
             int currentLevel = Mathf.Max(1, worldState.level);
-            if (worldState.cachedPathsByLevel == null)
+            bool hasHJBPath = HasSerializedPathForLevel(worldState.cachedPathsByLevel, currentLevel);
+            bool requiresAStarPath = hjbClickPathController != null && hjbClickPathController.RequiresAStarPath;
+            bool hasAStarPath = !requiresAStarPath || HasSerializedPathForLevel(worldState.cachedAStarPathsByLevel, currentLevel);
+
+            return !hasHJBPath || !hasAStarPath;
+        }
+
+        private static bool HasSerializedPathForLevel(System.Collections.Generic.List<LevelPathSaveData> cachedPaths, int level)
+        {
+            if (cachedPaths == null)
             {
-                return true;
+                return false;
             }
 
-            for (int i = 0; i < worldState.cachedPathsByLevel.Count; i++)
+            for (int i = 0; i < cachedPaths.Count; i++)
             {
-                LevelPathSaveData levelPath = worldState.cachedPathsByLevel[i];
-                if (levelPath != null && levelPath.level == currentLevel)
+                LevelPathSaveData levelPath = cachedPaths[i];
+                if (levelPath != null && levelPath.level == level && levelPath.waypoints != null && levelPath.waypoints.Count > 0)
                 {
-                    return false;
+                    return true;
                 }
             }
 
-            return true;
+            return false;
         }
 
         private IEnumerator WaitForLoadOpWithLoadingScreen(AsyncOperation loadOp, bool autoHide = true)

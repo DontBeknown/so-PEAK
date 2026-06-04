@@ -134,9 +134,9 @@ public class PlayerStats : MonoBehaviour
 
     private System.Collections.IEnumerator SpawnImmunityRoutine()
     {
-        isImmune = true;
+        SetImmuneState(true);
         yield return new WaitForSeconds(spawnImmunityDuration);
-        isImmune = false;
+        SetImmuneState(false);
     }
 
     private void Update()
@@ -262,6 +262,23 @@ public class PlayerStats : MonoBehaviour
         }
     }
 
+    private void SetImmuneState(bool value)
+    {
+        isImmune = value;
+
+        if (temperature == null)
+            return;
+
+        temperature.SetPenaltySuppressed(value);
+
+        if (!value)
+            return;
+
+        temperature.ResetToComfort();
+        hunger?.SetTemperatureMultiplier(1f);
+        thirst?.SetTemperatureMultiplier(1f);
+    }
+
     private void HandleLongFallDeath(float dt)
     {
         if (_playerController == null || health.Current <= 0f)
@@ -343,7 +360,7 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     public void SetImmunity(bool value)
     {
-        isImmune = value;
+        SetImmuneState(value);
     }
 
     public void Heal(float amount) => health.Heal(amount);

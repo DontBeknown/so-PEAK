@@ -24,6 +24,16 @@ namespace HJB.Pathfind
 
         void Awake()
         {
+            EnsureDirections();
+        }
+
+        void EnsureDirections()
+        {
+            if (directions != null)
+            {
+                return;
+            }
+
             directions = new Vector2[16];
             for (int i = 0; i < 16; i++)
             {
@@ -34,6 +44,8 @@ namespace HJB.Pathfind
 
         public List<Vector3> Solve(Vector2Int start, Vector2Int goal)
         {
+            EnsureDirections();
+
             int w = terrain.width;
             int h = terrain.height;
 

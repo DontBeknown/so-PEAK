@@ -19,6 +19,7 @@ public class HJBClickPathController : MonoBehaviour
 
     bool AStarEnabled => includeAStar && aStarSolver != null;
     bool AStarVisualEnabled => includeAStar && aStarVisualizer != null;
+    public bool RequiresAStarPath => AStarEnabled;
 
     [Header("Markers")]
     public GameObject startMarkerPrefab;
@@ -294,22 +295,23 @@ public class HJBClickPathController : MonoBehaviour
         SetGoalToPeak();
         TrySolvePath();
 
-        // Wait until path is available in savedPathsByLevel for the current level
+        // Wait until all required path data is available for the current level.
         WorldLevel currentLvl = provider.worldDataManager.currentLevel;
         float timeout = 3600f; // seconds
         float timer = 0f;
-        while ((!savedPathsByLevel.ContainsKey(currentLvl) || savedPathsByLevel[currentLvl] == null || savedPathsByLevel[currentLvl].Count == 0) && timer < timeout)
+        while (!HasRequiredCachedPathsForLevel(currentLvl) && timer < timeout)
         {
             timer += Time.deltaTime;
             yield return null;
         }
-        if (!savedPathsByLevel.ContainsKey(currentLvl) || savedPathsByLevel[currentLvl] == null || savedPathsByLevel[currentLvl].Count == 0)
+
+        if (!HasRequiredCachedPathsForLevel(currentLvl))
         {
-            Debug.LogWarning($"[HJBClickPath] Path calculation timed out for {currentLvl}!");
+            Debug.LogWarning($"[HJBClickPath] Required path calculation timed out for {currentLvl}!");
         }
         else
         {
-            Debug.Log($"[HJBClickPath] Path calculation complete for {currentLvl}.");
+            Debug.Log($"[HJBClickPath] Required path calculation complete for {currentLvl}.");
         }
     }
 
@@ -324,8 +326,10 @@ public class HJBClickPathController : MonoBehaviour
         {
             bool hasCachedPath = savedPathsByLevel.TryGetValue(level, out var cachedPath)
                                  && cachedPath != null && cachedPath.Count > 0;
+            bool hasCachedAStarPath = savedAStarPathsByLevel.TryGetValue(level, out var cachedAStarPath)
+                                      && cachedAStarPath != null && cachedAStarPath.Count > 0;
 
-            if (hasCachedPath)
+            if (hasCachedPath && (!AStarEnabled || hasCachedAStarPath))
             {
                 if (loadingScreen != null)
                 {
@@ -358,6 +362,19 @@ public class HJBClickPathController : MonoBehaviour
         StartCoroutine(BackgroundCalculateAllLevelPaths());
     }
 
+    public bool HasMissingRequiredCachedPaths()
+    {
+        foreach (WorldLevel level in System.Enum.GetValues(typeof(WorldLevel)))
+        {
+            if (!HasRequiredCachedPathsForLevel(level))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     System.Collections.IEnumerator BackgroundCalculateAllLevelPaths()
     {
         if (provider.levelSnapshots.Count == 0)
@@ -368,9 +385,12 @@ public class HJBClickPathController : MonoBehaviour
 
         foreach (WorldLevel level in System.Enum.GetValues(typeof(WorldLevel)))
         {
-            if (savedPathsByLevel.ContainsKey(level) && savedPathsByLevel[level] != null && savedPathsByLevel[level].Count > 0)
+            bool hasHJBPath = HasCachedPath(savedPathsByLevel, level);
+            bool hasAStarPath = HasCachedPath(savedAStarPathsByLevel, level);
+
+            if (hasHJBPath && (!AStarEnabled || hasAStarPath))
             {
-                DebugLog($"[HJBClickPath] Skipping {level} — path already cached.");
+                DebugLog($"[HJBClickPath] Skipping {level} - required paths already cached.");
                 continue;
             }
             yield return CalculatePathForLevel(level);
@@ -392,19 +412,58 @@ public class HJBClickPathController : MonoBehaviour
 
         Vector2Int nextStart = snap.pathStart;
         Vector2Int nextGoal = snap.pathGoal;
+        bool needsHJBPath = !HasCachedPath(savedPathsByLevel, level);
+        bool needsAStarPath = AStarEnabled && !HasCachedPath(savedAStarPathsByLevel, level);
+
+        if (!needsHJBPath && !needsAStarPath)
+        {
+            provider.RestoreCurrentLevelData();
+            DebugLog($"[HJBClickPath] Skipping {level} - required paths already cached.");
+            yield break;
+        }
 
         bool done = false;
         System.Threading.Tasks.Task.Run(() =>
         {
-            solver.Solve(nextGoal);
+            List<Vector3> aStarPath = null;
+
+            if (needsHJBPath)
+            {
+                solver.Solve(nextGoal);
+            }
+
+            if (needsAStarPath)
+            {
+                aStarPath = aStarSolver.Solve(nextStart, nextGoal);
+            }
+
+            return aStarPath;
         }).ContinueWith(t =>
         {
-            var path = backtracker.BuildPath(nextStart, nextGoal);
-            savedPathsByLevel[level] = path;
+            if (t.IsFaulted)
+            {
+                Debug.LogException(t.Exception?.GetBaseException() ?? t.Exception);
+                provider.RestoreCurrentLevelData();
+                done = true;
+                return;
+            }
+
+            List<Vector3> hjbPath = null;
+            if (needsHJBPath)
+            {
+                hjbPath = backtracker.BuildPath(nextStart, nextGoal);
+                savedPathsByLevel[level] = hjbPath;
+            }
+
+            if (needsAStarPath && t.Result != null)
+            {
+                savedAStarPathsByLevel[level] = t.Result;
+            }
+
             PersistPathsToCurrentSave(true);
             provider.RestoreCurrentLevelData();
             done = true;
-            DebugLog($"[HJBClickPath] Background path calculation finished for {level}! Generated {path.Count} waypoints.");
+            DebugLog($"[HJBClickPath] Background path calculation finished for {level}! Generated HJB waypoints: {hjbPath?.Count ?? 0}, AStar waypoints: {t.Result?.Count ?? 0}.");
         }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
 
         float timeout = 3600f;
@@ -445,10 +504,10 @@ public class HJBClickPathController : MonoBehaviour
         if (start != null && goal != null)
         {
             WorldLevel currentLvl = provider.worldDataManager.currentLevel;
-            bool hasHJBPath = savedPathsByLevel.TryGetValue(currentLvl, out var cachedPath) && cachedPath != null && cachedPath.Count > 0;
-            bool hasAStarPath = savedAStarPathsByLevel.TryGetValue(currentLvl, out var cachedAStarPath) && cachedAStarPath != null && cachedAStarPath.Count > 0;
+            bool needsHJBPath = !HasCachedPath(savedPathsByLevel, currentLvl);
+            bool needsAStarPath = AStarEnabled && !HasCachedPath(savedAStarPathsByLevel, currentLvl);
 
-            if (hasHJBPath && (!AStarEnabled || hasAStarPath))
+            if (!needsHJBPath && !needsAStarPath)
             {
                 DebugLog($"[HJBClickPath] Valid cached path already loaded for {currentLvl}. Skipping recalculation.");
                 return;
@@ -474,32 +533,44 @@ public class HJBClickPathController : MonoBehaviour
             // Run the solvers in a background task
             System.Threading.Tasks.Task.Run(() =>
             {
-                solver.Solve(goal.Value);
+                if (needsHJBPath)
+                {
+                    solver.Solve(goalAt);
+                }
 
                 List<Vector3> aStarResult = null;
-                if (AStarEnabled)
+                if (needsAStarPath)
                 {
-                    aStarResult = aStarSolver.Solve(start.Value, goal.Value);
+                    aStarResult = aStarSolver.Solve(startAt, goalAt);
                 }
 
                 return aStarResult;
             }).ContinueWith(t =>
             {
+                if (t.IsFaulted)
+                {
+                    Debug.LogException(t.Exception?.GetBaseException() ?? t.Exception);
+                    return;
+                }
+
                 // Retrieve but DO NOT draw the path immediately
-                var generatedPath = backtracker.BuildPath(start.Value, goal.Value);
+                List<Vector3> generatedPath = null;
+                if (needsHJBPath)
+                {
+                    generatedPath = backtracker.BuildPath(startAt, goalAt);
+                    savedPathsByLevel[levelAtStart] = generatedPath;
+                }
+
                 var generatedAStarPath = t.Result; // from Task return
 
-                // Store safely in the dictionary based on current WorldLevel
-                currentLvl = provider.worldDataManager.currentLevel;
-                savedPathsByLevel[currentLvl] = generatedPath;
                 if (generatedAStarPath != null)
                 {
-                    savedAStarPathsByLevel[currentLvl] = generatedAStarPath;
+                    savedAStarPathsByLevel[levelAtStart] = generatedAStarPath;
                 }
 
                 PersistPathsToCurrentSave(true);
 
-                DebugLog($"[HJBClickPath] Background path calculation finished for {currentLvl}! Generated HJB waypoints: {generatedPath.Count}, AStar waypoints: {generatedAStarPath?.Count ?? 0}. Ready to be saved or drawn.");
+                DebugLog($"[HJBClickPath] Background path calculation finished for {levelAtStart}! Generated HJB waypoints: {generatedPath?.Count ?? 0}, AStar waypoints: {generatedAStarPath?.Count ?? 0}. Ready to be saved or drawn.");
             }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
         }
     }
@@ -620,8 +691,19 @@ public class HJBClickPathController : MonoBehaviour
             return;
         }
 
+        worldState.cachedPathsByLevel = SerializePaths(savedPathsByLevel);
+        worldState.cachedAStarPathsByLevel = SerializePaths(savedAStarPathsByLevel);
+
+        if (saveToFile)
+        {
+            SaveLoadService.Instance.SaveWorld(SaveLoadService.Instance.CurrentWorldSave, refreshFreshLevelEntryFlag: false);
+        }
+    }
+
+    static List<LevelPathSaveData> SerializePaths(Dictionary<WorldLevel, List<Vector3>> pathsByLevel)
+    {
         var serializedPaths = new List<LevelPathSaveData>();
-        foreach (var kvp in savedPathsByLevel)
+        foreach (var kvp in pathsByLevel)
         {
             var pathEntry = new LevelPathSaveData
             {
@@ -645,12 +727,7 @@ public class HJBClickPathController : MonoBehaviour
             serializedPaths.Add(pathEntry);
         }
 
-        worldState.cachedPathsByLevel = serializedPaths;
-
-        if (saveToFile)
-        {
-            SaveLoadService.Instance.SaveWorld(SaveLoadService.Instance.CurrentWorldSave, refreshFreshLevelEntryFlag: false);
-        }
+        return serializedPaths;
     }
 
     void LoadPathsFromCurrentSave()
@@ -661,14 +738,26 @@ public class HJBClickPathController : MonoBehaviour
         }
 
         var worldState = SaveLoadService.Instance.CurrentWorldSave.worldState;
-        if (worldState == null || worldState.cachedPathsByLevel == null)
+        if (worldState == null)
         {
             return;
         }
 
         savedPathsByLevel.Clear();
+        savedAStarPathsByLevel.Clear();
 
-        foreach (var levelPath in worldState.cachedPathsByLevel)
+        LoadSerializedPaths(worldState.cachedPathsByLevel, savedPathsByLevel);
+        LoadSerializedPaths(worldState.cachedAStarPathsByLevel, savedAStarPathsByLevel);
+    }
+
+    static void LoadSerializedPaths(List<LevelPathSaveData> serializedPaths, Dictionary<WorldLevel, List<Vector3>> target)
+    {
+        if (serializedPaths == null)
+        {
+            return;
+        }
+
+        foreach (var levelPath in serializedPaths)
         {
             if (levelPath == null)
             {
@@ -694,7 +783,18 @@ public class HJBClickPathController : MonoBehaviour
                 }
             }
 
-            savedPathsByLevel[(WorldLevel)levelPath.level] = waypoints;
+            target[(WorldLevel)levelPath.level] = waypoints;
         }
+    }
+
+    static bool HasCachedPath(Dictionary<WorldLevel, List<Vector3>> pathsByLevel, WorldLevel level)
+    {
+        return pathsByLevel.TryGetValue(level, out var path) && path != null && path.Count > 0;
+    }
+
+    public bool HasRequiredCachedPathsForLevel(WorldLevel level)
+    {
+        return HasCachedPath(savedPathsByLevel, level)
+               && (!AStarEnabled || HasCachedPath(savedAStarPathsByLevel, level));
     }
 }

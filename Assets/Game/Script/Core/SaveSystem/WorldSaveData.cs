@@ -144,6 +144,9 @@ public class WorldStateSaveData
 
     // Cached HJB path waypoints by world level.
     public List<LevelPathSaveData> cachedPathsByLevel = new List<LevelPathSaveData>();
+
+    // Cached A* path waypoints by world level.
+    public List<LevelPathSaveData> cachedAStarPathsByLevel = new List<LevelPathSaveData>();
 }
 
 [Serializable]

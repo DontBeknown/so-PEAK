@@ -36,6 +36,8 @@ public interface ISaveLoadService
     // Path cache
     List<Vector3> GetCachedPathForCurrentLevel();
     List<Vector3> GetCachedPathForLevel(int level);
+    List<Vector3> GetCachedAStarPathForCurrentLevel();
+    List<Vector3> GetCachedAStarPathForLevel(int level);
 
     // Validation
     bool ValidateSaveFile(string worldGuid);

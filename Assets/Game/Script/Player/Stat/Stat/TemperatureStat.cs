@@ -46,6 +46,7 @@ public class TemperatureStat : Stat
     private float _coldResistance      = 0f;
     private float _hotResistance       = 0f;
     private bool  _comfortForced       = false;
+    private bool  _penaltySuppressed   = false;
 
     // ── Debug read-only (used by PlayerStatsEditor) ───────────────────
     public float DebugEnvironmentTarget => _environmentTarget;
@@ -128,6 +129,12 @@ public class TemperatureStat : Stat
 
     /// <summary>When true, effective temperature target is forced to 37°C (comfort zone) regardless of environment.</summary>
     public void SetComfortForced(bool forced) => _comfortForced = forced;
+
+    /// <summary>When true, temperature penalty queries return neutral values.</summary>
+    public void SetPenaltySuppressed(bool suppressed) => _penaltySuppressed = suppressed;
+
+    /// <summary>Immediately restores body temperature to the comfort temperature.</summary>
+    public void ResetToComfort() => SetCurrent(37f);
 
     /// <summary>
     /// Scans nearby ITemperatureSource objects and accumulates their bonus.
@@ -214,6 +221,7 @@ public class TemperatureStat : Stat
     /// </summary>
     public float GetColdSpeedPenalty()
     {
+        if (_penaltySuppressed) return 1f;
         if (current >= coldSpeedPenaltyThreshold) return 1f;
         if (coldSpeedPenaltyThreshold <= 0f) return coldSpeedMinMultiplier;
         float t = current / coldSpeedPenaltyThreshold; // 0 (absolute cold) → 1 (at threshold)

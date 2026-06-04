@@ -1,18 +1,8 @@
 using Game.Environment.Tornado;
 using UnityEngine;
 
-public class TornadoSpawner : MonoBehaviour
+public class TornadoSpawner : NaturalEventSpawnerBase
 {
-    [Header("Core Links")]
-    public NaturalEventDirector eventDirector;
-
-    [Header("Biome Target")]
-    [Tooltip("Check this box if you want this spawner to trigger in EVERY biome!")]
-    public bool spawnInAnyBiome = true;
-
-    [Tooltip("If the box above is unchecked, which specific biome should this spawn in?")]
-    public WorldLevel targetBiome;
-
     [Header("Tornado Settings")]
     [Tooltip("Drag your Tornado Prefab (which has the StartWarningPhase script) here.")]
     public GameObject tornadoPrefab;
@@ -20,34 +10,25 @@ public class TornadoSpawner : MonoBehaviour
     [Tooltip("How far away from the player should the tornado spawn?")]
     public float spawnDistance = 30f;
 
-    private void OnEnable()
+    protected override void SubscribeToDirector(NaturalEventDirector director)
     {
-        if (eventDirector != null)
-        {
-            // Listen for the Director!
-            eventDirector.OnTornadoTriggered += SpawnTornado;
-        }
+        director.OnTornadoTriggered += Spawn;
     }
 
-    private void OnDisable()
+    protected override void UnsubscribeFromDirector(NaturalEventDirector director)
     {
-        if (eventDirector != null)
-        {
-            eventDirector.OnTornadoTriggered -= SpawnTornado;
-        }
+        director.OnTornadoTriggered -= Spawn;
     }
 
-    // UPDATED: Now accepts both the player's Transform AND the triggered WorldLevel
-    public void SpawnTornado(Transform playerTransform, WorldLevel triggeredBiome)
+    protected override void SpawnInternal(Transform anchor, WorldLevel triggeredBiome)
     {
-        // THE CHECK: Ignore the alarm if the biomes don't match, unless "Any Biome" is checked!
-        if (!spawnInAnyBiome && triggeredBiome != targetBiome) return;
-
         if (tornadoPrefab == null)
         {
             Debug.LogWarning("[TornadoSpawner] Missing Tornado Prefab!");
             return;
         }
+
+        Transform playerTransform = anchor;
 
         // 1. Calculate a spawn position (e.g., 30 meters behind the player)
         // We use the player's forward vector, reversed, multiplied by the distance.
@@ -83,5 +64,11 @@ public class TornadoSpawner : MonoBehaviour
             // Tell the tornado to move that way!
             movementScript.SetStormDirection(directionToPlayer);
         }
+    }
+
+    [System.Obsolete("Use Spawn(Transform, WorldLevel) instead.")]
+    public void SpawnTornado(Transform playerTransform, WorldLevel triggeredBiome)
+    {
+        Spawn(playerTransform, triggeredBiome);
     }
 }

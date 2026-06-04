@@ -75,17 +75,18 @@ namespace Game.Player.PathFollowing
 
         private void Update()
         {
+            #if UNITY_EDITOR
             if (Input.GetKeyDown(KeyCode.K))
             {
-                var inst = HJBClickPathController.Instance;
-                if (inst != null && inst.savedAStarPathsByLevel.TryGetValue(WorldLevel.Forest, out var path) && path?.Count > 0)
+                if (TryGetCachedAStarPathForCurrentLevel(out var currentLevel, out var path))
                 {
                     SetPath(path);
-                    StartPath(DriveMode.Run);
-                } 
+                    StartPath(driveMode);
+                    Debug.Log($"[PlayerPathDriver] Started cached A* path for {currentLevel} with {path.Count} waypoints.");
+                }
             }
                 
-            #if UNITY_EDITOR
+            
             if (Input.GetKeyDown(KeyCode.L))
             {
                 StartCachedPathForCurrentLevel();
@@ -138,6 +139,40 @@ namespace Game.Player.PathFollowing
             if (!hjbClickPathController.savedPathsByLevel.TryGetValue(currentLevel, out cachedPath) || cachedPath == null || cachedPath.Count == 0)
             {
                 Debug.LogWarning($"[PlayerPathDriver] No cached path available for {currentLevel}. Press P to calculate first.");
+                cachedPath = null;
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool TryGetCachedAStarPathForCurrentLevel(out WorldLevel currentLevel, out List<Vector3> cachedPath)
+        {
+            currentLevel = default;
+            cachedPath = null;
+
+            if (hjbClickPathController == null)
+            {
+                hjbClickPathController = FindFirstObjectByType<HJBClickPathController>();
+            }
+
+            if (hjbClickPathController == null)
+            {
+                Debug.LogWarning("[PlayerPathDriver] Cannot start A* path because the HJB path controller is missing.");
+                return false;
+            }
+
+            if (hjbClickPathController.provider == null || hjbClickPathController.provider.worldDataManager == null)
+            {
+                Debug.LogWarning("[PlayerPathDriver] Cannot start A* path because world data is missing.");
+                return false;
+            }
+
+            currentLevel = hjbClickPathController.provider.worldDataManager.currentLevel;
+            if (!hjbClickPathController.savedAStarPathsByLevel.TryGetValue(currentLevel, out cachedPath)
+                || cachedPath == null || cachedPath.Count == 0)
+            {
+                Debug.LogWarning($"[PlayerPathDriver] No cached A* path available for {currentLevel}.");
                 cachedPath = null;
                 return false;
             }

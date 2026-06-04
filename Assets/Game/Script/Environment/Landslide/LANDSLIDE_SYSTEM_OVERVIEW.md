@@ -16,7 +16,7 @@
 
 ```csharp
 spawner.TriggerLandslide();                        // uses configured spawnAnchors
-spawner.TriggerLandslideAt(anchor);                // single provided Transform
+spawner.Spawn(anchor, biome);                      // single provided Transform
 spawner.TriggerLandslideAtPosition(worldPos);      // creates a temporary anchor at position
 ```
 
@@ -79,6 +79,6 @@ All audio published through `IEventBus` as positional SFX events:
 
 ## Integration Notes
 
-- Spawner requires at least one valid trigger strategy: configured `spawnAnchors`, or a direct `TriggerLandslideAt`/`TriggerLandslideAtPosition` call.
+- Spawner requires at least one valid trigger strategy: configured `spawnAnchors`, or a direct `Spawn`/`TriggerLandslideAtPosition` call.
 - If `spawnedRockLayerName` is invalid, spawner falls back to its own layer.
 - `LandslideDecalService` and `LandslideShakeController` are auto-added to the spawner's GameObject if missing.
