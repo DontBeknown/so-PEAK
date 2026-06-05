@@ -15,6 +15,9 @@ namespace Game.Player.Stat.Assessment
         [SerializeField] private PlayerStatsTrackerService statsTracker;
         [SerializeField] private AssessmentTracker assessmentTracker;
 
+        [Header("Debug")]
+        [SerializeField] private bool enableDebugLogs = true;
+
         [Header("Calculator")]
         private IAssessmentCalculator calculator;
         private OptimalMetricsCalculator optimalCalculator;
@@ -46,7 +49,7 @@ namespace Game.Player.Stat.Assessment
         {
             cachedOptimalMetrics = optimalMetrics;
             hasExternalOptimalMetrics = true;
-            Debug.Log("[LearningAssessment] External optimal metrics set");
+            LogDebug("[LearningAssessment] External optimal metrics set");
         }
         
         /// <summary>
@@ -67,7 +70,7 @@ namespace Game.Player.Stat.Assessment
                 optimalTime
             );
             hasExternalOptimalMetrics = true;
-            Debug.Log("[LearningAssessment] External optimal metrics set from values");
+            LogDebug("[LearningAssessment] External optimal metrics set from values");
         }
         
         /// <summary>
@@ -101,7 +104,7 @@ namespace Game.Player.Stat.Assessment
         {
             hasExternalOptimalMetrics = false;
             cachedOptimalMetrics = null;
-            Debug.Log("[LearningAssessment] Optimal metrics cleared");
+            LogDebug("[LearningAssessment] Optimal metrics cleared");
         }
         
         /// <summary>
@@ -152,10 +155,10 @@ namespace Game.Player.Stat.Assessment
             if (assessment.optimalMetrics != null && assessment.optimalMetrics.optimalTime > 0.01f)
             {
                 float timeDeltaPercent = ((metrics.totalTime - assessment.optimalMetrics.optimalTime) / assessment.optimalMetrics.optimalTime) * 100f;
-                Debug.Log($"[LearningAssessment] Time comparison - actual:{metrics.totalTime:F1}s optimal:{assessment.optimalMetrics.optimalTime:F1}s delta:{timeDeltaPercent:+0.0;-0.0;0.0}%");
+                LogDebug($"[LearningAssessment] Time comparison - actual:{metrics.totalTime:F1}s optimal:{assessment.optimalMetrics.optimalTime:F1}s delta:{timeDeltaPercent:+0.0;-0.0;0.0}%");
             }
             
-            Debug.Log($"[LearningAssessment] Assessment complete! Score: {totalScore:F1}, Rank: {assessment.rank}");
+            LogDebug($"[LearningAssessment] Assessment complete! Score: {totalScore:F1}, Rank: {assessment.rank}");
             
             OnAssessmentComplete?.Invoke(assessment);
             
@@ -173,7 +176,7 @@ namespace Game.Player.Stat.Assessment
 
             if (hasExternalOptimalMetrics)
             {
-                Debug.Log("[LearningAssessment] Using externally provided optimal metrics");
+                LogDebug("[LearningAssessment] Using externally provided optimal metrics");
                 return cachedOptimalMetrics;
             }
 
@@ -183,23 +186,23 @@ namespace Game.Player.Stat.Assessment
                 var cachedPath = saveLoadService.GetCachedPathForCurrentLevel();
                 if (cachedPath != null && cachedPath.Count >= 2)
                 {
-                    Debug.Log($"[LearningAssessment] Using cached HJB path from save for level {saveLoadService.GetCurrentLevel()}");
+                    LogDebug($"[LearningAssessment] Using cached HJB path from save for level {saveLoadService.GetCurrentLevel()}");
                     return optimalCalculator.Calculate(cachedPath, playerConfig);
                 }
 
-                Debug.LogWarning($"[LearningAssessment] No cached HJB path found for level {saveLoadService.GetCurrentLevel()}");
+                LogDebugWarning($"[LearningAssessment] No cached HJB path found for level {saveLoadService.GetCurrentLevel()}");
             }
 
             // Fall back to the tracked player path — planning score will be unreliable.
             if (metrics.pathTaken != null && metrics.pathTaken.Count >= 2)
             {
                 lastAssessmentUsedFallbackPath = true;
-                Debug.LogWarning("[LearningAssessment] Falling back to player path for optimal metrics — planning score unreliable");
+                LogDebugWarning("[LearningAssessment] Falling back to player path for optimal metrics — planning score unreliable");
                 return optimalCalculator.Calculate(metrics.pathTaken, playerConfig);
             }
 
             lastAssessmentUsedFallbackPath = true;
-            Debug.LogWarning("[LearningAssessment] No path data available, using actual metrics as baseline");
+            LogDebugWarning("[LearningAssessment] No path data available, using actual metrics as baseline");
             return optimalCalculator.CreateFromValues(
                 metrics.totalStaminaUsed,
                 metrics.totalFoodItemsConsumed,
@@ -207,6 +210,22 @@ namespace Game.Player.Stat.Assessment
                 metrics.totalDistance,
                 metrics.totalTime
             );
+        }
+
+        private void LogDebug(string message)
+        {
+            if (enableDebugLogs)
+            {
+                Debug.Log(message);
+            }
+        }
+
+        private void LogDebugWarning(string message)
+        {
+            if (enableDebugLogs)
+            {
+                Debug.LogWarning(message);
+            }
         }
         
         /// <summary>
