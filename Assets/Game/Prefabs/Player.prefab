@@ -18241,6 +18241,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.Player.Stat.Assessment.LearningAssessmentService
   statsTracker: {fileID: 9208590550276118743}
   assessmentTracker: {fileID: 4319261038100501006}
+  enableDebugLogs: 0
 --- !u!114 &4319261038100501006
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18416,7 +18417,7 @@ MonoBehaviour:
   hjbClickPathController: {fileID: 0}
   characterController: {fileID: 988247627514051869}
   playerStats: {fileID: 4013136103283677608}
-  arrivalRadius: 0.6
+  arrivalRadius: 2
   lowStaminaThreshold: 0.15
   resumeStaminaThreshold: 0.9
   stuckEpsilon: 0.05
@@ -18424,7 +18425,7 @@ MonoBehaviour:
   postJumpStuckSeconds: 1
   ignoreLayers:
     serializedVersion: 2
-    m_Bits: 133120
+    m_Bits: 133376
 --- !u!1 &4494736775984268260
 GameObject:
   m_ObjectHideFlags: 0

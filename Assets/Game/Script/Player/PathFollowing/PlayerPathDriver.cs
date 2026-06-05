@@ -49,6 +49,15 @@ namespace Game.Player.PathFollowing
         private float _stuckTimer;
         private Vector3 _lastProgressPos;
 
+#if UNITY_EDITOR
+        private bool _pathTimerActive;
+        private bool _showPathTotalTime;
+        private float _pathStartRealtime;
+        private float _lastPathElapsedRealtime;
+        private GUIStyle _pathTimerGuiStyle;
+        private Texture2D _pathTimerPanelTexture;
+#endif
+
         private PlayerStats _stats;
         private LearningAssessmentService _assessmentService;
         private IEventBus _eventBus;
@@ -200,6 +209,13 @@ namespace Game.Player.PathFollowing
             _stuckTimer = 0f;
             _lastProgressPos = transform.position;
 
+#if UNITY_EDITOR
+            _pathTimerActive = true;
+            _showPathTotalTime = false;
+            _pathStartRealtime = Time.realtimeSinceStartup;
+            _lastPathElapsedRealtime = 0f;
+#endif
+
             _assessmentService = ServiceContainer.Instance.TryGet<LearningAssessmentService>();
             if (_assessmentService == null)
                 _assessmentService = FindFirstObjectByType<LearningAssessmentService>();
@@ -223,9 +239,25 @@ namespace Game.Player.PathFollowing
         }
 
         /// <summary>Abort or finish the path, optionally triggering the assessment report.</summary>
-        public void StopPath(bool generateAssessment = true)
+        public void StopPath(bool generateAssessment = true, bool aborted = false)
         {
             if (!_isActive) return;
+
+#if UNITY_EDITOR
+            if (_pathTimerActive)
+            {
+                _lastPathElapsedRealtime = Time.realtimeSinceStartup - _pathStartRealtime;
+                _pathTimerActive = false;
+                _showPathTotalTime = generateAssessment;
+
+                if (generateAssessment)
+                {
+                    Debug.Log(aborted
+                        ? $"[PlayerPathDriver] Path aborted after {FormatPathTime(_lastPathElapsedRealtime)}."
+                        : $"[PlayerPathDriver] Path completed in {FormatPathTime(_lastPathElapsedRealtime)}.");
+                }
+            }
+#endif
 
             _isActive = false;
             _staminaPaused = false;
@@ -392,10 +424,53 @@ namespace Game.Player.PathFollowing
                 else if (_jumpAttempted && _stuckTimer >= postJumpStuckSeconds)
                 {
                     // Jump didn't free us — abort and show assessment
-                    StopPath(generateAssessment: true);
+                    StopPath(generateAssessment: true, aborted: true);
                 }
             }
         }
+
+#if UNITY_EDITOR
+        private void OnGUI()
+        {
+            if (!_showPathTotalTime) return;
+
+            if (_pathTimerGuiStyle == null)
+            {
+                _pathTimerGuiStyle = new GUIStyle(GUI.skin.label)
+                {
+                    alignment = TextAnchor.UpperLeft,
+                    fontSize = 32,
+                    fontStyle = FontStyle.Bold
+                };
+                _pathTimerGuiStyle.normal.textColor = Color.white;
+            }
+
+            if (_pathTimerPanelTexture == null)
+            {
+                _pathTimerPanelTexture = new Texture2D(1, 1);
+                _pathTimerPanelTexture.SetPixel(0, 0, new Color(0f, 0f, 0f, 0.65f));
+                _pathTimerPanelTexture.Apply();
+            }
+
+            const float width = 440f;
+            const float height = 72f;
+            var panelRect = new Rect(16f, 16f, width, height);
+            var labelRect = new Rect(24f, 24f, width - 16f, height - 16f);
+
+            GUI.DrawTexture(panelRect, _pathTimerPanelTexture);
+            GUI.Label(labelRect, $"Total Time: {FormatPathTime(_lastPathElapsedRealtime)}", _pathTimerGuiStyle);
+        }
+
+        private static string FormatPathTime(float elapsedSeconds)
+        {
+            int totalMilliseconds = Mathf.FloorToInt(elapsedSeconds * 1000f);
+            int minutes = totalMilliseconds / 60000;
+            int seconds = totalMilliseconds / 1000 % 60;
+            int milliseconds = totalMilliseconds % 1000;
+
+            return $"{minutes:00}:{seconds:00}.{milliseconds:000}";
+        }
+#endif
 
     }
 }
