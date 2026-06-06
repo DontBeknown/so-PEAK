@@ -15,6 +15,7 @@ public class HJBClickPathController : MonoBehaviour
     public bool includeAStar = true;
     public HJB.Pathfind.AStarPathSolver aStarSolver;
     public HJBPathVisualizer aStarVisualizer;
+    public HJBPathBenchmarkRunner benchmarkRunner;
 
     bool AStarEnabled => includeAStar && aStarSolver != null;
     bool AStarVisualEnabled => includeAStar && aStarVisualizer != null;
@@ -80,6 +81,7 @@ public class HJBClickPathController : MonoBehaviour
         cachedPathPresenter?.CancelFadeAnimations(visualizer, aStarVisualizer, AStarVisualEnabled);
     }
 
+
     void Update()
     {
 #if UNITY_EDITOR
@@ -94,6 +96,11 @@ public class HJBClickPathController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.O))
         {
             ToggleCachedPathDisplay(fadeInDuration, 0f, fadeOutDuration);
+        }
+
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            StartBenchmarkFromPlayerToPeak();
         }
 #endif
     }
@@ -215,6 +222,50 @@ public class HJBClickPathController : MonoBehaviour
     {
         EnsureHelpers();
         return cacheStore.HasRequiredCachedPathsForLevel(level, AStarEnabled);
+    }
+
+    [ContextMenu("Benchmark HJB vs A* From Player To Peak")]
+    public void StartBenchmarkFromPlayerToPeak()
+    {
+        EnsureHelpers();
+        SyncProviderHeightMultiplier();
+        SetStartToPlayer();
+        SetGoalToPeak();
+
+        if (start == null || goal == null)
+        {
+            Debug.LogWarning("[HJBClickPath] Cannot start benchmark because start or goal is missing.");
+            return;
+        }
+
+        if (aStarSolver == null)
+        {
+            Debug.LogWarning("[HJBClickPath] Cannot start benchmark because A* solver is missing.");
+            return;
+        }
+
+        if (benchmarkRunner == null)
+        {
+            benchmarkRunner = GetComponent<HJBPathBenchmarkRunner>();
+        }
+
+        if (benchmarkRunner == null)
+        {
+            benchmarkRunner = FindFirstObjectByType<HJBPathBenchmarkRunner>();
+        }
+
+        if (benchmarkRunner == null)
+        {
+            benchmarkRunner = gameObject.AddComponent<HJBPathBenchmarkRunner>();
+        }
+
+        benchmarkRunner.StartBenchmark(
+            provider,
+            calculationRunner,
+            start.Value,
+            goal.Value,
+            visualizer,
+            aStarVisualizer);
     }
 
     void TrySolvePath()

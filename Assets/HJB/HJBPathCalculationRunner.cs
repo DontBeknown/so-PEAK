@@ -122,6 +122,52 @@ public class HJBPathCalculationRunner
         }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 
+    public void CalculateFreshBenchmarkPath(Vector2Int start, Vector2Int goal, System.Action<HJBBenchmarkPathCalculationResult> onCompleted)
+    {
+        EnsureCostSurfaceBuilt();
+
+        solver.startPos = start;
+
+        Task.Run(() =>
+        {
+            var result = new HJBBenchmarkPathCalculationResult();
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            solver.Solve(goal);
+            stopwatch.Stop();
+            result.HjbSolveMilliseconds = stopwatch.Elapsed.TotalMilliseconds;
+
+            if (aStarSolver != null)
+            {
+                stopwatch.Restart();
+                result.AStarPath = aStarSolver.Solve(start, goal);
+                stopwatch.Stop();
+                result.AStarMilliseconds = stopwatch.Elapsed.TotalMilliseconds;
+            }
+
+            return result;
+        }).ContinueWith(t =>
+        {
+            if (t.IsFaulted)
+            {
+                Debug.LogException(t.Exception?.GetBaseException() ?? t.Exception);
+                onCompleted?.Invoke(null);
+                return;
+            }
+
+            HJBBenchmarkPathCalculationResult result = t.Result;
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            result.HjbPath = backtracker.BuildPath(start, goal);
+            stopwatch.Stop();
+
+            result.HjbBacktrackMilliseconds = stopwatch.Elapsed.TotalMilliseconds;
+            result.HjbTotalMilliseconds = result.HjbSolveMilliseconds + result.HjbBacktrackMilliseconds;
+
+            onCompleted?.Invoke(result);
+        }, TaskScheduler.FromCurrentSynchronizationContext());
+    }
+
     public IEnumerator WaitForRequiredPaths(WorldLevel level, float timeoutSeconds)
     {
         float timer = 0f;

@@ -46,6 +46,9 @@ public class NaturalEventDirector : MonoBehaviour
     [Tooltip("If no cliff is found, how long to wait before trying again?")]
     public float failedSearchWaitTime = 60f;
 
+    [Header("Debug")]
+    [SerializeField] private bool enableDebugLog = false;
+
     [Header("Current State (Read Only)")]
     [SerializeField] private float currentTimeRisk = 0f;
     [SerializeField] private float mapRisk = 0f;
@@ -101,7 +104,7 @@ public class NaturalEventDirector : MonoBehaviour
 
             if (currentWaitTimer <= 0f)
             {
-                Debug.Log("[NaturalEventDirector] Cooldown finished! Resuming hazard search...");
+                DebugLog("[NaturalEventDirector] Cooldown finished! Resuming hazard search...");
                 isWaitingForSearch = false;
             }
             return;
@@ -145,14 +148,14 @@ public class NaturalEventDirector : MonoBehaviour
 
         if (roll <= currentProfile.landslideWeight)
         {
-            Debug.Log($"[NaturalEventDirector] Searching for a Landslide Cliff...");
+            DebugLog("[NaturalEventDirector] Searching for a Landslide Cliff...");
 
             // Pass the current profile down to the search algorithm!
             Transform cliffAnchor = FindProceduralCliffAnchor(currentProfile);
 
             if (cliffAnchor != null)
             {
-                Debug.Log($"[NaturalEventDirector] Spawning Landslide!");
+                DebugLog("[NaturalEventDirector] Spawning Landslide!");
                 currentTimeRisk = 0f;
                 SetPendingLandslideAnchor(cliffAnchor);
                 OnLandslideTriggered?.Invoke(cliffAnchor, currentProfile.targetLevel);
@@ -161,14 +164,14 @@ public class NaturalEventDirector : MonoBehaviour
             }
             else
             {
-                Debug.Log($"[NaturalEventDirector] Search failed. Waiting {failedSearchWaitTime} seconds. Risk is preserved.");
+                DebugLog($"[NaturalEventDirector] Search failed. Waiting {failedSearchWaitTime} seconds. Risk is preserved.");
                 isWaitingForSearch = true;
                 currentWaitTimer = failedSearchWaitTime;
             }
         }
         else
         {
-            Debug.Log($"[NaturalEventDirector] Spawning Tornado!");
+            DebugLog("[NaturalEventDirector] Spawning Tornado!");
             currentTimeRisk = 0f;
             OnTornadoTriggered?.Invoke(playerTransform, currentProfile.targetLevel);
             _eventBus ??= ServiceContainer.Instance.TryGet<IEventBus>();
@@ -188,7 +191,7 @@ public class NaturalEventDirector : MonoBehaviour
         }
 
         // 2. If it fails, expand to the Expanded Radius
-        Debug.Log($"[NaturalEventDirector] No cliff at {profile.initialSearchRadius}m. Expanding to {profile.expandedSearchRadius}m...");
+        DebugLog($"[NaturalEventDirector] No cliff at {profile.initialSearchRadius}m. Expanding to {profile.expandedSearchRadius}m...");
         foundCliff = SearchAreaForCliff(profile.expandedSearchRadius, profile.minCliffHeightOffset, profile.minCliffDrop);
 
         if (foundCliff != null)
@@ -197,7 +200,7 @@ public class NaturalEventDirector : MonoBehaviour
         }
 
         // 3. Return null to trigger the cooldown timer
-        Debug.Log($"[NaturalEventDirector] No cliffs found within {profile.expandedSearchRadius}m.");
+        DebugLog($"[NaturalEventDirector] No cliffs found within {profile.expandedSearchRadius}m.");
         return null;
     }
 
@@ -254,7 +257,7 @@ public class NaturalEventDirector : MonoBehaviour
         // Did we find a winner?
         if (highestValidY != float.MinValue)
         {
-            Debug.Log($"[NaturalEventDirector] Selected the ABSOLUTE HIGHEST cliff! Height: {highestValidY}");
+            DebugLog($"[NaturalEventDirector] Selected the ABSOLUTE HIGHEST cliff! Height: {highestValidY}");
 
             GameObject tempAnchor = new GameObject("ProceduralLandslideAnchor");
 
@@ -321,5 +324,12 @@ public class NaturalEventDirector : MonoBehaviour
         }
 
         pendingLandslideAnchor.LookAt(playerTransform.position);
+    }
+
+    private void DebugLog(string message)
+    {
+        if (!enableDebugLog) return;
+
+        Debug.Log(message);
     }
 }

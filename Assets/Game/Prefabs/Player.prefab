@@ -18062,6 +18062,7 @@ GameObject:
   - component: {fileID: 6185875552093178812}
   - component: {fileID: 5655163553795439231}
   - component: {fileID: 7211555308733799645}
+  - component: {fileID: 3916696150309452292}
   m_Layer: 13
   m_Name: Player
   m_TagString: Player
@@ -18426,6 +18427,51 @@ MonoBehaviour:
   ignoreLayers:
     serializedVersion: 2
     m_Bits: 133376
+--- !u!114 &3916696150309452292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4482526209655570014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43f95c2a32704180a2ec57fca1a79685, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HJBPathBenchmarkRunner
+  playerController: {fileID: 4962120396931287550}
+  characterController: {fileID: 988247627514051869}
+  playerStats: {fileID: 4013136103283677608}
+  playerCamera: {fileID: 0}
+  excludeLayers:
+    serializedVersion: 2
+    m_Bits: 166144
+  statImmune: 1
+  ignoreSlope: 1
+  arrivalRadius: 0.6
+  stuckEpsilon: 0.05
+  stuckSeconds: 2
+  maxTrialSeconds: 600
+  calculationTimeoutSeconds: 3600
+  latestResult:
+    hjb:
+      algorithm: HJB
+      calculationMilliseconds: -1
+      travelSeconds: -1
+      plannedPathDistance: -1
+      actualTravelDistance: -1
+      staminaUsed: -1
+      status: 0
+      waypointCount: 0
+    aStar:
+      algorithm: A*
+      calculationMilliseconds: -1
+      travelSeconds: -1
+      plannedPathDistance: -1
+      actualTravelDistance: -1
+      staminaUsed: -1
+      status: 0
+      waypointCount: 0
 --- !u!1 &4494736775984268260
 GameObject:
   m_ObjectHideFlags: 0

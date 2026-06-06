@@ -38,6 +38,10 @@ public class PlayerStats : MonoBehaviour
 
     [SerializeField] private float spawnImmunityDuration = 2.5f;
     private bool isImmune;
+    private bool spawnImmunityActive;
+    private bool manualImmunityActive;
+    private bool staminaDrainSuppressed;
+    private bool survivalDrainSuppressed;
 
     private bool isSprinting;
     private float _fallingTimer;
@@ -134,9 +138,11 @@ public class PlayerStats : MonoBehaviour
 
     private System.Collections.IEnumerator SpawnImmunityRoutine()
     {
-        SetImmuneState(true);
+        spawnImmunityActive = true;
+        RefreshImmuneState();
         yield return new WaitForSeconds(spawnImmunityDuration);
-        SetImmuneState(false);
+        spawnImmunityActive = false;
+        RefreshImmuneState();
     }
 
     private void Update()
@@ -146,7 +152,7 @@ public class PlayerStats : MonoBehaviour
         UpdateThirstDrainReductionBuff(dt);
         UpdateResistanceBuffs(dt);
 
-        if (!isImmune)
+        if (!isImmune && !survivalDrainSuppressed)
         {
             hunger.Tick(dt);
             thirst.Tick(dt);
@@ -187,8 +193,8 @@ public class PlayerStats : MonoBehaviour
             thirst.SetTemperatureMultiplier(temperature.GetThirstDrainMultiplier());
         }
 
-        // Ensure stamina drains are tracked but optionally not consumed while immune.
-        stamina.ConsumeDrains = !isImmune;
+        // Ensure stamina drains are tracked but optionally not consumed while immune or benchmark-suppressed.
+        stamina.ConsumeDrains = !isImmune && !staminaDrainSuppressed;
         stamina.Tick(dt);
 
         if (!isImmune && hunger.ShouldHurt)
@@ -279,6 +285,11 @@ public class PlayerStats : MonoBehaviour
         thirst?.SetTemperatureMultiplier(1f);
     }
 
+    private void RefreshImmuneState()
+    {
+        SetImmuneState(spawnImmunityActive || manualImmunityActive);
+    }
+
     private void HandleLongFallDeath(float dt)
     {
         if (_playerController == null || health.Current <= 0f)
@@ -360,7 +371,30 @@ public class PlayerStats : MonoBehaviour
     /// </summary>
     public void SetImmunity(bool value)
     {
-        SetImmuneState(value);
+        manualImmunityActive = value;
+        RefreshImmuneState();
+    }
+
+    /// <summary>
+    /// Tracks stamina drain events without reducing the stamina value while suppressed.
+    /// Used by benchmarks that need stamina cost metrics without mutating player stats.
+    /// </summary>
+    public void SetStaminaDrainSuppressed(bool value)
+    {
+        staminaDrainSuppressed = value;
+        if (stamina != null)
+        {
+            stamina.ConsumeDrains = !isImmune && !staminaDrainSuppressed;
+        }
+    }
+
+    /// <summary>
+    /// Suppresses passive survival stat ticking while leaving the current stat values intact.
+    /// Used by path benchmarks that should not mutate hunger, thirst, fatigue, or temperature.
+    /// </summary>
+    public void SetSurvivalDrainSuppressed(bool value)
+    {
+        survivalDrainSuppressed = value;
     }
 
     public void Heal(float amount) => health.Heal(amount);
